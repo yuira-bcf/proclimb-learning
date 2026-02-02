@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phase 7: 基本機能実装 - WEB総合制作演習 II</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <style>
+    :root {
+      --primary: #FF3B30;
+      --primary-dark: #E02B20;
+      --primary-light: #FFF5F4;
+      --primary-lighter: #FFD4D1;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-exercises-2.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Phase</div>
+      <div class="chapter-number">7</div>
+      <h1 class="chapter-title">基本機能実装</h1>
+      <p class="chapter-subtitle">Day 20-24 / CRUD・バリデーション・認証</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この Phase の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">7-1</span>CRUD機能実装</li>
+        <li class="toc-item"><span class="toc-number">7-2</span>バリデーション実装</li>
+        <li class="toc-item"><span class="toc-number">7-3</span>認証・認可実装</li>
+        <li class="toc-item"><span class="toc-number">7-4</span>参照チュートリアル</li>
+      </ul>
+    </nav>
+
+    <!-- Section 7-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-1</span>
+        <h2 class="section-title">CRUD機能実装</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>主要エンティティの<strong>登録・表示・更新・削除</strong>機能を Spring Boot + MyBatis で実装します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>CRUDとは</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">add_circle</span>
+            </div>
+            <div class="feature-content">
+              <h4>Create（登録）</h4>
+              <p>新しいデータをデータベースに追加</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">visibility</span>
+            </div>
+            <div class="feature-content">
+              <h4>Read（表示）</h4>
+              <p>データベースからデータを取得して表示</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">edit</span>
+            </div>
+            <div class="feature-content">
+              <h4>Update（更新）</h4>
+              <p>既存データを修正</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF3B30;">
+              <span class="material-icons" style="color: white;">delete</span>
+            </div>
+            <div class="feature-content">
+              <h4>Delete（削除）</h4>
+              <p>データをデータベースから削除</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>実装する層</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>層</th>
+                <th>役割</th>
+                <th>クラス名の例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Controller</strong></td>
+                <td>リクエスト受付、レスポンス返却</td>
+                <td>TaskController</td>
+              </tr>
+              <tr>
+                <td><strong>Service</strong></td>
+                <td>ビジネスロジック</td>
+                <td>TaskService</td>
+              </tr>
+              <tr>
+                <td><strong>Mapper</strong></td>
+                <td>データベースアクセス</td>
+                <td>TaskMapper</td>
+              </tr>
+              <tr>
+                <td><strong>Entity/Form</strong></td>
+                <td>データ構造の定義</td>
+                <td>Task, TaskForm</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Thymeleafでの画面実装</h3>
+        <div class="highlight-box">
+          <ul>
+            <li>一覧画面 - <code>th:each</code> でループ表示</li>
+            <li>詳細画面 - <code>th:text</code> で値表示</li>
+            <li>入力フォーム - <code>th:field</code> でバインド</li>
+            <li>リンク - <code>th:href</code> でURL生成</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-2</span>
+        <h2 class="section-title">バリデーション実装</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>サーバーサイドの<strong>入力検証</strong>を実装します。不正なデータの登録を防ぎましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Bean Validationアノテーション</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>アノテーション</th>
+                <th>用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>@NotNull</code></td>
+                <td>null不可</td>
+              </tr>
+              <tr>
+                <td><code>@NotBlank</code></td>
+                <td>空文字・空白不可（文字列用）</td>
+              </tr>
+              <tr>
+                <td><code>@Size(min, max)</code></td>
+                <td>文字数の範囲指定</td>
+              </tr>
+              <tr>
+                <td><code>@Min</code> / <code>@Max</code></td>
+                <td>数値の範囲指定</td>
+              </tr>
+              <tr>
+                <td><code>@Email</code></td>
+                <td>メールアドレス形式</td>
+              </tr>
+              <tr>
+                <td><code>@Pattern</code></td>
+                <td>正規表現でのチェック</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>エラー処理</h3>
+        <div class="highlight-box">
+          <ul>
+            <li><code>BindingResult</code> でバリデーション結果を受け取る</li>
+            <li><code>th:errors</code> でエラーメッセージを表示</li>
+            <li>カスタムエラーメッセージの設定</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>例外処理</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF3B30;">
+              <span class="material-icons" style="color: white;">error</span>
+            </div>
+            <div class="feature-content">
+              <h4>グローバル例外ハンドラー</h4>
+              <p><code>@ControllerAdvice</code> でアプリ全体の例外を処理</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">web</span>
+            </div>
+            <div class="feature-content">
+              <h4>エラーページ</h4>
+              <p>404、500などのエラーページを用意</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-3</span>
+        <h2 class="section-title">認証・認可実装</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>Spring Security</strong>によるログイン機能、ロール管理、アクセス制御を実装します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>認証（Authentication）</h3>
+        <div class="highlight-box">
+          <h4>実装する機能</h4>
+          <ul>
+            <li>ログイン画面</li>
+            <li>ユーザー名・パスワードによる認証</li>
+            <li>ログアウト機能</li>
+            <li>パスワードのハッシュ化（BCrypt）</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>認可（Authorization）</h3>
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #007AFF; color: white;">ロール管理</div>
+            <p>ユーザーに役割（ADMIN、USER等）を付与</p>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #34C759; color: white;">アクセス制御</div>
+            <p>ロールに応じたページへのアクセス制限</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>セキュリティ対策</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>対策</th>
+                <th>内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>CSRF対策</strong></td>
+                <td>フォームにCSRFトークンを自動付与</td>
+              </tr>
+              <tr>
+                <td><strong>XSS対策</strong></td>
+                <td>Thymeleafで自動エスケープ</td>
+              </tr>
+              <tr>
+                <td><strong>SQLインジェクション対策</strong></td>
+                <td>MyBatisのプリペアドステートメント</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-4</span>
+        <h2 class="section-title">参照チュートリアル</h2>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>内容</th>
+              <th>チュートリアル</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Spring MVC</td>
+              <td><a href="../spring/5mvc-tutorial.html">spring/5mvc-tutorial.html</a></td>
+            </tr>
+            <tr>
+              <td>Thymeleaf</td>
+              <td><a href="../spring/6thymeleaf-tutorial.html">spring/6thymeleaf-tutorial.html</a></td>
+            </tr>
+            <tr>
+              <td>バリデーション</td>
+              <td><a href="../spring/14_validation.html">spring/14_validation.html</a></td>
+            </tr>
+            <tr>
+              <td>MyBatis</td>
+              <td><a href="../spring/9_MyBatis_Tutorial__2_.html">spring/9_MyBatis_Tutorial__2_.html</a></td>
+            </tr>
+            <tr>
+              <td>Serviceレイヤー</td>
+              <td><a href="../spring/12service-tutorial.html">spring/12service-tutorial.html</a></td>
+            </tr>
+            <tr>
+              <td>Spring Security</td>
+              <td><a href="../spring/15-spring-security-tutorial.html">spring/15-spring-security-tutorial.html</a></td>
+            </tr>
+            <tr>
+              <td>プロンプトPG 機能追加</td>
+              <td><a href="../promptpg-function/01_extends-todo.html">promptpg-function/ 全般</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- マイルストーン -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">マイルストーン</span>
+        <h2 class="section-title">Day 24 までの成果物</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>CRUD機能</strong> - 主要エンティティの登録・表示・更新・削除</li>
+          <li><strong>バリデーション</strong> - サーバーサイドの入力検証</li>
+          <li><strong>認証・認可</strong> - Spring Securityによるログイン・ロール管理</li>
+          <li><strong>例外処理</strong> - グローバル例外ハンドラー・エラーページ</li>
+        </ul>
+      </div>
+
+      <div class="info-box warning">
+        <div class="info-box-title"><span class="material-icons">schedule</span> 期日</div>
+        <div class="info-box-content">
+          <p>Day 24 までに基本機能（CRUD + バリデーション + 認証）を完成させてください。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="6-backend-design.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">Phase 6: サーバーサイド設計</div>
+    </a>
+    <a href="8-features.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">Phase 8: 追加機能実装</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 II - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

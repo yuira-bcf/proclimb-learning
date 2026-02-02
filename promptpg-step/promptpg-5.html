@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Step 5: データ登録</title>
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="../shared/common.css" />
+        <style>
+  :root {
+    --primary: #AF52DE;
+    --primary-dark: #9333EA;
+    --primary-light: #FAF5FF;
+    --primary-lighter: #E9D5FF;
+  }
+  .nav-category-links { display: none; }
+</style>
+        <style>
+            .download-btn {
+                background: #22c55e;
+                color: white;
+                border: none;
+                padding: 6px 14px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                margin-left: auto;
+            }
+            .code-header { display: flex; align-items: center; justify-content: space-between; }
+            .step-indicator { display: flex; justify-content: center; gap: 0.5rem; margin: 2rem 0; flex-wrap: wrap; }
+            .step-dot { width: 36px; height: 36px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: #64748b; }
+            .step-dot.active { background: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+            .step-dot.completed { background: #22c55e; color: white; }
+            .file-badge { display: inline-block; background: #3b82f6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 8px; }
+            .file-badge.new { background: #22c55e; }
+            .file-badge.modified { background: #f59e0b; }
+        </style>
+    </head>
+    <body>
+        <nav class="global-nav"></nav>
+        <script src="../shared/js/nav-promptpg-step.js"></script>
+
+        <div class="container">
+            <div class="step-indicator">
+                <div class="step-dot completed">1</div>
+                <div class="step-dot completed">2</div>
+                <div class="step-dot completed">3</div>
+                <div class="step-dot completed">4</div>
+                <div class="step-dot active">5</div>
+                <div class="step-dot">6</div>
+                <div class="step-dot">7</div>
+                <div class="step-dot">8</div>
+            </div>
+
+            <header class="chapter-header">
+                <div class="chapter-badge">🚀 Step</div>
+                <div class="chapter-number">5</div>
+                <h1 class="chapter-title">データ登録</h1>
+            </header>
+
+            <nav class="toc">
+                <h2 class="toc-title"><span class="material-icons">list_alt</span> このステップの内容</h2>
+                <ul class="toc-list">
+                    <li class="toc-item"><span class="toc-number">5-1</span><span>概要</span></li>
+                    <li class="toc-item"><span class="toc-number">5-2</span><span>仕様</span></li>
+                    <li class="toc-item"><span class="toc-number">5-3</span><span>アプリ仕様</span></li>
+                    <li class="toc-item"><span class="toc-number">5-4</span><span>プロンプトの生成</span></li>
+                    <li class="toc-item"><span class="toc-number">5-5</span><span>追加・変更箇所の解説</span></li>
+                </ul>
+            </nav>
+
+            <!-- 概要 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 5-1</span>
+                    <h2 class="section-title">概要</h2>
+                </div>
+
+                <div class="intro-text">
+                    <p>このステップでは、<strong>フォームから入力したデータをデータベースに登録</strong>する機能を実装します。</p>
+                    <p>Serviceクラスを追加し、登録処理を行います。</p>
+                </div>
+
+                <h3>このステップで学ぶこと</h3>
+                <div class="module-list">
+                    <div class="module-item">
+                        <div class="module-icon">⚙️</div>
+                        <div class="module-content">
+                            <h4>Serviceクラス</h4>
+                            <p>ビジネスロジックを担当するクラスの作成</p>
+                        </div>
+                    </div>
+                    <div class="module-item">
+                        <div class="module-icon">💾</div>
+                        <div class="module-content">
+                            <h4>データ保存</h4>
+                            <p>Repositoryを使用してデータを保存する方法</p>
+                        </div>
+                    </div>
+                    <div class="module-item">
+                        <div class="module-icon">🔄</div>
+                        <div class="module-content">
+                            <h4>Form→Entity変換</h4>
+                            <p>フォームデータをエンティティに変換して保存</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-header">
+                        <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                        <span class="info-box-title">このステップのゴール</span>
+                    </div>
+                    <p>入力 → 確認 → 登録 の流れで、データがH2データベースに保存されればOKです！<br>
+                    H2コンソールでデータを確認してみましょう。</p>
+                </div>
+            </section>
+
+            <!-- 仕様 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 5-2</span>
+                    <h2 class="section-title">仕様</h2>
+                </div>
+
+                <h3>処理の流れ</h3>
+                <div class="screen-flow-diagram" style="display: flex; justify-content: center; margin: 2rem 0;">
+                    <svg viewBox="0 0 600 180" width="600" height="180">
+                        <rect width="600" height="180" fill="#f8fafc" rx="8" />
+
+                        <rect x="20" y="30" width="100" height="50" rx="6" fill="#22c55e" />
+                        <text x="70" y="60" text-anchor="middle" font-size="11" fill="white" font-weight="bold">入力画面</text>
+
+                        <rect x="160" y="30" width="100" height="50" rx="6" fill="#f59e0b" />
+                        <text x="210" y="60" text-anchor="middle" font-size="11" fill="white" font-weight="bold">確認画面</text>
+
+                        <rect x="300" y="30" width="100" height="50" rx="6" fill="#8b5cf6" />
+                        <text x="350" y="60" text-anchor="middle" font-size="11" fill="white" font-weight="bold">完了画面</text>
+
+                        <rect x="300" y="110" width="100" height="50" rx="6" fill="#3b82f6" />
+                        <text x="350" y="140" text-anchor="middle" font-size="11" fill="white" font-weight="bold">データベース</text>
+
+                        <path d="M 120 55 L 155 55" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+                        <path d="M 260 55 L 295 55" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
+                        <path d="M 350 80 L 350 105" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow-green)" />
+
+                        <text x="350" y="95" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="bold">保存</text>
+
+                        <defs>
+                            <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                                <polygon points="0 0, 8 3, 0 6" fill="#64748b" />
+                            </marker>
+                            <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                                <polygon points="0 0, 8 3, 0 6" fill="#22c55e" />
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+            </section>
+
+            <!-- アプリ仕様 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 5-3</span>
+                    <h2 class="section-title">アプリ仕様</h2>
+                </div>
+
+                <h3>ファイル構成</h3>
+                <div class="code-block">
+                    <div class="code-header"><span class="code-title">プロジェクト構成</span></div>
+                    <div class="code-content">
+                        <pre>src/main/java/com/example/todo/
+├── TodoApplication.java
+├── controller/
+│   └── TodoController.java      ← 変更
+├── form/
+│   └── TodoForm.java
+├── entity/
+│   └── Todo.java
+├── repository/
+│   └── TodoRepository.java
+└── service/
+    └── TodoService.java         ← 新規追加</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- プロンプト -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 5-4</span>
+                    <h2 class="section-title">プロンプトの生成</h2>
+                </div>
+
+                <div class="code-block" id="prompt-1">
+                    <div class="code-header">
+                        <span class="code-title">プロンプト例</span>
+                        <button class="download-btn" onclick="downloadPrompt('prompt-1', 'step5_save.txt')">📥 ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre>あなたはJavaプログラマーです。
+
+Step 4で作成したアプリケーションに、データ登録機能を追加してください。
+
+【要件】
+1. 確認画面で「登録」ボタンを押すと、データベースに保存する
+2. Serviceクラスを作成してビジネスロジックを分離する
+3. 保存時に作成日時を自動設定する
+
+【Serviceクラス（TodoService.java）】
+パッケージ: com.example.todo.service
+メソッド:
+- save(TodoForm form): FormをEntityに変換して保存
+
+【Controllerの変更】
+- 完了画面(complete)でTodoServiceを呼び出してデータを保存
+- PRGパターンを使用して二重登録を防止
+
+【処理の流れ】
+1. 確認画面で「登録」ボタンをクリック
+2. ControllerがTodoServiceのsaveメソッドを呼び出す
+3. TodoServiceがTodoFormをTodoエンティティに変換
+4. TodoRepositoryでデータベースに保存
+5. 完了画面にリダイレクト
+
+各ファイルのコードを実装してください。</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 解説 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 5-5</span>
+                    <h2 class="section-title">追加・変更箇所の解説</h2>
+                </div>
+
+                <h3>ファイルの変更一覧</h3>
+                <table class="data-table">
+                    <thead><tr><th>ファイル</th><th>状態</th><th>変更内容</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>TodoService.java</code></td><td><span class="file-badge new">新規</span></td><td>登録処理を実装</td></tr>
+                        <tr><td><code>TodoController.java</code></td><td><span class="file-badge modified">変更</span></td><td>Service呼び出し追加</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Serviceクラスの例</h3>
+                <div class="code-block">
+                    <div class="code-header"><span class="code-title">TodoService.java</span></div>
+                    <div class="code-content">
+                        <pre>@Service
+public class TodoService {
+
+    @Autowired
+    private TodoRepository todoRepository;
+
+    public void save(TodoForm form) {
+        Todo todo = new Todo();
+        todo.setAuthor(form.getAuthor());
+        todo.setTitle(form.getTitle());
+        todo.setDetail(form.getDetail());
+        todo.setCreatedAt(LocalDateTime.now());
+        todoRepository.save(todo);
+    }
+}</pre>
+                    </div>
+                </div>
+
+                <div class="column">
+                    <div class="column-header">
+                        <span class="column-badge">Column</span>
+                        <span class="column-title">PRGパターンとは</span>
+                    </div>
+                    <p><strong>PRG（Post-Redirect-Get）パターン</strong>は、フォーム送信後にリダイレクトすることで、ブラウザの更新ボタンによる二重送信を防ぐ設計パターンです。</p>
+                    <ol class="step-list">
+                        <li>POST: フォームデータを送信</li>
+                        <li>Redirect: 処理後に別のURLにリダイレクト</li>
+                        <li>GET: リダイレクト先の画面を表示</li>
+                    </ol>
+                </div>
+
+                <div class="info-box" style="background: #f0fdf4; border-color: #22c55e;">
+                    <div class="info-box-header">
+                        <span class="info-box-icon">✅</span>
+                        <span class="info-box-title">完了チェック</span>
+                    </div>
+                    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                        <li>入力 → 確認 → 登録 の流れで操作できる</li>
+                        <li>H2コンソールでデータが登録されている</li>
+                        <li>ブラウザ更新で二重登録されない</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer"><p>プロンプトプログラミング チュートリアル</p></footer>
+
+        <div class="page-nav">
+            <a href="promptpg-4.html" class="page-nav-btn prev">
+                <span>←</span>
+                <div><div class="page-nav-label">前のステップ</div><div class="page-nav-title">Step 4: データベース設定</div></div>
+            </a>
+            <a href="promptpg-6.html" class="page-nav-btn next">
+                <div><div class="page-nav-label">次のステップ</div><div class="page-nav-title">Step 6: 一覧表示</div></div>
+                <span>→</span>
+            </a>
+        </div>
+
+        <script>
+            function toggleMenu() { document.querySelector(".nav-toggle").classList.toggle("active"); document.querySelector(".nav-menu").classList.toggle("active"); }
+            function downloadPrompt(elementId, filename) {
+                const element = document.getElementById(elementId);
+                const text = element.querySelector('pre').textContent;
+                const blob = new Blob([text], { type: 'text/plain; charset=utf-8' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.click();
+            }
+        </script>
+    </body>
+</html>

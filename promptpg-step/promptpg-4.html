@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Step 4: データベース設定</title>
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="../shared/common.css" />
+        <style>
+  :root {
+    --primary: #AF52DE;
+    --primary-dark: #9333EA;
+    --primary-light: #FAF5FF;
+    --primary-lighter: #E9D5FF;
+  }
+  .nav-category-links { display: none; }
+</style>
+        <style>
+            .download-btn {
+                background: #22c55e;
+                color: white;
+                border: none;
+                padding: 6px 14px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                margin-left: auto;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+            .download-btn:hover {
+                background: #16a34a;
+                transform: translateY(-1px);
+            }
+            .code-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .step-indicator {
+                display: flex;
+                justify-content: center;
+                gap: 0.5rem;
+                margin: 2rem 0;
+                flex-wrap: wrap;
+            }
+            .step-dot {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                background: #e2e8f0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                font-weight: bold;
+                color: #64748b;
+            }
+            .step-dot.active {
+                background: #3b82f6;
+                color: white;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            }
+            .step-dot.completed {
+                background: #22c55e;
+                color: white;
+            }
+            .file-badge {
+                display: inline-block;
+                background: #3b82f6;
+                color: white;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                margin-right: 8px;
+            }
+            .file-badge.new { background: #22c55e; }
+            .file-badge.modified { background: #f59e0b; }
+        </style>
+    </head>
+    <body>
+        <nav class="global-nav"></nav>
+        <script src="../shared/js/nav-promptpg-step.js"></script>
+
+        <div class="container">
+            <div class="step-indicator">
+                <div class="step-dot completed">1</div>
+                <div class="step-dot completed">2</div>
+                <div class="step-dot completed">3</div>
+                <div class="step-dot active">4</div>
+                <div class="step-dot">5</div>
+                <div class="step-dot">6</div>
+                <div class="step-dot">7</div>
+                <div class="step-dot">8</div>
+            </div>
+
+            <header class="chapter-header">
+                <div class="chapter-badge">🚀 Step</div>
+                <div class="chapter-number">4</div>
+                <h1 class="chapter-title">データベース設定</h1>
+            </header>
+
+            <nav class="toc">
+                <h2 class="toc-title"><span class="material-icons">list_alt</span> このステップの内容</h2>
+                <ul class="toc-list">
+                    <li class="toc-item"><span class="toc-number">4-1</span><span>概要</span></li>
+                    <li class="toc-item"><span class="toc-number">4-2</span><span>仕様</span></li>
+                    <li class="toc-item"><span class="toc-number">4-3</span><span>アプリ仕様</span></li>
+                    <li class="toc-item"><span class="toc-number">4-4</span><span>プロンプトの生成</span></li>
+                    <li class="toc-item"><span class="toc-number">4-5</span><span>追加・変更箇所の解説</span></li>
+                </ul>
+            </nav>
+
+            <!-- 概要 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 4-1</span>
+                    <h2 class="section-title">概要</h2>
+                </div>
+
+                <div class="intro-text">
+                    <p>このステップでは、<strong>H2データベースの設定</strong>と<strong>Entity・Repositoryの作成</strong>を行います。</p>
+                    <p>データベースの準備を整え、次のステップでデータ登録ができるようにします。</p>
+                </div>
+
+                <h3>このステップで学ぶこと</h3>
+                <div class="module-list">
+                    <div class="module-item">
+                        <div class="module-icon">💾</div>
+                        <div class="module-content">
+                            <h4>H2データベース</h4>
+                            <p>インメモリデータベースの設定方法</p>
+                        </div>
+                    </div>
+                    <div class="module-item">
+                        <div class="module-icon">📦</div>
+                        <div class="module-content">
+                            <h4>Entity（エンティティ）</h4>
+                            <p>データベースのテーブルに対応するクラス</p>
+                        </div>
+                    </div>
+                    <div class="module-item">
+                        <div class="module-icon">🔍</div>
+                        <div class="module-content">
+                            <h4>Repository（リポジトリ）</h4>
+                            <p>データベース操作を行うインターフェース</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-header">
+                        <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                        <span class="info-box-title">このステップのゴール</span>
+                    </div>
+                    <p>H2コンソール（<code>http://localhost:8080/h2-console</code>）にアクセスして、<br>
+                    todoテーブルが作成されていればOKです！</p>
+                </div>
+            </section>
+
+            <!-- 仕様 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 4-2</span>
+                    <h2 class="section-title">仕様</h2>
+                </div>
+
+                <h3>テーブル定義</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>カラム名</th>
+                            <th>型</th>
+                            <th>制約</th>
+                            <th>説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>id</td><td>Long</td><td>PRIMARY KEY, AUTO INCREMENT</td><td>ID</td></tr>
+                        <tr><td>author</td><td>String</td><td>NOT NULL</td><td>登録者</td></tr>
+                        <tr><td>title</td><td>String</td><td>NOT NULL</td><td>タイトル</td></tr>
+                        <tr><td>detail</td><td>String</td><td></td><td>詳細</td></tr>
+                        <tr><td>created_at</td><td>LocalDateTime</td><td></td><td>作成日時</td></tr>
+                        <tr><td>updated_at</td><td>LocalDateTime</td><td></td><td>更新日時</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>必要な依存関係</h3>
+                <table class="data-table">
+                    <thead><tr><th>依存関係</th><th>用途</th></tr></thead>
+                    <tbody>
+                        <tr><td>Spring Data JPA</td><td>データベース操作</td></tr>
+                        <tr><td>H2 Database</td><td>インメモリデータベース</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- アプリ仕様 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 4-3</span>
+                    <h2 class="section-title">アプリ仕様</h2>
+                </div>
+
+                <h3>ファイル構成</h3>
+                <div class="code-block">
+                    <div class="code-header"><span class="code-title">プロジェクト構成</span></div>
+                    <div class="code-content">
+                        <pre>src/main/java/com/example/todo/
+├── TodoApplication.java
+├── controller/
+│   └── TodoController.java
+├── form/
+│   └── TodoForm.java
+├── entity/
+│   └── Todo.java                ← 新規追加
+└── repository/
+    └── TodoRepository.java      ← 新規追加
+
+src/main/resources/
+├── application.properties       ← 変更（DB設定追加）
+└── templates/...</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- プロンプト -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 4-4</span>
+                    <h2 class="section-title">プロンプトの生成</h2>
+                </div>
+
+                <div class="code-block" id="prompt-1">
+                    <div class="code-header">
+                        <span class="code-title">プロンプト例</span>
+                        <button class="download-btn" onclick="downloadPrompt('prompt-1', 'step4_database.txt')">📥 ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre>あなたはJavaプログラマーです。
+
+Step 3で作成したアプリケーションに、H2データベースの設定を追加してください。
+
+【要件】
+1. H2インメモリデータベースを使用する
+2. H2コンソールを有効にする（URL: /h2-console）
+3. Todoエンティティを作成する
+4. TodoRepositoryを作成する
+
+【pom.xmlに追加する依存関係】
+- spring-boot-starter-data-jpa
+- h2database
+
+【Entityクラス（Todo.java）】
+パッケージ: com.example.todo.entity
+フィールド:
+- id (Long) - 主キー、自動採番
+- author (String) - 登録者
+- title (String) - タイトル
+- detail (String) - 詳細
+- createdAt (LocalDateTime) - 作成日時
+- updatedAt (LocalDateTime) - 更新日時
+
+【Repositoryインターフェース（TodoRepository.java）】
+パッケージ: com.example.todo.repository
+- JpaRepositoryを継承
+
+【application.properties】
+- H2データベースの接続設定
+- H2コンソールの有効化
+- JPA/Hibernateの設定
+
+各ファイルのコードを実装してください。</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 解説 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 4-5</span>
+                    <h2 class="section-title">追加・変更箇所の解説</h2>
+                </div>
+
+                <h3>ファイルの変更一覧</h3>
+                <table class="data-table">
+                    <thead><tr><th>ファイル</th><th>状態</th><th>変更内容</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>pom.xml</code></td><td><span class="file-badge modified">変更</span></td><td>JPA, H2依存関係追加</td></tr>
+                        <tr><td><code>application.properties</code></td><td><span class="file-badge modified">変更</span></td><td>DB設定追加</td></tr>
+                        <tr><td><code>Todo.java</code></td><td><span class="file-badge new">新規</span></td><td>Entityクラス</td></tr>
+                        <tr><td><code>TodoRepository.java</code></td><td><span class="file-badge new">新規</span></td><td>Repositoryインターフェース</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>application.propertiesの例</h3>
+                <div class="code-block">
+                    <div class="code-header"><span class="code-title">application.properties</span></div>
+                    <div class="code-content">
+                        <pre># H2 Database
+spring.datasource.url=jdbc:h2:mem:todo
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+# H2 Console
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# JPA
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true</pre>
+                    </div>
+                </div>
+
+                <div class="column">
+                    <div class="column-header">
+                        <span class="column-badge">Column</span>
+                        <span class="column-title">H2コンソールの使い方</span>
+                    </div>
+                    <ol class="step-list">
+                        <li>アプリケーションを起動</li>
+                        <li><code>http://localhost:8080/h2-console</code> にアクセス</li>
+                        <li>JDBC URL に <code>jdbc:h2:mem:todo</code> を入力</li>
+                        <li>Connect ボタンをクリック</li>
+                        <li>左側のTODOテーブルをクリックして確認</li>
+                    </ol>
+                </div>
+
+                <div class="info-box" style="background: #f0fdf4; border-color: #22c55e;">
+                    <div class="info-box-header">
+                        <span class="info-box-icon">✅</span>
+                        <span class="info-box-title">完了チェック</span>
+                    </div>
+                    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                        <li>H2コンソールにアクセスできる</li>
+                        <li>TODOテーブルが作成されている</li>
+                        <li>エラーなくアプリケーションが起動する</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer"><p>プロンプトプログラミング チュートリアル</p></footer>
+
+        <div class="page-nav">
+            <a href="promptpg-3.html" class="page-nav-btn prev">
+                <span>←</span>
+                <div><div class="page-nav-label">前のステップ</div><div class="page-nav-title">Step 3: フォームデータ持ち回り</div></div>
+            </a>
+            <a href="promptpg-5.html" class="page-nav-btn next">
+                <div><div class="page-nav-label">次のステップ</div><div class="page-nav-title">Step 5: データ登録</div></div>
+                <span>→</span>
+            </a>
+        </div>
+
+        <script>
+            function toggleMenu() {
+                const toggle = document.querySelector(".nav-toggle");
+                const menu = document.querySelector(".nav-menu");
+                toggle.classList.toggle("active");
+                menu.classList.toggle("active");
+            }
+            function downloadPrompt(elementId, filename) {
+                const element = document.getElementById(elementId);
+                const preElement = element.querySelector('pre');
+                const text = preElement.textContent;
+                const blob = new Blob([text], { type: 'text/plain; charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        </script>
+    </body>
+</html>

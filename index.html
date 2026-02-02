@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>チュートリアル ダッシュボード</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="shared/common.css">
+  <link rel="stylesheet" href="shared/apple-header-footer.css">
+  <meta name="description" content="職業訓練校教材 - Web開発の基礎からSpring Frameworkまで体系的に学べる12のチュートリアル">
+  <style>
+    :root {
+      /* Category Accents */
+      --accent-frontend: #007AFF;
+      --accent-frontend-light: rgba(0, 122, 255, 0.08);
+      --accent-backend: #34C759;
+      --accent-backend-light: rgba(52, 199, 89, 0.08);
+      --accent-ai: #AF52DE;
+      --accent-ai-light: rgba(175, 82, 222, 0.08);
+      --accent-design: #FF6B35;
+      --accent-design-light: rgba(255, 107, 53, 0.08);
+      --accent-business: #FF9F0A;
+      --accent-business-light: rgba(255, 159, 10, 0.10);
+      --accent-exercises: #FF3B30;
+      --accent-exercises-light: rgba(255, 59, 48, 0.08);
+    }
+    body.apple-layout {
+      background: var(--apple-bg-white);
+    }
+    /* Section Styles */
+    .section {
+      padding: 48px 24px;
+    }
+    .section.alt {
+      background: var(--apple-bg-light);
+    }
+    .section-inner {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .section-header {
+      margin-bottom: 24px;
+    }
+    .section-eyebrow {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 4px;
+    }
+    .section h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--apple-text-primary);
+      margin-bottom: 4px;
+    }
+    .section .lead {
+      font-size: 0.9rem;
+      color: var(--apple-text-secondary);
+    }
+    /* Dashboard Grid */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    /* Dashboard Card */
+    .dash-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      text-decoration: none;
+      display: block;
+    }
+    .dash-card:hover {
+      transform: scale(1.015);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+    }
+    .dc-bar {
+      display: none;
+    }
+    .dc-head {
+      padding: 18px 20px 14px 23px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dc-ic {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .dc-ic .material-icons {
+      font-size: 20px;
+    }
+    .dc-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--apple-text-primary);
+    }
+    .dc-sub {
+      font-size: 0.8rem;
+      color: var(--apple-text-tertiary);
+      margin-top: 1px;
+    }
+    .dc-body {
+      padding: 0 20px 18px 23px;
+    }
+    .dc-desc {
+      font-size: 0.85rem;
+      color: var(--apple-text-secondary);
+      margin-bottom: 10px;
+      line-height: 1.6;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .dc-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .dc-tags span {
+      font-size: 0.68rem;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-weight: 500;
+      background: var(--apple-bg-light);
+      color: var(--apple-text-secondary);
+    }
+    .dc-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid var(--apple-border-light);
+    }
+    .dc-ch {
+      font-size: 0.8rem;
+      color: var(--apple-text-quaternary);
+    }
+    .btn-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: #FFF;
+    }
+    /* Category Color Classes - アイコン・ボタンのカラーを一括管理 */
+    .dash-card.frontend .dc-ic { background: var(--accent-frontend-light); }
+    .dash-card.frontend .dc-ic .material-icons { color: var(--accent-frontend); }
+    .dash-card.frontend .btn-pill { background: var(--accent-frontend); }
+
+    .dash-card.backend .dc-ic { background: var(--accent-backend-light); }
+    .dash-card.backend .dc-ic .material-icons { color: var(--accent-backend); }
+    .dash-card.backend .btn-pill { background: var(--accent-backend); }
+
+    .dash-card.ai .dc-ic { background: var(--accent-ai-light); }
+    .dash-card.ai .dc-ic .material-icons { color: var(--accent-ai); }
+    .dash-card.ai .btn-pill { background: var(--accent-ai); }
+
+    .dash-card.design .dc-ic { background: var(--accent-design-light); }
+    .dash-card.design .dc-ic .material-icons { color: var(--accent-design); }
+    .dash-card.design .btn-pill { background: var(--accent-design); }
+
+    .dash-card.business .dc-ic { background: var(--accent-business-light); }
+    .dash-card.business .dc-ic .material-icons { color: var(--accent-business); }
+    .dash-card.business .btn-pill { background: var(--accent-business); }
+
+    .dash-card.exercises .dc-ic { background: var(--accent-exercises-light); }
+    .dash-card.exercises .dc-ic .material-icons { color: var(--accent-exercises); }
+    .dash-card.exercises .btn-pill { background: var(--accent-exercises); }
+
+    /* Section Eyebrow Colors */
+    .section.frontend .section-eyebrow { color: var(--accent-frontend); }
+    .section.backend .section-eyebrow { color: var(--accent-backend); }
+    .section.ai .section-eyebrow { color: var(--accent-ai); }
+    .section.design .section-eyebrow { color: var(--accent-design); }
+    .section.business .section-eyebrow { color: var(--accent-business); }
+    .section.exercises .section-eyebrow { color: var(--accent-exercises); }
+  </style>
+</head>
+<body class="apple-layout">
+  <!-- Apple Global Navigation -->
+  <nav class="apple-gnav">
+    <div class="apple-gnav-inner">
+      <a href="index.html" class="apple-gnav-logo">
+        <div class="logo-dot">T</div>
+        Tutorial
+      </a>
+      <div class="apple-gnav-links">
+        <a href="index.html" class="active">ダッシュボード</a>
+        <a href="index.html#frontend">フロントエンド</a>
+        <a href="index.html#backend">バックエンド</a>
+        <a href="index.html#ai">AI・自動化</a>
+        <a href="index.html#design">デザイン</a>
+        <a href="index.html#business">ビジネス</a>
+        <a href="index.html#exercises">総合演習</a>
+      </div>
+      <button class="hamburger-btn" onclick="toggleMobileMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html" class="active">ダッシュボード</a>
+    <a href="index.html#frontend">フロントエンド</a>
+    <a href="index.html#backend">バックエンド</a>
+    <a href="index.html#ai">AI・自動化</a>
+    <a href="index.html#design">デザイン</a>
+    <a href="index.html#business">ビジネス</a>
+    <a href="index.html#exercises">総合演習</a>
+  </div>
+
+  <!-- Sub Navigation -->
+  <nav class="apple-subnav">
+    <div class="apple-subnav-inner">
+      <div class="apple-subnav-title">
+        <span class="material-icons subnav-icon">dashboard</span>
+        ダッシュボード
+      </div>
+    </div>
+  </nav>
+
+  <!-- Frontend Section -->
+  <section class="section alt frontend" id="frontend">
+    <div class="section-inner">
+      <div class="section-header">
+        <p class="section-eyebrow">FRONTEND</p>
+        <h2>フロントエンド基礎</h2>
+        <p class="lead">Webサイト制作の基礎から、インタラクティブなUI開発まで。</p>
+      </div>
+      <div class="dash-grid">
+        <a href="html/index.html" class="dash-card frontend">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">language</span></div>
+            <div>
+              <div class="dc-title">HTML/CSS入門</div>
+              <div class="dc-sub">Web制作の基礎</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">Webサイト制作の基礎からレスポンシブデザイン、Tailwind CSSまで学べます。</p>
+            <div class="dc-tags">
+              <span>HTML</span>
+              <span>CSS</span>
+              <span>レイアウト</span>
+              <span>Tailwind</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全9章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+        <a href="javascript/index.html" class="dash-card frontend">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">bolt</span></div>
+            <div>
+              <div class="dc-title">JavaScript入門</div>
+              <div class="dc-sub">Webプログラミング</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">DOM操作、イベント処理、非同期処理など、フロントエンド開発のJavaScriptを学びます。</p>
+            <div class="dc-tags">
+              <span>基本文法</span>
+              <span>DOM</span>
+              <span>イベント</span>
+              <span>非同期</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全12章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Backend Section -->
+  <section class="section backend" id="backend">
+    <div class="section-inner">
+      <div class="section-header">
+        <p class="section-eyebrow">BACKEND</p>
+        <h2>バックエンド開発</h2>
+        <p class="lead">Javaの基礎からSpring Framework、システム開発まで。</p>
+      </div>
+      <div class="dash-grid">
+        <a href="java/index.html" class="dash-card backend">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">local_cafe</span></div>
+            <div>
+              <div class="dc-title">Java基礎</div>
+              <div class="dc-sub">プログラミング入門</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">Javaの基礎からオブジェクト指向、例外処理まで学びます。</p>
+            <div class="dc-tags">
+              <span>基本文法</span>
+              <span>クラス</span>
+              <span>継承</span>
+              <span>例外処理</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全7章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+        <a href="spring/index.html" class="dash-card backend">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">eco</span></div>
+            <div>
+              <div class="dc-title">Spring基礎</div>
+              <div class="dc-sub">Webアプリケーション</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">Spring FrameworkでのWebアプリケーション開発を体系的に学べます。</p>
+            <div class="dc-tags">
+              <span>DI/AOP</span>
+              <span>MVC</span>
+              <span>MyBatis</span>
+              <span>Security</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全15章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+        <a href="system-dev/index.html" class="dash-card backend">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">engineering</span></div>
+            <div>
+              <div class="dc-title">システム開発概論</div>
+              <div class="dc-sub">開発の基礎知識</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">システム開発の全体像、要件定義から運用まで体系的に学べます。</p>
+            <div class="dc-tags">
+              <span>要件定義</span>
+              <span>開発手法</span>
+              <span>品質</span>
+              <span>運用</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全10章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Section -->
+  <section class="section alt ai" id="ai">
+    <div class="section-inner">
+      <div class="section-header">
+        <p class="section-eyebrow">AI & AUTOMATION</p>
+        <h2>AI・自動化</h2>
+        <p class="lead">AIを活用した開発手法と、業務効率化のスキル。</p>
+      </div>
+      <div class="dash-grid">
+        <a href="promptpg-step/index.html" class="dash-card ai">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">stairs</span></div>
+            <div>
+              <div class="dc-title">プロンプトPG ステップアップ版</div>
+              <div class="dc-sub">段階的学習</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">AIを活用したプログラミング手法で、段階的にSpring Bootアプリを開発します。</p>
+            <div class="dc-tags">
+              <span>Spring Boot</span>
+              <span>CRUD</span>
+              <span>DB</span>
+              <span>段階学習</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全8章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+        <a href="promptpg-all/index.html" class="dash-card ai">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">view_compact</span></div>
+            <div>
+              <div class="dc-title">プロンプトPG オールインワン版</div>
+              <div class="dc-sub">一括学習</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">ToDoアプリの全コードを1ページで確認。コピー＆ペーストで素早く実装できます。</p>
+            <div class="dc-tags">
+              <span>Spring Boot</span>
+              <span>全コード</span>
+              <span>コピペ実装</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">1ページ</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+        <a href="promptpg-function/01_extends-todo.html" class="dash-card ai">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">build</span></div>
+            <div>
+              <div class="dc-title">プロンプトPG 機能追加</div>
+              <div class="dc-sub">応用学習</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">完成したToDoアプリに新機能を追加。プロンプトを活用した機能拡張を学びます。</p>
+            <div class="dc-tags">
+              <span>機能拡張</span>
+              <span>バリデーション</span>
+              <span>認証</span>
+              <span>API</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全25章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+        <a href="chatgpt/index.html" class="dash-card ai">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">forum</span></div>
+            <div>
+              <div class="dc-title">ChatGPT活用</div>
+              <div class="dc-sub">AI活用スキル</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">AIの基礎から実践的な活用まで、ChatGPTを使いこなすスキルを学びます。</p>
+            <div class="dc-tags">
+              <span>AI基礎</span>
+              <span>プロンプト</span>
+              <span>FW</span>
+              <span>検証</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全9章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Design Section -->
+  <section class="section design" id="design">
+    <div class="section-inner">
+      <div class="section-header">
+        <p class="section-eyebrow">DESIGN & UX</p>
+        <h2>デザイン・UX</h2>
+        <p class="lead">美しく使いやすいインターフェースを設計する。</p>
+      </div>
+      <div class="dash-grid">
+        <a href="uiux/index.html" class="dash-card design">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">palette</span></div>
+            <div>
+              <div class="dc-title">UI/UX概論</div>
+              <div class="dc-sub">デザインの基礎</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">UI/UXの基礎、デザイン原則、色彩理論まで体系的に学びます。</p>
+            <div class="dc-tags">
+              <span>UI/UX</span>
+              <span>デザイン原則</span>
+              <span>タイポ</span>
+              <span>色彩</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全10章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+        <a href="figma/index.html" class="dash-card design">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">edit</span></div>
+            <div>
+              <div class="dc-title">Figma入門</div>
+              <div class="dc-sub">デザインツール</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">Figmaの基本からコンポーネント、プロトタイプまで実践的に学べます。</p>
+            <div class="dc-tags">
+              <span>基本操作</span>
+              <span>コンポ</span>
+              <span>レイアウト</span>
+              <span>プロト</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全15章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Business Section -->
+  <section class="section alt business" id="business">
+    <div class="section-inner">
+      <div class="section-header">
+        <p class="section-eyebrow">BUSINESS SKILLS</p>
+        <h2>ビジネススキル</h2>
+        <p class="lead">セキュリティ、分析、マーケティングの実践知識。</p>
+      </div>
+      <div class="dash-grid">
+        <a href="security/index.html" class="dash-card business">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">lock</span></div>
+            <div>
+              <div class="dc-title">情報セキュリティ</div>
+              <div class="dc-sub">ITの必須知識</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">情報セキュリティの基礎からISMS、個人情報保護法まで学べます。</p>
+            <div class="dc-tags">
+              <span>CIA</span>
+              <span>個人情報</span>
+              <span>ISMS</span>
+              <span>MFA</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全5章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+        <a href="ga4/index.html" class="dash-card business">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">analytics</span></div>
+            <div>
+              <div class="dc-title">GA4入門</div>
+              <div class="dc-sub">アクセス解析</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">GA4の基礎から探索レポートまで、Webサイトの分析スキルを学べます。</p>
+            <div class="dc-tags">
+              <span>基本</span>
+              <span>レポート</span>
+              <span>集客</span>
+              <span>探索</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全6章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+        <a href="marketing/index.html" class="dash-card business">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">campaign</span></div>
+            <div>
+              <div class="dc-title">マーケティング入門</div>
+              <div class="dc-sub">Webマーケティング</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">マーケティングの基礎からWebマーケティング実践まで学べます。</p>
+            <div class="dc-tags">
+              <span>3C/SWOT</span>
+              <span>STP/4P</span>
+              <span>ペルソナ</span>
+              <span>LP</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全13章</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Exercises Section -->
+  <section class="section exercises" id="exercises">
+    <div class="section-inner">
+      <div class="section-header">
+        <p class="section-eyebrow">COMPREHENSIVE EXERCISES</p>
+        <h2>総合演習</h2>
+        <p class="lead">全授業の集大成。就職活動用ポートフォリオを制作する。</p>
+      </div>
+      <div class="dash-grid">
+        <a href="web-exercises-1/index.html" class="dash-card exercises">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">rocket_launch</span></div>
+            <div>
+              <div class="dc-title">WEB総合制作演習 I</div>
+              <div class="dc-sub">前半16日間</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">企画・設計からフロントエンド実装まで。ポートフォリオサイトをGitHub Pagesで公開します。</p>
+            <div class="dc-tags">
+              <span>企画</span>
+              <span>設計</span>
+              <span>HTML/CSS/JS</span>
+              <span>GitHub</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全12ステップ</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+        <a href="web-exercises-2/index.html" class="dash-card exercises">
+          <div class="dc-bar"></div>
+          <div class="dc-head">
+            <div class="dc-ic"><span class="material-icons">terminal</span></div>
+            <div>
+              <div class="dc-title">WEB総合制作演習 II</div>
+              <div class="dc-sub">後半16日間</div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <p class="dc-desc">Spring Bootによるサーバーサイド開発。テスト・ドキュメント整備を経て最終提出します。</p>
+            <div class="dc-tags">
+              <span>Spring Boot</span>
+              <span>CRUD</span>
+              <span>認証</span>
+              <span>テスト</span>
+            </div>
+            <div class="dc-foot">
+              <span class="dc-ch">全13ステップ</span>
+              <span class="btn-pill">学習を始める</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Apple Footer -->
+  <div class="apple-footer-top">
+    <div class="apple-footer-top-inner">
+      本チュートリアルは訓練校の教材として作成されています。各コースは実践的なスキル習得を目的とし、現場で活用できる知識を体系的に学べるよう設計されています。
+    </div>
+  </div>
+
+  <footer class="apple-footer-main">
+    <div class="apple-footer-main-inner">
+      <div class="apple-footer-col">
+        <h4>フロントエンド</h4>
+        <a href="html/index.html">HTML/CSS入門</a>
+        <a href="javascript/index.html">JavaScript入門</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>バックエンド</h4>
+        <a href="java/index.html">Java基礎</a>
+        <a href="spring/index.html">Spring基礎</a>
+        <a href="system-dev/index.html">システム開発概論</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>AI・自動化</h4>
+        <a href="promptpg-step/index.html">プロンプトPG ステップアップ版</a>
+        <a href="promptpg-all/index.html">プロンプトPG オールインワン版</a>
+        <a href="promptpg-function/01_extends-todo.html">プロンプトPG 機能追加</a>
+        <a href="chatgpt/index.html">ChatGPT活用</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>デザイン</h4>
+        <a href="uiux/index.html">UI/UX概論</a>
+        <a href="figma/index.html">Figma入門</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>ビジネス</h4>
+        <a href="security/index.html">情報セキュリティ</a>
+        <a href="ga4/index.html">GA4入門</a>
+        <a href="marketing/index.html">マーケティング入門</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>総合演習</h4>
+        <a href="web-exercises-1/index.html">WEB総合制作演習 I</a>
+        <a href="web-exercises-2/index.html">WEB総合制作演習 II</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="apple-footer-bottom">
+    <div class="apple-footer-bottom-inner">
+      <span class="apple-footer-copy">Copyright &copy; 2025 Tutorial Dashboard. All rights reserved.</span>
+      <div class="apple-footer-legal">
+        <a href="#">プライバシーポリシー</a>
+        <a href="#">利用規約</a>
+        <a href="#">サイトマップ</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMobileMenu() {
+      const btn = document.querySelector('.hamburger-btn');
+      const menu = document.getElementById('mobileMenu');
+      btn.classList.toggle('active');
+      menu.classList.toggle('active');
+    }
+
+    // Close menu when clicking a link
+    document.querySelectorAll('.mobile-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelector('.hamburger-btn').classList.remove('active');
+        document.getElementById('mobileMenu').classList.remove('active');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 7: 環境構成（本番／検証／開発） - システム開発概論</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <style>
+    :root {
+      --primary: #34C759;
+      --primary-dark: #2AA648;
+      --primary-light: #F0FDF4;
+      --primary-lighter: #BBF7D0;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-system-dev.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Chapter</div>
+      <div class="chapter-number">7</div>
+      <h1 class="chapter-title">環境構成（本番／検証／開発）</h1>
+      <p class="chapter-subtitle">環境を分けることの意味とデプロイの流れを理解する</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">7-1</span>この章のねらい</li>
+        <li class="toc-item"><span class="toc-number">7-2</span>なぜ環境を分けるのか</li>
+        <li class="toc-item"><span class="toc-number">7-3</span>本番環境（Production）の役割</li>
+        <li class="toc-item"><span class="toc-number">7-4</span>検証環境・テスト環境の役割</li>
+        <li class="toc-item"><span class="toc-number">7-5</span>開発環境の役割</li>
+        <li class="toc-item"><span class="toc-number">7-6</span>その他の環境</li>
+        <li class="toc-item"><span class="toc-number">7-7</span>環境ごとの構成要素</li>
+        <li class="toc-item"><span class="toc-number">7-8</span>設定の分離：環境変数と設定ファイル</li>
+        <li class="toc-item"><span class="toc-number">7-9</span>デプロイの流れ</li>
+        <li class="toc-item"><span class="toc-number">7-10</span>環境管理のベストプラクティス</li>
+        <li class="toc-item"><span class="toc-number">7-11</span>まとめ</li>
+      </ul>
+    </nav>
+
+    <!-- Section 7-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-1</span>
+        <h2 class="section-title">この章のねらい</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この章では、システム開発における<strong>環境構成</strong>について学びます。本番環境、検証環境、開発環境など、複数の環境を分けることの意味、それぞれの役割、環境ごとの設定の分離方法、デプロイの流れを理解することを目標とします。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>この章を読み終わる頃の目標</h3>
+        <ul class="custom-list">
+          <li>なぜ複数の環境を分けるのか、その理由を説明できる</li>
+          <li>本番環境、検証環境、開発環境それぞれの役割と特徴を理解している</li>
+          <li>環境ごとの設定の分離方法（環境変数、設定ファイル）を理解している</li>
+          <li>開発からリリースまでのデプロイの流れをイメージできる</li>
+        </ul>
+      </div>
+
+      <div class="warning-box">
+        <div class="warning-box-title">重要なポイント</div>
+        <div class="warning-box-content">
+          <p>環境の分離は、システムの安定性とセキュリティを守るための基本です。「開発環境で動いたから本番でも動くはず」という考え方は危険です。環境の違いを理解し、適切に管理することが重要です。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-2</span>
+        <h2 class="section-title">なぜ環境を分けるのか</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　本番データを守る</h3>
+        <p>本番環境には、顧客の個人情報、注文データ、売上データなど、重要なデータが保存されています。開発中の不完全なコードを本番環境で動かすと、</p>
+        <ul class="custom-list">
+          <li>データが破壊される</li>
+          <li>データが漏洩する</li>
+          <li>サービスが停止する</li>
+        </ul>
+        <p>といった深刻な問題が発生するリスクがあります。環境を分けることで、開発やテストの影響が本番データに及ばないようにします。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　品質を確保する</h3>
+        <p>本番環境にリリースする前に、しっかりとテストを行う必要があります。テスト専用の環境があれば、</p>
+        <ul class="custom-list">
+          <li>様々なテストケースを試せる</li>
+          <li>本番に影響を与えずに検証できる</li>
+          <li>問題があっても本番には影響しない</li>
+        </ul>
+        <p>という安心感を持ってテストできます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>3　開発効率を上げる</h3>
+        <p>開発者が自由に使える環境があれば、</p>
+        <ul class="custom-list">
+          <li>試行錯誤しながら開発できる</li>
+          <li>失敗しても他の人に影響しない</li>
+          <li>新しい技術や手法を試せる</li>
+        </ul>
+        <p>という形で、開発効率が向上します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>4　一般的な環境構成</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span>環境の流れ（イメージ）</span>
+          </div>
+          <pre><code>開発環境（Development）
+    ↓
+検証環境（Staging / Test）
+    ↓
+本番環境（Production）</code></pre>
+        </div>
+        <p>コードは、開発環境 → 検証環境 → 本番環境 の順に移動していきます。各環境でテストや確認を行い、問題がなければ次の環境へ進みます。</p>
+      </div>
+    </section>
+
+    <!-- Section 7-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-3</span>
+        <h2 class="section-title">本番環境（Production）の役割</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　本番環境とは</h3>
+        <p>本番環境（Production Environment、略して「本番」「Prod」）は、実際のユーザーがアクセスし、実際のデータを扱う環境です。</p>
+
+        <div class="highlight-box">
+          <p><strong>本番環境 = ビジネスが動いている環境</strong></p>
+        </div>
+
+        <ul class="custom-list">
+          <li>実際の顧客がアクセスする</li>
+          <li>実際の取引が行われる</li>
+          <li>実際のお金が動く</li>
+          <li>問題が起きると、ビジネスに直接影響する</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>2　本番環境の特徴</h3>
+        <ul class="custom-list">
+          <li><strong>高い可用性</strong>：24時間365日稼働し続ける必要がある（場合が多い）</li>
+          <li><strong>高い信頼性</strong>：障害が起きにくく、起きても復旧が早い</li>
+          <li><strong>高いセキュリティ</strong>：アクセス制限が厳しく、監査ログが取られる</li>
+          <li><strong>高い性能</strong>：実際の負荷に耐えられる性能</li>
+          <li><strong>本物のデータ</strong>：顧客の個人情報など、重要なデータ</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　本番環境へのアクセス制限</h3>
+        <p>本番環境は、厳格にアクセスを制限する必要があります。</p>
+        <ul class="custom-list">
+          <li>アクセスできる人を限定する</li>
+          <li>アクセス時に認証・認可を厳密に行う</li>
+          <li>アクセスログを記録する</li>
+          <li>変更作業は承認プロセスを経て行う</li>
+        </ul>
+
+        <div class="warning-box">
+          <div class="warning-box-title">本番環境の鉄則</div>
+          <div class="warning-box-content">
+            <ul class="custom-list">
+              <li>本番環境で「試しに」実行しない</li>
+              <li>本番環境で直接コードを編集しない</li>
+              <li>本番データを開発・テストに使わない（匿名化が必要）</li>
+              <li>本番環境への変更は、必ず検証環境でテストしてから</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-4</span>
+        <h2 class="section-title">検証環境・テスト環境の役割</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　検証環境とは</h3>
+        <p>検証環境（Staging Environment、Test Environment）は、本番環境にリリースする前に、動作を確認するための環境です。</p>
+        <ul class="custom-list">
+          <li><strong>ステージング環境</strong>：本番環境に限りなく近い構成で、最終確認を行う</li>
+          <li><strong>テスト環境</strong>：結合テストやシステムテストを行う</li>
+          <li><strong>QA環境</strong>：品質保証チームがテストを行う</li>
+        </ul>
+        <p>会社やプロジェクトによって、名称や役割分担は異なります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　検証環境の特徴</h3>
+        <ul class="custom-list">
+          <li><strong>本番に近い構成</strong>：本番環境と同じ（または近い）サーバー構成、ミドルウェア、設定</li>
+          <li><strong>テスト用データ</strong>：本番データではなく、テスト用に作成されたデータ</li>
+          <li><strong>アクセス制限</strong>：関係者のみアクセス可能</li>
+          <li><strong>自由なテスト</strong>：様々なテストシナリオを試せる</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　検証環境で行うこと</h3>
+        <ul class="custom-list">
+          <li>結合テスト・システムテストの実施</li>
+          <li>リリース前の最終動作確認</li>
+          <li>本番相当の負荷をかけた性能テスト</li>
+          <li>リリース手順のリハーサル</li>
+          <li>障害発生時の復旧手順の確認</li>
+        </ul>
+
+        <div class="info-box">
+          <div class="info-box-title">本番と検証の差異に注意</div>
+          <div class="info-box-content">
+            <p>「検証環境で動いたのに、本番で動かない」というトラブルはよく発生します。原因としては、</p>
+            <ul class="custom-list">
+              <li>環境設定の違い</li>
+              <li>データ量の違い</li>
+              <li>ネットワーク構成の違い</li>
+              <li>外部連携先の違い</li>
+            </ul>
+            <p>などがあります。検証環境は、できるだけ本番に近づけることが重要です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-5</span>
+        <h2 class="section-title">開発環境の役割</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　開発環境とは</h3>
+        <p>開発環境（Development Environment、略して「Dev」）は、エンジニアが日常的にコーディングやデバッグを行う環境です。</p>
+        <ul class="custom-list">
+          <li><strong>ローカル開発環境</strong>：各エンジニアのPC上に構築された環境</li>
+          <li><strong>共有開発環境</strong>：チームで共有する開発サーバー</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>2　開発環境の特徴</h3>
+        <ul class="custom-list">
+          <li><strong>自由度が高い</strong>：試行錯誤、実験が自由にできる</li>
+          <li><strong>簡易な構成</strong>：本番ほど厳密な構成は不要</li>
+          <li><strong>ダミーデータ</strong>：テスト用のサンプルデータを使用</li>
+          <li><strong>デバッグ機能</strong>：詳細なログ出力、デバッガの使用が可能</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　ローカル開発環境の構築</h3>
+        <p>最近は、以下のようなツールを使ってローカル開発環境を構築することが一般的です。</p>
+        <ul class="custom-list">
+          <li><strong>Docker</strong>：コンテナ技術を使って、環境を簡単に構築・再現できる</li>
+          <li><strong>仮想マシン（VM）</strong>：VirtualBox、VMwareなどで仮想環境を構築</li>
+          <li><strong>クラウド開発環境</strong>：GitHub Codespaces、AWS Cloud9など</li>
+        </ul>
+
+        <div class="info-box">
+          <div class="info-box-title">Dockerのメリット</div>
+          <div class="info-box-content">
+            <ul class="custom-list">
+              <li>「自分の環境では動くのに」問題を減らせる</li>
+              <li>環境構築の手順をコード化（Infrastructure as Code）できる</li>
+              <li>新しいメンバーの環境構築が簡単</li>
+              <li>本番環境と同じ構成を再現しやすい</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-6 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-6</span>
+        <h2 class="section-title">その他の環境</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　サンドボックス環境</h3>
+        <p>実験や検証のために、本番とは完全に分離された環境です。新しい技術の検証、セキュリティテスト、負荷テストなどに使用します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　デモ環境</h3>
+        <p>営業活動やユーザー向けのデモンストレーションに使用する環境です。見せ方に最適化されたデータが入っていることが多いです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>3　DR環境（災害復旧環境）</h3>
+        <p>本番環境に障害が発生した場合に切り替えるための環境です。別のデータセンターやリージョンに用意することが多いです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>4　環境の数と管理</h3>
+        <p>環境が多すぎると管理コストが増えます。プロジェクトの規模や要件に応じて、適切な数の環境を設計することが重要です。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>環境</th>
+                <th>主な用途</th>
+                <th>データ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>本番</strong></td>
+                <td>実際のサービス提供</td>
+                <td>本物のデータ</td>
+              </tr>
+              <tr>
+                <td><strong>ステージング</strong></td>
+                <td>リリース前の最終確認</td>
+                <td>テストデータ</td>
+              </tr>
+              <tr>
+                <td><strong>テスト</strong></td>
+                <td>結合・システムテスト</td>
+                <td>テストデータ</td>
+              </tr>
+              <tr>
+                <td><strong>開発</strong></td>
+                <td>日常的な開発作業</td>
+                <td>ダミーデータ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-7 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-7</span>
+        <h2 class="section-title">環境ごとの構成要素</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　環境を構成する要素</h3>
+        <p>システムの環境は、以下のような要素で構成されます。</p>
+        <ul class="custom-list">
+          <li><strong>サーバー</strong>：アプリケーションサーバー、Webサーバー、DBサーバーなど</li>
+          <li><strong>ミドルウェア</strong>：データベース、キャッシュ、メッセージキューなど</li>
+          <li><strong>ネットワーク</strong>：ファイアウォール、ロードバランサー、DNS</li>
+          <li><strong>アプリケーション</strong>：デプロイされたプログラム</li>
+          <li><strong>データ</strong>：データベース内のデータ</li>
+          <li><strong>設定</strong>：接続先URL、認証情報、各種パラメータ</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>2　環境による違い</h3>
+        <p>環境によって、同じ構成要素でも設定が異なります。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>開発環境</th>
+                <th>本番環境</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>DB接続先</td>
+                <td>localhost:5432</td>
+                <td>prod-db.example.com:5432</td>
+              </tr>
+              <tr>
+                <td>ログレベル</td>
+                <td>DEBUG</td>
+                <td>INFO または WARN</td>
+              </tr>
+              <tr>
+                <td>外部API</td>
+                <td>サンドボックスAPI</td>
+                <td>本番API</td>
+              </tr>
+              <tr>
+                <td>メール送信</td>
+                <td>無効化 or テスト用</td>
+                <td>本物のメール送信</td>
+              </tr>
+              <tr>
+                <td>セキュリティ</td>
+                <td>緩め</td>
+                <td>厳格</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-8 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-8</span>
+        <h2 class="section-title">設定の分離：環境変数と設定ファイル</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　なぜ設定を分離するのか</h3>
+        <p>環境ごとに設定が異なるため、設定値をコードにハードコードしてしまうと、</p>
+        <ul class="custom-list">
+          <li>環境を切り替えるたびにコードを書き換える必要がある</li>
+          <li>パスワードなどの機密情報がコードに含まれてしまう</li>
+          <li>設定ミスによる本番障害のリスクが高まる</li>
+        </ul>
+        <p>といった問題が発生します。設定をコードから分離することで、同じコードを異なる環境で動かせるようになります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　環境変数</h3>
+        <p>環境変数（Environment Variables）は、OSやコンテナレベルで設定される変数です。アプリケーションは、環境変数を読み取って設定を取得します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>環境変数の例</span>
+          </div>
+          <pre><code># 環境変数の設定
+export DATABASE_URL=postgresql://user:pass@localhost:5432/mydb
+export API_KEY=your-api-key-here
+export LOG_LEVEL=DEBUG
+
+# アプリケーションから読み取り
+String dbUrl = System.getenv("DATABASE_URL");
+String apiKey = System.getenv("API_KEY");</code></pre>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">環境変数のメリット</div>
+          <div class="info-box-content">
+            <ul class="custom-list">
+              <li>コードに設定を含めなくて良い</li>
+              <li>環境ごとに異なる値を設定できる</li>
+              <li>機密情報（パスワード、APIキー）をコードから分離できる</li>
+              <li>12-Factor Appの原則に沿っている</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>3　設定ファイル</h3>
+        <p>環境ごとの設定ファイルを用意し、起動時にどのファイルを使うかを指定する方法もあります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>設定ファイルの例（Spring Boot）</span>
+          </div>
+          <pre><code>application.properties        # 共通設定
+application-dev.properties    # 開発環境用
+application-stg.properties    # ステージング環境用
+application-prod.properties   # 本番環境用
+
+# 起動時にプロファイルを指定
+java -jar app.jar --spring.profiles.active=prod</code></pre>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>4　機密情報の管理</h3>
+        <p>パスワードやAPIキーなどの機密情報は、特に慎重に管理する必要があります。</p>
+        <ul class="custom-list">
+          <li><strong>Gitにコミットしない</strong>：.gitignoreに設定ファイルを追加</li>
+          <li><strong>シークレット管理サービス</strong>：AWS Secrets Manager、HashiCorp Vaultなど</li>
+          <li><strong>暗号化</strong>：設定ファイルを暗号化して管理</li>
+        </ul>
+
+        <div class="warning-box">
+          <div class="warning-box-title">よくある事故</div>
+          <div class="warning-box-content">
+            <p>パスワードやAPIキーを含む設定ファイルをGitHubにプッシュしてしまい、機密情報が漏洩する事故が頻繁に発生しています。一度プッシュしてしまうと、履歴からの完全削除は困難です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-9 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-9</span>
+        <h2 class="section-title">デプロイの流れ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　デプロイとは</h3>
+        <p>デプロイ（Deploy）とは、開発したアプリケーションを、サーバー上で動作する状態にすることです。「リリース」「展開」とも呼ばれます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　一般的なデプロイの流れ</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span>デプロイの流れ</span>
+          </div>
+          <pre><code>1. コードをコミット・プッシュ
+       ↓
+2. CIでビルド・テスト
+       ↓
+3. 開発環境にデプロイ・動作確認
+       ↓
+4. 検証環境にデプロイ・テスト
+       ↓
+5. 本番環境にデプロイ・動作確認</code></pre>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>3　CI/CD</h3>
+        <p>CI/CD（Continuous Integration / Continuous Delivery または Deployment）は、コードの変更から本番デプロイまでを自動化する仕組みです。</p>
+
+        <div class="info-box">
+          <div class="info-box-title">CI（継続的インテグレーション）</div>
+          <div class="info-box-content">
+            <p>コードがプッシュされるたびに、自動でビルド・テストを実行する。問題を早期に発見できる。</p>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">CD（継続的デリバリー/デプロイ）</div>
+          <div class="info-box-content">
+            <p>CIが成功したら、自動で（または承認後に）環境にデプロイする。リリースの頻度を上げ、品質を安定させる。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>4　本番デプロイの注意点</h3>
+        <ul class="custom-list">
+          <li><strong>バックアップ</strong>：デプロイ前にデータベースのバックアップを取る</li>
+          <li><strong>切り戻し計画</strong>：問題発生時に旧バージョンに戻す手順を用意</li>
+          <li><strong>段階的デプロイ</strong>：一部のサーバーから順に展開（カナリアリリース、ブルーグリーンデプロイ）</li>
+          <li><strong>監視</strong>：デプロイ後の監視を強化し、問題を早期に検知</li>
+          <li><strong>メンテナンス時間</strong>：必要に応じてメンテナンス時間を設定</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>5　デプロイ方式</h3>
+
+        <h4>ローリングデプロイ</h4>
+        <p>サーバーを1台ずつ順番に更新する方式。サービスを停止せずに更新できるが、新旧バージョンが混在する時間がある。</p>
+
+        <h4>ブルーグリーンデプロイ</h4>
+        <p>本番環境を2つ（Blue/Green）用意し、新バージョンを非稼働系にデプロイ後、トラフィックを切り替える方式。切り戻しが容易。</p>
+
+        <h4>カナリアリリース</h4>
+        <p>新バージョンを一部のユーザーにのみ公開し、問題がなければ徐々に範囲を広げる方式。リスクを最小化できる。</p>
+      </div>
+    </section>
+
+    <!-- Section 7-10 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-10</span>
+        <h2 class="section-title">環境管理のベストプラクティス</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　Infrastructure as Code（IaC）</h3>
+        <p>環境の構成をコードで定義し、バージョン管理する考え方です。</p>
+        <ul class="custom-list">
+          <li>Terraform、CloudFormation、Ansible、Dockerなど</li>
+          <li>環境の再現性が高まる</li>
+          <li>変更履歴が追跡できる</li>
+          <li>レビューが可能</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>2　環境の一貫性を保つ</h3>
+        <ul class="custom-list">
+          <li>開発・検証・本番で、できるだけ同じ構成を使う</li>
+          <li>ミドルウェアのバージョンを揃える</li>
+          <li>Dockerを使って環境を統一する</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　本番データの取り扱い</h3>
+        <ul class="custom-list">
+          <li>本番データを開発・テストに使う場合は、必ず匿名化・マスキングする</li>
+          <li>個人情報を含むデータは特に注意</li>
+          <li>法令（個人情報保護法など）を遵守する</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　アクセス権限の管理</h3>
+        <ul class="custom-list">
+          <li>環境ごとにアクセスできる人を限定する</li>
+          <li>本番環境へのアクセスは特に厳格に管理</li>
+          <li>最小権限の原則（必要最低限の権限のみ付与）</li>
+          <li>アクセスログを記録・監査する</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 7-11 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-11</span>
+        <h2 class="section-title">まとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul class="custom-list">
+          <li>環境を分けることで、本番データの保護、品質の確保、開発効率の向上が実現できる。</li>
+          <li>本番環境は実際のユーザーがアクセスする環境であり、高い可用性、信頼性、セキュリティが求められる。</li>
+          <li>検証環境は本番環境に近い構成で、リリース前の最終確認やテストを行う。</li>
+          <li>開発環境はエンジニアが日常的に開発作業を行う環境で、自由度が高い。</li>
+          <li>環境ごとに設定が異なるため、環境変数や設定ファイルを使って設定をコードから分離する。</li>
+          <li>機密情報（パスワード、APIキー）は、Gitにコミットしない、シークレット管理サービスを使うなど、慎重に管理する。</li>
+          <li>デプロイは、開発環境→検証環境→本番環境の順に行い、各段階でテストや確認を行う。</li>
+          <li>CI/CDを導入することで、ビルド・テスト・デプロイを自動化し、品質と効率を向上できる。</li>
+          <li>本番デプロイでは、バックアップ、切り戻し計画、段階的デプロイ、監視が重要である。</li>
+          <li>Infrastructure as Code（IaC）で環境をコード化し、一貫性と再現性を高めることがベストプラクティスである。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ページナビゲーション -->
+    <nav class="page-nav">
+      <a href="6sd-wbs-meetings.html" class="page-nav-link prev">
+        <span class="page-nav-label">前の章</span>
+        <span class="page-nav-title">WBSの考え方とミーティングの種類・役割</span>
+      </a>
+      <a href="8sd-security.html" class="page-nav-link next">
+        <span class="page-nav-label">次の章</span>
+        <span class="page-nav-title">情報セキュリティの基礎</span>
+      </a>
+    </nav>
+  </div>
+
+  <footer class="footer">
+    <p>システム開発概論 - 職業訓練校教材</p>
+  </footer>
+
+  <script src="../shared/demo.js"></script>
+</body>
+</html>
