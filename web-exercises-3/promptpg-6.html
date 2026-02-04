@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 06: View層（一覧・登録） - WEB総合制作演習 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
+    }
+    .nav-category-links { display: none; }
+    .prompt-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #667eea; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+    .file-structure { background: #1e293b; border-radius: 12px; padding: 20px; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; }
+    .file-structure pre { margin: 0; }
+    .prompt-label { display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-exercises-3.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Step</div>
+      <div class="chapter-number">06</div>
+      <h1 class="chapter-title">View層（一覧・登録）</h1>
+      <p class="chapter-subtitle">Thymeleafテンプレートで一覧画面と登録フォームを実装</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">Phase 1: 基本CRUD実装</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">01</span><a href="promptpg-1.html">プロジェクト作成</a></li>
+        <li class="toc-item"><span class="toc-number">02</span><a href="promptpg-2.html">データベース設計</a></li>
+        <li class="toc-item"><span class="toc-number">03</span><a href="promptpg-3.html">Entity作成</a></li>
+        <li class="toc-item"><span class="toc-number">04</span><a href="promptpg-4.html">Repository作成</a></li>
+        <li class="toc-item"><span class="toc-number">05</span><a href="promptpg-5.html">一覧表示</a></li>
+        <li class="toc-item"><span class="toc-number">06</span><a href="promptpg-6.html" style="color: var(--primary); font-weight: 600;">新規作成</a></li>
+        <li class="toc-item"><span class="toc-number">07</span><a href="promptpg-7.html">編集・更新</a></li>
+        <li class="toc-item"><span class="toc-number">08</span><a href="promptpg-8.html">削除機能</a></li>
+      </ul>
+    </nav>
+
+    <!-- Section 06-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 06-1</span>
+        <h2 class="section-title">工程概要</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>Thymeleafテンプレートで<strong>一覧画面と登録フォーム</strong>を実装します。ToDoの表示と新規登録機能を作成します。</p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: var(--primary); color: white;">テンプレートエンジン</div>
+          <p>Thymeleaf</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #007AFF; color: white;">構文</div>
+          <p>th:each, th:text</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #34C759; color: white;">フォーム</div>
+          <p>th:action, th:object</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #FF9F0A; color: white;">レイアウト</div>
+          <p>Bootstrap 5</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>このステップで行うこと</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: var(--primary);">
+              <span class="material-icons" style="color: white;">list</span>
+            </div>
+            <div class="feature-content">
+              <h4>一覧画面作成</h4>
+              <p>ToDoリストの表示（th:each でループ）</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">edit_note</span>
+            </div>
+            <div class="feature-content">
+              <h4>フォーム作成</h4>
+              <p>新規登録フォーム（th:object でバインド）</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">dashboard</span>
+            </div>
+            <div class="feature-content">
+              <h4>レイアウト共通化</h4>
+              <p>ヘッダー・フッターの共通テンプレート</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 06-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 06-2</span>
+        <h2 class="section-title">成果物</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>このステップで作成するファイルの一覧です。</p>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ファイル</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>list.html</code></td>
+              <td>ToDo一覧画面</td>
+            </tr>
+            <tr>
+              <td><code>form.html</code></td>
+              <td>新規登録・編集フォーム</td>
+            </tr>
+            <tr>
+              <td><code>layout.html</code></td>
+              <td>共通レイアウト（任意）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <h4>ファイル構成</h4>
+        <div class="file-structure">
+<pre>src/main/resources/templates/
+├── layout.html               ← 共通レイアウト
+├── list.html                 ← ToDo一覧画面
+└── form.html                 ← 登録・編集フォーム</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 06-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 06-3</span>
+        <h2 class="section-title">生成プロンプト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、実装コードを生成できます。</p>
+      </div>
+
+      <!-- 一覧画面プロンプト -->
+      <div class="prompt-card">
+        <span class="prompt-label">list.html</span>
+        <h4><span class="material-icons">smart_toy</span> 一覧画面プロンプト</h4>
+        <div class="prompt-box">
+          <pre id="prompt-06a">あなたはJavaプログラマーです。
+
+ToDoアプリの一覧画面（list.html）をThymeleafで作成してください。
+
+【技術スタック】
+- Thymeleaf
+- Bootstrap 5（CDN使用）
+
+【画面要件】
+1. ページタイトル「ToDo一覧」
+2. 新規作成ボタン（/todos/new へのリンク）
+3. ToDoリストをテーブルで表示
+   - 完了チェックボックス（POST /todos/{id}/toggle）
+   - タイトル
+   - 作成日時（フォーマット: yyyy/MM/dd HH:mm）
+   - 編集ボタン（/todos/{id}/edit へのリンク）
+   - 削除ボタン（POST /todos/{id}/delete）
+4. 完了済みのToDoは取り消し線で表示
+5. ToDoが0件の場合は「登録されたToDoはありません」と表示
+
+【Modelから受け取るデータ】
+- todos: List<Todo>（Todo: id, title, completed, createdAt）
+
+【ファイル配置】
+src/main/resources/templates/list.html
+
+コードを実装してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="copyPrompt('prompt-06a')">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <!-- フォーム画面プロンプト -->
+      <div class="prompt-card">
+        <span class="prompt-label">form.html</span>
+        <h4><span class="material-icons">smart_toy</span> フォーム画面プロンプト</h4>
+        <div class="prompt-box">
+          <pre id="prompt-06b">あなたはJavaプログラマーです。
+
+ToDoアプリの登録・編集フォーム（form.html）をThymeleafで作成してください。
+
+【技術スタック】
+- Thymeleaf
+- Bootstrap 5（CDN使用）
+
+【画面要件】
+1. 新規作成時：タイトル「ToDo登録」、POST /todos
+2. 編集時：タイトル「ToDo編集」、POST /todos/{id}
+3. 入力項目
+   - タイトル（テキスト入力、必須）
+   - 完了チェックボックス（編集時のみ表示）
+4. ボタン
+   - 保存ボタン
+   - キャンセルボタン（一覧へ戻る）
+5. 新規/編集を th:if で判定（todo.id の有無）
+
+【Modelから受け取るデータ】
+- todo: Todo（新規時は空のTodo）
+
+【ファイル配置】
+src/main/resources/templates/form.html
+
+コードを実装してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="copyPrompt('prompt-06b')">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box success">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> ポイント</div>
+        <div class="info-box-content">
+          <p>th:object="${todo}" でフォームにオブジェクトをバインドし、th:field="*{title}" で各フィールドを紐付けます。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="promptpg-5.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前のステップ</div>
+      <div class="page-nav-title">05 一覧表示</div>
+    </a>
+    <a href="promptpg-7.html" class="page-nav-btn next">
+      <div class="page-nav-label">次のステップ</div>
+      <div class="page-nav-title">07 編集・更新</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 3 - Phase 1: 基本CRUD実装</p>
+  </footer>
+
+  <script>
+    function copyPrompt(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons">check</span> コピーしました';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

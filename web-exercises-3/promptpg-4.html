@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 04: Service層 - WEB総合制作演習 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
+    }
+    .nav-category-links { display: none; }
+    .prompt-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #667eea; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+    .file-structure { background: #1e293b; border-radius: 12px; padding: 20px; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; }
+    .file-structure pre { margin: 0; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-exercises-3.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Step</div>
+      <div class="chapter-number">04</div>
+      <h1 class="chapter-title">Service層</h1>
+      <p class="chapter-subtitle">ビジネスロジックを担当するService層を実装</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">Phase 1: 基本CRUD実装</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">01</span><a href="promptpg-1.html">プロジェクト作成</a></li>
+        <li class="toc-item"><span class="toc-number">02</span><a href="promptpg-2.html">データベース設計</a></li>
+        <li class="toc-item"><span class="toc-number">03</span><a href="promptpg-3.html">Entity作成</a></li>
+        <li class="toc-item"><span class="toc-number">04</span><a href="promptpg-4.html" style="color: var(--primary); font-weight: 600;">Repository作成</a></li>
+        <li class="toc-item"><span class="toc-number">05</span><a href="promptpg-5.html">一覧表示</a></li>
+        <li class="toc-item"><span class="toc-number">06</span><a href="promptpg-6.html">新規作成</a></li>
+        <li class="toc-item"><span class="toc-number">07</span><a href="promptpg-7.html">編集・更新</a></li>
+        <li class="toc-item"><span class="toc-number">08</span><a href="promptpg-8.html">削除機能</a></li>
+      </ul>
+    </nav>
+
+    <!-- Section 04-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 04-1</span>
+        <h2 class="section-title">工程概要</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>ControllerとRepositoryの橋渡し</strong>を行うService層を実装します。ビジネスロジックとトランザクション管理を担当します。</p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: var(--primary); color: white;">役割</div>
+          <p>ビジネスロジック</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #007AFF; color: white;">アノテーション</div>
+          <p>@Service</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #34C759; color: white;">DI</div>
+          <p>コンストラクタ注入</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #FF9F0A; color: white;">トランザクション</div>
+          <p>@Transactional</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>このステップで行うこと</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: var(--primary);">
+              <span class="material-icons" style="color: white;">code</span>
+            </div>
+            <div class="feature-content">
+              <h4>Serviceクラス作成</h4>
+              <p>@Serviceアノテーションでコンポーネント登録</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">link</span>
+            </div>
+            <div class="feature-content">
+              <h4>Mapper注入</h4>
+              <p>コンストラクタインジェクションでMapperを注入</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">build</span>
+            </div>
+            <div class="feature-content">
+              <h4>ビジネスメソッド実装</h4>
+              <p>CRUD操作のラッパーメソッド作成</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 04-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 04-2</span>
+        <h2 class="section-title">成果物</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>このステップで作成するファイルの一覧です。</p>
+      </div>
+
+      <div class="highlight-box">
+        <h4>実装するメソッド</h4>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>メソッド名</th><th>戻り値</th><th>機能</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>findAll()</td><td>List&lt;Todo&gt;</td><td>全ToDo取得</td></tr>
+              <tr><td>findById(Long id)</td><td>Todo</td><td>ID指定取得</td></tr>
+              <tr><td>create(Todo todo)</td><td>Todo</td><td>新規作成（ID付与）</td></tr>
+              <tr><td>update(Todo todo)</td><td>void</td><td>更新</td></tr>
+              <tr><td>delete(Long id)</td><td>void</td><td>削除</td></tr>
+              <tr><td>toggleComplete(Long id)</td><td>void</td><td>完了状態切替</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ファイル</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>TodoService.java</code></td>
+              <td>Serviceクラス</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <h4>ファイル構成</h4>
+        <div class="file-structure">
+<pre>src/main/java/com/example/todo/
+└── service/
+    └── TodoService.java          ← Serviceクラス</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 04-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 04-3</span>
+        <h2 class="section-title">生成プロンプト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、実装コードを生成できます。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4><span class="material-icons">smart_toy</span> AIへの入力プロンプト</h4>
+        <div class="prompt-box">
+          <pre id="prompt-04">あなたはJavaプログラマーです。
+
+Step 3で作成したTodoMapperを使用するService層を作成してください。
+
+【役割】
+- ControllerとRepositoryの橋渡し
+- ビジネスロジックの実装
+- トランザクション管理
+
+【技術スタック】
+- Spring Framework（@Service）
+- コンストラクタインジェクション（Lombokの@RequiredArgsConstructor使用）
+
+【TodoMapperのメソッド】
+- findAll(): List<Todo>
+- findById(Long id): Todo
+- insert(Todo todo): void
+- update(Todo todo): void
+- delete(Long id): void
+
+【作成するメソッド】
+1. findAll() - 全件取得
+2. findById(Long id) - ID指定取得
+3. create(Todo todo) - 新規作成（登録後のTodoを返す）
+4. update(Todo todo) - 更新
+5. delete(Long id) - 削除
+6. toggleComplete(Long id) - 完了状態の切り替え
+
+【ファイル配置】
+src/main/java/com/example/todo/service/TodoService.java
+
+【要件】
+- @Serviceアノテーションを付与
+- @RequiredArgsConstructorでMapperを注入
+- 更新系メソッドには@Transactionalを付与
+
+コードを実装してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="copyPrompt('prompt-04')">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box success">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> ポイント</div>
+        <div class="info-box-content">
+          <p>toggleCompleteメソッドは、現在の完了状態を反転させる便利なメソッドです。UIでのチェックボックス操作に使用します。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="promptpg-3.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前のステップ</div>
+      <div class="page-nav-title">03 Entity作成</div>
+    </a>
+    <a href="promptpg-5.html" class="page-nav-btn next">
+      <div class="page-nav-label">次のステップ</div>
+      <div class="page-nav-title">05 一覧表示</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 3 - Phase 1: 基本CRUD実装</p>
+  </footer>
+
+  <script>
+    function copyPrompt(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons">check</span> コピーしました';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

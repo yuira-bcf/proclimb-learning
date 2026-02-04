@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WEB総合制作演習 3 - ToDoアプリ完全実装</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <link rel="stylesheet" href="../shared/apple-header-footer.css">
+  <link rel="stylesheet" href="../shared/css/prompt-gemini.css">
+  <meta name="description" content="WEB総合制作演習 3 - ToDoアプリをステップバイステップで完全実装し、プロジェクトアーカイブを作成する">
+  <style>
+    :root {
+      --course-accent: #FF3B30;
+      --course-accent-light: rgba(255, 59, 48, 0.08);
+    }
+    body.apple-layout {
+      background: var(--apple-bg-white);
+    }
+    .index-hero {
+      background: var(--apple-bg-white);
+      padding: 48px 24px 32px;
+      text-align: center;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .hero-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--course-accent);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 2.5rem;
+    }
+    .hero-icon .material-icons {
+      color: white;
+      font-size: 2.5rem;
+    }
+    .index-hero h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--apple-text-primary);
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+    .index-hero p {
+      font-size: 1rem;
+      color: var(--apple-text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--course-accent-light);
+      color: var(--course-accent);
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .section-divider {
+      background: none;
+      padding: 32px 24px 16px;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .section-divider h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--apple-text-primary);
+      margin-bottom: 4px;
+    }
+    .section-divider p {
+      font-size: 0.88rem;
+      color: var(--apple-text-secondary);
+    }
+    .chapters-section {
+      background: var(--apple-bg-light);
+      padding: 48px 24px;
+    }
+    .chapters-inner {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .chapters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .chapter-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      text-decoration: none;
+      color: var(--apple-text-primary);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+    .chapter-card::before {
+      display: none;
+    }
+    .chapter-card:hover {
+      transform: scale(1.015);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+    }
+    .chapter-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      padding-left: 8px;
+    }
+    .chapter-card-num {
+      background: var(--course-accent-light);
+      color: var(--course-accent);
+      min-width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .chapter-card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      flex: 1;
+    }
+    .chapter-card-desc {
+      font-size: 0.85rem;
+      color: var(--apple-text-secondary);
+      line-height: 1.6;
+      margin-bottom: 10px;
+      padding-left: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .chapter-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding-left: 8px;
+    }
+    .chapter-tag {
+      background: var(--apple-bg-light);
+      color: var(--apple-text-secondary);
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 0.68rem;
+      font-weight: 500;
+    }
+    .prompt-section {
+      background: var(--apple-bg-white);
+      padding: 48px 24px;
+    }
+    .prompt-inner {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .prompt-section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--apple-text-primary);
+      margin-bottom: 8px;
+    }
+    .prompt-section-desc {
+      font-size: 0.88rem;
+      color: var(--apple-text-secondary);
+      margin-bottom: 32px;
+    }
+    .overview-section {
+      background: var(--apple-bg-light);
+      padding: 48px 24px;
+    }
+    .overview-inner {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .overview-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--apple-text-primary);
+    }
+    .deliverables-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .deliverable-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .deliverable-card h4 {
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .deliverable-card h4 .material-icons {
+      color: var(--course-accent);
+      font-size: 1.2rem;
+    }
+    .deliverable-card ul {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 0.85rem;
+      color: var(--apple-text-secondary);
+    }
+    .deliverable-card li {
+      margin-bottom: 4px;
+    }
+    .tech-requirements {
+      background: var(--apple-bg-white);
+      padding: 48px 24px;
+    }
+    .tech-requirements-inner {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .tech-requirements h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--apple-text-primary);
+    }
+    .tech-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .tech-table th, .tech-table td {
+      padding: 14px 18px;
+      text-align: left;
+      border-bottom: 1px solid var(--apple-border-light);
+    }
+    .tech-table th {
+      background: var(--apple-bg-light);
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--apple-text-secondary);
+    }
+    .tech-table td {
+      font-size: 0.9rem;
+      color: var(--apple-text-primary);
+    }
+    .tech-table tr:last-child td {
+      border-bottom: none;
+    }
+    .related-section {
+      background: var(--apple-bg-light);
+      padding: 48px 24px;
+      border-top: 1px solid var(--apple-border-light);
+    }
+    .related-inner {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .related-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--apple-text-primary);
+    }
+    .related-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .related-link {
+      background: white;
+      padding: 10px 18px;
+      border-radius: 100px;
+      text-decoration: none;
+      color: var(--apple-text-primary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .related-link:hover {
+      background: var(--course-accent);
+      color: white;
+    }
+    .related-link.archive-link {
+      background: var(--course-accent);
+      color: white;
+    }
+    .related-link.archive-link:hover {
+      background: #e0352b;
+    }
+    @media (min-width: 768px) {
+      .index-hero {
+        padding: 64px 40px 48px;
+      }
+      .index-hero h1 {
+        font-size: 2.6rem;
+      }
+      .hero-icon {
+        width: 100px;
+        height: 100px;
+        font-size: 3rem;
+      }
+      .hero-icon .material-icons {
+        font-size: 3rem;
+      }
+    }
+  </style>
+</head>
+<body class="apple-layout">
+  <!-- Apple Global Navigation -->
+  <nav class="apple-gnav">
+    <div class="apple-gnav-inner">
+      <a href="../index.html" class="apple-gnav-logo">
+        <div class="logo-dot">T</div>
+        Tutorial
+      </a>
+      <div class="apple-gnav-links">
+        <a href="../index.html">ダッシュボード</a>
+        <a href="../index.html#frontend">フロントエンド</a>
+        <a href="../index.html#backend">バックエンド</a>
+        <a href="../index.html#ai">AI・自動化</a>
+        <a href="../index.html#design">デザイン</a>
+        <a href="../index.html#exercises" class="active">総合演習</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Apple Sub Navigation -->
+  <nav class="apple-subnav">
+    <div class="apple-subnav-inner">
+      <div class="apple-subnav-title">
+        <span class="material-icons subnav-icon">code</span>
+        WEB総合制作演習 3
+      </div>
+      <a href="../index.html" class="apple-subnav-back">
+        &larr; <span>ダッシュボードに戻る</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="index-hero">
+    <div class="hero-badge">
+      <span class="material-icons" style="font-size: 1rem;">build</span>
+      Spring Boot + 26機能
+    </div>
+    <div class="hero-icon"><span class="material-icons">code</span></div>
+    <h1>WEB総合制作演習 3</h1>
+    <p>ToDoアプリをステップバイステップで完全実装し、26の追加機能を学習。プロジェクトアーカイブの設計資料も作成します。</p>
+  </div>
+
+  <!-- Chapters Section -->
+  <div class="chapters-section">
+    <div class="chapters-inner">
+
+      <!-- Phase 1: 基本実装 -->
+      <div class="section-divider">
+        <h2>Phase 1: 基本実装（ステップ別プログラミング）</h2>
+        <p>Step 1-8 / ToDoアプリの基本機能をステップバイステップで実装</p>
+      </div>
+
+      <div class="chapters-grid">
+        <a href="../promptpg-step/promptpg-1.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">01</div>
+            <div class="chapter-card-title">プロジェクト作成</div>
+          </div>
+          <p class="chapter-card-desc">Spring Initializrでプロジェクトを作成し、開発環境を構築</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">Spring Boot</span>
+            <span class="chapter-tag">環境構築</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-2.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">02</div>
+            <div class="chapter-card-title">データベース設計</div>
+          </div>
+          <p class="chapter-card-desc">ToDoテーブルの設計とEntityクラスの作成</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">MySQL</span>
+            <span class="chapter-tag">Entity</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-3.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">03</div>
+            <div class="chapter-card-title">Repository層</div>
+          </div>
+          <p class="chapter-card-desc">MyBatisを使用したデータアクセス層の実装</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">MyBatis</span>
+            <span class="chapter-tag">SQL</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-4.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">04</div>
+            <div class="chapter-card-title">Service層</div>
+          </div>
+          <p class="chapter-card-desc">ビジネスロジックを担当するService層の実装</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">ビジネスロジック</span>
+            <span class="chapter-tag">DI</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-5.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">05</div>
+            <div class="chapter-card-title">Controller層</div>
+          </div>
+          <p class="chapter-card-desc">HTTPリクエストを処理するController層の実装</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">MVC</span>
+            <span class="chapter-tag">リクエスト処理</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-6.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">06</div>
+            <div class="chapter-card-title">View層（一覧・登録）</div>
+          </div>
+          <p class="chapter-card-desc">Thymeleafテンプレートで一覧画面と登録機能を実装</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">Thymeleaf</span>
+            <span class="chapter-tag">フォーム</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-7.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">07</div>
+            <div class="chapter-card-title">View層（編集・削除）</div>
+          </div>
+          <p class="chapter-card-desc">編集機能と削除機能の実装</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">CRUD</span>
+            <span class="chapter-tag">更新・削除</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-8.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">08</div>
+            <div class="chapter-card-title">スタイリング</div>
+          </div>
+          <p class="chapter-card-desc">CSSでUIを整え、使いやすいデザインに仕上げる</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">CSS</span>
+            <span class="chapter-tag">UI</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Phase 2: 機能追加（初級） -->
+      <div class="section-divider">
+        <h2>Phase 2: 機能追加（初級）</h2>
+        <p>Step 01-06 / バリデーション・ステータス・検索などの基本追加機能</p>
+      </div>
+
+      <div class="chapters-grid">
+        <a href="../promptpg-step/promptpg-function/01_extends-todo.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">01</div>
+            <div class="chapter-card-title">ToDo項目の拡張</div>
+          </div>
+          <p class="chapter-card-desc">説明文、重要度などの項目を追加</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">Entity拡張</span>
+            <span class="chapter-tag">DB変更</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/02_validation.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">02</div>
+            <div class="chapter-card-title">バリデーション</div>
+          </div>
+          <p class="chapter-card-desc">入力値の検証機能を実装</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">Bean Validation</span>
+            <span class="chapter-tag">エラー表示</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/03_status.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">03</div>
+            <div class="chapter-card-title">ステータス管理</div>
+          </div>
+          <p class="chapter-card-desc">未着手・進行中・完了の状態管理</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">Enum</span>
+            <span class="chapter-tag">状態遷移</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/04_search.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">04</div>
+            <div class="chapter-card-title">検索機能</div>
+          </div>
+          <p class="chapter-card-desc">キーワードによるToDo検索</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">LIKE検索</span>
+            <span class="chapter-tag">動的SQL</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/05_sort.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">05</div>
+            <div class="chapter-card-title">ソート機能</div>
+          </div>
+          <p class="chapter-card-desc">日付順・優先度順などの並び替え</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">ORDER BY</span>
+            <span class="chapter-tag">UI連携</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/06_delete_dialog.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">06</div>
+            <div class="chapter-card-title">削除確認ダイアログ</div>
+          </div>
+          <p class="chapter-card-desc">削除前の確認機能</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">JavaScript</span>
+            <span class="chapter-tag">UX</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Phase 2: 機能追加（中級） -->
+      <div class="section-divider">
+        <h2>Phase 2: 機能追加（中級）</h2>
+        <p>Step 07-12 / ページネーション・カテゴリ・CSVエクスポートなど</p>
+      </div>
+
+      <div class="chapters-grid">
+        <a href="../promptpg-step/promptpg-function/07_pagination.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">07</div>
+            <div class="chapter-card-title">ページネーション</div>
+          </div>
+          <p class="chapter-card-desc">大量データの分割表示</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">LIMIT/OFFSET</span>
+            <span class="chapter-tag">ページUI</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/08_priority.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">08</div>
+            <div class="chapter-card-title">優先度設定</div>
+          </div>
+          <p class="chapter-card-desc">高・中・低の優先度管理</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">Enum</span>
+            <span class="chapter-tag">表示切替</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/09_category.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">09</div>
+            <div class="chapter-card-title">カテゴリ管理</div>
+          </div>
+          <p class="chapter-card-desc">ToDoのカテゴリ分類機能</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">マスタ管理</span>
+            <span class="chapter-tag">リレーション</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/10_deadline.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">10</div>
+            <div class="chapter-card-title">期限設定</div>
+          </div>
+          <p class="chapter-card-desc">締め切り日時の設定と表示</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">日付処理</span>
+            <span class="chapter-tag">期限表示</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/11_bulk_delete.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">11</div>
+            <div class="chapter-card-title">一括削除</div>
+          </div>
+          <p class="chapter-card-desc">複数ToDoの一括削除機能</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">チェックボックス</span>
+            <span class="chapter-tag">バッチ処理</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/12_csv_export.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">12</div>
+            <div class="chapter-card-title">CSVエクスポート</div>
+          </div>
+          <p class="chapter-card-desc">データのCSV出力機能</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">ファイル出力</span>
+            <span class="chapter-tag">ダウンロード</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Phase 2: 機能追加（上級） -->
+      <div class="section-divider">
+        <h2>Phase 2: 機能追加（上級）</h2>
+        <p>Step 13-19 / 認証・認可・REST API・トランザクションなど</p>
+      </div>
+
+      <div class="chapters-grid">
+        <a href="../promptpg-step/promptpg-function/13_login.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">13</div>
+            <div class="chapter-card-title">ログイン機能</div>
+          </div>
+          <p class="chapter-card-desc">Spring Securityによる認証</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">Spring Security</span>
+            <span class="chapter-tag">認証</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/14_user_todo.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">14</div>
+            <div class="chapter-card-title">ユーザー別ToDo</div>
+          </div>
+          <p class="chapter-card-desc">ユーザーごとのToDo管理</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">外部キー</span>
+            <span class="chapter-tag">セッション</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/15_role.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">15</div>
+            <div class="chapter-card-title">権限管理</div>
+          </div>
+          <p class="chapter-card-desc">管理者・一般ユーザーの権限設定</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">ロール</span>
+            <span class="chapter-tag">認可</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/16_rest_api.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">16</div>
+            <div class="chapter-card-title">REST API</div>
+          </div>
+          <p class="chapter-card-desc">RESTfulなAPIエンドポイントの実装</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">JSON</span>
+            <span class="chapter-tag">RestController</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/17_exception.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">17</div>
+            <div class="chapter-card-title">例外処理</div>
+          </div>
+          <p class="chapter-card-desc">グローバル例外ハンドリング</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">ExceptionHandler</span>
+            <span class="chapter-tag">エラーページ</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/18_aop.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">18</div>
+            <div class="chapter-card-title">AOP（横断的関心事）</div>
+          </div>
+          <p class="chapter-card-desc">ログ出力などの共通処理</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">Aspect</span>
+            <span class="chapter-tag">ログ</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/19_transaction.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">19</div>
+            <div class="chapter-card-title">トランザクション</div>
+          </div>
+          <p class="chapter-card-desc">データ整合性の保証</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">@Transactional</span>
+            <span class="chapter-tag">ロールバック</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Phase 2: 機能追加（エキスパート） -->
+      <div class="section-divider">
+        <h2>Phase 2: 機能追加（エキスパート）</h2>
+        <p>Step 20-26 / ファイルアップロード・国際化・テスト・非同期処理など</p>
+      </div>
+
+      <div class="chapters-grid">
+        <a href="../promptpg-step/promptpg-function/20_file_upload.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">20</div>
+            <div class="chapter-card-title">ファイルアップロード</div>
+          </div>
+          <p class="chapter-card-desc">画像・ファイルの添付機能</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">MultipartFile</span>
+            <span class="chapter-tag">ストレージ</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/21_i18n.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">21</div>
+            <div class="chapter-card-title">国際化（i18n）</div>
+          </div>
+          <p class="chapter-card-desc">多言語対応の実装</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">メッセージ</span>
+            <span class="chapter-tag">ロケール</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/22_unit_test.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">22</div>
+            <div class="chapter-card-title">単体テスト</div>
+          </div>
+          <p class="chapter-card-desc">JUnitによるテストコード作成</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">JUnit</span>
+            <span class="chapter-tag">Mockito</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/23_async.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">23</div>
+            <div class="chapter-card-title">非同期処理</div>
+          </div>
+          <p class="chapter-card-desc">バックグラウンド処理の実装</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">@Async</span>
+            <span class="chapter-tag">スレッド</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/24_mail.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">24</div>
+            <div class="chapter-card-title">メール送信</div>
+          </div>
+          <p class="chapter-card-desc">通知メールの送信機能</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">JavaMailSender</span>
+            <span class="chapter-tag">SMTP</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/25_audit_log.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">25</div>
+            <div class="chapter-card-title">監査ログ</div>
+          </div>
+          <p class="chapter-card-desc">操作履歴の記録機能</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">AOP</span>
+            <span class="chapter-tag">履歴管理</span>
+          </div>
+        </a>
+
+        <a href="../promptpg-step/promptpg-function/26_javadoc.html" class="chapter-card">
+          <div class="chapter-card-header">
+            <div class="chapter-card-num">26</div>
+            <div class="chapter-card-title">Javadoc作成</div>
+          </div>
+          <p class="chapter-card-desc">APIドキュメントの自動生成</p>
+          <div class="chapter-card-tags">
+            <span class="chapter-tag">Javadoc</span>
+            <span class="chapter-tag">ドキュメント</span>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Prompt Section -->
+  <div class="prompt-section">
+    <div class="prompt-inner">
+      <h2 class="prompt-section-title">Phase 3: プロジェクトアーカイブ設計資料生成</h2>
+      <p class="prompt-section-desc">実装したToDoアプリの設計資料を生成するためのプロンプトです。AIに入力して設計資料を作成しましょう。</p>
+
+      <!-- 仕様書生成プロンプト -->
+      <div class="prompt-card">
+        <div class="prompt-card-header">
+          <span class="prompt-card-badge">07 仕様書</span>
+          <h4 class="prompt-card-title">仕様書生成プロンプト</h4>
+        </div>
+        <p class="prompt-card-desc">以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、仕様書を生成できます。</p>
+        <div class="prompt-box">
+          <div class="prompt-box-header"><span class="material-icons">edit_note</span> AIへの入力プロンプト</div>
+          <pre id="prompt-spec">以下のToDoアプリケーションの仕様書を作成してください。
+
+【アプリケーション概要】
+- Spring Boot + MyBatis + Thymeleaf で構築したToDoアプリケーション
+- 基本CRUD機能 + 26の追加機能を実装
+
+【実装済み機能一覧】
+■ 基本機能
+- ToDo一覧表示、新規登録、編集、削除
+
+■ 追加機能（25機能）
+1. ToDo項目の拡張（説明文、重要度）
+2. バリデーション（入力値検証）
+3. ステータス管理（未着手・進行中・完了）
+4. 検索機能（キーワード検索）
+5. ソート機能（日付順・優先度順）
+6. 削除確認ダイアログ
+7. ページネーション
+8. 優先度設定（高・中・低）
+9. カテゴリ管理
+10. 期限設定
+11. 一括削除
+12. CSVエクスポート
+13. ログイン機能（Spring Security）
+14. ユーザー別ToDo管理
+15. 権限管理（管理者・一般ユーザー）
+16. REST API
+17. 例外処理（グローバルハンドリング）
+18. AOP（ログ出力）
+19. トランザクション管理
+20. ファイルアップロード
+21. 国際化（i18n）
+22. 単体テスト（JUnit）
+23. 非同期処理
+24. メール送信
+25. 監査ログ
+26. Javadoc作成（APIドキュメント生成）
+
+【出力形式】
+以下の項目を含めて仕様書を作成してください：
+1. システム概要
+2. 機能一覧（機能ID、機能名、概要、画面/API）
+3. 画面一覧（画面ID、画面名、URL、概要）
+4. API一覧（エンドポイント、メソッド、概要、リクエスト/レスポンス）
+5. 非機能要件（セキュリティ、パフォーマンス、可用性）
+6. 制約事項・前提条件</pre>
+          <button class="copy-btn" onclick="copyPrompt('prompt-spec')">
+            <span class="material-icons">content_copy</span> コピー
+          </button>
+        </div>
+        <div class="prompt-tip">
+          <span class="material-icons">lightbulb</span>
+          <span class="prompt-tip-text">「画面遷移図も含めてください」「Markdown形式で出力してください」など、出力形式を指定すると、より使いやすい仕様書が生成されます。</span>
+        </div>
+      </div>
+
+      <!-- DB設計書生成プロンプト -->
+      <div class="prompt-card">
+        <div class="prompt-card-header">
+          <span class="prompt-card-badge">08 DB設計書</span>
+          <h4 class="prompt-card-title">DB設計書生成プロンプト</h4>
+        </div>
+        <p class="prompt-card-desc">以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、DB設計書を生成できます。</p>
+        <div class="prompt-box">
+          <div class="prompt-box-header"><span class="material-icons">edit_note</span> AIへの入力プロンプト</div>
+          <pre id="prompt-db">以下のToDoアプリケーションのDB設計書を作成してください。
+
+【アプリケーション概要】
+- Spring Boot + MyBatis + MySQL で構築したToDoアプリケーション
+- ユーザー認証、ToDo管理、カテゴリ管理、監査ログ機能を実装
+
+【必要なテーブル】
+1. users（ユーザー情報）
+   - ログイン認証用
+   - 権限管理（ADMIN/USER）
+
+2. todos（ToDo情報）
+   - 基本項目：タイトル、説明、ステータス、優先度、期限
+   - ユーザーとの関連付け
+   - カテゴリとの関連付け
+   - ファイル添付対応
+
+3. categories（カテゴリ情報）
+   - ToDoの分類用
+   - ユーザーごとのカテゴリ管理
+
+4. audit_logs（監査ログ）
+   - 操作履歴の記録
+   - ユーザー、操作種別、対象データ、日時
+
+5. attachments（添付ファイル）
+   - ToDoに紐づくファイル情報
+
+【出力形式】
+以下の項目を含めてDB設計書を作成してください：
+1. ER図（テキストベースでの関連図）
+2. テーブル定義書（各テーブルごとに）
+   - テーブル名、論理名、概要
+   - カラム一覧（カラム名、データ型、NULL許可、デフォルト値、説明）
+   - 主キー、外部キー、インデックス
+3. リレーション説明
+4. 初期データ（マスタデータ）
+5. 命名規則</pre>
+          <button class="copy-btn" onclick="copyPrompt('prompt-db')">
+            <span class="material-icons">content_copy</span> コピー
+          </button>
+        </div>
+        <div class="prompt-tip">
+          <span class="material-icons">lightbulb</span>
+          <span class="prompt-tip-text">「CREATE TABLE文も出力してください」「MySQLの構文で」など、使用するDBを指定すると、すぐに使えるSQL文も生成されます。</span>
+        </div>
+      </div>
+
+      <!-- テスト報告書生成プロンプト -->
+      <div class="prompt-card">
+        <div class="prompt-card-header">
+          <span class="prompt-card-badge">09 テスト報告書</span>
+          <h4 class="prompt-card-title">テスト報告書生成プロンプト</h4>
+        </div>
+        <p class="prompt-card-desc">以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、テスト報告書を生成できます。</p>
+        <div class="prompt-box">
+          <div class="prompt-box-header"><span class="material-icons">edit_note</span> AIへの入力プロンプト</div>
+          <pre id="prompt-test">以下のToDoアプリケーションのテスト報告書を作成してください。
+
+【アプリケーション概要】
+- Spring Boot + MyBatis + Thymeleaf で構築したToDoアプリケーション
+- 基本CRUD + 26の追加機能を実装
+
+【テスト対象機能】
+■ 認証・認可
+- ログイン/ログアウト
+- 権限に応じたアクセス制御
+
+■ ToDo基本操作
+- 一覧表示、新規登録、編集、削除
+- バリデーション（必須入力、文字数制限）
+
+■ 検索・フィルタ
+- キーワード検索
+- ステータス絞り込み
+- ソート（日付、優先度）
+
+■ 追加機能
+- ページネーション
+- 一括削除
+- CSVエクスポート
+- ファイルアップロード
+- メール送信
+
+■ API
+- REST APIエンドポイント
+- エラーレスポンス
+
+【出力形式】
+以下の項目を含めてテスト報告書を作成してください：
+1. テスト概要（目的、期間、環境）
+2. テスト項目一覧
+   - テストID、機能名、テスト観点、手順、期待結果、実施結果、備考
+3. テスト結果サマリ
+   - 総テスト数、成功数、失敗数、未実施数
+   - 機能別の結果集計
+4. 発見した不具合一覧（あれば）
+   - 不具合ID、概要、重要度、対応状況
+5. 特記事項・課題
+6. 結論と推奨事項</pre>
+          <button class="copy-btn" onclick="copyPrompt('prompt-test')">
+            <span class="material-icons">content_copy</span> コピー
+          </button>
+        </div>
+        <div class="prompt-tip">
+          <span class="material-icons">lightbulb</span>
+          <span class="prompt-tip-text">「境界値テスト」「異常系テスト」など、テスト種別を指定すると、より網羅的なテスト項目が生成されます。</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Deliverables Section -->
+  <div class="overview-section">
+    <div class="overview-inner">
+      <h2 class="overview-title">成果物一覧</h2>
+      <div class="deliverables-grid">
+        <div class="deliverable-card">
+          <h4><span class="material-icons">memory</span>Webアプリケーション</h4>
+          <ul>
+            <li>Spring Boot ToDoアプリ</li>
+            <li>基本CRUD機能</li>
+            <li>26の追加機能</li>
+            <li>認証・認可システム</li>
+          </ul>
+        </div>
+        <div class="deliverable-card">
+          <h4><span class="material-icons">description</span>設計ドキュメント</h4>
+          <ul>
+            <li>仕様書（機能仕様書）</li>
+            <li>データベース設計書</li>
+            <li>テスト報告書</li>
+            <li>振り返り・技術記事</li>
+          </ul>
+        </div>
+        <div class="deliverable-card">
+          <h4><span class="material-icons">folder_special</span>プロジェクトアーカイブ</h4>
+          <ul>
+            <li>全ページ統合</li>
+            <li>設計資料配置</li>
+            <li>スキルシート</li>
+            <li>連絡先ページ</li>
+          </ul>
+        </div>
+        <div class="deliverable-card">
+          <h4><span class="material-icons">cloud_done</span>GitHub公開</h4>
+          <ul>
+            <li>ソースコード一式</li>
+            <li>README.md充実</li>
+            <li>コミット履歴</li>
+            <li>ドキュメント</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tech Requirements Section -->
+  <div class="tech-requirements">
+    <div class="tech-requirements-inner">
+      <h2>技術要件</h2>
+      <table class="tech-table">
+        <tr>
+          <th>項目</th>
+          <th>要件</th>
+        </tr>
+        <tr>
+          <td>フレームワーク</td>
+          <td>Spring Boot 3.x</td>
+        </tr>
+        <tr>
+          <td>データベース</td>
+          <td>MySQL / MyBatis</td>
+        </tr>
+        <tr>
+          <td>テンプレート</td>
+          <td>Thymeleaf</td>
+        </tr>
+        <tr>
+          <td>認証</td>
+          <td>Spring Security</td>
+        </tr>
+        <tr>
+          <td>基本機能</td>
+          <td>CRUD + バリデーション</td>
+        </tr>
+        <tr>
+          <td>追加機能</td>
+          <td>26機能（検索・ソート・API・テスト等）</td>
+        </tr>
+        <tr>
+          <td>セキュリティ</td>
+          <td>XSS / CSRF / SQLインジェクション対策</td>
+        </tr>
+        <tr>
+          <td>テスト</td>
+          <td>JUnit / Mockito</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Related Section -->
+  <div class="related-section">
+    <div class="related-inner">
+      <h2 class="related-title">関連リンク</h2>
+      <div class="related-links">
+        <a href="./portfolio-templates/index.html" class="related-link archive-link">プロジェクトアーカイブを開く</a>
+        <a href="../java/index.html" class="related-link">Java基礎</a>
+        <a href="../spring/index.html" class="related-link">Spring基礎</a>
+        <a href="../system-dev/index.html" class="related-link">システム開発概論</a>
+        <a href="../web-exercises-1/index.html" class="related-link">WEB総合制作演習 I</a>
+        <a href="../web-exercises-2/index.html" class="related-link">WEB総合制作演習 II</a>
+        <a href="../security/index.html" class="related-link">情報セキュリティ</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Apple Footer -->
+  <div class="apple-footer-top">
+    <div class="apple-footer-top-inner">
+      本チュートリアルは訓練校の教材として作成されています。各コースは実践的なスキル習得を目的とし、現場で活用できる知識を体系的に学べるよう設計されています。
+    </div>
+  </div>
+
+  <footer class="apple-footer-main">
+    <div class="apple-footer-main-inner">
+      <div class="apple-footer-col">
+        <h4>フロントエンド</h4>
+        <a href="../html/index.html">HTML/CSS入門</a>
+        <a href="../javascript/index.html">JavaScript入門</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>バックエンド</h4>
+        <a href="../java/index.html">Java基礎</a>
+        <a href="../spring/index.html">Spring基礎</a>
+        <a href="../system-dev/index.html">システム開発概論</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>AI・自動化</h4>
+        <a href="../promptpg-step/index.html">プロンプトプログラミング</a>
+        <a href="../chatgpt/index.html">ChatGPT活用</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>デザイン</h4>
+        <a href="../uiux/index.html">UI/UX概論</a>
+        <a href="../figma/index.html">Figma入門</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>総合演習</h4>
+        <a href="../web-exercises-1/index.html">WEB総合制作演習 I</a>
+        <a href="../web-exercises-2/index.html">WEB総合制作演習 II</a>
+        <a href="../generaltraining/web-exercises-3.html">WEB総合制作演習 3</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="apple-footer-bottom">
+    <div class="apple-footer-bottom-inner">
+      <span class="apple-footer-copy">Copyright &copy; 2026 Tutorial Dashboard. All rights reserved.</span>
+      <div class="apple-footer-legal">
+        <a href="#">プライバシーポリシー</a>
+        <a href="#">利用規約</a>
+        <a href="#">サイトマップ</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function copyPrompt(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons">check</span> コピーしました';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 03: Repository層 - WEB総合制作演習 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
+    }
+    .nav-category-links { display: none; }
+    .prompt-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #667eea; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+    .file-structure { background: #1e293b; border-radius: 12px; padding: 20px; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto; margin: 16px 0; }
+    .file-structure pre { margin: 0; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-exercises-3.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Step</div>
+      <div class="chapter-number">03</div>
+      <h1 class="chapter-title">Repository層</h1>
+      <p class="chapter-subtitle">MyBatisを使用したデータアクセス層を実装</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">Phase 1: 基本CRUD実装</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">01</span><a href="promptpg-1.html">プロジェクト作成</a></li>
+        <li class="toc-item"><span class="toc-number">02</span><a href="promptpg-2.html">データベース設計</a></li>
+        <li class="toc-item"><span class="toc-number">03</span><a href="promptpg-3.html" style="color: var(--primary); font-weight: 600;">Entity作成</a></li>
+        <li class="toc-item"><span class="toc-number">04</span><a href="promptpg-4.html">Repository作成</a></li>
+        <li class="toc-item"><span class="toc-number">05</span><a href="promptpg-5.html">一覧表示</a></li>
+        <li class="toc-item"><span class="toc-number">06</span><a href="promptpg-6.html">新規作成</a></li>
+        <li class="toc-item"><span class="toc-number">07</span><a href="promptpg-7.html">編集・更新</a></li>
+        <li class="toc-item"><span class="toc-number">08</span><a href="promptpg-8.html">削除機能</a></li>
+      </ul>
+    </nav>
+
+    <!-- Section 03-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 03-1</span>
+        <h2 class="section-title">工程概要</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>MyBatisを使用した<strong>データアクセス層</strong>を実装し、データベースとのCRUD操作を担当するMapperを作成します。</p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: var(--primary); color: white;">パターン</div>
+          <p>Repository Pattern</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #007AFF; color: white;">技術</div>
+          <p>MyBatis Mapper</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #34C759; color: white;">アノテーション</div>
+          <p>@Mapper</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #FF9F0A; color: white;">SQL記述</div>
+          <p>XMLまたはアノテーション</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>このステップで行うこと</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: var(--primary);">
+              <span class="material-icons" style="color: white;">code</span>
+            </div>
+            <div class="feature-content">
+              <h4>Mapperインターフェース作成</h4>
+              <p>データアクセスのインターフェース定義</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">edit_note</span>
+            </div>
+            <div class="feature-content">
+              <h4>CRUD操作実装</h4>
+              <p>全件取得、ID取得、登録、更新、削除</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">description</span>
+            </div>
+            <div class="feature-content">
+              <h4>XMLマッピング作成</h4>
+              <p>SQLとJavaオブジェクトのマッピング</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 03-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 03-2</span>
+        <h2 class="section-title">成果物</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>このステップで作成するファイルの一覧です。</p>
+      </div>
+
+      <div class="highlight-box">
+        <h4>実装するメソッド</h4>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>メソッド名</th><th>戻り値</th><th>機能</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>findAll()</td><td>List&lt;Todo&gt;</td><td>全件取得</td></tr>
+              <tr><td>findById(Long id)</td><td>Todo</td><td>ID指定取得</td></tr>
+              <tr><td>insert(Todo todo)</td><td>void</td><td>新規登録</td></tr>
+              <tr><td>update(Todo todo)</td><td>void</td><td>更新</td></tr>
+              <tr><td>delete(Long id)</td><td>void</td><td>削除</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ファイル</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>TodoMapper.java</code></td>
+              <td>Mapperインターフェース</td>
+            </tr>
+            <tr>
+              <td><code>TodoMapper.xml</code></td>
+              <td>SQLマッピング定義</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <h4>ファイル構成</h4>
+        <div class="file-structure">
+<pre>src/main/java/com/example/todo/
+└── mapper/
+    └── TodoMapper.java           ← Mapperインターフェース
+
+src/main/resources/
+└── mapper/
+    └── TodoMapper.xml            ← SQLマッピング</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 03-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 03-3</span>
+        <h2 class="section-title">生成プロンプト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、実装コードを生成できます。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4><span class="material-icons">smart_toy</span> AIへの入力プロンプト</h4>
+        <div class="prompt-box">
+          <pre id="prompt-03">あなたはJavaプログラマーです。
+
+Step 2で作成したTodoエンティティに対するRepository層（データアクセス層）を作成してください。
+
+【技術スタック】
+- MyBatis
+- XMLマッピング方式
+
+【Todoエンティティ】
+- id: Long（主キー）
+- title: String
+- completed: Boolean
+- createdAt: LocalDateTime
+
+【作成するメソッド】
+1. findAll() - 全件取得（作成日時の降順）
+2. findById(Long id) - ID指定取得
+3. insert(Todo todo) - 新規登録（useGeneratedKeysでID取得）
+4. update(Todo todo) - 更新（title, completedのみ）
+5. delete(Long id) - 削除
+
+【作成するファイル】
+1. TodoMapper.java - Mapperインターフェース（@Mapperアノテーション付き）
+2. TodoMapper.xml - SQLマッピング定義
+
+【ファイル配置】
+src/main/java/com/example/todo/mapper/TodoMapper.java
+src/main/resources/mapper/TodoMapper.xml
+
+【application.propertiesへの追加設定】
+mybatis.mapper-locations=classpath:mapper/*.xml
+mybatis.configuration.map-underscore-to-camel-case=true
+
+各ファイルのコードを実装してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="copyPrompt('prompt-03')">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box success">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> ポイント</div>
+        <div class="info-box-content">
+          <p>map-underscore-to-camel-caseを有効にすると、created_at → createdAt のような変換が自動で行われます。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="promptpg-2.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前のステップ</div>
+      <div class="page-nav-title">02 データベース設計</div>
+    </a>
+    <a href="promptpg-4.html" class="page-nav-btn next">
+      <div class="page-nav-label">次のステップ</div>
+      <div class="page-nav-title">04 Repository作成</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 3 - Phase 1: 基本CRUD実装</p>
+  </footer>
+
+  <script>
+    function copyPrompt(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons">check</span> コピーしました';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

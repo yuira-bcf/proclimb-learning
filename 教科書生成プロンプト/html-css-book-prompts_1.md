@@ -605,7 +605,7 @@ html-css-book/ch07-tile-layout/ 内に以下のファイルを作成してくだ
 
 ## プロジェクト概要
 
-架空のポートフォリオサイト「DESIGN WORKS」を作成
+架空のプロジェクトアーカイブサイト「DESIGN WORKS」を作成
 
 ## ファイル構成
 

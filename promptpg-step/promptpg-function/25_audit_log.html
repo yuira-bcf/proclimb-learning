@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>機能25: 監査ログ - WEB総合制作演習 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
+    }
+    .nav-category-links { display: none; }
+    .level-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-left: 12px; }
+    .level-beginner { background: #dcfce7; color: #166534; }
+    .level-intermediate { background: #fef9c3; color: #854d0e; }
+    .level-advanced { background: #ffedd5; color: #9a3412; }
+    .level-expert { background: #fee2e2; color: #991b1b; }
+    .prompt-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #667eea; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-exercises-3.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">機能</div>
+      <div class="chapter-number">25</div>
+      <h1 class="chapter-title">監査ログ<span class="level-badge level-expert">エキスパート</span></h1>
+      <p class="chapter-subtitle">操作履歴の記録機能</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この機能の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">25-1</span>工程概要</li>
+        <li class="toc-item"><span class="toc-number">25-2</span>成果物</li>
+        <li class="toc-item"><span class="toc-number">25-3</span>生成プロンプト</li>
+      </ul>
+    </nav>
+
+    <!-- Section 25-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 25-1</span>
+        <h2 class="section-title">工程概要</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>誰が、いつ、何を変更したか</strong>を記録し、トレーサビリティを確保します。</p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: var(--primary); color: white;">学習テーマ</div>
+          <p>監査証跡</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #007AFF; color: white;">主な技術</div>
+          <p>AOP / 別テーブル保存</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #34C759; color: white;">関連レイヤー</div>
+          <p>Cross-cutting / Repository</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>この機能で行うこと</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: var(--primary);">
+              <span class="material-icons" style="color: white;">storage</span>
+            </div>
+            <div class="feature-content">
+              <h4>監査ログテーブル設計</h4>
+              <p>audit_logsテーブルに操作履歴を永続化</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">label</span>
+            </div>
+            <div class="feature-content">
+              <h4>カスタムアノテーション</h4>
+              <p>@Auditableアノテーションで監査対象メソッドを指定</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">layers</span>
+            </div>
+            <div class="feature-content">
+              <h4>AOPで自動記録</h4>
+              <p>アスペクトで横断的に監査ログを記録</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">search</span>
+            </div>
+            <div class="feature-content">
+              <h4>監査ログ検索画面</h4>
+              <p>管理者向けの操作履歴検索機能</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 25-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 25-2</span>
+        <h2 class="section-title">成果物</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この機能で作成・更新するファイルの一覧です。</p>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ファイル</th>
+              <th>変更内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>schema.sql</code></td>
+              <td>audit_logsテーブルのDDL</td>
+            </tr>
+            <tr>
+              <td><code>AuditLog.java</code></td>
+              <td>監査ログエンティティ</td>
+            </tr>
+            <tr>
+              <td><code>AuditLogMapper.java/xml</code></td>
+              <td>監査ログのMapper</td>
+            </tr>
+            <tr>
+              <td><code>AuditLogService.java</code></td>
+              <td>監査ログ記録サービス</td>
+            </tr>
+            <tr>
+              <td><code>Auditable.java</code></td>
+              <td>カスタムアノテーション</td>
+            </tr>
+            <tr>
+              <td><code>AuditAspect.java</code></td>
+              <td>AOPで監査ログを自動記録</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <h4>監査ログテーブルのカラム</h4>
+        <ul>
+          <li><strong>action</strong> - 操作種別（CREATE, UPDATE, DELETE）</li>
+          <li><strong>entity_type</strong> - 対象エンティティ（TODO, USER等）</li>
+          <li><strong>entity_id</strong> - 対象のID</li>
+          <li><strong>old_value / new_value</strong> - 変更前後の値（JSON形式）</li>
+          <li><strong>user_id / username</strong> - 操作したユーザー情報</li>
+          <li><strong>ip_address</strong> - IPアドレス</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 25-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 25-3</span>
+        <h2 class="section-title">生成プロンプト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、実装コードを生成できます。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4><span class="material-icons">smart_toy</span> AIへの入力プロンプト</h4>
+        <div class="prompt-box">
+          <pre id="prompt-25">あなたはJavaプログラマーです。
+
+Spring Boot 3.xのToDoアプリに監査ログ機能を追加してください。
+
+【現在の状態】
+- Spring Boot 3.x + MyBatis + Thymeleafで構築されたToDoアプリ
+- Spring Securityでログイン認証済み
+- CRUD操作は実装済みだが、操作履歴は記録していない
+
+【実装要件】
+1. 監査ログテーブル設計
+   - audit_logsテーブル（action, entity_type, entity_id, user_id, username, old_value, new_value, ip_address, created_at）
+   - 変更前後の値をJSON形式で保存
+
+2. 監査ログエンティティとMapper
+   - AuditLog.java（エンティティ）
+   - AuditLogMapper.java/xml（INSERT、検索クエリ）
+
+3. カスタムアノテーション @Auditable
+   - action: CREATE, UPDATE, DELETE
+   - entityType: TODO, USER など
+
+4. AOPで自動記録（AuditAspect.java）
+   - @Auditableが付いたメソッドの前後で処理
+   - 変更前の値を取得（UPDATE/DELETEの場合）
+   - 変更後の値を戻り値から取得
+   - Propagation.REQUIRES_NEWで独立したトランザクション
+
+5. 監査ログ検索画面（管理者向け）
+   - エンティティ種別、ユーザー、日付範囲で検索
+   - 変更内容の詳細表示
+
+【技術スタック】
+- Spring Boot 3.x
+- Spring AOP
+- MyBatis
+- Jackson（JSON変換）
+- Spring Security（ユーザー情報取得）
+
+必要なコードの変更点を提示してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="copyPrompt('prompt-25')">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box success">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> ポイント</div>
+        <div class="info-box-content">
+          <p>監査ログは独立したトランザクションで記録することで、本体の処理がロールバックされても監査記録は残ります。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="24_mail.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前の機能</div>
+      <div class="page-nav-title">24 メール送信</div>
+    </a>
+    <a href="26_javadoc.html" class="page-nav-btn next">
+      <div class="page-nav-label">次の機能</div>
+      <div class="page-nav-title">26 Javadoc作成</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 3 - Phase 2: 機能追加</p>
+  </footer>
+
+  <script>
+    function copyPrompt(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons">check</span> コピーしました';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,672 +1,208 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Step 2: 画面作成（リンク遷移）</title>
-
-        <link
-            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap"
-            rel="stylesheet"
-        />
-        <link rel="stylesheet" href="../shared/common.css" />
-        <style>
-  :root {
-    --primary: #AF52DE;
-    --primary-dark: #9333EA;
-    --primary-light: #FAF5FF;
-    --primary-lighter: #E9D5FF;
-  }
-  .nav-category-links { display: none; }
-</style>
-        <style>
-            .download-btn {
-                background: #22c55e;
-                color: white;
-                border: none;
-                padding: 6px 14px;
-                border-radius: 6px;
-                font-size: 12px;
-                font-weight: 600;
-                cursor: pointer;
-                margin-left: auto;
-                transition: all 0.2s ease;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-            }
-            .download-btn:hover {
-                background: #16a34a;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-            }
-            .download-btn:active {
-                transform: translateY(0);
-            }
-            .code-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
-            .step-indicator {
-                display: flex;
-                justify-content: center;
-                gap: 0.5rem;
-                margin: 2rem 0;
-                flex-wrap: wrap;
-            }
-            .step-dot {
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
-                background: #e2e8f0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 14px;
-                font-weight: bold;
-                color: #64748b;
-                transition: all 0.3s ease;
-            }
-            .step-dot.active {
-                background: #3b82f6;
-                color: white;
-                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-            }
-            .step-dot.completed {
-                background: #22c55e;
-                color: white;
-            }
-            .diff-add {
-                background: #dcfce7;
-                border-left: 3px solid #22c55e;
-                padding: 0.5rem;
-                margin: 0.5rem 0;
-            }
-            .diff-remove {
-                background: #fee2e2;
-                border-left: 3px solid #ef4444;
-                padding: 0.5rem;
-                margin: 0.5rem 0;
-            }
-            .file-badge {
-                display: inline-block;
-                background: #3b82f6;
-                color: white;
-                padding: 2px 8px;
-                border-radius: 4px;
-                font-size: 12px;
-                margin-right: 8px;
-            }
-            .file-badge.new {
-                background: #22c55e;
-            }
-            .file-badge.modified {
-                background: #f59e0b;
-            }
-        </style>
-    </head>
-    <body>
-        <!-- グローバルナビゲーション -->
-        <nav class="global-nav"></nav>
-        <script src="../shared/js/nav-promptpg-step.js"></script>
-
-        <div class="container">
-            <!-- ステップインジケーター -->
-            <div class="step-indicator">
-                <div class="step-dot completed">1</div>
-                <div class="step-dot active">2</div>
-                <div class="step-dot">3</div>
-                <div class="step-dot">4</div>
-                <div class="step-dot">5</div>
-                <div class="step-dot">6</div>
-                <div class="step-dot">7</div>
-                <div class="step-dot">8</div>
-            </div>
-
-            <!-- ヘッダー -->
-            <header class="chapter-header">
-                <div class="chapter-badge">🚀 Step</div>
-                <div class="chapter-number">2</div>
-                <h1 class="chapter-title">画面作成（リンク遷移）</h1>
-            </header>
-
-            <!-- 目次 -->
-            <nav class="toc">
-                <h2 class="toc-title"><span class="material-icons">list_alt</span> このステップの内容</h2>
-                <ul class="toc-list">
-                    <li class="toc-item">
-                        <span class="toc-number">2-1</span>
-                        <span>概要</span>
-                    </li>
-                    <li class="toc-item">
-                        <span class="toc-number">2-2</span>
-                        <span>仕様</span>
-                    </li>
-                    <li class="toc-item">
-                        <span class="toc-number">2-3</span>
-                        <span>アプリ仕様</span>
-                    </li>
-                    <li class="toc-item">
-                        <span class="toc-number">2-4</span>
-                        <span>プロンプトの生成</span>
-                    </li>
-                    <li class="toc-item">
-                        <span class="toc-number">2-5</span>
-                        <span>追加・変更箇所の解説</span>
-                    </li>
-                </ul>
-            </nav>
-
-            <!-- セクション 2-1: 概要 -->
-            <section class="section">
-                <div class="section-header">
-                    <span class="section-number">Section 2-1</span>
-                    <h2 class="section-title">概要</h2>
-                </div>
-
-                <div class="intro-text">
-                    <p>
-                        このステップでは、<strong>4つの画面（一覧・入力・確認・完了）</strong>を作成し、<strong>aタグのリンクで画面遷移</strong>できるようにします。
-                    </p>
-                    <p>
-                        まだフォームの送信やデータベースは使用せず、<strong>リンクによるシンプルな画面遷移</strong>を実装します。
-                    </p>
-                </div>
-
-                <h3>このステップで学ぶこと</h3>
-                <div class="module-list">
-                    <div class="module-item">
-                        <div class="module-icon">📄</div>
-                        <div class="module-content">
-                            <h4>複数画面の作成</h4>
-                            <p>一覧・入力・確認・完了の4画面を作成する方法</p>
-                        </div>
-                    </div>
-                    <div class="module-item">
-                        <div class="module-icon">🔗</div>
-                        <div class="module-content">
-                            <h4>画面遷移（リンク）</h4>
-                            <p>aタグを使用したシンプルな画面遷移の実装</p>
-                        </div>
-                    </div>
-                    <div class="module-item">
-                        <div class="module-icon">🎯</div>
-                        <div class="module-content">
-                            <h4>Controllerのマッピング</h4>
-                            <p>複数のURLパスに対応するControllerの書き方</p>
-                        </div>
-                    </div>
-                </div>
-
-                <h3>ステップの流れ</h3>
-                <ol class="step-list">
-                    <li><strong>画面設計</strong>：4画面の役割と遷移を整理</li>
-                    <li><strong>Controller拡張</strong>：各画面に対応するメソッドを追加</li>
-                    <li><strong>テンプレート作成</strong>：4つのHTMLファイルを作成</li>
-                    <li><strong>リンク設置</strong>：aタグで各画面を接続</li>
-                </ol>
-
-                <div class="info-box">
-                    <div class="info-box-header">
-                        <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
-                        <span class="info-box-title">このステップのゴール</span>
-                    </div>
-                    <p>一覧画面 → 入力画面 → 確認画面 → 完了画面 → 一覧画面<br>
-                    とリンクで遷移できればOKです！</p>
-                </div>
-            </section>
-
-            <!-- セクション 2-2: 仕様 -->
-            <section class="section">
-                <div class="section-header">
-                    <span class="section-number">Section 2-2</span>
-                    <h2 class="section-title">仕様</h2>
-                </div>
-
-                <h3>画面一覧</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>画面名</th>
-                            <th>ファイル名</th>
-                            <th>URL</th>
-                            <th>役割</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>一覧画面</td>
-                            <td><code>index.html</code></td>
-                            <td><code>/</code></td>
-                            <td>ToDo一覧を表示（後のステップで実装）</td>
-                        </tr>
-                        <tr>
-                            <td>入力画面</td>
-                            <td><code>edit.html</code></td>
-                            <td><code>/edit</code></td>
-                            <td>ToDo入力フォーム</td>
-                        </tr>
-                        <tr>
-                            <td>確認画面</td>
-                            <td><code>confirm.html</code></td>
-                            <td><code>/confirm</code></td>
-                            <td>入力内容の確認</td>
-                        </tr>
-                        <tr>
-                            <td>完了画面</td>
-                            <td><code>complete.html</code></td>
-                            <td><code>/complete</code></td>
-                            <td>登録完了メッセージ</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3>画面遷移</h3>
-                <div class="screen-flow-diagram" style="display: flex; justify-content: center; margin: 2rem 0;">
-                    <svg viewBox="0 0 600 120" width="600" height="120">
-                        <rect width="600" height="120" fill="#f8fafc" rx="8" />
-
-                        <!-- 画面ボックス -->
-                        <rect x="20" y="40" width="100" height="50" rx="6" fill="#3b82f6" />
-                        <text x="70" y="70" text-anchor="middle" font-size="12" fill="white" font-weight="bold">一覧</text>
-
-                        <rect x="160" y="40" width="100" height="50" rx="6" fill="#22c55e" />
-                        <text x="210" y="70" text-anchor="middle" font-size="12" fill="white" font-weight="bold">入力</text>
-
-                        <rect x="300" y="40" width="100" height="50" rx="6" fill="#f59e0b" />
-                        <text x="350" y="70" text-anchor="middle" font-size="12" fill="white" font-weight="bold">確認</text>
-
-                        <rect x="440" y="40" width="100" height="50" rx="6" fill="#8b5cf6" />
-                        <text x="490" y="70" text-anchor="middle" font-size="12" fill="white" font-weight="bold">完了</text>
-
-                        <!-- 矢印 -->
-                        <path d="M 120 65 L 155 65" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
-                        <path d="M 260 65 L 295 65" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
-                        <path d="M 400 65 L 435 65" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" />
-                        <path d="M 490 95 Q 490 110 300 110 Q 70 110 70 95" stroke="#8b5cf6" stroke-width="1.5" fill="none" stroke-dasharray="4" marker-end="url(#arrow-purple)" />
-
-                        <defs>
-                            <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                                <polygon points="0 0, 8 3, 0 6" fill="#64748b" />
-                            </marker>
-                            <marker id="arrow-purple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                                <polygon points="0 0, 8 3, 0 6" fill="#8b5cf6" />
-                            </marker>
-                        </defs>
-                    </svg>
-                </div>
-            </section>
-
-            <!-- セクション 2-3: アプリ仕様 -->
-            <section class="section">
-                <div class="section-header">
-                    <span class="section-number">Section 2-3</span>
-                    <h2 class="section-title">アプリ仕様</h2>
-                </div>
-
-                <h3>各画面の仕様</h3>
-
-                <h4>1. 一覧画面（index.html）</h4>
-                <div class="screen-mockup" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin: 1rem auto; max-width: 500px;">
-                    <div style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 4px 4px 0 0; font-weight: bold; margin: -1rem -1rem 1rem -1rem;">
-                        📋 一覧画面
-                    </div>
-                    <h2 style="color: #1e293b; margin: 0 0 1rem 0;">ToDo一覧</h2>
-                    <p style="color: #64748b;">（ここに一覧が表示されます）</p>
-                    <a href="#" style="display: inline-block; background: #22c55e; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; margin-top: 1rem;">新規登録</a>
-                </div>
-
-                <h4>2. 入力画面（edit.html）</h4>
-                <div class="screen-mockup" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin: 1rem auto; max-width: 500px;">
-                    <div style="background: #22c55e; color: white; padding: 0.5rem 1rem; border-radius: 4px 4px 0 0; font-weight: bold; margin: -1rem -1rem 1rem -1rem;">
-                        ✏️ 入力画面
-                    </div>
-                    <h2 style="color: #1e293b; margin: 0 0 1rem 0;">ToDo登録</h2>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <th style="text-align: left; padding: 0.5rem; background: #f1f5f9; border: 1px solid #e2e8f0;">登録者</th>
-                            <td style="padding: 0.5rem; border: 1px solid #e2e8f0;"><input type="text" style="width: 100%; padding: 0.3rem;" disabled></td>
-                        </tr>
-                        <tr>
-                            <th style="text-align: left; padding: 0.5rem; background: #f1f5f9; border: 1px solid #e2e8f0;">タイトル</th>
-                            <td style="padding: 0.5rem; border: 1px solid #e2e8f0;"><input type="text" style="width: 100%; padding: 0.3rem;" disabled></td>
-                        </tr>
-                        <tr>
-                            <th style="text-align: left; padding: 0.5rem; background: #f1f5f9; border: 1px solid #e2e8f0;">詳細</th>
-                            <td style="padding: 0.5rem; border: 1px solid #e2e8f0;"><textarea style="width: 100%; height: 60px;" disabled></textarea></td>
-                        </tr>
-                    </table>
-                    <div style="margin-top: 1rem;">
-                        <a href="#" style="display: inline-block; background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">確認</a>
-                        <a href="#" style="display: inline-block; background: #6b7280; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; margin-left: 0.5rem;">戻る</a>
-                    </div>
-                </div>
-
-                <h4>3. 確認画面（confirm.html）</h4>
-                <div class="screen-mockup" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin: 1rem auto; max-width: 500px;">
-                    <div style="background: #f59e0b; color: white; padding: 0.5rem 1rem; border-radius: 4px 4px 0 0; font-weight: bold; margin: -1rem -1rem 1rem -1rem;">
-                        🔍 確認画面
-                    </div>
-                    <h2 style="color: #1e293b; margin: 0 0 1rem 0;">入力内容の確認</h2>
-                    <p style="background: #fef3c7; padding: 0.8rem; border-radius: 4px; color: #92400e;">上記で登録して良いですか？</p>
-                    <div style="margin-top: 1rem;">
-                        <a href="#" style="display: inline-block; background: #22c55e; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">登録</a>
-                        <a href="#" style="display: inline-block; background: #6b7280; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; margin-left: 0.5rem;">修正</a>
-                    </div>
-                </div>
-
-                <h4>4. 完了画面（complete.html）</h4>
-                <div class="screen-mockup" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin: 1rem auto; max-width: 500px;">
-                    <div style="background: #8b5cf6; color: white; padding: 0.5rem 1rem; border-radius: 4px 4px 0 0; font-weight: bold; margin: -1rem -1rem 1rem -1rem;">
-                        ✅ 完了画面
-                    </div>
-                    <div style="text-align: center; padding: 2rem; background: #dcfce7; border-radius: 8px;">
-                        <span style="font-size: 3rem;">✅</span>
-                        <h2 style="color: #166534; margin: 1rem 0 0 0;">登録が完了しました</h2>
-                    </div>
-                    <div style="text-align: center; margin-top: 1rem;">
-                        <a href="#" style="color: #3b82f6;">← 一覧へ戻る</a>
-                    </div>
-                </div>
-
-                <h3>ファイル構成</h3>
-                <div class="code-block">
-                    <div class="code-header">
-                        <span class="code-title">プロジェクト構成</span>
-                    </div>
-                    <div class="code-content">
-                        <pre>src/main/java/com/example/todo/
-├── TodoApplication.java
-└── controller/
-    └── TodoController.java       ← HelloControllerから変更
-
-src/main/resources/
-├── application.properties
-└── templates/
-    ├── index.html                ← 一覧画面
-    ├── edit.html                 ← 入力画面（新規）
-    ├── confirm.html              ← 確認画面（新規）
-    └── complete.html             ← 完了画面（新規）</pre>
-                    </div>
-                </div>
-            </section>
-
-            <!-- セクション 2-4: プロンプトの生成 -->
-            <section class="section">
-                <div class="section-header">
-                    <span class="section-number">Section 2-4</span>
-                    <h2 class="section-title">プロンプトの生成</h2>
-                </div>
-
-                <div class="intro-text">
-                    <p>Step 1で作成したプロジェクトに、4画面を追加するプロンプトを作成します。</p>
-                </div>
-
-                <div class="code-block" id="prompt-1">
-                    <div class="code-header">
-                        <span class="code-title">プロンプト例</span>
-                        <button class="download-btn" onclick="downloadPrompt('prompt-1', 'step2_screens.txt')">📥 ダウンロード</button>
-                    </div>
-                    <div class="code-content">
-                        <pre>あなたはJavaプログラマーです。
-
-Step 1で作成したSpring Bootプロジェクトに、4つの画面を追加してください。
-画面間の遷移はaタグのリンクで行います（フォーム送信はまだ使用しません）。
-
-【作成する画面】
-1. 一覧画面（index.html）- URL: /
-   - タイトル「ToDo一覧」を表示
-   - 「新規登録」リンク → 入力画面へ
-
-2. 入力画面（edit.html）- URL: /edit
-   - タイトル「ToDo登録」を表示
-   - 入力フォーム（テーブルレイアウト）
-     - 登録者（テキスト入力）
-     - タイトル（テキスト入力）
-     - 詳細（テキストエリア）
-   - 「確認」リンク → 確認画面へ
-   - 「戻る」リンク → 一覧画面へ
-
-3. 確認画面（confirm.html）- URL: /confirm
-   - タイトル「入力内容の確認」を表示
-   - 「上記で登録して良いですか？」メッセージ
-   - 「登録」リンク → 完了画面へ
-   - 「修正」リンク → 入力画面へ
-
-4. 完了画面（complete.html）- URL: /complete
-   - 「登録が完了しました」メッセージ
-   - 「一覧へ戻る」リンク → 一覧画面へ
-
-【Controller】
-- HelloControllerをTodoControllerに変更
-- 各URLに対応するメソッドを追加
-
-【注意】
-- この段階ではフォームのデータ送信は行いません
-- 全てaタグのリンクで画面遷移します
-- Thymeleafの th:href を使用してください
-
-各ファイルのコードを実装してください。</pre>
-                    </div>
-                </div>
-
-                <h4>AIからの質問例</h4>
-                <div class="screen-spec" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
-                    <p style="margin: 0 0 1rem 0; font-weight: bold; color: #92400e;">🤖 AIからこのような質問が来ることがあります</p>
-                    <ul style="margin: 0; padding-left: 1.5rem; line-height: 1.8;">
-                        <li><strong>スタイル</strong>：CSSを追加しますか？それともシンプルなHTMLのみですか？</li>
-                        <li><strong>レイアウト</strong>：共通ヘッダー・フッターは必要ですか？</li>
-                        <li><strong>入力項目</strong>：他に入力項目は必要ですか？</li>
-                    </ul>
-                </div>
-
-                <div class="info-box">
-                    <div class="info-box-header">
-                        <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
-                        <span class="info-box-title">ポイント</span>
-                    </div>
-                    <p>このステップでは<strong>画面遷移の仕組み</strong>を理解することが目的です。<br>
-                    フォームデータの送信は次のステップで学びます。</p>
-                </div>
-            </section>
-
-            <!-- セクション 2-5: 追加・変更箇所の解説 -->
-            <section class="section">
-                <div class="section-header">
-                    <span class="section-number">Section 2-5</span>
-                    <h2 class="section-title">追加・変更箇所の解説</h2>
-                </div>
-
-                <div class="intro-text">
-                    <p>Step 1からの変更点を解説します。</p>
-                </div>
-
-                <h3>ファイルの変更一覧</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ファイル</th>
-                            <th>状態</th>
-                            <th>変更内容</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>HelloController.java</code></td>
-                            <td><span class="file-badge modified">変更</span></td>
-                            <td>TodoController.javaにリネーム、メソッド追加</td>
-                        </tr>
-                        <tr>
-                            <td><code>index.html</code></td>
-                            <td><span class="file-badge modified">変更</span></td>
-                            <td>一覧画面の内容に変更</td>
-                        </tr>
-                        <tr>
-                            <td><code>edit.html</code></td>
-                            <td><span class="file-badge new">新規</span></td>
-                            <td>入力画面を追加</td>
-                        </tr>
-                        <tr>
-                            <td><code>confirm.html</code></td>
-                            <td><span class="file-badge new">新規</span></td>
-                            <td>確認画面を追加</td>
-                        </tr>
-                        <tr>
-                            <td><code>complete.html</code></td>
-                            <td><span class="file-badge new">新規</span></td>
-                            <td>完了画面を追加</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3>Controllerの変更</h3>
-                <div class="code-block">
-                    <div class="code-header">
-                        <span class="code-title">TodoController.java（変更後）</span>
-                    </div>
-                    <div class="code-content">
-                        <pre>@Controller
-public class TodoController {
-
-    // 一覧画面
-    @GetMapping("/")
-    public String index() {
-        return "index";
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 2: 画面作成（リンク遷移） - プロンプトプログラミング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
     }
+    .nav-category-links { display: none; }
+    .prompt-card { background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #AF52DE; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-promptpg-step.js"></script>
 
-    // 入力画面
-    @GetMapping("/edit")
-    public String edit() {
-        return "edit";
-    }
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge">Chapter</div>
+      <div class="chapter-number">2</div>
+      <h1 class="chapter-title">画面作成（リンク遷移）</h1>
+      <p class="chapter-subtitle">ControllerとViewを作成し、画面間の遷移を実装</p>
+    </header>
 
-    // 確認画面
-    @GetMapping("/confirm")
-    public String confirm() {
-        return "confirm";
-    }
+    <nav class="toc">
+      <h2 class="toc-title">この Chapter の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">2-1</span>Controllerの基本</li>
+        <li class="toc-item"><span class="toc-number">2-2</span>Thymeleafテンプレートの作成</li>
+        <li class="toc-item"><span class="toc-number">2-3</span>画面遷移の実装</li>
+      </ul>
+    </nav>
 
-    // 完了画面
-    @GetMapping("/complete")
-    public String complete() {
-        return "complete";
-    }
-}</pre>
-                    </div>
-                </div>
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-1</span>
+        <h2 class="section-title">Controllerの基本</h2>
+      </div>
 
-                <h3>リンクの書き方（Thymeleaf）</h3>
-                <div class="code-block">
-                    <div class="code-header">
-                        <span class="code-title">Thymeleafでのリンク記述</span>
-                    </div>
-                    <div class="code-content">
-                        <pre>&lt;!-- 入力画面へのリンク --&gt;
-&lt;a th:href="@{/edit}"&gt;新規登録&lt;/a&gt;
+      <div class="intro-text">
+        <p><strong>@Controller</strong>アノテーションを使用して、HTTPリクエストを処理するControllerを作成します。</p>
+      </div>
 
-&lt;!-- 確認画面へのリンク --&gt;
-&lt;a th:href="@{/confirm}"&gt;確認&lt;/a&gt;
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>Spring BootでToDoアプリ用のControllerを作成してください。
 
-&lt;!-- 一覧画面へのリンク --&gt;
-&lt;a th:href="@{/}"&gt;一覧へ戻る&lt;/a&gt;</pre>
-                    </div>
-                </div>
+要件:
+- クラス名: TodoController
+- @Controllerアノテーションを使用
+- 以下のエンドポイントを作成:
+  - GET /todos → 一覧画面
+  - GET /todos/new → 新規作成画面
+  - GET /todos/{id} → 詳細画面
 
-                <div class="column">
-                    <div class="column-header">
-                        <span class="column-badge">Column</span>
-                        <span class="column-title">th:hrefとhrefの違い</span>
-                    </div>
-                    <p>Thymeleafでは <code>th:href="@{/path}"</code> を使用することで、コンテキストパスを自動的に付与してくれます。</p>
-                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-                        <li><code>href="/edit"</code> → 固定パス（コンテキストパスが変わると動かない）</li>
-                        <li><code>th:href="@{/edit}"</code> → コンテキストパスを自動付与（推奨）</li>
-                    </ul>
-                </div>
-
-                <!-- 次のステップ -->
-                <h3>次のステップへ</h3>
-                <div class="info-box" style="background: #f0fdf4; border-color: #22c55e;">
-                    <div class="info-box-header">
-                        <span class="info-box-icon">✅</span>
-                        <span class="info-box-title">完了チェック</span>
-                    </div>
-                    <p>以下が確認できたら、Step 3 に進みましょう！</p>
-                    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem; line-height: 1.8;">
-                        <li>4つの画面が表示される</li>
-                        <li>リンクをクリックして画面遷移できる</li>
-                        <li>一覧 → 入力 → 確認 → 完了 → 一覧 と遷移できる</li>
-                    </ul>
-                </div>
-            </section>
+各メソッドの説明コメントも含めてください。</pre>
         </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
 
-        <footer class="footer">
-            <p>プロンプトプログラミング チュートリアル</p>
-        </footer>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>アノテーション</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>@Controller</code></td>
+              <td>Viewを返すコントローラークラスに付与</td>
+            </tr>
+            <tr>
+              <td><code>@GetMapping</code></td>
+              <td>GETリクエストを処理するメソッドに付与</td>
+            </tr>
+            <tr>
+              <td><code>@PostMapping</code></td>
+              <td>POSTリクエストを処理するメソッドに付与</td>
+            </tr>
+            <tr>
+              <td><code>@PathVariable</code></td>
+              <td>URLパスから値を取得</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-        <div class="page-nav">
-            <a href="promptpg-1.html" class="page-nav-btn prev">
-                <span>←</span>
-                <div>
-                    <div class="page-nav-label">前のステップ</div>
-                    <div class="page-nav-title">Step 1: Hello! Spring Boot</div>
-                </div>
-            </a>
-            <a href="promptpg-3.html" class="page-nav-btn next">
-                <div>
-                    <div class="page-nav-label">次のステップ</div>
-                    <div class="page-nav-title">Step 3: フォームデータ持ち回り</div>
-                </div>
-                <span>→</span>
-            </a>
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-2</span>
+        <h2 class="section-title">Thymeleafテンプレートの作成</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>Thymeleaf</strong>は、Spring Bootで標準的に使用されるテンプレートエンジンです。HTMLにデータを埋め込むことができます。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>ThymeleafでToDoアプリの一覧画面を作成してください。
+
+要件:
+- ファイル名: list.html
+- 場所: src/main/resources/templates/todo/
+- ヘッダーとフッターを含むレイアウト
+- ToDoリストをテーブルで表示
+- 新規作成へのリンクボタン
+- 各行に詳細・編集・削除へのリンク
+
+Bootstrap 5のCDNを使用してスタイリングしてください。</pre>
         </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
 
-        <script>
-            function toggleMenu() {
-                const toggle = document.querySelector(".nav-toggle");
-                const menu = document.querySelector(".nav-menu");
-                toggle.classList.toggle("active");
-                menu.classList.toggle("active");
-            }
+      <div class="highlight-box">
+        <h4>Thymeleaf基本構文</h4>
+        <ul>
+          <li><code>th:text</code> - テキストを出力</li>
+          <li><code>th:each</code> - 繰り返し処理</li>
+          <li><code>th:href</code> - リンクURLを動的に生成</li>
+          <li><code>th:if</code> / <code>th:unless</code> - 条件分岐</li>
+        </ul>
+      </div>
+    </section>
 
-            document.addEventListener("click", function (e) {
-                const nav = document.querySelector(".global-nav");
-                const toggle = document.querySelector(".nav-toggle");
-                const menu = document.querySelector(".nav-menu");
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-3</span>
+        <h2 class="section-title">画面遷移の実装</h2>
+      </div>
 
-                if (!nav.contains(e.target) && menu.classList.contains("active")) {
-                    toggle.classList.remove("active");
-                    menu.classList.remove("active");
-                }
-            });
+      <div class="intro-text">
+        <p>複数の画面間を<strong>リンク</strong>で遷移できるようにします。Thymeleafの<code>th:href</code>を使用します。</p>
+      </div>
 
-            window.addEventListener("resize", function () {
-                if (window.innerWidth >= 1024) {
-                    const toggle = document.querySelector(".nav-toggle");
-                    const menu = document.querySelector(".nav-menu");
-                    toggle.classList.remove("active");
-                    menu.classList.remove("active");
-                }
-            });
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>Thymeleafで以下の画面遷移を実装してください。
 
-            function downloadPrompt(elementId, filename) {
-                const element = document.getElementById(elementId);
-                const preElement = element.querySelector('pre');
-                const text = preElement.textContent;
+画面構成:
+1. 一覧画面（/todos）
+   - 新規作成ボタン → 新規作成画面へ
+   - 各行の「詳細」リンク → 詳細画面へ
 
-                const blob = new Blob([text], { type: 'text/plain; charset=utf-8' });
-                const url = URL.createObjectURL(blob);
+2. 新規作成画面（/todos/new）
+   - 「戻る」ボタン → 一覧画面へ
 
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-        </script>
-    </body>
+3. 詳細画面（/todos/{id}）
+   - 「一覧に戻る」ボタン → 一覧画面へ
+   - 「編集」ボタン → 編集画面へ
+
+th:hrefの使い方と、パラメータの渡し方を示してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-title"><span class="material-icons">check_circle</span> 確認ポイント</div>
+        <div class="info-box-content">
+          <p>各画面間のリンクをクリックして、正しく遷移できることを確認してください。URLも期待通りに変化していることを確認しましょう。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="page-nav">
+    <a href="promptpg-1.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">Chapter 1: Hello! Spring Boot</div>
+    </a>
+    <a href="promptpg-3.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">Chapter 3: フォームデータ持ち回り</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトプログラミング - 職業訓練校教材</p>
+  </footer>
+</body>
 </html>

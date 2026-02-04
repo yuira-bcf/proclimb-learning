@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>機能11: 一括削除 - WEB総合制作演習 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #FF3B30;
+      --primary-dark: #D63030;
+      --primary-light: #FFF5F5;
+      --primary-lighter: #FECACA;
+    }
+    .nav-category-links { display: none; }
+    .level-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-left: 12px; }
+    .level-beginner { background: #dcfce7; color: #166534; }
+    .level-intermediate { background: #fef9c3; color: #854d0e; }
+    .level-advanced { background: #ffedd5; color: #9a3412; }
+    .level-expert { background: #fee2e2; color: #991b1b; }
+    .prompt-card { background: linear-gradient(135deg, #FF3B30 0%, #D63030 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #FF3B30; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-exercises-3.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">機能</div>
+      <div class="chapter-number">11</div>
+      <h1 class="chapter-title">一括削除<span class="level-badge level-intermediate">中級</span></h1>
+      <p class="chapter-subtitle">複数ToDoをチェックボックスでまとめて削除</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この機能の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">11-1</span>工程概要</li>
+        <li class="toc-item"><span class="toc-number">11-2</span>成果物</li>
+        <li class="toc-item"><span class="toc-number">11-3</span>生成プロンプト</li>
+      </ul>
+    </nav>
+
+    <!-- Section 11-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-1</span>
+        <h2 class="section-title">工程概要</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>複数のToDoを<strong>チェックボックスで選択</strong>し、まとめて削除できる機能を実装します。</p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: var(--primary); color: white;">学習テーマ</div>
+          <p>バッチ処理</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #007AFF; color: white;">主な技術</div>
+          <p>JavaScript / MyBatis IN句</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #34C759; color: white;">関連レイヤー</div>
+          <p>Controller / Repository / View</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>この機能で行うこと</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: var(--primary);">
+              <span class="material-icons" style="color: white;">check_box</span>
+            </div>
+            <div class="feature-content">
+              <h4>チェックボックスUI</h4>
+              <p>各行に選択用チェックボックス追加</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">select_all</span>
+            </div>
+            <div class="feature-content">
+              <h4>全選択機能</h4>
+              <p>一括で全件選択/解除</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">tag</span>
+            </div>
+            <div class="feature-content">
+              <h4>選択件数表示</h4>
+              <p>選択中の件数をリアルタイム表示</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">delete_sweep</span>
+            </div>
+            <div class="feature-content">
+              <h4>一括削除API</h4>
+              <p>複数IDをまとめて削除</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 11-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-2</span>
+        <h2 class="section-title">成果物</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この機能で作成・更新するファイルの一覧です。</p>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ファイル</th>
+              <th>変更内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>TodoController.java</code></td>
+              <td>一括削除エンドポイント追加</td>
+            </tr>
+            <tr>
+              <td><code>TodoService.java</code></td>
+              <td>deleteByIds(List&lt;Integer&gt;) メソッド</td>
+            </tr>
+            <tr>
+              <td><code>TodoMapper.xml</code></td>
+              <td>DELETE文にIN句を使用</td>
+            </tr>
+            <tr>
+              <td><code>list.html</code></td>
+              <td>チェックボックス、全選択、削除ボタン</td>
+            </tr>
+            <tr>
+              <td><code>bulk-delete.js</code></td>
+              <td>選択管理JavaScript（新規作成）</td>
+            </tr>
+            <tr>
+              <td><code>style.css</code></td>
+              <td>選択状態のスタイル</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <h4>JavaScript処理</h4>
+        <ul>
+          <li><strong>toggleAll()</strong> - 全選択/全解除</li>
+          <li><strong>updateCount()</strong> - 選択件数更新</li>
+          <li><strong>getSelectedIds()</strong> - 選択IDリスト取得</li>
+          <li><strong>confirmBulkDelete()</strong> - 確認後に削除実行</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 11-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-3</span>
+        <h2 class="section-title">生成プロンプト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、実装コードを生成できます。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4><span class="material-icons">smart_toy</span> AIへの入力プロンプト</h4>
+        <div class="prompt-box">
+          <pre id="prompt-11">あなたはJavaプログラマーです。
+
+ToDoアプリに一括削除機能を追加してください。
+
+【要件】
+- 各ToDoにチェックボックスを追加
+- ヘッダーに「全選択」チェックボックス
+- 選択中の件数をリアルタイム表示
+- 「一括削除」ボタンで選択したToDoを削除
+- 削除前に確認ダイアログを表示
+
+【実装箇所】
+
+■ list.html
+- 各行にチェックボックス追加
+  &lt;input type="checkbox" class="todo-checkbox" th:value="${todo.id}"&gt;
+- ヘッダーに全選択チェックボックス
+- 選択件数表示エリア
+- 一括削除ボタン（選択0件時は無効化）
+
+■ bulk-delete.js（新規作成）
+```javascript
+// 全選択/全解除
+function toggleAll(checked) {
+    document.querySelectorAll('.todo-checkbox')
+        .forEach(cb => cb.checked = checked);
+    updateSelectedCount();
+}
+
+// 選択件数更新
+function updateSelectedCount() {
+    const count = document.querySelectorAll('.todo-checkbox:checked').length;
+    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('bulkDeleteBtn').disabled = count === 0;
+}
+
+// 一括削除実行
+function bulkDelete() {
+    const ids = Array.from(document.querySelectorAll('.todo-checkbox:checked'))
+        .map(cb => cb.value);
+    if (confirm(`${ids.length}件のToDoを削除しますか？`)) {
+        // フォームで送信 or fetch API
+    }
+}
+```
+
+■ TodoController.java
+- @PostMapping("/bulk-delete")
+- @RequestParam List&lt;Integer&gt; ids で複数ID受け取り
+- サービス経由で削除実行
+
+■ TodoService.java
+- deleteByIds(List&lt;Integer&gt; ids) メソッド追加
+- 空リストの場合は何もしない
+
+■ TodoMapper.xml
+- DELETE FROM todo WHERE id IN
+- &lt;foreach collection="ids" item="id" open="(" separator="," close=")"&gt;
+    #{id}
+  &lt;/foreach&gt;
+
+■ style.css
+- .todo-checkbox:checked + .todo-row { background: #eff6ff; }
+- 選択行のハイライト表示
+
+必要なコードを提示してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="copyPrompt('prompt-11')">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box success">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> ポイント</div>
+        <div class="info-box-content">
+          <p>MyBatisの&lt;foreach&gt;タグを使うと、IN句に渡すリストを動的に生成できます。SQLインジェクション対策も自動で行われます。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="10_deadline.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前の機能</div>
+      <div class="page-nav-title">10 期限設定</div>
+    </a>
+    <a href="12_csv_export.html" class="page-nav-btn next">
+      <div class="page-nav-label">次の機能</div>
+      <div class="page-nav-title">12 CSVエクスポート</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 3 - Phase 2: 機能追加</p>
+  </footer>
+
+  <script>
+    function copyPrompt(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons">check</span> コピーしました';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

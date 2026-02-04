@@ -1,338 +1,241 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Step 8: 編集機能</title>
-
-        <link
-            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap"
-            rel="stylesheet"
-        />
-        <link rel="stylesheet" href="../shared/common.css" />
-        <style>
-  :root {
-    --primary: #AF52DE;
-    --primary-dark: #9333EA;
-    --primary-light: #FAF5FF;
-    --primary-lighter: #E9D5FF;
-  }
-  .nav-category-links { display: none; }
-</style>
-        <style>
-            .download-btn { background: #22c55e; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-left: auto; }
-            .code-header { display: flex; align-items: center; justify-content: space-between; }
-            .step-indicator { display: flex; justify-content: center; gap: 0.5rem; margin: 2rem 0; flex-wrap: wrap; }
-            .step-dot { width: 36px; height: 36px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: #64748b; }
-            .step-dot.active { background: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
-            .step-dot.completed { background: #22c55e; color: white; }
-            .file-badge { display: inline-block; background: #3b82f6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 8px; }
-            .file-badge.new { background: #22c55e; }
-            .file-badge.modified { background: #f59e0b; }
-        </style>
-    </head>
-    <body>
-        <nav class="global-nav"></nav>
-        <script src="../shared/js/nav-promptpg-step.js"></script>
-
-        <div class="container">
-            <div class="step-indicator">
-                <div class="step-dot completed">1</div>
-                <div class="step-dot completed">2</div>
-                <div class="step-dot completed">3</div>
-                <div class="step-dot completed">4</div>
-                <div class="step-dot completed">5</div>
-                <div class="step-dot completed">6</div>
-                <div class="step-dot completed">7</div>
-                <div class="step-dot active">8</div>
-            </div>
-
-            <header class="chapter-header">
-                <div class="chapter-badge">🚀 Step</div>
-                <div class="chapter-number">8</div>
-                <h1 class="chapter-title">編集機能</h1>
-            </header>
-
-            <nav class="toc">
-                <h2 class="toc-title"><span class="material-icons">list_alt</span> このステップの内容</h2>
-                <ul class="toc-list">
-                    <li class="toc-item"><span class="toc-number">8-1</span><span>概要</span></li>
-                    <li class="toc-item"><span class="toc-number">8-2</span><span>仕様</span></li>
-                    <li class="toc-item"><span class="toc-number">8-3</span><span>アプリ仕様</span></li>
-                    <li class="toc-item"><span class="toc-number">8-4</span><span>プロンプトの生成</span></li>
-                    <li class="toc-item"><span class="toc-number">8-5</span><span>追加・変更箇所の解説</span></li>
-                </ul>
-            </nav>
-
-            <!-- 概要 -->
-            <section class="section">
-                <div class="section-header">
-                    <span class="section-number">Section 8-1</span>
-                    <h2 class="section-title">概要</h2>
-                </div>
-
-                <div class="intro-text">
-                    <p>このステップでは、<strong>既存のToDoを編集</strong>する機能を実装します。</p>
-                    <p>一覧画面から編集ボタンをクリックすると、現在のデータが入力された状態で編集画面が表示されます。</p>
-                </div>
-
-                <h3>このステップで学ぶこと</h3>
-                <div class="module-list">
-                    <div class="module-item">
-                        <div class="module-icon">✏️</div>
-                        <div class="module-content">
-                            <h4>編集画面</h4>
-                            <p>既存データを読み込んで編集する画面</p>
-                        </div>
-                    </div>
-                    <div class="module-item">
-                        <div class="module-icon">🔄</div>
-                        <div class="module-content">
-                            <h4>更新処理</h4>
-                            <p>既存データを更新する方法</p>
-                        </div>
-                    </div>
-                    <div class="module-item">
-                        <div class="module-icon">🆔</div>
-                        <div class="module-content">
-                            <h4>IDの管理</h4>
-                            <p>新規登録と編集を区別する方法</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-box">
-                    <div class="info-box-header">
-                        <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
-                        <span class="info-box-title">このステップのゴール</span>
-                    </div>
-                    <p>一覧画面から編集ボタンをクリックして、ToDoの内容を更新できればOKです！<br>
-                    <strong>これでToDoアプリのCRUD機能が完成します！</strong></p>
-                </div>
-            </section>
-
-            <!-- 仕様 -->
-            <section class="section">
-                <div class="section-header">
-                    <span class="section-number">Section 8-2</span>
-                    <h2 class="section-title">仕様</h2>
-                </div>
-
-                <h3>編集の流れ</h3>
-                <ol class="step-list">
-                    <li>一覧画面の編集ボタンをクリック</li>
-                    <li>編集画面が表示される（既存データがフォームに入力済み）</li>
-                    <li>内容を修正して確認ボタンをクリック</li>
-                    <li>確認画面で内容を確認</li>
-                    <li>更新ボタンで保存</li>
-                </ol>
-
-                <h3>URL設計</h3>
-                <table class="data-table">
-                    <thead><tr><th>URL</th><th>メソッド</th><th>説明</th></tr></thead>
-                    <tbody>
-                        <tr><td><code>/edit/{id}</code></td><td>GET</td><td>編集画面表示（データ読み込み）</td></tr>
-                        <tr><td><code>/confirm</code></td><td>POST</td><td>確認画面（新規・編集共通）</td></tr>
-                        <tr><td><code>/complete</code></td><td>POST</td><td>保存処理（新規・更新を判定）</td></tr>
-                    </tbody>
-                </table>
-            </section>
-
-            <!-- アプリ仕様 -->
-            <section class="section">
-                <div class="section-header">
-                    <span class="section-number">Section 8-3</span>
-                    <h2 class="section-title">アプリ仕様</h2>
-                </div>
-
-                <h3>画面イメージ</h3>
-                <div class="screen-mockup" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin: 1rem auto; max-width: 650px;">
-                    <div style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 4px 4px 0 0; font-weight: bold; margin: -1rem -1rem 1rem -1rem;">
-                        📋 一覧画面（編集ボタン追加）
-                    </div>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                        <thead>
-                            <tr style="background: #e2e8f0;">
-                                <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">No</th>
-                                <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">タイトル</th>
-                                <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">登録者</th>
-                                <th style="border: 1px solid #cbd5e1; padding: 0.5rem;">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="border: 1px solid #cbd5e1; padding: 0.5rem; text-align: center;">1</td>
-                                <td style="border: 1px solid #cbd5e1; padding: 0.5rem;">買い物リスト</td>
-                                <td style="border: 1px solid #cbd5e1; padding: 0.5rem;">山田太郎</td>
-                                <td style="border: 1px solid #cbd5e1; padding: 0.5rem; text-align: center;">
-                                    <span style="background: #f59e0b; color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; margin-right: 4px;">編集</span>
-                                    <span style="background: #ef4444; color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem;">削除</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <h3>Formクラスの変更</h3>
-                <table class="data-table">
-                    <thead><tr><th>フィールド</th><th>型</th><th>説明</th></tr></thead>
-                    <tbody>
-                        <tr><td>id</td><td>Long</td><td>ID（新規はnull、編集時は値あり）</td></tr>
-                        <tr><td>author</td><td>String</td><td>登録者</td></tr>
-                        <tr><td>title</td><td>String</td><td>タイトル</td></tr>
-                        <tr><td>detail</td><td>String</td><td>詳細</td></tr>
-                    </tbody>
-                </table>
-            </section>
-
-            <!-- プロンプト -->
-            <section class="section">
-                <div class="section-header">
-                    <span class="section-number">Section 8-4</span>
-                    <h2 class="section-title">プロンプトの生成</h2>
-                </div>
-
-                <div class="code-block" id="prompt-1">
-                    <div class="code-header">
-                        <span class="code-title">プロンプト例</span>
-                        <button class="download-btn" onclick="downloadPrompt('prompt-1', 'step8_edit.txt')">📥 ダウンロード</button>
-                    </div>
-                    <div class="code-content">
-                        <pre>あなたはJavaプログラマーです。
-
-Step 7で作成したアプリケーションに、編集機能を追加してください。
-
-【要件】
-1. 一覧画面に編集ボタンを追加する
-2. 編集ボタンをクリックすると、既存データが入力された編集画面を表示する
-3. 確認画面・完了画面は新規登録と共通で使用する
-4. 新規と編集の判定はIDの有無で行う（idがnullなら新規、値があれば更新）
-
-【TodoFormの変更】
-- idフィールドを追加（Long型）
-
-【Serviceクラスの追加メソッド】
-- findById(Long id): IDでデータを取得
-- update(TodoForm form): データを更新（updatedAtを更新）
-
-【Controllerの追加・変更】
-- GET /edit/{id}: 編集画面表示（データを読み込んでFormにセット）
-- POST /complete: IDの有無で新規登録か更新かを判定
-
-【テンプレートの変更】
-- index.html: 編集ボタン追加
-- edit.html: hiddenフィールドでIDを保持
-- confirm.html: hiddenフィールドでIDを保持
-
-各ファイルのコードを実装してください。</pre>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 解説 -->
-            <section class="section">
-                <div class="section-header">
-                    <span class="section-number">Section 8-5</span>
-                    <h2 class="section-title">追加・変更箇所の解説</h2>
-                </div>
-
-                <h3>ファイルの変更一覧</h3>
-                <table class="data-table">
-                    <thead><tr><th>ファイル</th><th>状態</th><th>変更内容</th></tr></thead>
-                    <tbody>
-                        <tr><td><code>TodoForm.java</code></td><td><span class="file-badge modified">変更</span></td><td>idフィールド追加</td></tr>
-                        <tr><td><code>TodoService.java</code></td><td><span class="file-badge modified">変更</span></td><td>findById, updateメソッド追加</td></tr>
-                        <tr><td><code>TodoController.java</code></td><td><span class="file-badge modified">変更</span></td><td>編集エンドポイント追加</td></tr>
-                        <tr><td><code>index.html</code></td><td><span class="file-badge modified">変更</span></td><td>編集ボタン追加</td></tr>
-                        <tr><td><code>edit.html</code></td><td><span class="file-badge modified">変更</span></td><td>hidden id追加</td></tr>
-                        <tr><td><code>confirm.html</code></td><td><span class="file-badge modified">変更</span></td><td>hidden id追加</td></tr>
-                    </tbody>
-                </table>
-
-                <h3>新規・編集の判定</h3>
-                <div class="code-block">
-                    <div class="code-header"><span class="code-title">TodoService.java（抜粋）</span></div>
-                    <div class="code-content">
-                        <pre>public void saveOrUpdate(TodoForm form) {
-    if (form.getId() == null) {
-        // 新規登録
-        save(form);
-    } else {
-        // 更新
-        update(form);
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 8: 編集機能 - プロンプトプログラミング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
     }
-}</pre>
-                    </div>
-                </div>
+    .nav-category-links { display: none; }
+    .prompt-card { background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #AF52DE; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-promptpg-step.js"></script>
 
-                <h3>編集ボタンの例</h3>
-                <div class="code-block">
-                    <div class="code-header"><span class="code-title">index.html（抜粋）</span></div>
-                    <div class="code-content">
-                        <pre>&lt;a th:href="@{/edit/{id}(id=${todo.id})}"&gt;編集&lt;/a&gt;</pre>
-                    </div>
-                </div>
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge">Chapter</div>
+      <div class="chapter-number">8</div>
+      <h1 class="chapter-title">編集機能</h1>
+      <p class="chapter-subtitle">編集画面を作成し、UPDATE処理を実装</p>
+    </header>
 
-                <!-- 完成 -->
-                <div class="column" style="background: #f0fdf4; border-color: #22c55e;">
-                    <div class="column-header">
-                        <span class="column-badge" style="background: #22c55e;">🎉 Complete</span>
-                        <span class="column-title">ToDoアプリ完成！</span>
-                    </div>
-                    <p>おめでとうございます！これで<strong>CRUD機能を持つToDoアプリ</strong>が完成しました！</p>
-                    <h4>実装した機能</h4>
-                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-                        <li><strong>Create</strong>: 新規登録（Step 3-5）</li>
-                        <li><strong>Read</strong>: 一覧表示（Step 6）</li>
-                        <li><strong>Update</strong>: 編集（Step 8）</li>
-                        <li><strong>Delete</strong>: 削除（Step 7）</li>
-                    </ul>
-                    <p style="margin-top: 1rem;">次のステップとして、以下の機能追加にチャレンジしてみましょう！</p>
-                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-                        <li>入力バリデーション</li>
-                        <li>検索・ソート機能</li>
-                        <li>ページネーション</li>
-                        <li>ログイン認証</li>
-                    </ul>
-                </div>
+    <nav class="toc">
+      <h2 class="toc-title">この Chapter の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">8-1</span>編集画面の表示</li>
+        <li class="toc-item"><span class="toc-number">8-2</span>更新処理の実装</li>
+        <li class="toc-item"><span class="toc-number">8-3</span>完了状態の切り替え</li>
+      </ul>
+    </nav>
 
-                <div class="info-box" style="background: #f0fdf4; border-color: #22c55e;">
-                    <div class="info-box-header">
-                        <span class="info-box-icon">✅</span>
-                        <span class="info-box-title">完了チェック</span>
-                    </div>
-                    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
-                        <li>編集ボタンで編集画面が表示される</li>
-                        <li>既存データがフォームに入力されている</li>
-                        <li>更新後、一覧に反映される</li>
-                        <li>新規登録も引き続き動作する</li>
-                    </ul>
-                </div>
-            </section>
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-1</span>
+        <h2 class="section-title">編集画面の表示</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>既存データを取得し、<strong>編集画面</strong>にフォームの初期値として表示します。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>Spring BootでToDoの編集画面を実装してください。
+
+要件:
+- GET /todos/{id}/edit で編集画面を表示
+- 既存データをDBから取得してフォームに表示
+- 存在しないIDの場合は404エラー
+- フォームは新規作成画面と同じレイアウト
+
+EntityからFormへの変換処理も含めてください。</pre>
         </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
 
-        <footer class="footer"><p>プロンプトプログラミング チュートリアル</p></footer>
+      <div class="highlight-box">
+        <h4>編集画面のポイント</h4>
+        <ul>
+          <li>IDを hidden フィールドで保持</li>
+          <li>既存値をフォームの value に設定</li>
+          <li>新規作成と編集でテンプレートを共通化可能</li>
+        </ul>
+      </div>
+    </section>
 
-        <div class="page-nav">
-            <a href="promptpg-7.html" class="page-nav-btn prev">
-                <span>←</span>
-                <div><div class="page-nav-label">前のステップ</div><div class="page-nav-title">Step 7: 削除機能</div></div>
-            </a>
-            <a href="../promptpg-all/index.html" class="page-nav-btn next">
-                <div><div class="page-nav-label">トップに戻る</div><div class="page-nav-title">プロンプトプログラミング概要</div></div>
-                <span>→</span>
-            </a>
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-2</span>
+        <h2 class="section-title">更新処理の実装</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>編集されたデータを<strong>UPDATE</strong>して、データベースに保存します。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>Spring BootでToDoの更新処理を実装してください。
+
+要件:
+- POST /todos/{id}/update で更新処理
+- バリデーションエラー時は編集画面に戻る
+- 更新成功後は一覧画面にリダイレクト
+- フラッシュメッセージで「更新が完了しました」を表示
+- 楽観的ロック（バージョン管理）も実装
+
+Controller、Service、Entityのバージョン管理を含めてください。</pre>
         </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
 
-        <script>
-            function toggleMenu() { document.querySelector(".nav-toggle").classList.toggle("active"); document.querySelector(".nav-menu").classList.toggle("active"); }
-            function downloadPrompt(elementId, filename) {
-                const text = document.getElementById(elementId).querySelector('pre').textContent;
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain; charset=utf-8' }));
-                a.download = filename;
-                a.click();
-            }
-        </script>
-    </body>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>楽観的ロック</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>@Version</code></td>
+              <td>バージョン管理用フィールドに付与</td>
+            </tr>
+            <tr>
+              <td>動作</td>
+              <td>更新時にバージョンをチェックし、変更があれば例外発生</td>
+            </tr>
+            <tr>
+              <td>メリット</td>
+              <td>同時編集によるデータ不整合を防止</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-3</span>
+        <h2 class="section-title">完了状態の切り替え</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>一覧画面から<strong>ワンクリック</strong>でToDoの完了/未完了を切り替える機能を実装します。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>ToDoの完了状態をワンクリックで切り替える機能を実装してください。
+
+要件:
+- POST /todos/{id}/toggle で完了状態を反転
+- 一覧画面のチェックボックスまたはボタンで切り替え
+- Ajaxを使用してページ遷移なしで更新（オプション）
+- 完了したToDoは打ち消し線で表示
+
+非同期通信を使用しない場合と使用する場合の両方を示してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-title"><span class="material-icons">celebration</span> 完成！</div>
+        <div class="info-box-content">
+          <p>これでCRUD（Create, Read, Update, Delete）の基本機能がすべて完成しました。ToDoアプリとして必要な機能が揃いました。次のステップとして、バリデーション、検索、ページネーションなどの機能追加に挑戦してみましょう。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">プロンプトプログラミング 完了</h2>
+      </div>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon" style="background: #34C759;">
+            <span class="material-icons" style="color: white;">check</span>
+          </div>
+          <div class="feature-content">
+            <h4>Chapter 1-3: 基本設定</h4>
+            <p>プロジェクト作成、画面遷移、フォーム処理</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon" style="background: #34C759;">
+            <span class="material-icons" style="color: white;">check</span>
+          </div>
+          <div class="feature-content">
+            <h4>Chapter 4-5: データベース</h4>
+            <p>DB設定、Entity、Repository、データ登録</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon" style="background: #34C759;">
+            <span class="material-icons" style="color: white;">check</span>
+          </div>
+          <div class="feature-content">
+            <h4>Chapter 6-8: CRUD完成</h4>
+            <p>一覧表示、削除機能、編集機能</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="next-step-box">
+        <span class="next-step-badge">次のステップ</span>
+        <h3>機能追加編へ</h3>
+        <p>基本CRUDが完成したら、バリデーション、検索、ページネーション、認証などの機能を追加しましょう。</p>
+        <a href="../promptpg-function/01_extends-todo.html" class="btn-primary">
+          機能追加編へ進む
+          <span class="material-icons">arrow_forward</span>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <div class="page-nav">
+    <a href="promptpg-7.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">Chapter 7: 削除機能</div>
+    </a>
+    <a href="index.html" class="page-nav-btn next">
+      <div class="page-nav-label">トップ</div>
+      <div class="page-nav-title">プロンプトプログラミング</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトプログラミング - 職業訓練校教材</p>
+  </footer>
+</body>
 </html>
