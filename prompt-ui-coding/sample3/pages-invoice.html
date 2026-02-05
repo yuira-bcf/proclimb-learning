@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>請求書 - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .invoice-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    .invoice-header {
+      background: linear-gradient(135deg, #17a2b8, #20c997);
+      color: #fff;
+      padding: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .invoice-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .invoice-brand .material-icons {
+      font-size: 48px;
+    }
+
+    .invoice-brand-name {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .invoice-brand-tagline {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .invoice-info {
+      text-align: right;
+    }
+
+    .invoice-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .invoice-number {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .invoice-body {
+      padding: 32px;
+    }
+
+    .invoice-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 32px;
+    }
+
+    .invoice-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .invoice-section-content {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .invoice-section-content strong {
+      display: block;
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .invoice-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+    }
+
+    .invoice-table th {
+      background: #f8f9fa;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    .invoice-table td {
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    .invoice-table .text-right {
+      text-align: right;
+    }
+
+    .invoice-table .item-name {
+      font-weight: 500;
+    }
+
+    .invoice-table .item-desc {
+      font-size: 13px;
+      color: #6c757d;
+    }
+
+    .invoice-summary {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 32px;
+    }
+
+    .invoice-summary-table {
+      width: 280px;
+    }
+
+    .invoice-summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+
+    .invoice-summary-row.total {
+      border-top: 2px solid #333;
+      margin-top: 8px;
+      padding-top: 16px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .invoice-notes {
+      background: #f8f9fa;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    .invoice-notes-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .invoice-notes-content {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .invoice-footer {
+      text-align: center;
+      padding-top: 24px;
+      border-top: 1px solid #eee;
+    }
+
+    .invoice-footer p {
+      font-size: 13px;
+      color: #6c757d;
+    }
+
+    .invoice-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-bottom: 24px;
+    }
+
+    .invoice-status {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .invoice-status.paid {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .invoice-status.pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .invoice-status.overdue {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    @media print {
+      .invoice-actions,
+      .header,
+      .sidebar,
+      .page-header {
+        display: none !important;
+      }
+      .main {
+        margin-left: 0 !important;
+      }
+      .invoice-container {
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <nav class="breadcrumb">
+            <a href="sample-3-dashboard.html">ホーム</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>ページ</span>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>請求書</span>
+          </nav>
+        </div>
+        <div class="header-right">
+          <button class="header-btn">
+            <span class="material-icons">notifications_none</span>
+          </button>
+          <div class="header-user">
+            <div class="header-user-avatar">
+              <span class="material-icons" style="font-size: 16px;">person</span>
+            </div>
+            <span class="header-user-name">山田 太郎</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-header">
+          <h1 class="page-title">
+          <span class="page-num-badge">7-2</span>請求書
+          <button class="prompt-btn" data-prompt-id="7-2" data-prompt="請求書ページを作成してください。
+
+【要件】
+- 会社ロゴとブランド情報
+- 請求書番号・日付
+- 送付先・請求先情報
+- 商品/サービス明細テーブル
+- 小計・税・合計金額
+- 支払い条件
+- 印刷ボタン
+
+【デザイン】
+- グラデーションヘッダー
+- クリーンな表形式
+- 印刷用スタイル対応" onclick="openPromptModal('7-2')">
+            <span class="material-icons">auto_awesome</span>
+            プロンプト
+          </button>
+          <button class="source-btn" data-source-id="7-2" onclick="openSourceModal('7-2')">
+            <span class="material-icons">code</span>
+            ソース
+          </button>
+        </h1>
+          <p class="page-subtitle">請求書の表示と印刷</p>
+        </div>
+
+        <div class="invoice-actions">
+          <button class="btn btn-secondary" onclick="window.print()">
+            <span class="material-icons">print</span>
+            印刷
+          </button>
+          <button class="btn btn-primary">
+            <span class="material-icons">file_download</span>
+            PDFダウンロード
+          </button>
+        </div>
+
+        <div class="invoice-container">
+          <div class="invoice-header">
+            <div class="invoice-brand">
+              <span class="material-icons">business</span>
+              <div>
+                <div class="invoice-brand-name">AdminPanel Inc.</div>
+                <div class="invoice-brand-tagline">ビジネスソリューション</div>
+              </div>
+            </div>
+            <div class="invoice-info">
+              <div class="invoice-title">請求書</div>
+              <div class="invoice-number">No. INV-2024-0042</div>
+            </div>
+          </div>
+
+          <div class="invoice-body">
+            <h4 class="card-title" style="font-size: 14px; margin-bottom: 16px;"><span class="section-num-badge">7-2-1</span>請求先・請求情報
+              <button class="prompt-btn" data-prompt-id="7-2-1" data-prompt="請求先・請求情報セクションを作成してください。
+
+【構造】
+- invoice-details: 2カラムグリッドレイアウト（grid-template-columns: 1fr 1fr, gap: 32px）
+
+【左カラム - 請求先】
+- invoice-section-title: ラベル（font-size: 12px, font-weight: 600, color: #6c757d, text-transform: uppercase）
+- invoice-section-content: 内容
+  - strong: 会社名（font-size: 16px, color: #333, display: block）
+  - 住所、電話番号など（font-size: 14px, line-height: 1.6）
+
+【右カラム - 請求情報】
+- 発行日、支払期限、ステータスを flexbox で横並び（justify-content: space-between）
+- invoice-status: ステータスバッジ
+  - .paid: background: #d4edda, color: #155724（支払済）
+  - .pending: background: #fff3cd, color: #856404（支払い待ち）
+  - .overdue: background: #f8d7da, color: #721c24（期限超過）
+
+【ステータスバッジCSS】
+padding: 6px 16px
+border-radius: 20px
+font-size: 12px
+font-weight: 600" onclick="openPromptModal('7-2-1')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="7-2-1" onclick="openSourceModal('7-2-1')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h4>
+            <div class="invoice-details">
+              <div>
+                <div class="invoice-section-title">請求先</div>
+                <div class="invoice-section-content">
+                  <strong>株式会社サンプル</strong>
+                  〒100-0001<br>
+                  東京都千代田区千代田1-1-1<br>
+                  サンプルビル 5F<br>
+                  Tel: 03-1234-5678
+                </div>
+              </div>
+              <div>
+                <div class="invoice-section-title">請求情報</div>
+                <div class="invoice-section-content">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>発行日:</span>
+                    <span>2024年1月15日</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>支払期限:</span>
+                    <span>2024年2月15日</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>ステータス:</span>
+                    <span class="invoice-status pending">支払い待ち</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h4 class="card-title" style="font-size: 14px; margin-bottom: 16px; margin-top: 24px;"><span class="section-num-badge">7-2-2</span>明細テーブル
+              <button class="prompt-btn" data-prompt-id="7-2-2" data-prompt="請求書明細テーブルを作成してください。
+
+【テーブル構造】
+- invoice-table: width: 100%, border-collapse: collapse, margin-bottom: 24px
+
+【テーブルヘッダー（th）】
+- background: #f8f9fa
+- padding: 12px 16px
+- text-align: left
+- font-size: 12px, font-weight: 600, color: #6c757d
+- text-transform: uppercase
+- border-bottom: 2px solid #dee2e6
+
+【列構成】
+1. 品目（左寄せ）
+2. 数量（右寄せ: .text-right）
+3. 単価（右寄せ）
+4. 金額（右寄せ）
+
+【テーブルボディ（td）】
+- padding: 16px
+- border-bottom: 1px solid #eee
+- font-size: 14px
+
+【品目セルの構造】
+- item-name: 商品名（font-weight: 500）
+- item-desc: 説明文（font-size: 13px, color: #6c757d）
+
+【データ例】
+| 品目 | 数量 | 単価 | 金額 |
+|------|------|------|------|
+| Webアプリケーション開発 | 1 | ¥800,000 | ¥800,000 |
+| UI/UXデザイン | 1 | ¥300,000 | ¥300,000 |
+| サーバー構築 | 1 | ¥150,000 | ¥150,000 |
+| 保守サポート（月額） | 3 | ¥50,000 | ¥150,000 |" onclick="openPromptModal('7-2-2')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="7-2-2" onclick="openSourceModal('7-2-2')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h4>
+            <table class="invoice-table">
+              <thead>
+                <tr>
+                  <th>品目</th>
+                  <th class="text-right">数量</th>
+                  <th class="text-right">単価</th>
+                  <th class="text-right">金額</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="item-name">Webアプリケーション開発</div>
+                    <div class="item-desc">フロントエンド・バックエンド開発一式</div>
+                  </td>
+                  <td class="text-right">1</td>
+                  <td class="text-right">¥800,000</td>
+                  <td class="text-right">¥800,000</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="item-name">UI/UXデザイン</div>
+                    <div class="item-desc">ワイヤーフレーム、UIデザイン、プロトタイプ</div>
+                  </td>
+                  <td class="text-right">1</td>
+                  <td class="text-right">¥300,000</td>
+                  <td class="text-right">¥300,000</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="item-name">サーバー構築</div>
+                    <div class="item-desc">AWS環境構築・設定</div>
+                  </td>
+                  <td class="text-right">1</td>
+                  <td class="text-right">¥150,000</td>
+                  <td class="text-right">¥150,000</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="item-name">保守サポート（月額）</div>
+                    <div class="item-desc">障害対応・軽微な修正対応</div>
+                  </td>
+                  <td class="text-right">3</td>
+                  <td class="text-right">¥50,000</td>
+                  <td class="text-right">¥150,000</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4 class="card-title" style="font-size: 14px; margin-bottom: 16px;"><span class="section-num-badge">7-2-3</span>合計金額
+              <button class="prompt-btn" data-prompt-id="7-2-3" data-prompt="請求書合計金額セクションを作成してください。
+
+【レイアウト】
+- invoice-summary: display: flex, justify-content: flex-end（右寄せ）
+- invoice-summary-table: width: 280px
+
+【各行の構造】
+- invoice-summary-row: display: flex, justify-content: space-between, padding: 8px 0, font-size: 14px
+
+【合計行の特別スタイル（.total）】
+- border-top: 2px solid #333
+- margin-top: 8px
+- padding-top: 16px
+- font-size: 18px
+- font-weight: 700
+
+【データ例】
+- 小計: ¥1,400,000
+- 消費税（10%）: ¥140,000
+- 合計: ¥1,540,000
+
+【HTML構造】
+&lt;div class=&quot;invoice-summary&quot;&gt;
+  &lt;div class=&quot;invoice-summary-table&quot;&gt;
+    &lt;div class=&quot;invoice-summary-row&quot;&gt;
+      &lt;span&gt;小計&lt;/span&gt;
+      &lt;span&gt;¥1,400,000&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;invoice-summary-row&quot;&gt;
+      &lt;span&gt;消費税（10%）&lt;/span&gt;
+      &lt;span&gt;¥140,000&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;invoice-summary-row total&quot;&gt;
+      &lt;span&gt;合計&lt;/span&gt;
+      &lt;span&gt;¥1,540,000&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;" onclick="openPromptModal('7-2-3')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="7-2-3" onclick="openSourceModal('7-2-3')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h4>
+            <div class="invoice-summary">
+              <div class="invoice-summary-table">
+                <div class="invoice-summary-row">
+                  <span>小計</span>
+                  <span>¥1,400,000</span>
+                </div>
+                <div class="invoice-summary-row">
+                  <span>消費税（10%）</span>
+                  <span>¥140,000</span>
+                </div>
+                <div class="invoice-summary-row total">
+                  <span>合計</span>
+                  <span>¥1,540,000</span>
+                </div>
+              </div>
+            </div>
+
+            <h4 class="card-title" style="font-size: 14px; margin-bottom: 16px;"><span class="section-num-badge">7-2-4</span>備考・フッター
+              <button class="prompt-btn" data-prompt-id="7-2-4" data-prompt="請求書の備考・フッターセクションを作成してください。
+
+【備考セクション（invoice-notes）】
+- background: #f8f9fa
+- padding: 16px
+- border-radius: 8px
+- margin-bottom: 24px
+
+【備考タイトル】
+- invoice-notes-title: font-size: 13px, font-weight: 600, margin-bottom: 8px
+
+【備考内容】
+- invoice-notes-content: font-size: 13px, color: #666, line-height: 1.6
+- 振込先情報、注意事項などを記載
+
+【フッターセクション（invoice-footer）】
+- text-align: center
+- padding-top: 24px
+- border-top: 1px solid #eee
+- font-size: 13px, color: #6c757d
+
+【内容例】
+備考:
+- 振込先: 三菱UFJ銀行 渋谷支店 普通 1234567
+- 口座名義: カ）アドミンパネル
+- 振込手数料はお客様ご負担
+
+フッター:
+- お問い合わせ: Email: billing@adminpanel.co.jp | Tel: 03-9999-9999" onclick="openPromptModal('7-2-4')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="7-2-4" onclick="openSourceModal('7-2-4')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h4>
+            <div class="invoice-notes">
+              <div class="invoice-notes-title">備考</div>
+              <div class="invoice-notes-content">
+                お支払いは下記口座へお振込みください。<br>
+                三菱UFJ銀行 渋谷支店 普通 1234567<br>
+                カ）アドミンパネル<br>
+                ※振込手数料はお客様ご負担でお願いいたします。
+              </div>
+            </div>
+
+            <div class="invoice-footer">
+              <p>ご不明な点がございましたら、お気軽にお問い合わせください。</p>
+              <p>Email: billing@adminpanel.co.jp | Tel: 03-9999-9999</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <script src="common.js"></script>
+</body>
+</html>

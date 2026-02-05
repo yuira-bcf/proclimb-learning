@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第12章 テーブルUIの実装 - プロンプトUIコーディング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <link rel="stylesheet" href="../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+    .lib-card {
+      background: white;
+      border: 1px solid #e5e5e5;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .lib-card-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .lib-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: white;
+    }
+    .lib-info h4 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .lib-info p {
+      font-size: 0.85rem;
+      color: #666;
+    }
+    .lib-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .lib-feature {
+      background: #f5f5f5;
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      color: #666;
+    }
+    .mock-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin: 16px 0;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .mock-table th {
+      background: #f8f9fa;
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #e5e5e5;
+    }
+    .mock-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .mock-table tr:last-child td {
+      border-bottom: none;
+    }
+    .mock-table tr:hover td {
+      background: #f8f9fa;
+    }
+    .mock-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px 8px 0 0;
+      border: 1px solid #e5e5e5;
+      border-bottom: none;
+    }
+    .mock-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+    .mock-search input {
+      border: none;
+      outline: none;
+      font-size: 0.9rem;
+    }
+    .mock-pagination {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      justify-content: flex-end;
+    }
+    .mock-page-btn {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .mock-page-btn.active {
+      background: #007AFF;
+      color: white;
+      border-color: #007AFF;
+    }
+    .use-case-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .use-case-card {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .use-case-card h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+    .use-case-card p {
+      font-size: 0.9rem;
+      color: #666;
+      line-height: 1.6;
+    }
+    /* 実行結果プレビュー */
+    .result-preview {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+    .result-preview-header {
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .result-preview-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .result-preview-title .material-icons {
+      font-size: 18px;
+      color: #28a745;
+    }
+    .result-preview-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .result-preview-tab {
+      padding: 6px 12px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .result-preview-tab:hover {
+      background: #f8f9fa;
+    }
+    .result-preview-tab.active {
+      background: #007AFF;
+      border-color: #007AFF;
+      color: #fff;
+    }
+    .result-preview-content {
+      padding: 16px;
+      overflow-x: auto;
+    }
+    .result-preview-code {
+      display: none;
+      padding: 16px;
+      background: #1e1e1e;
+      overflow-x: auto;
+    }
+    .result-preview-code.active {
+      display: block;
+    }
+    .result-preview-code pre {
+      margin: 0;
+      color: #d4d4d4;
+      font-size: 13px;
+      line-height: 1.5;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* サンプルステータスバッジ */
+    .sample-status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .sample-status-badge--active {
+      background: #D1FAE5;
+      color: #065F46;
+    }
+    .sample-status-badge--inactive {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+    .sample-action-btn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-right: 4px;
+    }
+    .sample-action-btn--edit {
+      background: #E0F2FE;
+      color: #0369A1;
+    }
+    .sample-action-btn--delete {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-prompt-ui-coding.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">プロンプトUIコーディング</div>
+      <div class="chapter-number">12</div>
+      <h1 class="chapter-title">テーブルUIの実装</h1>
+      <p class="chapter-subtitle">DataTables・jsGridで高機能なデータ表示を実現</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">12-1</span>テーブルUIの基本</li>
+        <li class="toc-item"><span class="toc-number">12-2</span>DataTablesの活用</li>
+        <li class="toc-item"><span class="toc-number">12-3</span>jsGridの活用</li>
+        <li class="toc-item"><span class="toc-number">12-4</span>ライブラリの選び方</li>
+        <li class="toc-item"><span class="toc-number">12-5</span>AIプロンプトで実装する</li>
+      </ul>
+    </nav>
+
+    <!-- Section 12-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-1</span>
+        <h2 class="section-title">テーブルUIの基本</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>Webアプリケーションでは、大量のデータを一覧表示するためにテーブルUIが多用されます。基本的なHTMLテーブルから、高機能なJavaScriptライブラリまで、用途に応じた選択が重要です。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>テーブルUIに求められる機能</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">sort</span>
+            </div>
+            <div class="feature-content">
+              <h4>ソート（並び替え）</h4>
+              <p>列ヘッダーをクリックして昇順・降順で並び替え</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">search</span>
+            </div>
+            <div class="feature-content">
+              <h4>検索・フィルタリング</h4>
+              <p>キーワードや条件で表示データを絞り込み</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">view_list</span>
+            </div>
+            <div class="feature-content">
+              <h4>ページネーション</h4>
+              <p>大量データを複数ページに分割表示</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #AF52DE;">
+              <span class="material-icons" style="color: white;">edit</span>
+            </div>
+            <div class="feature-content">
+              <h4>インライン編集</h4>
+              <p>セルをクリックしてその場で値を編集</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF3B30;">
+              <span class="material-icons" style="color: white;">file_download</span>
+            </div>
+            <div class="feature-content">
+              <h4>エクスポート</h4>
+              <p>CSV、Excel、PDF形式でデータを出力</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #5856D6;">
+              <span class="material-icons" style="color: white;">smartphone</span>
+            </div>
+            <div class="feature-content">
+              <h4>レスポンシブ対応</h4>
+              <p>スマートフォンでも崩れない表示</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>基本的なHTMLテーブル</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;table class="data-table"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;ID&lt;/th&gt;
+      &lt;th&gt;名前&lt;/th&gt;
+      &lt;th&gt;メール&lt;/th&gt;
+      &lt;th&gt;登録日&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;山田太郎&lt;/td&gt;
+      &lt;td&gt;yamada@example.com&lt;/td&gt;
+      &lt;td&gt;2024-01-15&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;!-- 繰り返し --&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">基本テーブルの限界</div>
+          <div class="info-box-content">
+            <p>HTMLのみのテーブルでは、ソートや検索などの機能を自前で実装する必要があります。<strong>JavaScriptライブラリを活用</strong>することで、これらの機能を簡単に追加できます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 12-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-2</span>
+        <h2 class="section-title">DataTablesの活用</h2>
+      </div>
+
+      <div class="lib-card">
+        <div class="lib-card-header">
+          <div class="lib-logo" style="background: linear-gradient(135deg, #337AB7 0%, #2E6DA4 100%);">DT</div>
+          <div class="lib-info">
+            <h4>DataTables</h4>
+            <p>jQuery製の高機能テーブルプラグイン。世界で最も使われているテーブルライブラリ</p>
+          </div>
+        </div>
+        <div class="lib-features">
+          <span class="lib-feature">ソート</span>
+          <span class="lib-feature">検索</span>
+          <span class="lib-feature">ページネーション</span>
+          <span class="lib-feature">Ajax対応</span>
+          <span class="lib-feature">エクスポート</span>
+          <span class="lib-feature">レスポンシブ</span>
+          <span class="lib-feature">豊富な拡張機能</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>DataTablesの導入</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML - CDN読み込み</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!-- CSS --&gt;
+&lt;link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css"&gt;
+
+&lt;!-- JavaScript --&gt;
+&lt;script src="https://code.jquery.com/jquery-3.7.1.min.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"&gt;&lt;/script&gt;</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">JavaScript - 基本初期化</span>
+          </div>
+          <div class="code-content">
+            <pre>$(document).ready(function() {
+    $('#myTable').DataTable();
+});</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>DataTablesの主要オプション</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">JavaScript - カスタマイズ例</span>
+          </div>
+          <div class="code-content">
+            <pre>$('#myTable').DataTable({
+    // 日本語化
+    language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/ja.json'
+    },
+    // ページあたりの表示件数
+    pageLength: 25,
+    // 表示件数の選択肢
+    lengthMenu: [10, 25, 50, 100],
+    // 初期ソート（2列目を降順）
+    order: [[1, 'desc']],
+    // 列ごとの設定
+    columnDefs: [
+        { orderable: false, targets: [0, -1] }, // 最初と最後の列はソート無効
+        { searchable: false, targets: [0] }     // 最初の列は検索対象外
+    ],
+    // レスポンシブ対応
+    responsive: true,
+    // 処理中表示
+    processing: true
+});</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Ajax対応（サーバーサイド処理）</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">JavaScript - Ajaxデータ取得</span>
+          </div>
+          <div class="code-content">
+            <pre>$('#myTable').DataTable({
+    ajax: {
+        url: '/api/users',
+        dataSrc: 'data'
+    },
+    columns: [
+        { data: 'id' },
+        { data: 'name' },
+        { data: 'email' },
+        { data: 'created_at' }
+    ],
+    // サーバーサイド処理（大量データ向け）
+    serverSide: true,
+    processing: true
+});</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>表示イメージ</h3>
+        <div class="mock-toolbar">
+          <div>
+            表示件数:
+            <select style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd;">
+              <option>10</option>
+              <option selected>25</option>
+              <option>50</option>
+            </select>
+          </div>
+          <div class="mock-search">
+            <span class="material-icons" style="color: #999; font-size: 1.2rem;">search</span>
+            <input type="text" placeholder="検索..." style="width: 150px;">
+          </div>
+        </div>
+        <table class="mock-table" style="border-radius: 0 0 8px 8px;">
+          <thead>
+            <tr>
+              <th>ID <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">unfold_more</span></th>
+              <th>名前 <span class="material-icons" style="font-size: 1rem; vertical-align: middle;">arrow_upward</span></th>
+              <th>メール</th>
+              <th>登録日</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>山田太郎</td><td>yamada@example.com</td><td>2024-01-15</td></tr>
+            <tr><td>2</td><td>佐藤花子</td><td>sato@example.com</td><td>2024-01-18</td></tr>
+            <tr><td>3</td><td>鈴木一郎</td><td>suzuki@example.com</td><td>2024-01-20</td></tr>
+          </tbody>
+        </table>
+        <div class="mock-pagination">
+          <span style="font-size: 0.85rem; color: #666;">1〜3件 / 全50件</span>
+          <button class="mock-page-btn">前へ</button>
+          <button class="mock-page-btn active">1</button>
+          <button class="mock-page-btn">2</button>
+          <button class="mock-page-btn">3</button>
+          <button class="mock-page-btn">次へ</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 12-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-3</span>
+        <h2 class="section-title">jsGridの活用</h2>
+      </div>
+
+      <div class="lib-card">
+        <div class="lib-card-header">
+          <div class="lib-logo" style="background: linear-gradient(135deg, #5CB85C 0%, #4CAE4C 100%);">jG</div>
+          <div class="lib-info">
+            <h4>jsGrid</h4>
+            <p>軽量でシンプルなグリッドコンポーネント。CRUD操作に特化した設計</p>
+          </div>
+        </div>
+        <div class="lib-features">
+          <span class="lib-feature">ソート</span>
+          <span class="lib-feature">フィルタリング</span>
+          <span class="lib-feature">ページネーション</span>
+          <span class="lib-feature">インライン編集</span>
+          <span class="lib-feature">行の追加・削除</span>
+          <span class="lib-feature">バリデーション</span>
+          <span class="lib-feature">軽量</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>jsGridの導入</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML - CDN読み込み</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!-- CSS --&gt;
+&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css"&gt;
+&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css"&gt;
+
+&lt;!-- JavaScript --&gt;
+&lt;script src="https://code.jquery.com/jquery-3.7.1.min.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"&gt;&lt;/script&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>jsGridの基本設定</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">JavaScript - 基本初期化</span>
+          </div>
+          <div class="code-content">
+            <pre>$("#jsGrid").jsGrid({
+    width: "100%",
+    height: "400px",
+
+    // 機能の有効化
+    inserting: true,   // 新規追加
+    editing: true,     // 編集
+    sorting: true,     // ソート
+    paging: true,      // ページネーション
+    filtering: true,   // フィルタリング
+
+    pageSize: 10,
+    pageButtonCount: 5,
+
+    // データ
+    data: clients,
+
+    // 列定義
+    fields: [
+        { name: "id", title: "ID", type: "number", width: 50 },
+        { name: "name", title: "名前", type: "text", width: 150 },
+        { name: "email", title: "メール", type: "text", width: 200 },
+        { name: "status", title: "ステータス", type: "select",
+          items: [
+            { Name: "有効", Id: 1 },
+            { Name: "無効", Id: 0 }
+          ],
+          valueField: "Id", textField: "Name"
+        },
+        { type: "control" }  // 編集・削除ボタン
+    ]
+});</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>CRUD操作の実装</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">JavaScript - API連携</span>
+          </div>
+          <div class="code-content">
+            <pre>$("#jsGrid").jsGrid({
+    // ... 基本設定 ...
+
+    controller: {
+        // データ読み込み
+        loadData: function(filter) {
+            return $.ajax({
+                type: "GET",
+                url: "/api/clients",
+                data: filter
+            });
+        },
+        // 新規追加
+        insertItem: function(item) {
+            return $.ajax({
+                type: "POST",
+                url: "/api/clients",
+                data: item
+            });
+        },
+        // 更新
+        updateItem: function(item) {
+            return $.ajax({
+                type: "PUT",
+                url: "/api/clients/" + item.id,
+                data: item
+            });
+        },
+        // 削除
+        deleteItem: function(item) {
+            return $.ajax({
+                type: "DELETE",
+                url: "/api/clients/" + item.id
+            });
+        }
+    }
+});</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>バリデーション</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">JavaScript - 入力検証</span>
+          </div>
+          <div class="code-content">
+            <pre>fields: [
+    {
+        name: "name",
+        title: "名前",
+        type: "text",
+        validate: {
+            validator: "required",
+            message: "名前は必須です"
+        }
+    },
+    {
+        name: "email",
+        title: "メール",
+        type: "text",
+        validate: {
+            validator: function(value) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+            },
+            message: "有効なメールアドレスを入力してください"
+        }
+    }
+]</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 12-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-4</span>
+        <h2 class="section-title">ライブラリの選び方</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>DataTables vs jsGrid 比較</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>観点</th>
+                <th>DataTables</th>
+                <th>jsGrid</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>特徴</strong></td>
+                <td>高機能・拡張性が高い</td>
+                <td>軽量・シンプル</td>
+              </tr>
+              <tr>
+                <td><strong>主な用途</strong></td>
+                <td>データ閲覧・レポート表示</td>
+                <td>データ入力・CRUD操作</td>
+              </tr>
+              <tr>
+                <td><strong>学習コスト</strong></td>
+                <td>やや高い</td>
+                <td>低い</td>
+              </tr>
+              <tr>
+                <td><strong>ファイルサイズ</strong></td>
+                <td>約100KB</td>
+                <td>約40KB</td>
+              </tr>
+              <tr>
+                <td><strong>インライン編集</strong></td>
+                <td>拡張機能で対応</td>
+                <td>標準で対応</td>
+              </tr>
+              <tr>
+                <td><strong>エクスポート</strong></td>
+                <td>豊富（CSV, Excel, PDF）</td>
+                <td>なし（自前実装）</td>
+              </tr>
+              <tr>
+                <td><strong>ドキュメント</strong></td>
+                <td>非常に充実</td>
+                <td>基本的</td>
+              </tr>
+              <tr>
+                <td><strong>コミュニティ</strong></td>
+                <td>大規模</td>
+                <td>中規模</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ユースケース別の選び方</h3>
+        <div class="use-case-grid">
+          <div class="use-case-card">
+            <h4><span class="material-icons" style="color: #007AFF;">analytics</span> レポート・分析画面</h4>
+            <p><strong>DataTables</strong>がおすすめ。ソート、検索、エクスポート機能が充実。大量データの表示に強い。</p>
+          </div>
+          <div class="use-case-card">
+            <h4><span class="material-icons" style="color: #34C759;">edit_note</span> データ入力・管理画面</h4>
+            <p><strong>jsGrid</strong>がおすすめ。インライン編集、CRUD操作が標準で対応。入力バリデーションも簡単。</p>
+          </div>
+          <div class="use-case-card">
+            <h4><span class="material-icons" style="color: #FF9F0A;">speed</span> 軽量さ重視</h4>
+            <p><strong>jsGrid</strong>がおすすめ。ファイルサイズが小さく、初期表示が速い。シンプルな要件に最適。</p>
+          </div>
+          <div class="use-case-card">
+            <h4><span class="material-icons" style="color: #AF52DE;">extension</span> 拡張性重視</h4>
+            <p><strong>DataTables</strong>がおすすめ。豊富なプラグイン、カスタマイズオプションで複雑な要件にも対応。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>その他の選択肢</h3>
+        <div class="highlight-box">
+          <h4>モダンなテーブルライブラリ</h4>
+          <ul>
+            <li><strong>AG Grid</strong> - 企業向け高機能グリッド（有料版あり）</li>
+            <li><strong>Tabulator</strong> - jQuery不要、モダンな設計</li>
+            <li><strong>Handsontable</strong> - Excel風のスプレッドシートUI</li>
+            <li><strong>React Table</strong> - React用のヘッドレスライブラリ</li>
+            <li><strong>TanStack Table</strong> - フレームワーク非依存</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 12-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-5</span>
+        <h2 class="section-title">AIプロンプトで実装する</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>DataTablesのプロンプト例</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">プロンプト例</span>
+          </div>
+          <div class="code-content">
+            <pre>以下の仕様でDataTablesを使った顧客一覧テーブルを作成してください。
+
+【基本要件】
+- jQuery + DataTables（CDN）
+- 日本語化
+- レスポンシブ対応
+
+【テーブル列】
+1. ID（数値、ソート可）
+2. 顧客名（テキスト、検索対象）
+3. メールアドレス（テキスト、検索対象）
+4. 電話番号（テキスト）
+5. 登録日（日付、ソート可）
+6. ステータス（バッジ表示：有効=緑、無効=赤）
+7. 操作（編集・削除ボタン、ソート無効）
+
+【機能】
+- ページネーション（10, 25, 50件）
+- 検索ボックス
+- 列ソート
+- 初期表示は登録日の降順
+
+【スタイル】
+- モダンなデザイン
+- ホバー時に行をハイライト
+- ステータスはバッジスタイル
+
+HTML/CSS/JavaScriptで作成してください。</pre>
+          </div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <div class="mock-toolbar" style="border-radius: 8px 8px 0 0;">
+              <div>
+                表示件数:
+                <select style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd;">
+                  <option>10</option>
+                  <option selected>25</option>
+                </select>
+              </div>
+              <div class="mock-search">
+                <span class="material-icons" style="color: #999; font-size: 1rem;">search</span>
+                <input type="text" placeholder="検索..." style="width: 120px; border: none; outline: none; font-size: 13px;">
+              </div>
+            </div>
+            <table class="mock-table" style="border-radius: 0; margin: 0;">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>顧客名</th>
+                  <th>メール</th>
+                  <th>登録日</th>
+                  <th>ステータス</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>山田太郎</td>
+                  <td>yamada@example.com</td>
+                  <td>2024-01-15</td>
+                  <td><span class="sample-status-badge sample-status-badge--active">有効</span></td>
+                  <td>
+                    <button class="sample-action-btn sample-action-btn--edit">編集</button>
+                    <button class="sample-action-btn sample-action-btn--delete">削除</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>佐藤花子</td>
+                  <td>sato@example.com</td>
+                  <td>2024-01-18</td>
+                  <td><span class="sample-status-badge sample-status-badge--active">有効</span></td>
+                  <td>
+                    <button class="sample-action-btn sample-action-btn--edit">編集</button>
+                    <button class="sample-action-btn sample-action-btn--delete">削除</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>鈴木一郎</td>
+                  <td>suzuki@example.com</td>
+                  <td>2024-01-10</td>
+                  <td><span class="sample-status-badge sample-status-badge--inactive">無効</span></td>
+                  <td>
+                    <button class="sample-action-btn sample-action-btn--edit">編集</button>
+                    <button class="sample-action-btn sample-action-btn--delete">削除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="mock-pagination" style="margin-top: 12px;">
+              <span style="font-size: 0.8rem; color: #666;">1〜3件 / 全50件</span>
+              <button class="mock-page-btn">前へ</button>
+              <button class="mock-page-btn active">1</button>
+              <button class="mock-page-btn">2</button>
+              <button class="mock-page-btn">次へ</button>
+            </div>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;!-- DataTables初期化 --&gt;
+&lt;table id="customersTable" class="display"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;ID&lt;/th&gt;
+      &lt;th&gt;顧客名&lt;/th&gt;
+      &lt;th&gt;メール&lt;/th&gt;
+      &lt;th&gt;登録日&lt;/th&gt;
+      &lt;th&gt;ステータス&lt;/th&gt;
+      &lt;th&gt;操作&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+&lt;/table&gt;
+
+&lt;script&gt;
+$('#customersTable').DataTable({
+  language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/ja.json' },
+  pageLength: 25,
+  order: [[3, 'desc']],
+  columnDefs: [{ orderable: false, targets: [-1] }],
+  responsive: true
+});
+&lt;/script&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>jsGridのプロンプト例</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">プロンプト例</span>
+          </div>
+          <div class="code-content">
+            <pre>以下の仕様でjsGridを使った商品管理テーブルを作成してください。
+
+【基本要件】
+- jQuery + jsGrid（CDN）
+- CRUD操作対応（追加・編集・削除）
+
+【テーブル列】
+1. ID（数値、自動採番、編集不可）
+2. 商品名（テキスト、必須）
+3. カテゴリ（選択式：食品/飲料/日用品/その他）
+4. 価格（数値、必須、0以上）
+5. 在庫数（数値、0以上）
+6. 操作（編集・削除ボタン）
+
+【機能】
+- インライン編集
+- 新規追加行
+- フィルタリング（各列）
+- ページネーション（15件/ページ）
+- バリデーション（必須チェック、数値チェック）
+
+【API連携】
+- loadData: GET /api/products
+- insertItem: POST /api/products
+- updateItem: PUT /api/products/:id
+- deleteItem: DELETE /api/products/:id
+
+HTML/CSS/JavaScriptで作成してください。</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>生成後のチェックポイント</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>カテゴリ</th>
+                <th>チェック項目</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td rowspan="3"><strong>機能</strong></td>
+                <td>□ ソートが正しく動作するか</td>
+              </tr>
+              <tr><td>□ 検索・フィルタが機能するか</td></tr>
+              <tr><td>□ ページネーションが動くか</td></tr>
+              <tr>
+                <td rowspan="3"><strong>データ</strong></td>
+                <td>□ APIからデータを取得できるか</td>
+              </tr>
+              <tr><td>□ CRUD操作が正しく動作するか</td></tr>
+              <tr><td>□ バリデーションが効いているか</td></tr>
+              <tr>
+                <td rowspan="2"><strong>UI/UX</strong></td>
+                <td>□ レスポンシブ対応しているか</td>
+              </tr>
+              <tr><td>□ ローディング表示があるか</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第12章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>テーブルUI</strong>にはソート、検索、ページネーション等の機能が求められる</li>
+          <li><strong>DataTables</strong>は高機能で拡張性が高く、レポート・分析画面に最適</li>
+          <li><strong>jsGrid</strong>は軽量でCRUD操作に強く、データ入力画面に最適</li>
+          <li>用途に応じて<strong>適切なライブラリを選択</strong>することが重要</li>
+          <li>プロンプトでは<strong>列定義・機能・API連携</strong>を明確に指定する</li>
+        </ul>
+      </div>
+
+      <div class="info-box success">
+        <div class="info-box-title"><span class="material-icons">tips_and_updates</span> 実践のヒント</div>
+        <div class="info-box-content">
+          <p>まずはサンプルデータで動作確認し、その後API連携を実装しましょう。大量データの場合はサーバーサイド処理（serverSide: true）を検討してください。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="11puic-uiux-forms.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">フォームUX改善の20ポイント</div>
+    </a>
+    <a href="13puic-kanban.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">看板ボードの実装</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトUIコーディング - 職業訓練校教材</p>
+  </footer>
+
+  <script>
+    // Result Preview Tab Functionality
+    document.querySelectorAll('.result-preview').forEach(preview => {
+      const tabs = preview.querySelectorAll('.result-preview-tab');
+      const content = preview.querySelector('.result-preview-content');
+      const code = preview.querySelector('.result-preview-code');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          if (tab.dataset.tab === 'preview') {
+            content.style.display = 'block';
+            code.classList.remove('active');
+          } else {
+            content.style.display = 'none';
+            code.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>タイムライン - AdminPanel</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    /* ========== Main Content ========== */
+    .main-content {
+      margin-left: 260px;
+      padding: 80px 24px 24px;
+      min-height: 100vh;
+      background: #f4f6f9;
+    }
+
+    @media (max-width: 991px) {
+      .main-content {
+        margin-left: 0;
+      }
+    }
+
+    /* ========== Page Header ========== */
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 8px 0;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: #6c757d;
+    }
+
+    .breadcrumb a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    /* ========== Cards ========== */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
+
+    .card-body {
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    /* ========== Grid ========== */
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0 -12px;
+    }
+
+    .col-6 {
+      flex: 0 0 50%;
+      max-width: 50%;
+      padding: 0 12px;
+      min-width: 0;
+    }
+
+    .col-12 {
+      flex: 0 0 100%;
+      max-width: 100%;
+      padding: 0 12px;
+    }
+
+    @media (max-width: 768px) {
+      .col-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+    }
+
+    /* ========== Basic Timeline ========== */
+    /* Override common.css timeline styles */
+    .timeline {
+      position: relative;
+      padding: 0;
+      padding-left: 0;
+      margin: 0;
+      list-style: none;
+      width: 100%;
+    }
+
+    /* Reset common.css .timeline-icon styles when used as modifier */
+    ul.timeline.timeline-icon,
+    .timeline.timeline-icon {
+      position: relative;
+      left: auto;
+      width: 100%;
+      height: auto;
+      border-radius: 0;
+      background: none;
+      border: none;
+      box-shadow: none;
+      display: block;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 11px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, #e9ecef 0%, #dee2e6 100%);
+      border-radius: 1px;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 40px;
+      padding-bottom: 24px;
+      display: block;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-marker {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #007bff;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px #007bff;
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .timeline-time,
+    .timeline-title,
+    .timeline-content {
+      display: block;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .timeline-item:hover .timeline-marker {
+      transform: scale(1.1);
+    }
+
+    .timeline-marker.primary {
+      background: #007bff;
+      box-shadow: 0 0 0 2px #007bff, 0 2px 4px rgba(0,123,255,0.3);
+    }
+
+    .timeline-marker.success {
+      background: #28a745;
+      box-shadow: 0 0 0 2px #28a745, 0 2px 4px rgba(40,167,69,0.3);
+    }
+
+    .timeline-marker.warning {
+      background: #ffc107;
+      box-shadow: 0 0 0 2px #ffc107, 0 2px 4px rgba(255,193,7,0.3);
+    }
+
+    .timeline-marker.danger {
+      background: #dc3545;
+      box-shadow: 0 0 0 2px #dc3545, 0 2px 4px rgba(220,53,69,0.3);
+    }
+
+    .timeline-marker.info {
+      background: #17a2b8;
+      box-shadow: 0 0 0 2px #17a2b8, 0 2px 4px rgba(23,162,184,0.3);
+    }
+
+    .timeline-time {
+      font-size: 0.75rem;
+      color: #6c757d;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .timeline-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .timeline-content {
+      font-size: 0.875rem;
+      color: #6c757d;
+      line-height: 1.5;
+    }
+
+    /* ========== Timeline with Icons ========== */
+    .timeline.timeline-icon::before {
+      left: 17px;
+      top: 0;
+      bottom: 0;
+    }
+
+    .timeline.timeline-icon .timeline-item {
+      padding-left: 52px;
+      padding-bottom: 28px;
+      display: block;
+    }
+
+    .timeline.timeline-icon .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline.timeline-icon .timeline-marker {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      left: 0;
+      top: 0;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+      flex-shrink: 0;
+    }
+
+    .timeline.timeline-icon .timeline-marker.primary {
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+    }
+
+    .timeline.timeline-icon .timeline-marker.success {
+      background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+      box-shadow: 0 2px 8px rgba(40,167,69,0.3);
+    }
+
+    .timeline.timeline-icon .timeline-marker.warning {
+      background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+      box-shadow: 0 2px 8px rgba(255,193,7,0.3);
+    }
+
+    .timeline.timeline-icon .timeline-marker.danger {
+      background: linear-gradient(135deg, #dc3545 0%, #bd2130 100%);
+      box-shadow: 0 2px 8px rgba(220,53,69,0.3);
+    }
+
+    .timeline.timeline-icon .timeline-marker.info {
+      background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);
+      box-shadow: 0 2px 8px rgba(23,162,184,0.3);
+    }
+
+    .timeline.timeline-icon .timeline-marker .material-icons {
+      font-size: 18px;
+      color: #fff;
+    }
+
+    /* ========== Timeline Card ========== */
+    .timeline-card {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+      border-left: 4px solid #007bff;
+      transition: box-shadow 0.2s ease;
+      margin-top: 4px;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .timeline-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .timeline.timeline-icon .timeline-item .timeline-card {
+      margin-top: 0;
+    }
+
+    .timeline-card-body {
+      display: block;
+      width: 100%;
+    }
+
+    .timeline-card.success {
+      border-left-color: #28a745;
+      background: linear-gradient(135deg, #f8f9fa 0%, #f0fff4 100%);
+    }
+
+    .timeline-card.warning {
+      border-left-color: #ffc107;
+      background: linear-gradient(135deg, #f8f9fa 0%, #fffbeb 100%);
+    }
+
+    .timeline-card.danger {
+      border-left-color: #dc3545;
+      background: linear-gradient(135deg, #f8f9fa 0%, #fff5f5 100%);
+    }
+
+    .timeline-card.info {
+      border-left-color: #17a2b8;
+      background: linear-gradient(135deg, #f8f9fa 0%, #f0f9ff 100%);
+    }
+
+    .timeline-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      width: 100%;
+    }
+
+    .timeline-card-avatar {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .timeline-card-avatar .material-icons {
+      font-size: 20px;
+    }
+
+    .timeline-card-header > div:last-child {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .timeline-card-user {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9rem;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .timeline-card-time {
+      font-size: 0.75rem;
+      color: #6c757d;
+      display: block;
+    }
+
+    .timeline-card-body {
+      font-size: 0.875rem;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    /* ========== Horizontal Timeline ========== */
+    .timeline-horizontal {
+      display: flex;
+      overflow-x: auto;
+      padding: 20px 0;
+      scrollbar-width: thin;
+    }
+
+    .timeline-horizontal::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .timeline-horizontal::-webkit-scrollbar-thumb {
+      background: #dee2e6;
+      border-radius: 3px;
+    }
+
+    .timeline-horizontal::before {
+      display: none;
+    }
+
+    .timeline-h-item {
+      flex: 0 0 180px;
+      text-align: center;
+      position: relative;
+      padding: 0 12px;
+    }
+
+    .timeline-h-item::before {
+      content: "";
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #e9ecef;
+      border-radius: 2px;
+    }
+
+    .timeline-h-item:first-child::before {
+      left: 50%;
+    }
+
+    .timeline-h-item:last-child::before {
+      right: 50%;
+    }
+
+    .timeline-h-marker {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      position: relative;
+      z-index: 1;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+      transition: transform 0.2s ease;
+    }
+
+    .timeline-h-item:hover .timeline-h-marker {
+      transform: scale(1.1);
+    }
+
+    .timeline-h-marker .material-icons {
+      font-size: 20px;
+    }
+
+    .timeline-h-marker.success,
+    .timeline-h-marker.completed {
+      background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+      box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+    }
+
+    .timeline-h-marker.warning,
+    .timeline-h-marker.current {
+      background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+      color: #212529;
+      box-shadow: 0 4px 12px rgba(255,193,7,0.3);
+    }
+
+    .timeline-h-marker.danger {
+      background: linear-gradient(135deg, #dc3545 0%, #bd2130 100%);
+      box-shadow: 0 4px 12px rgba(220,53,69,0.3);
+    }
+
+    .timeline-h-marker.pending {
+      background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+      box-shadow: 0 4px 12px rgba(108,117,125,0.3);
+    }
+
+    .timeline-h-content {
+      font-size: 0.875rem;
+    }
+
+    .timeline-h-title {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .timeline-h-date {
+      font-size: 0.75rem;
+      color: #6c757d;
+    }
+
+    /* ========== Activity Feed ========== */
+    .activity-feed {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background 0.2s ease;
+    }
+
+    .activity-item:hover {
+      background: #f8f9fa;
+      margin: 0 -20px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .activity-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .activity-icon.primary {
+      background: linear-gradient(135deg, rgba(0,123,255,0.15) 0%, rgba(0,123,255,0.1) 100%);
+      color: #007bff;
+    }
+
+    .activity-icon.success {
+      background: linear-gradient(135deg, rgba(40,167,69,0.15) 0%, rgba(40,167,69,0.1) 100%);
+      color: #28a745;
+    }
+
+    .activity-icon.warning {
+      background: linear-gradient(135deg, rgba(255,193,7,0.15) 0%, rgba(255,193,7,0.1) 100%);
+      color: #d39e00;
+    }
+
+    .activity-icon.danger {
+      background: linear-gradient(135deg, rgba(220,53,69,0.15) 0%, rgba(220,53,69,0.1) 100%);
+      color: #dc3545;
+    }
+
+    .activity-icon.info {
+      background: linear-gradient(135deg, rgba(23,162,184,0.15) 0%, rgba(23,162,184,0.1) 100%);
+      color: #17a2b8;
+    }
+
+    .activity-icon .material-icons {
+      font-size: 18px;
+    }
+
+    .activity-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .activity-text {
+      font-size: 0.875rem;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .activity-text strong {
+      font-weight: 600;
+      color: #007bff;
+    }
+
+    .activity-time {
+      font-size: 0.75rem;
+      color: #999;
+    }
+
+    /* ========== Date Label ========== */
+    .timeline-date-label {
+      position: relative;
+      text-align: center;
+      margin: 20px 0 16px;
+    }
+
+    .timeline-date-label::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 1px;
+      background: #e9ecef;
+    }
+
+    .timeline-date-label span {
+      background: #fff;
+      padding: 4px 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #6c757d;
+      position: relative;
+      z-index: 1;
+      border-radius: 100px;
+      border: 1px solid #e9ecef;
+    }
+
+    /* ========== Mini Timeline ========== */
+    .timeline-mini::before {
+      left: 5px;
+      width: 2px;
+    }
+
+    .timeline-mini .timeline-item {
+      padding-left: 24px;
+      padding-bottom: 16px;
+    }
+
+    .timeline-mini .timeline-marker {
+      width: 12px;
+      height: 12px;
+      left: 0;
+      top: 2px;
+      border-width: 2px;
+      box-shadow: 0 0 0 2px currentColor;
+    }
+
+    .timeline-mini .timeline-time {
+      font-size: 0.7rem;
+    }
+
+    .timeline-mini .timeline-title {
+      font-size: 0.85rem;
+    }
+
+    .timeline-mini .timeline-content {
+      font-size: 0.8rem;
+    }
+
+    /* ========== Alternating Timeline ========== */
+    .timeline-alternating {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .timeline-alternating::before {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .timeline-alternating .timeline-item {
+      width: 50%;
+      padding-left: 0;
+      padding-right: 40px;
+    }
+
+    .timeline-alternating .timeline-item:nth-child(even) {
+      margin-left: 50%;
+      padding-left: 40px;
+      padding-right: 0;
+    }
+
+    .timeline-alternating .timeline-marker {
+      left: auto;
+      right: -12px;
+    }
+
+    .timeline-alternating .timeline-item:nth-child(even) .timeline-marker {
+      left: -12px;
+      right: auto;
+    }
+
+    .timeline-alternating .timeline-item:nth-child(odd) {
+      text-align: right;
+    }
+
+    .timeline-alternating .timeline-item:nth-child(odd) .timeline-content {
+      text-align: right;
+    }
+
+    @media (max-width: 768px) {
+      .timeline-alternating::before {
+        left: 11px;
+        transform: none;
+      }
+
+      .timeline-alternating .timeline-item,
+      .timeline-alternating .timeline-item:nth-child(even) {
+        width: 100%;
+        margin-left: 0;
+        padding-left: 40px;
+        padding-right: 0;
+        text-align: left;
+      }
+
+      .timeline-alternating .timeline-marker,
+      .timeline-alternating .timeline-item:nth-child(even) .timeline-marker {
+        left: 0;
+        right: auto;
+      }
+
+      .timeline-alternating .timeline-item:nth-child(odd) .timeline-content {
+        text-align: left;
+      }
+    }
+
+    /* ========== Section Title ========== */
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Container -->
+  <div id="sidebar-container"></div>
+
+  <!-- Top Navigation -->
+  <header class="top-nav">
+    <button class="menu-toggle" id="menuToggle">
+      <span class="material-icons">menu</span>
+    </button>
+    <div class="nav-search">
+      <span class="material-icons">search</span>
+      <input type="text" placeholder="検索...">
+    </div>
+    <div class="nav-items">
+      <button class="nav-item">
+        <span class="material-icons">notifications</span>
+        <span class="nav-badge">3</span>
+      </button>
+      <button class="nav-item">
+        <span class="material-icons">fullscreen</span>
+      </button>
+      <div class="nav-user">
+        <span class="material-icons">account_circle</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">
+      <span class="page-num-badge">5-8</span>タイムライン
+      <button class="prompt-btn" data-prompt-id="5-8" data-prompt="タイムラインコンポーネントページを作成してください。
+
+【要件】
+- 縦タイムライン（左寄せ）
+- 縦タイムライン（交互配置）
+- 横タイムライン
+- アイコン付きタイムライン
+- カラーバリエーション
+
+【デザイン】
+- 垂直線と円形マーカー
+- イベントカード
+- 日付・時間表示
+- アニメーション" onclick="openPromptModal('5-8')">
+        <span class="material-icons">auto_awesome</span>
+        プロンプト
+      </button>
+      <button class="source-btn" data-source-id="5-8" onclick="openSourceModal('5-8')">
+        <span class="material-icons">code</span>
+        ソース
+      </button>
+    </h1>
+      <div class="breadcrumb">
+        <a href="sample-3-dashboard.html">ホーム</a>
+        <span>/</span>
+        <span>UI要素</span>
+        <span>/</span>
+        <span>タイムライン</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Basic Timeline -->
+      <div class="col-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span class="section-num-badge">5-8-1</span>基本タイムライン
+              <button class="prompt-btn" data-prompt-id="5-8-1" data-prompt="基本タイムラインを作成してください。
+
+【HTML構造】
+- .timeline: タイムラインリスト（position: relative、padding/margin: 0、list-style: none）
+- .timeline::before: 縦線（content: ''、position: absolute、left: 11px、top: 0、bottom: 0、width: 2px、background: linear-gradient(180deg, #e9ecef, #dee2e6)）
+- .timeline-item: アイテム（position: relative、padding-left: 40px、padding-bottom: 24px）
+- .timeline-marker: マーカー円（position: absolute、left: 0、top: 0、width/height: 24px、border-radius: 50%、border: 3px solid #fff）
+- .timeline-time: 時間（font-size: 0.75rem、color: #6c757d、margin-bottom: 4px、font-weight: 500）
+- .timeline-title: タイトル（font-size: 0.95rem、font-weight: 600、color: #333、margin-bottom: 4px）
+- .timeline-content: 内容（font-size: 0.875rem、color: #6c757d、line-height: 1.5）
+
+【マーカーカラー】
+- .timeline-marker.primary: background: #007bff、box-shadow: 0 0 0 2px #007bff
+- .timeline-marker.success: background: #28a745
+- .timeline-marker.warning: background: #ffc107
+- .timeline-marker.danger: background: #dc3545
+- .timeline-marker.info: background: #17a2b8
+
+【ホバー効果】
+.timeline-item:hover .timeline-marker: transform: scale(1.1)" onclick="openPromptModal('5-8-1')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="5-8-1" onclick="openSourceModal('5-8-1')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+            <ul class="timeline">
+              <li class="timeline-item">
+                <div class="timeline-marker primary"></div>
+                <div class="timeline-time">10:00</div>
+                <div class="timeline-title">ミーティング開始</div>
+                <div class="timeline-content">プロジェクトの進捗確認ミーティングを開始しました。</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker success"></div>
+                <div class="timeline-time">11:30</div>
+                <div class="timeline-title">タスク完了</div>
+                <div class="timeline-content">デザインレビューが完了し、承認されました。</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker warning"></div>
+                <div class="timeline-time">14:00</div>
+                <div class="timeline-title">レビュー依頼</div>
+                <div class="timeline-content">コードレビューの依頼が送信されました。</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker danger"></div>
+                <div class="timeline-time">16:30</div>
+                <div class="timeline-title">緊急対応</div>
+                <div class="timeline-content">本番環境でエラーが発生。緊急対応中。</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline with Icons -->
+      <div class="col-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span class="section-num-badge">5-8-2</span>アイコン付きタイムライン
+              <button class="prompt-btn" data-prompt-id="5-8-2" data-prompt="アイコン付きタイムラインを作成してください。
+
+【HTML構造】
+- .timeline.timeline-icon: アイコン付きモード
+- .timeline.timeline-icon::before: left: 17px（マーカーサイズに合わせて調整）
+- .timeline.timeline-icon .timeline-item: padding-left: 52px、padding-bottom: 28px
+- .timeline.timeline-icon .timeline-marker:
+  width/height: 36px
+  display: flex、align-items: center、justify-content: center
+  border: none
+  box-shadow: 0 2px 8px rgba(0,123,255,0.3)
+- .timeline.timeline-icon .timeline-marker .material-icons: font-size: 18px、color: #fff
+
+【グラデーション背景】
+- .timeline-marker.primary: background: linear-gradient(135deg, #007bff 0%, #0056b3 100%)
+- .timeline-marker.success: background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%)
+- .timeline-marker.warning: background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%)
+- .timeline-marker.danger: background: linear-gradient(135deg, #dc3545 0%, #bd2130 100%)
+- .timeline-marker.info: background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%)
+
+【アイコン例】
+shopping_cart（注文）、credit_card（支払い）、inventory（準備）、local_shipping（配送）" onclick="openPromptModal('5-8-2')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="5-8-2" onclick="openSourceModal('5-8-2')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+            <ul class="timeline timeline-icon">
+              <li class="timeline-item">
+                <div class="timeline-marker primary">
+                  <span class="material-icons">shopping_cart</span>
+                </div>
+                <div class="timeline-time">2024年1月15日</div>
+                <div class="timeline-title">注文受付</div>
+                <div class="timeline-content">ご注文を受け付けました。</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker info">
+                  <span class="material-icons">credit_card</span>
+                </div>
+                <div class="timeline-time">2024年1月15日</div>
+                <div class="timeline-title">支払い確認</div>
+                <div class="timeline-content">お支払いが確認されました。</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker warning">
+                  <span class="material-icons">inventory</span>
+                </div>
+                <div class="timeline-time">2024年1月16日</div>
+                <div class="timeline-title">出荷準備中</div>
+                <div class="timeline-content">商品を準備しています。</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker success">
+                  <span class="material-icons">local_shipping</span>
+                </div>
+                <div class="timeline-time">2024年1月17日</div>
+                <div class="timeline-title">配送中</div>
+                <div class="timeline-content">商品を発送しました。</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline Cards -->
+      <div class="col-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span class="section-num-badge">5-8-3</span>カード型タイムライン
+              <button class="prompt-btn" data-prompt-id="5-8-3" data-prompt="カード型タイムラインを作成してください。
+
+【HTML構造】
+- .timeline-card: カード本体（background: #f8f9fa、border-radius: 12px、padding: 16px、border-left: 4px solid #007bff、transition: box-shadow 0.2s、margin-top: 4px）
+- .timeline-card:hover: box-shadow: 0 4px 12px rgba(0,0,0,0.08)
+- .timeline-card-header: ヘッダー（display: flex、align-items: center、gap: 12px、margin-bottom: 12px）
+- .timeline-card-avatar: アバター（width/height: 40px、border-radius: 50%、background: linear-gradient(135deg, #007bff, #0056b3)、color: #fff、display: flex、align-items/justify-content: center、font-weight: 600）
+- .timeline-card-user: ユーザー名（font-weight: 600、color: #333、font-size: 0.9rem）
+- .timeline-card-time: 時間（font-size: 0.75rem、color: #6c757d）
+- .timeline-card-body: 内容（font-size: 0.875rem、color: #555、line-height: 1.6）
+
+【カラーバリエーション】
+- .timeline-card.success: border-left-color: #28a745、background: linear-gradient(135deg, #f8f9fa 0%, #f0fff4 100%)
+- .timeline-card.warning: border-left-color: #ffc107、background: linear-gradient(135deg, #f8f9fa 0%, #fffbeb 100%)
+- .timeline-card.danger: border-left-color: #dc3545、background: linear-gradient(135deg, #f8f9fa 0%, #fff5f5 100%)
+- .timeline-card.info: border-left-color: #17a2b8、background: linear-gradient(135deg, #f8f9fa 0%, #f0f9ff 100%)" onclick="openPromptModal('5-8-3')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="5-8-3" onclick="openSourceModal('5-8-3')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+            <ul class="timeline timeline-icon">
+              <li class="timeline-item">
+                <div class="timeline-marker primary">
+                  <span class="material-icons">person</span>
+                </div>
+                <div class="timeline-card">
+                  <div class="timeline-card-header">
+                    <div class="timeline-card-avatar">Y</div>
+                    <div>
+                      <div class="timeline-card-user">山田 太郎</div>
+                      <div class="timeline-card-time">2時間前</div>
+                    </div>
+                  </div>
+                  <div class="timeline-card-body">
+                    新しいプロジェクトを作成しました。チームメンバーを招待してください。
+                  </div>
+                </div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker success">
+                  <span class="material-icons">check</span>
+                </div>
+                <div class="timeline-card success">
+                  <div class="timeline-card-header">
+                    <div class="timeline-card-avatar" style="background: linear-gradient(135deg, #28a745, #1e7e34);">S</div>
+                    <div>
+                      <div class="timeline-card-user">佐藤 花子</div>
+                      <div class="timeline-card-time">5時間前</div>
+                    </div>
+                  </div>
+                  <div class="timeline-card-body">
+                    タスク「UIデザイン作成」を完了しました。
+                  </div>
+                </div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker warning">
+                  <span class="material-icons">comment</span>
+                </div>
+                <div class="timeline-card warning">
+                  <div class="timeline-card-header">
+                    <div class="timeline-card-avatar" style="background: linear-gradient(135deg, #ffc107, #e0a800);">I</div>
+                    <div>
+                      <div class="timeline-card-user">鈴木 一郎</div>
+                      <div class="timeline-card-time">昨日</div>
+                    </div>
+                  </div>
+                  <div class="timeline-card-body">
+                    レビューコメントを追加：「この部分のパフォーマンスを改善できそうです」
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Feed -->
+      <div class="col-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">アクティビティフィード</h3>
+          </div>
+          <div class="card-body">
+            <ul class="activity-feed">
+              <li class="activity-item">
+                <div class="activity-icon primary">
+                  <span class="material-icons">person_add</span>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-text"><strong>田中さん</strong>がチームに参加しました</div>
+                  <div class="activity-time">5分前</div>
+                </div>
+              </li>
+              <li class="activity-item">
+                <div class="activity-icon success">
+                  <span class="material-icons">check_circle</span>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-text"><strong>山田さん</strong>が「ログイン機能」を完了しました</div>
+                  <div class="activity-time">30分前</div>
+                </div>
+              </li>
+              <li class="activity-item">
+                <div class="activity-icon warning">
+                  <span class="material-icons">edit</span>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-text"><strong>佐藤さん</strong>がドキュメントを更新しました</div>
+                  <div class="activity-time">1時間前</div>
+                </div>
+              </li>
+              <li class="activity-item">
+                <div class="activity-icon danger">
+                  <span class="material-icons">bug_report</span>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-text"><strong>鈴木さん</strong>がバグを報告しました</div>
+                  <div class="activity-time">2時間前</div>
+                </div>
+              </li>
+              <li class="activity-item">
+                <div class="activity-icon info">
+                  <span class="material-icons">upload_file</span>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-text"><strong>高橋さん</strong>がファイルをアップロードしました</div>
+                  <div class="activity-time">3時間前</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Horizontal Timeline -->
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">横型タイムライン（配送ステータス）</h3>
+          </div>
+          <div class="card-body">
+            <div class="timeline-horizontal">
+              <div class="timeline-h-item">
+                <div class="timeline-h-marker completed">
+                  <span class="material-icons">check</span>
+                </div>
+                <div class="timeline-h-content">
+                  <div class="timeline-h-title">注文確定</div>
+                  <div class="timeline-h-date">1月15日 10:00</div>
+                </div>
+              </div>
+              <div class="timeline-h-item">
+                <div class="timeline-h-marker completed">
+                  <span class="material-icons">check</span>
+                </div>
+                <div class="timeline-h-content">
+                  <div class="timeline-h-title">支払い完了</div>
+                  <div class="timeline-h-date">1月15日 10:05</div>
+                </div>
+              </div>
+              <div class="timeline-h-item">
+                <div class="timeline-h-marker completed">
+                  <span class="material-icons">check</span>
+                </div>
+                <div class="timeline-h-content">
+                  <div class="timeline-h-title">出荷準備</div>
+                  <div class="timeline-h-date">1月16日 09:00</div>
+                </div>
+              </div>
+              <div class="timeline-h-item">
+                <div class="timeline-h-marker current">
+                  <span class="material-icons">local_shipping</span>
+                </div>
+                <div class="timeline-h-content">
+                  <div class="timeline-h-title">配送中</div>
+                  <div class="timeline-h-date">1月17日 14:30</div>
+                </div>
+              </div>
+              <div class="timeline-h-item">
+                <div class="timeline-h-marker pending">
+                  <span class="material-icons">home</span>
+                </div>
+                <div class="timeline-h-content">
+                  <div class="timeline-h-title">配達完了</div>
+                  <div class="timeline-h-date">予定: 1月18日</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline with Date Labels -->
+      <div class="col-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">日付ラベル付きタイムライン</h3>
+          </div>
+          <div class="card-body">
+            <div class="timeline-date-label">
+              <span>今日</span>
+            </div>
+            <ul class="timeline timeline-mini">
+              <li class="timeline-item">
+                <div class="timeline-marker primary"></div>
+                <div class="timeline-time">09:00</div>
+                <div class="timeline-title">朝会</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker success"></div>
+                <div class="timeline-time">11:00</div>
+                <div class="timeline-title">クライアント打ち合わせ</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker warning"></div>
+                <div class="timeline-time">15:00</div>
+                <div class="timeline-title">レビュー会議</div>
+              </li>
+            </ul>
+
+            <div class="timeline-date-label">
+              <span>昨日</span>
+            </div>
+            <ul class="timeline timeline-mini">
+              <li class="timeline-item">
+                <div class="timeline-marker info"></div>
+                <div class="timeline-time">10:00</div>
+                <div class="timeline-title">設計レビュー</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker danger"></div>
+                <div class="timeline-time">14:00</div>
+                <div class="timeline-title">緊急対応</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini Timeline -->
+      <div class="col-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">コンパクトタイムライン</h3>
+          </div>
+          <div class="card-body">
+            <p class="section-title">本日のアクティビティ</p>
+            <ul class="timeline timeline-mini">
+              <li class="timeline-item">
+                <div class="timeline-marker primary"></div>
+                <div class="timeline-time">09:15</div>
+                <div class="timeline-title">ログイン</div>
+                <div class="timeline-content">東京オフィスからログイン</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker success"></div>
+                <div class="timeline-time">09:30</div>
+                <div class="timeline-title">ファイル更新</div>
+                <div class="timeline-content">報告書.xlsx を更新</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker info"></div>
+                <div class="timeline-time">10:00</div>
+                <div class="timeline-title">共有</div>
+                <div class="timeline-content">山田さんとファイルを共有</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker warning"></div>
+                <div class="timeline-time">11:30</div>
+                <div class="timeline-title">コメント</div>
+                <div class="timeline-content">プロジェクトAにコメントを追加</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker primary"></div>
+                <div class="timeline-time">12:00</div>
+                <div class="timeline-title">タスク作成</div>
+                <div class="timeline-content">新しいタスクを3件追加</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker danger"></div>
+                <div class="timeline-time">14:30</div>
+                <div class="timeline-title">アラート</div>
+                <div class="timeline-content">システムアラートを確認</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alternating Timeline -->
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">交互タイムライン（プロジェクト履歴）</h3>
+          </div>
+          <div class="card-body">
+            <ul class="timeline timeline-alternating">
+              <li class="timeline-item">
+                <div class="timeline-marker primary"></div>
+                <div class="timeline-time">2024年1月</div>
+                <div class="timeline-title">プロジェクト開始</div>
+                <div class="timeline-content">新しいWebアプリケーションの開発プロジェクトを開始。要件定義フェーズに入る。</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker info"></div>
+                <div class="timeline-time">2024年2月</div>
+                <div class="timeline-title">設計完了</div>
+                <div class="timeline-content">システム設計とUIデザインが完了。開発チームへの引き継ぎ準備。</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker warning"></div>
+                <div class="timeline-time">2024年3月</div>
+                <div class="timeline-title">開発フェーズ</div>
+                <div class="timeline-content">フロントエンドとバックエンドの実装を並行して進行中。</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-marker success"></div>
+                <div class="timeline-time">2024年4月</div>
+                <div class="timeline-title">テスト開始</div>
+                <div class="timeline-content">統合テストとユーザー受け入れテストを実施予定。</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="common.js"></script>
+</body>
+</html>

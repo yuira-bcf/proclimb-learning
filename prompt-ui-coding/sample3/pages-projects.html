@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>プロジェクト - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .project-card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .project-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    .project-image {
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .project-image .material-icons {
+      font-size: 48px;
+      color: #fff;
+      opacity: 0.9;
+    }
+
+    .project-image.blue {
+      background: linear-gradient(135deg, #17a2b8, #20c997);
+    }
+
+    .project-image.purple {
+      background: linear-gradient(135deg, #6f42c1, #9b59b6);
+    }
+
+    .project-image.orange {
+      background: linear-gradient(135deg, #fd7e14, #ffc107);
+    }
+
+    .project-image.green {
+      background: linear-gradient(135deg, #28a745, #5cb85c);
+    }
+
+    .project-image.red {
+      background: linear-gradient(135deg, #dc3545, #ff6b6b);
+    }
+
+    .project-image.pink {
+      background: linear-gradient(135deg, #e83e8c, #fd79a8);
+    }
+
+    .project-body {
+      padding: 20px;
+    }
+
+    .project-status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .project-status.active {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .project-status.pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .project-status.completed {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .project-status.onhold {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .project-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .project-desc {
+      font-size: 13px;
+      color: #6c757d;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .project-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+
+    .project-team {
+      display: flex;
+    }
+
+    .project-team-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      margin-left: -8px;
+      border: 2px solid #fff;
+    }
+
+    .project-team-avatar:first-child {
+      margin-left: 0;
+    }
+
+    .project-team-avatar.blue { background: #17a2b8; }
+    .project-team-avatar.green { background: #28a745; }
+    .project-team-avatar.orange { background: #fd7e14; }
+    .project-team-avatar.purple { background: #6f42c1; }
+    .project-team-avatar.more { background: #6c757d; font-size: 10px; }
+
+    .project-deadline {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    .project-deadline .material-icons {
+      font-size: 16px;
+    }
+
+    .project-progress {
+      margin-bottom: 16px;
+    }
+
+    .project-progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .project-progress-label {
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    .project-progress-bar {
+      height: 6px;
+      background: #e9ecef;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .project-progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .project-progress-fill.blue { background: linear-gradient(90deg, #17a2b8, #20c997); }
+    .project-progress-fill.green { background: linear-gradient(90deg, #28a745, #5cb85c); }
+    .project-progress-fill.orange { background: linear-gradient(90deg, #fd7e14, #ffc107); }
+
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      background: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+      border-color: #17a2b8;
+      color: #17a2b8;
+    }
+
+    .filter-btn.active {
+      background: #17a2b8;
+      border-color: #17a2b8;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <nav class="breadcrumb">
+            <a href="sample-3-dashboard.html">ホーム</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>ページ</span>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>プロジェクト</span>
+          </nav>
+        </div>
+        <div class="header-right">
+          <button class="header-btn">
+            <span class="material-icons">notifications_none</span>
+          </button>
+          <div class="header-user">
+            <div class="header-user-avatar">
+              <span class="material-icons" style="font-size: 16px;">person</span>
+            </div>
+            <span class="header-user-name">山田 太郎</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h1 class="page-title">
+            <span class="page-num-badge">7-3</span>プロジェクト
+            <button class="prompt-btn" data-prompt-id="7-3" data-prompt="プロジェクト一覧ページを作成してください。
+
+【要件】
+- プロジェクトカードグリッド
+- カード内にアイコン/画像
+- プロジェクト名・説明
+- 進捗バー
+- チームメンバーアバター
+- ステータスバッジ
+- フィルター/検索
+
+【デザイン】
+- レスポンシブグリッド
+- カードホバーエフェクト
+- グラデーション背景画像" onclick="openPromptModal('7-3')">
+              <span class="material-icons">auto_awesome</span>
+              プロンプト
+            </button>
+            <button class="source-btn" data-source-id="7-3" onclick="openSourceModal('7-3')">
+              <span class="material-icons">code</span>
+              ソース
+            </button>
+          </h1>
+            <p class="page-subtitle">進行中のプロジェクト一覧</p>
+          </div>
+          <button class="btn btn-primary">
+            <span class="material-icons">add</span>
+            新規プロジェクト
+          </button>
+        </div>
+
+        <h4 class="card-title" style="font-size: 14px; margin-bottom: 12px;"><span class="section-num-badge">7-3-1</span>フィルターバー
+          <button class="prompt-btn" data-prompt-id="7-3-1" data-prompt="プロジェクトフィルターバーを作成してください。
+
+【構造】
+- filter-bar: display: flex, gap: 12px, margin-bottom: 24px, flex-wrap: wrap
+
+【フィルターボタン（filter-btn）】
+- padding: 8px 16px
+- border: 1px solid #ddd
+- border-radius: 20px（ピル型）
+- background: #fff
+- font-size: 13px
+- cursor: pointer
+- transition: all 0.2s
+
+【ホバー状態】
+- border-color: #17a2b8
+- color: #17a2b8
+
+【アクティブ状態（.active）】
+- background: #17a2b8
+- border-color: #17a2b8
+- color: #fff
+
+【ボタンリスト】
+- すべて（デフォルトでactive）
+- 進行中
+- 完了
+- 保留中
+- 計画中
+
+【JavaScript】
+クリック時に他のボタンからactiveクラスを削除し、クリックされたボタンにactiveクラスを追加" onclick="openPromptModal('7-3-1')">
+            <span class="material-icons">auto_awesome</span>
+            プロンプト
+          </button>
+          <button class="source-btn" data-source-id="7-3-1" onclick="openSourceModal('7-3-1')">
+            <span class="material-icons">code</span>
+            ソース
+          </button>
+        </h4>
+        <div class="filter-bar">
+          <button class="filter-btn active">すべて</button>
+          <button class="filter-btn">進行中</button>
+          <button class="filter-btn">完了</button>
+          <button class="filter-btn">保留中</button>
+          <button class="filter-btn">計画中</button>
+        </div>
+
+        <h4 class="card-title" style="font-size: 14px; margin-bottom: 16px;"><span class="section-num-badge">7-3-2</span>プロジェクトカードグリッド
+          <button class="prompt-btn" data-prompt-id="7-3-2" data-prompt="プロジェクトカードグリッドを作成してください。
+
+【グリッドレイアウト】
+- project-grid: display: grid
+- grid-template-columns: repeat(auto-fill, minmax(320px, 1fr))
+- gap: 24px
+
+【プロジェクトカード（project-card）】
+- background: #fff
+- border-radius: 10px
+- box-shadow: 0 2px 8px rgba(0,0,0,0.06)
+- overflow: hidden
+- transition: transform 0.2s, box-shadow 0.2s
+
+【ホバー効果】
+- transform: translateY(-4px)
+- box-shadow: 0 8px 24px rgba(0,0,0,0.12)
+
+【カード画像エリア（project-image）】
+- height: 140px
+- display: flex, align-items: center, justify-content: center
+- アイコン: font-size: 48px, color: #fff, opacity: 0.9
+- グラデーション背景クラス:
+  - .blue: linear-gradient(135deg, #17a2b8, #20c997)
+  - .purple: linear-gradient(135deg, #6f42c1, #9b59b6)
+  - .orange: linear-gradient(135deg, #fd7e14, #ffc107)
+  - .green: linear-gradient(135deg, #28a745, #5cb85c)
+  - .red: linear-gradient(135deg, #dc3545, #ff6b6b)
+  - .pink: linear-gradient(135deg, #e83e8c, #fd79a8)
+
+【ステータスバッジ（project-status）】
+- display: inline-block
+- padding: 4px 10px, border-radius: 4px
+- font-size: 11px, font-weight: 600
+- .active: background: #d4edda, color: #155724（進行中）
+- .pending: background: #fff3cd, color: #856404（計画中）
+- .completed: background: #d1ecf1, color: #0c5460（完了）
+- .onhold: background: #f8d7da, color: #721c24（保留中）
+
+【進捗バー】
+- project-progress-bar: height: 6px, background: #e9ecef, border-radius: 3px
+- project-progress-fill: 色のクラス（.blue, .green, .orange）
+
+【チームアバター】
+- project-team-avatar: 32px円形、重なり表示（margin-left: -8px）
+- 最初のアバターのみ margin-left: 0
+- border: 2px solid #fff
+
+【締切表示】
+- project-deadline: アイコン + 日付、font-size: 12px, color: #6c757d" onclick="openPromptModal('7-3-2')">
+            <span class="material-icons">auto_awesome</span>
+            プロンプト
+          </button>
+          <button class="source-btn" data-source-id="7-3-2" onclick="openSourceModal('7-3-2')">
+            <span class="material-icons">code</span>
+            ソース
+          </button>
+        </h4>
+        <div class="project-grid">
+          <!-- Project 1 -->
+          <div class="project-card">
+            <div class="project-image blue">
+              <span class="material-icons">shopping_cart</span>
+            </div>
+            <div class="project-body">
+              <span class="project-status active">進行中</span>
+              <h3 class="project-title">ECサイトリニューアル</h3>
+              <p class="project-desc">既存ECサイトのUI/UX改善とパフォーマンス最適化プロジェクト</p>
+              <div class="project-progress">
+                <div class="project-progress-header">
+                  <span class="project-progress-label">進捗</span>
+                  <span class="project-progress-label">75%</span>
+                </div>
+                <div class="project-progress-bar">
+                  <div class="project-progress-fill blue" style="width: 75%"></div>
+                </div>
+              </div>
+              <div class="project-meta">
+                <div class="project-team">
+                  <div class="project-team-avatar blue">田</div>
+                  <div class="project-team-avatar green">山</div>
+                  <div class="project-team-avatar orange">佐</div>
+                  <div class="project-team-avatar more">+2</div>
+                </div>
+                <div class="project-deadline">
+                  <span class="material-icons">event</span>
+                  2024/02/28
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project 2 -->
+          <div class="project-card">
+            <div class="project-image purple">
+              <span class="material-icons">phone_android</span>
+            </div>
+            <div class="project-body">
+              <span class="project-status active">進行中</span>
+              <h3 class="project-title">モバイルアプリ開発</h3>
+              <p class="project-desc">React Nativeを使用したiOS/Androidアプリの新規開発</p>
+              <div class="project-progress">
+                <div class="project-progress-header">
+                  <span class="project-progress-label">進捗</span>
+                  <span class="project-progress-label">45%</span>
+                </div>
+                <div class="project-progress-bar">
+                  <div class="project-progress-fill orange" style="width: 45%"></div>
+                </div>
+              </div>
+              <div class="project-meta">
+                <div class="project-team">
+                  <div class="project-team-avatar purple">高</div>
+                  <div class="project-team-avatar blue">伊</div>
+                  <div class="project-team-avatar green">渡</div>
+                </div>
+                <div class="project-deadline">
+                  <span class="material-icons">event</span>
+                  2024/04/15
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project 3 -->
+          <div class="project-card">
+            <div class="project-image green">
+              <span class="material-icons">analytics</span>
+            </div>
+            <div class="project-body">
+              <span class="project-status completed">完了</span>
+              <h3 class="project-title">データ分析基盤構築</h3>
+              <p class="project-desc">BigQueryとLookerを使用したBI環境の構築</p>
+              <div class="project-progress">
+                <div class="project-progress-header">
+                  <span class="project-progress-label">進捗</span>
+                  <span class="project-progress-label">100%</span>
+                </div>
+                <div class="project-progress-bar">
+                  <div class="project-progress-fill green" style="width: 100%"></div>
+                </div>
+              </div>
+              <div class="project-meta">
+                <div class="project-team">
+                  <div class="project-team-avatar orange">加</div>
+                  <div class="project-team-avatar purple">吉</div>
+                </div>
+                <div class="project-deadline">
+                  <span class="material-icons">event</span>
+                  2024/01/10
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project 4 -->
+          <div class="project-card">
+            <div class="project-image orange">
+              <span class="material-icons">security</span>
+            </div>
+            <div class="project-body">
+              <span class="project-status pending">計画中</span>
+              <h3 class="project-title">セキュリティ強化</h3>
+              <p class="project-desc">全システムのセキュリティ監査と脆弱性対策</p>
+              <div class="project-progress">
+                <div class="project-progress-header">
+                  <span class="project-progress-label">進捗</span>
+                  <span class="project-progress-label">10%</span>
+                </div>
+                <div class="project-progress-bar">
+                  <div class="project-progress-fill orange" style="width: 10%"></div>
+                </div>
+              </div>
+              <div class="project-meta">
+                <div class="project-team">
+                  <div class="project-team-avatar blue">中</div>
+                  <div class="project-team-avatar green">松</div>
+                  <div class="project-team-avatar more">+4</div>
+                </div>
+                <div class="project-deadline">
+                  <span class="material-icons">event</span>
+                  2024/06/30
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project 5 -->
+          <div class="project-card">
+            <div class="project-image red">
+              <span class="material-icons">support_agent</span>
+            </div>
+            <div class="project-body">
+              <span class="project-status onhold">保留中</span>
+              <h3 class="project-title">カスタマーサポートAI</h3>
+              <p class="project-desc">AIチャットボットによる自動応答システムの導入</p>
+              <div class="project-progress">
+                <div class="project-progress-header">
+                  <span class="project-progress-label">進捗</span>
+                  <span class="project-progress-label">30%</span>
+                </div>
+                <div class="project-progress-bar">
+                  <div class="project-progress-fill blue" style="width: 30%"></div>
+                </div>
+              </div>
+              <div class="project-meta">
+                <div class="project-team">
+                  <div class="project-team-avatar purple">田</div>
+                  <div class="project-team-avatar orange">鈴</div>
+                </div>
+                <div class="project-deadline">
+                  <span class="material-icons">event</span>
+                  未定
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project 6 -->
+          <div class="project-card">
+            <div class="project-image pink">
+              <span class="material-icons">palette</span>
+            </div>
+            <div class="project-body">
+              <span class="project-status active">進行中</span>
+              <h3 class="project-title">デザインシステム構築</h3>
+              <p class="project-desc">全社共通のUIコンポーネントライブラリの開発</p>
+              <div class="project-progress">
+                <div class="project-progress-header">
+                  <span class="project-progress-label">進捗</span>
+                  <span class="project-progress-label">60%</span>
+                </div>
+                <div class="project-progress-bar">
+                  <div class="project-progress-fill blue" style="width: 60%"></div>
+                </div>
+              </div>
+              <div class="project-meta">
+                <div class="project-team">
+                  <div class="project-team-avatar green">小</div>
+                  <div class="project-team-avatar blue">林</div>
+                  <div class="project-team-avatar orange">愛</div>
+                </div>
+                <div class="project-deadline">
+                  <span class="material-icons">event</span>
+                  2024/03/31
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <script src="common.js"></script>
+</body>
+</html>

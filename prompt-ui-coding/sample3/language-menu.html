@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Language Menu - AdminPanel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .demo-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .demo-card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .demo-card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
+
+    .demo-card-body {
+      padding: 20px;
+    }
+
+    /* Language Dropdown */
+    .lang-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .lang-dropdown-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 140px;
+    }
+
+    .lang-dropdown-toggle:hover {
+      background: #e9ecef;
+    }
+
+    .lang-flag {
+      width: 24px;
+      height: 16px;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .lang-dropdown-arrow {
+      margin-left: auto;
+      color: #999;
+      transition: transform 0.2s;
+    }
+
+    .lang-dropdown.open .lang-dropdown-arrow {
+      transform: rotate(180deg);
+    }
+
+    .lang-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 8px;
+      background: #fff;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+      z-index: 100;
+      min-width: 180px;
+    }
+
+    .lang-dropdown.open .lang-dropdown-menu {
+      display: block;
+    }
+
+    .lang-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: #333;
+      text-decoration: none;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+
+    .lang-dropdown-item:hover {
+      background: #f8f9fa;
+    }
+
+    .lang-dropdown-item.active {
+      background: #667eea;
+      color: #fff;
+    }
+
+    .lang-dropdown-item .check-icon {
+      margin-left: auto;
+      opacity: 0;
+    }
+
+    .lang-dropdown-item.active .check-icon {
+      opacity: 1;
+    }
+
+    /* Language List Style */
+    .lang-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .lang-list-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .lang-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .lang-list-item:hover {
+      background: #f8f9fa;
+    }
+
+    .lang-list-item.active {
+      background: #f0f4ff;
+    }
+
+    .lang-list-info {
+      flex: 1;
+    }
+
+    .lang-list-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .lang-list-native {
+      font-size: 0.875rem;
+      color: #666;
+    }
+
+    .lang-list-check {
+      color: #667eea;
+      opacity: 0;
+    }
+
+    .lang-list-item.active .lang-list-check {
+      opacity: 1;
+    }
+
+    /* Tabs Style */
+    .lang-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .lang-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #f8f9fa;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lang-tab:hover {
+      background: #e9ecef;
+    }
+
+    .lang-tab.active {
+      background: #fff;
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .lang-code {
+      font-size: 0.75rem;
+      color: #999;
+      font-weight: 500;
+    }
+
+    .lang-tab.active .lang-code {
+      color: #667eea;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <nav class="breadcrumb">
+            <a href="sample-3-dashboard.html">ホーム</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>Language Menu</span>
+          </nav>
+        </div>
+        <div class="header-right">
+          <button class="header-btn">
+            <span class="material-icons">notifications_none</span>
+          </button>
+          <div class="header-user">
+            <div class="header-user-avatar">
+              <span class="material-icons" style="font-size: 16px;">person</span>
+            </div>
+            <span class="header-user-name">山田 太郎</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-header">
+          <h1 class="page-title">Language Menu</h1>
+          <p class="page-subtitle">言語切り替えのUIパターン</p>
+        </div>
+
+        <div class="demo-grid">
+          <div class="demo-card">
+            <div class="demo-card-header">
+              <h3 class="demo-card-title">
+                <span class="section-num-badge">10-6-1</span>ドロップダウン
+                <button class="prompt-btn" data-prompt-id="10-6-1" data-prompt="言語選択ドロップダウンUIを作成してください。
+
+【要件】
+- クリックで開閉するドロップダウンメニュー
+- 国旗絵文字 + 言語名の表示
+- 選択中の言語にチェックマーク
+- 外部クリックで閉じる
+
+【構造】
+- .lang-dropdown: position: relative
+- .lang-dropdown-toggle: トリガーボタン（国旗、言語名、矢印アイコン）
+- .lang-dropdown-menu: ドロップダウンメニュー（position: absolute、z-index: 100）
+- .lang-dropdown-item: メニュー項目
+
+【スタイル】
+- トリガー: #f8f9fa背景、角丸8px、min-width: 140px
+- メニュー: 白背景、ボーダー、影（0 4px 12px rgba(0,0,0,0.15)）
+- 選択中: #667eea背景、白文字
+- ホバー: #f8f9fa背景
+
+【アニメーション】
+- .open時に矢印アイコンを180度回転" onclick="openPromptModal('10-6-1')">
+                  <span class="material-icons">auto_awesome</span>
+                  プロンプト
+                </button>
+                <button class="source-btn" data-source-id="10-6-1" onclick="openSourceModal('10-6-1')">
+                  <span class="material-icons">code</span>
+                  ソース
+                </button>
+              </h3>
+            </div>
+            <div class="demo-card-body">
+              <div class="lang-dropdown" id="langDropdown1">
+                <div class="lang-dropdown-toggle" onclick="toggleLangDropdown('langDropdown1')">
+                  <span class="lang-flag">🇯🇵</span>
+                  <span>日本語</span>
+                  <span class="material-icons lang-dropdown-arrow">expand_more</span>
+                </div>
+                <div class="lang-dropdown-menu">
+                  <div class="lang-dropdown-item active" onclick="selectLang(this, 'langDropdown1')">
+                    <span class="lang-flag">🇯🇵</span>
+                    <span>日本語</span>
+                    <span class="material-icons check-icon">check</span>
+                  </div>
+                  <div class="lang-dropdown-item" onclick="selectLang(this, 'langDropdown1')">
+                    <span class="lang-flag">🇺🇸</span>
+                    <span>English</span>
+                    <span class="material-icons check-icon">check</span>
+                  </div>
+                  <div class="lang-dropdown-item" onclick="selectLang(this, 'langDropdown1')">
+                    <span class="lang-flag">🇨🇳</span>
+                    <span>中文</span>
+                    <span class="material-icons check-icon">check</span>
+                  </div>
+                  <div class="lang-dropdown-item" onclick="selectLang(this, 'langDropdown1')">
+                    <span class="lang-flag">🇰🇷</span>
+                    <span>한국어</span>
+                    <span class="material-icons check-icon">check</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="demo-card">
+            <div class="demo-card-header">
+              <h3 class="demo-card-title">
+                <span class="section-num-badge">10-6-2</span>タブスタイル
+                <button class="prompt-btn" data-prompt-id="10-6-2" data-prompt="言語選択タブUIを作成してください。
+
+【要件】
+- 横並びのタブ形式で言語を選択
+- 国旗絵文字 + 言語名 + 言語コードの表示
+- 選択中のタブは枠線でハイライト
+
+【構造】
+- .lang-tabs: flexコンテナ（gap: 8px、flex-wrap: wrap）
+- .lang-tab: 各タブ（国旗、言語名、言語コード）
+- .lang-code: 言語コード（JA, EN, ZH等）
+
+【スタイル】
+- タブ: #f8f9fa背景、角丸8px、パディング10px 16px
+- 選択中: 白背景、2px青ボーダー、青文字
+- ホバー: #e9ecef背景
+- 言語コード: 小さめフォント、グレー文字" onclick="openPromptModal('10-6-2')">
+                  <span class="material-icons">auto_awesome</span>
+                  プロンプト
+                </button>
+                <button class="source-btn" data-source-id="10-6-2" onclick="openSourceModal('10-6-2')">
+                  <span class="material-icons">code</span>
+                  ソース
+                </button>
+              </h3>
+            </div>
+            <div class="demo-card-body">
+              <div class="lang-tabs">
+                <div class="lang-tab active" onclick="selectTab(this)">
+                  <span class="lang-flag">🇯🇵</span>
+                  <span>日本語</span>
+                  <span class="lang-code">JA</span>
+                </div>
+                <div class="lang-tab" onclick="selectTab(this)">
+                  <span class="lang-flag">🇺🇸</span>
+                  <span>English</span>
+                  <span class="lang-code">EN</span>
+                </div>
+                <div class="lang-tab" onclick="selectTab(this)">
+                  <span class="lang-flag">🇨🇳</span>
+                  <span>中文</span>
+                  <span class="lang-code">ZH</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="demo-card">
+            <div class="demo-card-header">
+              <h3 class="demo-card-title">
+                <span class="section-num-badge">10-6-3</span>リストスタイル
+                <button class="prompt-btn" data-prompt-id="10-6-3" data-prompt="言語選択リストUIを作成してください。
+
+【要件】
+- 縦型のリスト形式で言語を選択
+- 国旗（大きめ）+ 言語名 + 英語名 + チェックアイコン
+- 選択中は青背景でハイライト
+
+【構造】
+- .lang-list: リストコンテナ（list-style: none）
+- .lang-list-item: 各項目（flex、gap: 16px）
+- .lang-list-info: 言語名と英語名
+- .lang-list-check: チェックアイコン（check_circle）
+
+【スタイル】
+- リスト項目: パディング16px、下線区切り
+- 国旗: 24pxサイズ
+- 選択中: #f0f4ff背景
+- チェックアイコン: #667eea色、選択時のみ表示（opacity: 1）
+- ホバー: #f8f9fa背景" onclick="openPromptModal('10-6-3')">
+                  <span class="material-icons">auto_awesome</span>
+                  プロンプト
+                </button>
+                <button class="source-btn" data-source-id="10-6-3" onclick="openSourceModal('10-6-3')">
+                  <span class="material-icons">code</span>
+                  ソース
+                </button>
+              </h3>
+            </div>
+            <div class="demo-card-body" style="padding: 0;">
+              <ul class="lang-list">
+                <li class="lang-list-item active" onclick="selectListItem(this)">
+                  <span class="lang-flag" style="font-size: 24px;">🇯🇵</span>
+                  <div class="lang-list-info">
+                    <div class="lang-list-name">日本語</div>
+                    <div class="lang-list-native">Japanese</div>
+                  </div>
+                  <span class="material-icons lang-list-check">check_circle</span>
+                </li>
+                <li class="lang-list-item" onclick="selectListItem(this)">
+                  <span class="lang-flag" style="font-size: 24px;">🇺🇸</span>
+                  <div class="lang-list-info">
+                    <div class="lang-list-name">English</div>
+                    <div class="lang-list-native">英語</div>
+                  </div>
+                  <span class="material-icons lang-list-check">check_circle</span>
+                </li>
+                <li class="lang-list-item" onclick="selectListItem(this)">
+                  <span class="lang-flag" style="font-size: 24px;">🇨🇳</span>
+                  <div class="lang-list-info">
+                    <div class="lang-list-name">中文 (简体)</div>
+                    <div class="lang-list-native">Simplified Chinese</div>
+                  </div>
+                  <span class="material-icons lang-list-check">check_circle</span>
+                </li>
+                <li class="lang-list-item" onclick="selectListItem(this)">
+                  <span class="lang-flag" style="font-size: 24px;">🇰🇷</span>
+                  <div class="lang-list-info">
+                    <div class="lang-list-name">한국어</div>
+                    <div class="lang-list-native">Korean</div>
+                  </div>
+                  <span class="material-icons lang-list-check">check_circle</span>
+                </li>
+                <li class="lang-list-item" onclick="selectListItem(this)">
+                  <span class="lang-flag" style="font-size: 24px;">🇫🇷</span>
+                  <div class="lang-list-info">
+                    <div class="lang-list-name">Français</div>
+                    <div class="lang-list-native">French</div>
+                  </div>
+                  <span class="material-icons lang-list-check">check_circle</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    function toggleLangDropdown(id) {
+      const dropdown = document.getElementById(id);
+      document.querySelectorAll('.lang-dropdown.open').forEach(d => {
+        if (d.id !== id) d.classList.remove('open');
+      });
+      dropdown.classList.toggle('open');
+    }
+
+    function selectLang(item, dropdownId) {
+      const dropdown = document.getElementById(dropdownId);
+      const toggle = dropdown.querySelector('.lang-dropdown-toggle');
+
+      dropdown.querySelectorAll('.lang-dropdown-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+
+      const flag = item.querySelector('.lang-flag').textContent;
+      const name = item.querySelector('span:nth-child(2)').textContent;
+
+      toggle.querySelector('.lang-flag').textContent = flag;
+      toggle.querySelector('span:nth-child(2)').textContent = name;
+
+      dropdown.classList.remove('open');
+    }
+
+    function selectTab(tab) {
+      document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    }
+
+    function selectListItem(item) {
+      document.querySelectorAll('.lang-list-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.lang-dropdown')) {
+        document.querySelectorAll('.lang-dropdown.open').forEach(d => {
+          d.classList.remove('open');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

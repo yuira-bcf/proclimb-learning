@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>jsGrid - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <!-- jsGrid CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css">
+  <style>
+    /* jsGrid カスタムスタイル */
+    .jsgrid {
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    .jsgrid-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .jsgrid-header-row > .jsgrid-header-cell {
+      background: #f8f9fa;
+      border-bottom: 2px solid #dee2e6;
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+    }
+
+    .jsgrid-row > .jsgrid-cell,
+    .jsgrid-alt-row > .jsgrid-cell {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    .jsgrid-row:hover > .jsgrid-cell,
+    .jsgrid-alt-row:hover > .jsgrid-cell {
+      background: #f8f9fa;
+    }
+
+    .jsgrid-alt-row > .jsgrid-cell {
+      background: #fafafa;
+    }
+
+    .jsgrid-filter-row > .jsgrid-cell {
+      padding: 8px;
+      background: #fff;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .jsgrid-filter-row input,
+    .jsgrid-filter-row select {
+      width: 100%;
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .jsgrid-filter-row input:focus,
+    .jsgrid-filter-row select:focus {
+      border-color: #17a2b8;
+    }
+
+    .jsgrid-insert-row > .jsgrid-cell {
+      padding: 8px;
+      background: #e3f2fd;
+      border-bottom: 2px solid #17a2b8;
+    }
+
+    .jsgrid-insert-row input,
+    .jsgrid-insert-row select {
+      width: 100%;
+      padding: 6px 10px;
+      border: 1px solid #90caf9;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .jsgrid-edit-row > .jsgrid-cell {
+      background: #fff8e1;
+    }
+
+    .jsgrid-edit-row input,
+    .jsgrid-edit-row select {
+      width: 100%;
+      padding: 6px 10px;
+      border: 1px solid #ffcc80;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    /* ページネーション */
+    .jsgrid-pager {
+      padding: 16px;
+      text-align: center;
+    }
+
+    .jsgrid-pager-page,
+    .jsgrid-pager-current-page,
+    .jsgrid-pager-nav-button {
+      display: inline-block;
+      padding: 6px 12px;
+      margin: 0 2px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fff;
+      color: #333;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .jsgrid-pager-page:hover,
+    .jsgrid-pager-nav-button:hover {
+      background: #f8f9fa;
+      border-color: #17a2b8;
+      color: #17a2b8;
+    }
+
+    .jsgrid-pager-current-page {
+      background: #17a2b8;
+      border-color: #17a2b8;
+      color: #fff;
+    }
+
+    .jsgrid-pager-nav-inactive-button {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ボタン */
+    .jsgrid-button {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: #f8f9fa;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .jsgrid-button:hover {
+      background: #e9ecef;
+    }
+
+    .jsgrid-insert-button,
+    .jsgrid-insert-mode-button {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .jsgrid-insert-button:hover,
+    .jsgrid-insert-mode-button:hover {
+      background: #c3e6cb;
+    }
+
+    .jsgrid-edit-button {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .jsgrid-edit-button:hover {
+      background: #ffeeba;
+    }
+
+    .jsgrid-delete-button {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .jsgrid-delete-button:hover {
+      background: #f5c6cb;
+    }
+
+    .jsgrid-update-button,
+    .jsgrid-cancel-edit-button {
+      background: #17a2b8;
+      color: #fff;
+    }
+
+    .jsgrid-update-button:hover,
+    .jsgrid-cancel-edit-button:hover {
+      background: #138496;
+    }
+
+    /* 追加スタイル */
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .feature-item .material-icons {
+      color: #28a745;
+      font-size: 20px;
+    }
+
+    .code-example {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .code-example .comment {
+      color: #6a9955;
+    }
+
+    .code-example .string {
+      color: #ce9178;
+    }
+
+    .code-example .keyword {
+      color: #569cd6;
+    }
+
+    .code-example .function {
+      color: #dcdcaa;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 12px 16px;
+      border: 1px solid #dee2e6;
+      text-align: left;
+    }
+
+    .comparison-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+    }
+
+    .comparison-table .check {
+      color: #28a745;
+    }
+
+    .comparison-table .cross {
+      color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <nav class="breadcrumb">
+            <a href="sample-3-dashboard.html">ホーム</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>テーブル</span>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>jsGrid</span>
+          </nav>
+        </div>
+        <div class="header-right">
+          <button class="header-btn">
+            <span class="material-icons">notifications_none</span>
+          </button>
+          <div class="header-user">
+            <div class="header-user-avatar">
+              <span class="material-icons" style="font-size: 16px;">person</span>
+            </div>
+            <span class="header-user-name">山田 太郎</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-header">
+          <h1 class="page-title">
+              <span class="page-num-badge">4-3</span>jsGrid
+              <button class="prompt-btn" data-prompt-id="4-3" data-prompt="jsGridを使用したテーブルページを作成してください。
+
+【要件】
+- jsGridライブラリ統合
+- インライン編集機能
+- 行の追加・削除
+- フィルタリング
+- ページネーション
+- ソート機能
+
+【技術】
+- jsGrid使用
+- CRUD操作対応
+- カスタムセルレンダリング
+- バリデーション設定" onclick="openPromptModal('4-3')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="4-3" onclick="openSourceModal('4-3')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h1>
+          <p class="page-subtitle">軽量なCRUD対応グリッドコンポーネント</p>
+        </div>
+
+        <!-- 機能紹介 -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">4-3-1</span>
+              <span class="material-icons">info</span>
+              jsGridの主な機能
+              <button class="prompt-btn" data-prompt-id="4-3-1" data-prompt="jsGridの機能紹介セクションを作成してください。
+
+【構成】
+- カード形式で機能一覧を表示
+- 説明テキスト + 機能グリッド
+
+【説明テキスト】
+jsGridは、CRUD操作に特化した軽量なjQueryグリッドプラグインです。インライン編集やフィルタリングが標準搭載されています。
+
+【機能リスト（feature-list）】
+- grid表示（auto-fit, minmax 200px）
+- 6つの機能項目
+
+【各機能項目（feature-item）】
+- Material Icons（アイコン色: #28a745 緑）
+- 機能名テキスト
+
+【表示する機能】
+1. add_circle: インライン追加
+2. edit: インライン編集
+3. delete: 行削除
+4. filter_alt: カラムフィルター
+5. sort: ソート機能
+6. api: Ajax/API連携" onclick="openPromptModal('4-3-1')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="4-3-1" onclick="openSourceModal('4-3-1')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+            <p style="margin-bottom: 16px; color: #666;">jsGridは、CRUD操作に特化した軽量なjQueryグリッドプラグインです。インライン編集やフィルタリングが標準搭載されています。</p>
+            <div class="feature-list">
+              <div class="feature-item">
+                <span class="material-icons">add_circle</span>
+                <span>インライン追加</span>
+              </div>
+              <div class="feature-item">
+                <span class="material-icons">edit</span>
+                <span>インライン編集</span>
+              </div>
+              <div class="feature-item">
+                <span class="material-icons">delete</span>
+                <span>行削除</span>
+              </div>
+              <div class="feature-item">
+                <span class="material-icons">filter_alt</span>
+                <span>カラムフィルター</span>
+              </div>
+              <div class="feature-item">
+                <span class="material-icons">sort</span>
+                <span>ソート機能</span>
+              </div>
+              <div class="feature-item">
+                <span class="material-icons">api</span>
+                <span>Ajax/API連携</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CRUD テーブル -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">4-3-2</span>
+              <span class="material-icons">table_chart</span>
+              CRUD対応グリッド
+              <button class="prompt-btn" data-prompt-id="4-3-2" data-prompt="jsGridを使用したCRUD対応グリッドを作成してください。
+
+【テーブル構成】
+- id=&quot;crudGrid&quot;
+- カラム：ID、名前、部署、役職、給与、操作
+- 8件のサンプル社員データ
+
+【jsGrid初期化】
+$('#crudGrid').jsGrid({
+  width: '100%',
+  height: '400px',
+  inserting: true,    // 追加行表示
+  editing: true,      // 編集可能
+  sorting: true,      // ソート
+  paging: true,       // ページネーション
+  filtering: true,    // フィルター行表示
+  pageSize: 5,
+  pageButtonCount: 5,
+  deleteConfirm: 'このレコードを削除してもよろしいですか？',
+  data: employees
+});
+
+【フィールド定義】
+- id: number型、編集不可
+- name: text型、validate: 'required'
+- department: select型（配列から選択）
+- position: select型（配列から選択）
+- salary: number型、itemTemplateで円表示
+- control: 操作ボタン列
+
+【カスタムCSS】
+- ヘッダー行: 背景 #f8f9fa
+- フィルター行: 背景 #fff、input border-radius 4px
+- 追加行: 背景 #e3f2fd（水色）
+- 編集行: 背景 #fff8e1（黄色）
+- ページネーション: border-radius 4px、アクティブ時 #17a2b8
+
+【ボタンスタイル】
+- insert: 背景 #d4edda（緑）
+- edit: 背景 #fff3cd（黄）
+- delete: 背景 #f8d7da（赤）
+- update/cancel: 背景 #17a2b8" onclick="openPromptModal('4-3-2')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="4-3-2" onclick="openSourceModal('4-3-2')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+            <p style="margin-bottom: 16px; color: #666; font-size: 13px;">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle;">tips_and_updates</span>
+              上部のフィルター行で検索、「+」ボタンで新規追加、各行の編集・削除ボタンでCRUD操作ができます
+            </p>
+            <div id="crudGrid"></div>
+          </div>
+        </div>
+
+        <!-- シンプルなグリッド -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">4-3-3</span>
+              <span class="material-icons">view_list</span>
+              読み取り専用グリッド
+              <button class="prompt-btn" data-prompt-id="4-3-3" data-prompt="jsGridを使用した読み取り専用グリッドを作成してください。
+
+【テーブル構成】
+- id=&quot;readonlyGrid&quot;
+- カラム：商品名、カテゴリ、販売数、売上
+- 7件のサンプル売上データ
+
+【jsGrid初期化（読み取り専用）】
+$('#readonlyGrid').jsGrid({
+  width: '100%',
+  height: '300px',
+  sorting: true,      // ソートのみ有効
+  paging: true,
+  filtering: true,
+  pageSize: 5,
+  data: salesData
+  // inserting, editing は未設定（false）
+});
+
+【フィールド定義】
+- product: text型
+- category: select型（電子機器、周辺機器、オーディオ、ストレージ）
+- quantity: number型
+- revenue: number型、itemTemplateで円表示
+
+【表示データ例】
+- ノートパソコン / 電子機器 / 45個 / ¥5,760,000
+- モニター / 電子機器 / 78個 / ¥4,118,400
+など" onclick="openPromptModal('4-3-3')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="4-3-3" onclick="openSourceModal('4-3-3')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+            <div id="readonlyGrid"></div>
+          </div>
+        </div>
+
+        <!-- 比較表 -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">4-3-4</span>
+              <span class="material-icons">compare</span>
+              DataTables vs jsGrid 比較
+              <button class="prompt-btn" data-prompt-id="4-3-4" data-prompt="DataTablesとjsGridの比較表を作成してください。
+
+【テーブル構成】
+- comparison-table クラス
+- カラム：機能、DataTables、jsGrid
+- 10項目の比較
+
+【比較項目と内容】
+1. ソート: 両方○
+2. 検索/フィルター: DT=グローバル検索、jsGrid=カラム別フィルター
+3. ページネーション: 両方○
+4. インライン編集: DT=×（別途プラグイン必要）、jsGrid=○標準搭載
+5. インライン追加: DT=×、jsGrid=○標準搭載
+6. 削除機能: DT=×（自前実装）、jsGrid=○標準搭載
+7. レスポンシブ: DT=○優れている、jsGrid=○基本対応
+8. エクスポート: DT=○拡張機能あり、jsGrid=×
+9. ファイルサイズ: DT=約85KB、jsGrid=約25KB
+10. 最適な用途: DT=データ表示・検索重視、jsGrid=CRUD操作重視
+
+【アイコン表示】
+- check_circle（check クラス）: 緑 #28a745
+- cancel（cross クラス）: 赤 #dc3545
+
+【テーブルスタイル】
+- border-collapse: collapse
+- th: 背景 #f8f9fa
+- th, td: padding 12px 16px、border 1px #dee2e6" onclick="openPromptModal('4-3-4')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="4-3-4" onclick="openSourceModal('4-3-4')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th>機能</th>
+                  <th>DataTables</th>
+                  <th>jsGrid</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>ソート</td>
+                  <td><span class="material-icons check">check_circle</span></td>
+                  <td><span class="material-icons check">check_circle</span></td>
+                </tr>
+                <tr>
+                  <td>検索/フィルター</td>
+                  <td><span class="material-icons check">check_circle</span> グローバル検索</td>
+                  <td><span class="material-icons check">check_circle</span> カラム別フィルター</td>
+                </tr>
+                <tr>
+                  <td>ページネーション</td>
+                  <td><span class="material-icons check">check_circle</span></td>
+                  <td><span class="material-icons check">check_circle</span></td>
+                </tr>
+                <tr>
+                  <td>インライン編集</td>
+                  <td><span class="material-icons cross">cancel</span> 別途プラグイン必要</td>
+                  <td><span class="material-icons check">check_circle</span> 標準搭載</td>
+                </tr>
+                <tr>
+                  <td>インライン追加</td>
+                  <td><span class="material-icons cross">cancel</span></td>
+                  <td><span class="material-icons check">check_circle</span> 標準搭載</td>
+                </tr>
+                <tr>
+                  <td>削除機能</td>
+                  <td><span class="material-icons cross">cancel</span> 自前実装</td>
+                  <td><span class="material-icons check">check_circle</span> 標準搭載</td>
+                </tr>
+                <tr>
+                  <td>レスポンシブ</td>
+                  <td><span class="material-icons check">check_circle</span> 優れている</td>
+                  <td><span class="material-icons check">check_circle</span> 基本対応</td>
+                </tr>
+                <tr>
+                  <td>エクスポート</td>
+                  <td><span class="material-icons check">check_circle</span> 拡張機能あり</td>
+                  <td><span class="material-icons cross">cancel</span></td>
+                </tr>
+                <tr>
+                  <td>ファイルサイズ</td>
+                  <td>約 85KB（minified）</td>
+                  <td>約 25KB（minified）</td>
+                </tr>
+                <tr>
+                  <td>最適な用途</td>
+                  <td>データ表示・検索重視</td>
+                  <td>CRUD操作重視</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 初期化コード -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">4-3-5</span>
+              <span class="material-icons">code</span>
+              初期化コード
+              <button class="prompt-btn" data-prompt-id="4-3-5" data-prompt="jsGridの初期化コード表示セクションを作成してください。
+
+【構成】
+- 説明テキスト
+- コードブロック（code-example クラス）
+
+【コードブロックスタイル】
+- 背景: #1e1e1e
+- 文字色: #d4d4d4
+- フォント: Consolas, monospace
+- padding: 16px、border-radius: 8px
+
+【シンタックスハイライト】
+- .comment: #6a9955（緑）
+- .string: #ce9178（オレンジ）
+- .keyword: #569cd6（青）
+- .function: #dcdcaa（黄）
+
+【表示するコード内容】
+1. CDN読み込み
+   - jsgrid.min.css
+   - jsgrid-theme.min.css
+   - jsgrid.min.js
+
+2. CRUD対応グリッドの初期化例:
+$('#jsGrid').jsGrid({
+  width: '100%',
+  height: '400px',
+  inserting: true,
+  editing: true,
+  sorting: true,
+  paging: true,
+  filtering: true,
+  data: clients,
+  fields: [
+    { name: 'name', type: 'text', width: 150 },
+    { name: 'age', type: 'number', width: 50 },
+    { type: 'control' }
+  ]
+});" onclick="openPromptModal('4-3-5')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="4-3-5" onclick="openSourceModal('4-3-5')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+            <p style="margin-bottom: 16px; color: #666;">jsGridの基本的な初期化方法：</p>
+            <div class="code-example">
+              <span class="comment">// CDN読み込み</span><br>
+              &lt;link rel="stylesheet" href="<span class="string">https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css</span>"&gt;<br>
+              &lt;link rel="stylesheet" href="<span class="string">https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css</span>"&gt;<br>
+              &lt;script src="<span class="string">https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js</span>"&gt;&lt;/script&gt;<br><br>
+              <span class="comment">// CRUD対応グリッドの初期化</span><br>
+              $(<span class="string">"#jsGrid"</span>).<span class="function">jsGrid</span>({<br>
+              &nbsp;&nbsp;width: <span class="string">"100%"</span>,<br>
+              &nbsp;&nbsp;height: <span class="string">"400px"</span>,<br>
+              &nbsp;&nbsp;inserting: <span class="keyword">true</span>,<br>
+              &nbsp;&nbsp;editing: <span class="keyword">true</span>,<br>
+              &nbsp;&nbsp;sorting: <span class="keyword">true</span>,<br>
+              &nbsp;&nbsp;paging: <span class="keyword">true</span>,<br>
+              &nbsp;&nbsp;filtering: <span class="keyword">true</span>,<br>
+              &nbsp;&nbsp;data: clients,<br>
+              &nbsp;&nbsp;fields: [<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;{ name: <span class="string">"name"</span>, type: <span class="string">"text"</span>, width: <span class="keyword">150</span> },<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;{ name: <span class="string">"age"</span>, type: <span class="string">"number"</span>, width: <span class="keyword">50</span> },<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;{ type: <span class="string">"control"</span> }<br>
+              &nbsp;&nbsp;]<br>
+              });
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- jsGrid -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+
+  <script src="common.js"></script>
+  <script>
+    // サンプルデータ
+    var employees = [
+      { id: 1, name: "山田 太郎", department: "開発部", position: "マネージャー", salary: 650000 },
+      { id: 2, name: "鈴木 花子", department: "営業部", position: "シニア", salary: 520000 },
+      { id: 3, name: "佐藤 一郎", department: "開発部", position: "リーダー", salary: 580000 },
+      { id: 4, name: "田中 美咲", department: "人事部", position: "担当", salary: 420000 },
+      { id: 5, name: "高橋 健太", department: "マーケティング部", position: "マネージャー", salary: 680000 },
+      { id: 6, name: "伊藤 さくら", department: "開発部", position: "担当", salary: 380000 },
+      { id: 7, name: "渡辺 大輔", department: "営業部", position: "リーダー", salary: 550000 },
+      { id: 8, name: "小林 愛", department: "総務部", position: "担当", salary: 400000 }
+    ];
+
+    var departments = ["開発部", "営業部", "人事部", "マーケティング部", "総務部", "経理部"];
+    var positions = ["マネージャー", "リーダー", "シニア", "担当"];
+
+    // CRUD対応グリッド
+    $("#crudGrid").jsGrid({
+      width: "100%",
+      height: "400px",
+      inserting: true,
+      editing: true,
+      sorting: true,
+      paging: true,
+      filtering: true,
+      pageSize: 5,
+      pageButtonCount: 5,
+      deleteConfirm: "このレコードを削除してもよろしいですか？",
+      data: employees,
+      fields: [
+        { name: "id", title: "ID", type: "number", width: 50, editing: false },
+        { name: "name", title: "名前", type: "text", width: 120, validate: "required" },
+        {
+          name: "department",
+          title: "部署",
+          type: "select",
+          items: departments,
+          valueField: "",
+          textField: "",
+          width: 120
+        },
+        {
+          name: "position",
+          title: "役職",
+          type: "select",
+          items: positions,
+          valueField: "",
+          textField: "",
+          width: 100
+        },
+        {
+          name: "salary",
+          title: "給与",
+          type: "number",
+          width: 100,
+          itemTemplate: function(value) {
+            return "¥" + value.toLocaleString();
+          }
+        },
+        { type: "control", width: 100 }
+      ],
+      onItemInserting: function(args) {
+        // 新規ID生成
+        var maxId = Math.max.apply(Math, employees.map(function(e) { return e.id; }));
+        args.item.id = maxId + 1;
+      }
+    });
+
+    // 売上データ
+    var salesData = [
+      { product: "ノートパソコン", category: "電子機器", quantity: 45, revenue: 5760000 },
+      { product: "モニター", category: "電子機器", quantity: 78, revenue: 4118400 },
+      { product: "キーボード", category: "周辺機器", quantity: 234, revenue: 2995200 },
+      { product: "マウス", category: "周辺機器", quantity: 456, revenue: 1596000 },
+      { product: "ヘッドセット", category: "オーディオ", quantity: 89, revenue: 1646500 },
+      { product: "Webカメラ", category: "周辺機器", quantity: 123, revenue: 799500 },
+      { product: "外付けSSD", category: "ストレージ", quantity: 67, revenue: 1058600 }
+    ];
+
+    // 読み取り専用グリッド
+    $("#readonlyGrid").jsGrid({
+      width: "100%",
+      height: "300px",
+      sorting: true,
+      paging: true,
+      filtering: true,
+      pageSize: 5,
+      data: salesData,
+      fields: [
+        { name: "product", title: "商品名", type: "text", width: 150 },
+        {
+          name: "category",
+          title: "カテゴリ",
+          type: "select",
+          items: ["電子機器", "周辺機器", "オーディオ", "ストレージ"],
+          width: 100
+        },
+        { name: "quantity", title: "販売数", type: "number", width: 80 },
+        {
+          name: "revenue",
+          title: "売上",
+          type: "number",
+          width: 120,
+          itemTemplate: function(value) {
+            return "¥" + value.toLocaleString();
+          }
+        }
+      ]
+    });
+  </script>
+</body>
+</html>

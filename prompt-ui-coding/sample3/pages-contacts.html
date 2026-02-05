@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>連絡先 - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .contacts-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 992px) {
+      .contacts-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .contact-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .contact-search .material-icons {
+      color: #6c757d;
+    }
+
+    .contact-search input {
+      flex: 1;
+      border: none;
+      background: none;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .contact-groups {
+      margin-bottom: 16px;
+    }
+
+    .contact-group-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      color: #333;
+      text-decoration: none;
+    }
+
+    .contact-group-item:hover {
+      background: #f8f9fa;
+    }
+
+    .contact-group-item.active {
+      background: rgba(23, 162, 184, 0.1);
+      color: #17a2b8;
+    }
+
+    .contact-group-item .material-icons {
+      font-size: 20px;
+    }
+
+    .contact-group-count {
+      margin-left: auto;
+      background: #e9ecef;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .contact-group-item.active .contact-group-count {
+      background: #17a2b8;
+      color: #fff;
+    }
+
+    .contact-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .contact-list-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .contact-list-count {
+      font-size: 13px;
+      color: #6c757d;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .contact-item:hover {
+      background: #f8f9fa;
+    }
+
+    .contact-item.selected {
+      background: rgba(23, 162, 184, 0.05);
+      border-left: 3px solid #17a2b8;
+    }
+
+    .contact-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .contact-avatar.blue { background: linear-gradient(135deg, #17a2b8, #20c997); }
+    .contact-avatar.green { background: linear-gradient(135deg, #28a745, #5cb85c); }
+    .contact-avatar.orange { background: linear-gradient(135deg, #fd7e14, #ffc107); }
+    .contact-avatar.purple { background: linear-gradient(135deg, #6f42c1, #9b59b6); }
+    .contact-avatar.red { background: linear-gradient(135deg, #dc3545, #ff6b6b); }
+    .contact-avatar.pink { background: linear-gradient(135deg, #e83e8c, #fd79a8); }
+
+    .contact-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .contact-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .contact-role {
+      font-size: 13px;
+      color: #6c757d;
+    }
+
+    .contact-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .contact-action-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: #f8f9fa;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .contact-action-btn:hover {
+      background: #17a2b8;
+      color: #fff;
+    }
+
+    .contact-action-btn .material-icons {
+      font-size: 18px;
+    }
+
+    .contact-detail {
+      padding: 24px;
+    }
+
+    .contact-detail-header {
+      text-align: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 24px;
+    }
+
+    .contact-detail-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      font-weight: 600;
+      color: #fff;
+      margin: 0 auto 16px;
+      background: linear-gradient(135deg, #17a2b8, #20c997);
+    }
+
+    .contact-detail-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .contact-detail-role {
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 16px;
+    }
+
+    .contact-detail-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .contact-info-section {
+      margin-bottom: 24px;
+    }
+
+    .contact-info-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .contact-info-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .contact-info-item:last-child {
+      border-bottom: none;
+    }
+
+    .contact-info-item .material-icons {
+      color: #17a2b8;
+      font-size: 20px;
+    }
+
+    .contact-info-label {
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    .contact-info-value {
+      font-size: 14px;
+      color: #333;
+    }
+
+    .contact-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .contact-tag {
+      padding: 4px 12px;
+      background: #e9ecef;
+      border-radius: 16px;
+      font-size: 12px;
+      color: #495057;
+    }
+
+    .contact-tag.vip {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .contact-tag.client {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .contact-tag.partner {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <nav class="breadcrumb">
+            <a href="sample-3-dashboard.html">ホーム</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>ページ</span>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>連絡先</span>
+          </nav>
+        </div>
+        <div class="header-right">
+          <button class="header-btn">
+            <span class="material-icons">notifications_none</span>
+          </button>
+          <div class="header-user">
+            <div class="header-user-avatar">
+              <span class="material-icons" style="font-size: 16px;">person</span>
+            </div>
+            <span class="header-user-name">山田 太郎</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h1 class="page-title">
+            <span class="page-num-badge">7-4</span>連絡先
+            <button class="prompt-btn" data-prompt-id="7-4" data-prompt="連絡先一覧ページを作成してください。
+
+【要件】
+- 連絡先リスト
+- アバター・名前・役職
+- 電話・メール情報
+- グループ/カテゴリ分け
+- 検索・フィルター
+- 連絡先詳細表示
+
+【デザイン】
+- 2カラムレイアウト（リスト+詳細）
+- ホバーでハイライト
+- オンライン状態表示" onclick="openPromptModal('7-4')">
+              <span class="material-icons">auto_awesome</span>
+              プロンプト
+            </button>
+            <button class="source-btn" data-source-id="7-4" onclick="openSourceModal('7-4')">
+              <span class="material-icons">code</span>
+              ソース
+            </button>
+          </h1>
+            <p class="page-subtitle">連絡先の管理</p>
+          </div>
+          <button class="btn btn-primary">
+            <span class="material-icons">person_add</span>
+            連絡先を追加
+          </button>
+        </div>
+
+        <div class="contacts-layout">
+          <!-- サイドバー -->
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title"><span class="section-num-badge">7-4-1</span>検索・グループナビ
+                  <button class="prompt-btn" data-prompt-id="7-4-1" data-prompt="連絡先検索・グループナビゲーションを作成してください。
+
+【検索バー（contact-search）】
+- display: flex, align-items: center, gap: 8px
+- padding: 12px 16px
+- background: #f8f9fa
+- border-radius: 8px
+- margin-bottom: 16px
+- アイコン: Material Icons search, color: #6c757d
+- input: flex: 1, border: none, background: none, outline: none, font-size: 14px
+
+【グループナビゲーション（contact-groups）】
+各アイテム（contact-group-item）:
+- display: flex, align-items: center, gap: 12px
+- padding: 12px 16px
+- border-radius: 8px
+- cursor: pointer
+- transition: background 0.2s
+- text-decoration: none, color: #333
+
+【ホバー状態】
+- background: #f8f9fa
+
+【アクティブ状態（.active）】
+- background: rgba(23, 162, 184, 0.1)
+- color: #17a2b8
+
+【カウントバッジ（contact-group-count）】
+- margin-left: auto
+- background: #e9ecef
+- padding: 2px 8px
+- border-radius: 10px
+- font-size: 12px, font-weight: 500
+
+【アクティブ時のカウント】
+- background: #17a2b8
+- color: #fff
+
+【グループリスト】
+- すべての連絡先（124）- people アイコン
+- お気に入り（12）- star アイコン
+- クライアント（45）- business アイコン
+- パートナー（28）- handshake アイコン
+- チームメンバー（39）- groups アイコン
+- 区切り線（hr）
+- タグを管理 - label アイコン
+- ゴミ箱（3）- delete アイコン" onclick="openPromptModal('7-4-1')">
+                    <span class="material-icons">auto_awesome</span>
+                    プロンプト
+                  </button>
+                  <button class="source-btn" data-source-id="7-4-1" onclick="openSourceModal('7-4-1')">
+                    <span class="material-icons">code</span>
+                    ソース
+                  </button>
+                </h3>
+              </div>
+              <div class="card-body">
+                <div class="contact-search">
+                  <span class="material-icons">search</span>
+                  <input type="text" placeholder="連絡先を検索...">
+                </div>
+
+                <div class="contact-groups">
+                  <a href="#" class="contact-group-item active">
+                    <span class="material-icons">people</span>
+                    <span>すべての連絡先</span>
+                    <span class="contact-group-count">124</span>
+                  </a>
+                  <a href="#" class="contact-group-item">
+                    <span class="material-icons">star</span>
+                    <span>お気に入り</span>
+                    <span class="contact-group-count">12</span>
+                  </a>
+                  <a href="#" class="contact-group-item">
+                    <span class="material-icons">business</span>
+                    <span>クライアント</span>
+                    <span class="contact-group-count">45</span>
+                  </a>
+                  <a href="#" class="contact-group-item">
+                    <span class="material-icons">handshake</span>
+                    <span>パートナー</span>
+                    <span class="contact-group-count">28</span>
+                  </a>
+                  <a href="#" class="contact-group-item">
+                    <span class="material-icons">groups</span>
+                    <span>チームメンバー</span>
+                    <span class="contact-group-count">39</span>
+                  </a>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;">
+
+                <a href="#" class="contact-group-item">
+                  <span class="material-icons">label</span>
+                  <span>タグを管理</span>
+                </a>
+                <a href="#" class="contact-group-item">
+                  <span class="material-icons">delete</span>
+                  <span>ゴミ箱</span>
+                  <span class="contact-group-count">3</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- メインコンテンツ -->
+          <div class="row">
+            <div class="col-6">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title"><span class="section-num-badge">7-4-2</span>連絡先リスト
+                    <button class="prompt-btn" data-prompt-id="7-4-2" data-prompt="連絡先リストを作成してください。
+
+【リストヘッダー（contact-list-header）】
+- display: flex, justify-content: space-between, align-items: center
+- padding: 16px 20px
+- border-bottom: 1px solid #eee
+- contact-list-title: font-size: 16px, font-weight: 600
+- contact-list-count: font-size: 13px, color: #6c757d
+
+【連絡先アイテム（contact-item）】
+- display: flex, align-items: center, gap: 16px
+- padding: 16px 20px
+- border-bottom: 1px solid #f0f0f0
+- cursor: pointer
+- transition: background 0.2s
+
+【ホバー状態】
+- background: #f8f9fa
+
+【選択状態（.selected）】
+- background: rgba(23, 162, 184, 0.05)
+- border-left: 3px solid #17a2b8
+
+【アバター（contact-avatar）】
+- 48px円形
+- グラデーション背景（.blue, .green, .orange, .purple, .red, .pink）
+- 姓の頭文字を表示
+- font-size: 18px, font-weight: 600, color: #fff
+
+【連絡先情報（contact-info）】
+- flex: 1, min-width: 0
+- contact-name: font-size: 15px, font-weight: 600, color: #333
+- contact-role: font-size: 13px, color: #6c757d
+
+【アクションボタン（contact-actions）】
+- display: flex, gap: 8px
+- contact-action-btn: 36px円形, border: none, background: #f8f9fa
+- ホバー時: background: #17a2b8, color: #fff
+- アイコン: email, phone（font-size: 18px）" onclick="openPromptModal('7-4-2')">
+                      <span class="material-icons">auto_awesome</span>
+                      プロンプト
+                    </button>
+                    <button class="source-btn" data-source-id="7-4-2" onclick="openSourceModal('7-4-2')">
+                      <span class="material-icons">code</span>
+                      ソース
+                    </button>
+                  </h3>
+                </div>
+                <div class="contact-list-header">
+                  <span class="contact-list-title">連絡先一覧</span>
+                  <span class="contact-list-count">124件</span>
+                </div>
+                <div class="contact-item selected">
+                  <div class="contact-avatar blue">阿</div>
+                  <div class="contact-info">
+                    <div class="contact-name">阿部 花子</div>
+                    <div class="contact-role">株式会社ABC - 代表取締役</div>
+                  </div>
+                  <div class="contact-actions">
+                    <button class="contact-action-btn"><span class="material-icons">email</span></button>
+                    <button class="contact-action-btn"><span class="material-icons">phone</span></button>
+                  </div>
+                </div>
+                <div class="contact-item">
+                  <div class="contact-avatar green">鈴</div>
+                  <div class="contact-info">
+                    <div class="contact-name">鈴木 一郎</div>
+                    <div class="contact-role">DEF株式会社 - 営業部長</div>
+                  </div>
+                  <div class="contact-actions">
+                    <button class="contact-action-btn"><span class="material-icons">email</span></button>
+                    <button class="contact-action-btn"><span class="material-icons">phone</span></button>
+                  </div>
+                </div>
+                <div class="contact-item">
+                  <div class="contact-avatar orange">田</div>
+                  <div class="contact-info">
+                    <div class="contact-name">田中 美咲</div>
+                    <div class="contact-role">GHI合同会社 - デザイナー</div>
+                  </div>
+                  <div class="contact-actions">
+                    <button class="contact-action-btn"><span class="material-icons">email</span></button>
+                    <button class="contact-action-btn"><span class="material-icons">phone</span></button>
+                  </div>
+                </div>
+                <div class="contact-item">
+                  <div class="contact-avatar purple">高</div>
+                  <div class="contact-info">
+                    <div class="contact-name">高橋 健太</div>
+                    <div class="contact-role">JKL株式会社 - エンジニア</div>
+                  </div>
+                  <div class="contact-actions">
+                    <button class="contact-action-btn"><span class="material-icons">email</span></button>
+                    <button class="contact-action-btn"><span class="material-icons">phone</span></button>
+                  </div>
+                </div>
+                <div class="contact-item">
+                  <div class="contact-avatar red">伊</div>
+                  <div class="contact-info">
+                    <div class="contact-name">伊藤 さくら</div>
+                    <div class="contact-role">MNO株式会社 - マーケター</div>
+                  </div>
+                  <div class="contact-actions">
+                    <button class="contact-action-btn"><span class="material-icons">email</span></button>
+                    <button class="contact-action-btn"><span class="material-icons">phone</span></button>
+                  </div>
+                </div>
+                <div class="contact-item">
+                  <div class="contact-avatar pink">渡</div>
+                  <div class="contact-info">
+                    <div class="contact-name">渡辺 大輔</div>
+                    <div class="contact-role">PQR株式会社 - プロジェクトマネージャー</div>
+                  </div>
+                  <div class="contact-actions">
+                    <button class="contact-action-btn"><span class="material-icons">email</span></button>
+                    <button class="contact-action-btn"><span class="material-icons">phone</span></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title"><span class="section-num-badge">7-4-3</span>連絡先詳細
+                    <button class="prompt-btn" data-prompt-id="7-4-3" data-prompt="連絡先詳細パネルを作成してください。
+
+【全体構造（contact-detail）】
+- padding: 24px
+
+【ヘッダー（contact-detail-header）】
+- text-align: center
+- padding-bottom: 24px
+- border-bottom: 1px solid #eee
+- margin-bottom: 24px
+
+【大きいアバター（contact-detail-avatar）】
+- 100px円形
+- background: linear-gradient(135deg, #17a2b8, #20c997)
+- margin: 0 auto 16px
+- font-size: 40px, font-weight: 600, color: #fff
+
+【名前・役職】
+- contact-detail-name: font-size: 22px, font-weight: 700, color: #333
+- contact-detail-role: font-size: 14px, color: #6c757d, margin-bottom: 16px
+
+【アクションボタン】
+- display: flex, justify-content: center, gap: 12px
+- btn btn-primary btn-sm: メール送信
+- btn btn-secondary btn-sm: 編集
+
+【情報セクション（contact-info-section）】
+- margin-bottom: 24px
+
+【セクションタイトル】
+- contact-info-title: font-size: 12px, font-weight: 600, color: #6c757d
+- text-transform: uppercase, margin-bottom: 12px
+
+【情報アイテム（contact-info-item）】
+- display: flex, align-items: center, gap: 12px
+- padding: 10px 0
+- border-bottom: 1px solid #f0f0f0
+- アイコン: color: #17a2b8, font-size: 20px
+- contact-info-label: font-size: 12px, color: #6c757d
+- contact-info-value: font-size: 14px, color: #333
+
+【タグ（contact-tags）】
+- display: flex, flex-wrap: wrap, gap: 8px
+- contact-tag: padding: 4px 12px, background: #e9ecef, border-radius: 16px
+- .vip: background: #fff3cd, color: #856404
+- .client: background: #d4edda, color: #155724
+- .partner: background: #d1ecf1, color: #0c5460" onclick="openPromptModal('7-4-3')">
+                      <span class="material-icons">auto_awesome</span>
+                      プロンプト
+                    </button>
+                    <button class="source-btn" data-source-id="7-4-3" onclick="openSourceModal('7-4-3')">
+                      <span class="material-icons">code</span>
+                      ソース
+                    </button>
+                  </h3>
+                </div>
+                <div class="contact-detail">
+                  <div class="contact-detail-header">
+                    <div class="contact-detail-avatar">阿</div>
+                    <div class="contact-detail-name">阿部 花子</div>
+                    <div class="contact-detail-role">株式会社ABC - 代表取締役</div>
+                    <div class="contact-detail-actions">
+                      <button class="btn btn-primary btn-sm">
+                        <span class="material-icons">email</span>
+                        メール送信
+                      </button>
+                      <button class="btn btn-secondary btn-sm">
+                        <span class="material-icons">edit</span>
+                        編集
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="contact-info-section">
+                    <div class="contact-info-title">連絡先情報</div>
+                    <div class="contact-info-item">
+                      <span class="material-icons">email</span>
+                      <div>
+                        <div class="contact-info-label">メール</div>
+                        <div class="contact-info-value">abe.hanako@abc-corp.co.jp</div>
+                      </div>
+                    </div>
+                    <div class="contact-info-item">
+                      <span class="material-icons">phone</span>
+                      <div>
+                        <div class="contact-info-label">電話番号</div>
+                        <div class="contact-info-value">03-1234-5678</div>
+                      </div>
+                    </div>
+                    <div class="contact-info-item">
+                      <span class="material-icons">smartphone</span>
+                      <div>
+                        <div class="contact-info-label">携帯電話</div>
+                        <div class="contact-info-value">090-1234-5678</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="contact-info-section">
+                    <div class="contact-info-title">会社情報</div>
+                    <div class="contact-info-item">
+                      <span class="material-icons">business</span>
+                      <div>
+                        <div class="contact-info-label">会社名</div>
+                        <div class="contact-info-value">株式会社ABC</div>
+                      </div>
+                    </div>
+                    <div class="contact-info-item">
+                      <span class="material-icons">location_on</span>
+                      <div>
+                        <div class="contact-info-label">住所</div>
+                        <div class="contact-info-value">東京都港区六本木1-1-1 ABCビル10F</div>
+                      </div>
+                    </div>
+                    <div class="contact-info-item">
+                      <span class="material-icons">language</span>
+                      <div>
+                        <div class="contact-info-label">Webサイト</div>
+                        <div class="contact-info-value">https://abc-corp.co.jp</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="contact-info-section">
+                    <div class="contact-info-title">タグ</div>
+                    <div class="contact-tags">
+                      <span class="contact-tag vip">VIP</span>
+                      <span class="contact-tag client">クライアント</span>
+                      <span class="contact-tag partner">パートナー</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <script src="common.js"></script>
+</body>
+</html>

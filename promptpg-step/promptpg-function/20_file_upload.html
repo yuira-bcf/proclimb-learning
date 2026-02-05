@@ -22,12 +22,35 @@
     .level-intermediate { background: #fef9c3; color: #854d0e; }
     .level-advanced { background: #ffedd5; color: #9a3412; }
     .level-expert { background: #fee2e2; color: #991b1b; }
-    .prompt-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
-    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-    .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-card { background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; color: white; }
+    .prompt-box { background: rgba(0,0,0,0.3); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
     .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
-    .copy-btn { background: white; color: #667eea; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn { background: white; color: #4285F4; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
     .copy-btn:hover { background: #f0f0f0; }
+    .diagram-container { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .diagram-container h4 { margin: 0 0 16px 0; color: white; display: flex; align-items: center; gap: 8px; }
+    .diagram-box { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; }
+    .code-explanation { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 20px; margin: 16px 0; }
+    .code-explanation h4 { margin: 0 0 12px 0; color: #92400e; display: flex; align-items: center; gap: 8px; }
+    .code-explanation ul { margin: 0; padding-left: 20px; color: #78350f; }
+    .code-explanation li { margin-bottom: 8px; line-height: 1.6; }
+    /* コードブロック（spring/style.css準拠） */
+    .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .code-dot.red { background: #ff5f56; }
+    .code-dot.yellow { background: #ffbd2e; }
+    .code-dot.green { background: #27ca40; }
+    .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .code-content { padding: 16px; overflow-x: auto; }
+    .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+    .code-keyword { color: #c084fc; }
+    .code-class { color: #67e8f9; }
+    .code-string { color: #86efac; }
+    .code-comment { color: #94a3b8; }
+    .code-annotation { color: #fbbf24; }
   </style>
 </head>
 <body>
@@ -180,6 +203,168 @@
           <li><strong>UUID形式のファイル名</strong> - 元のファイル名は露出させない</li>
         </ul>
       </div>
+
+      <div class="subsection">
+        <h3>サンプルソースコード</h3>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">FileStorageService.java</span>
+          </div>
+          <div class="code-content">
+            <pre><span class="code-annotation">@Service</span>
+<span class="code-keyword">public class</span> <span class="code-class">FileStorageService</span> {
+
+    <span class="code-annotation">@Value("${app.upload.dir}")</span>
+    <span class="code-keyword">private</span> <span class="code-class">String</span> uploadDir;
+
+    <span class="code-keyword">private final</span> <span class="code-class">AttachmentMapper</span> attachmentMapper;
+
+    <span class="code-keyword">public</span> <span class="code-class">TodoAttachment</span> <span class="code-class">store</span>(<span class="code-class">Integer</span> todoId, <span class="code-class">MultipartFile</span> file) {
+        <span class="code-comment">// ファイル名サニタイズ（パストラバーサル対策）</span>
+        <span class="code-class">String</span> originalFilename = <span class="code-class">StringUtils</span>.cleanPath(
+            file.getOriginalFilename());
+
+        <span class="code-keyword">if</span> (originalFilename.contains(<span class="code-string">".."</span>)) {
+            <span class="code-keyword">throw new</span> <span class="code-class">StorageException</span>(<span class="code-string">"Invalid file path"</span>);
+        }
+
+        <span class="code-comment">// UUID形式でファイル名を生成</span>
+        <span class="code-class">String</span> storedFilename = <span class="code-class">UUID</span>.randomUUID() + getExtension(originalFilename);
+        <span class="code-class">Path</span> targetPath = <span class="code-class">Paths</span>.get(uploadDir).resolve(storedFilename);
+
+        <span class="code-comment">// ファイル保存</span>
+        <span class="code-class">Files</span>.copy(file.getInputStream(), targetPath);
+
+        <span class="code-comment">// メタ情報をDBに保存</span>
+        <span class="code-class">TodoAttachment</span> attachment = <span class="code-keyword">new</span> <span class="code-class">TodoAttachment</span>();
+        attachment.setTodoId(todoId);
+        attachment.setOriginalFilename(originalFilename);
+        attachment.setStoredFilename(storedFilename);
+        attachment.setContentType(file.getContentType());
+        attachment.setFileSize(file.getSize());
+        attachmentMapper.insert(attachment);
+
+        <span class="code-keyword">return</span> attachment;
+    }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-explanation">
+          <h4><span class="material-icons">lightbulb</span> コード解説</h4>
+          <ul>
+            <li><strong>StringUtils.cleanPath()</strong> - ファイルパスを正規化し、危険な文字を除去</li>
+            <li><strong>".."チェック</strong> - パストラバーサル攻撃（../../../etc/passwd等）を防止</li>
+            <li><strong>UUID形式</strong> - 元のファイル名を隠し、ファイル名衝突を回避</li>
+            <li><strong>メタ情報のDB保存</strong> - 元ファイル名はDBに保存し、ダウンロード時に復元</li>
+          </ul>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">TodoController.java（アップロード・ダウンロード）</span>
+          </div>
+          <div class="code-content">
+            <pre><span class="code-annotation">@Controller</span>
+<span class="code-keyword">public class</span> <span class="code-class">TodoController</span> {
+
+    <span class="code-comment">// アップロード処理</span>
+    <span class="code-annotation">@PostMapping("/{id}/attach")</span>
+    <span class="code-keyword">public</span> <span class="code-class">String</span> <span class="code-class">uploadFile</span>(
+            <span class="code-annotation">@PathVariable</span> <span class="code-class">Integer</span> id,
+            <span class="code-annotation">@RequestParam("file")</span> <span class="code-class">MultipartFile</span> file) {
+        fileStorageService.store(id, file);
+        <span class="code-keyword">return</span> <span class="code-string">"redirect:/todos/"</span> + id;
+    }
+
+    <span class="code-comment">// ダウンロード処理</span>
+    <span class="code-annotation">@GetMapping("/attachments/{attachmentId}/download")</span>
+    <span class="code-keyword">public</span> <span class="code-class">ResponseEntity</span>&lt;<span class="code-class">Resource</span>&gt; <span class="code-class">downloadFile</span>(
+            <span class="code-annotation">@PathVariable</span> <span class="code-class">Integer</span> attachmentId) {
+        <span class="code-class">TodoAttachment</span> attachment = attachmentMapper.findById(attachmentId);
+        <span class="code-class">Path</span> filePath = <span class="code-class">Paths</span>.get(uploadDir).resolve(attachment.getStoredFilename());
+        <span class="code-class">Resource</span> resource = <span class="code-keyword">new</span> <span class="code-class">UrlResource</span>(filePath.toUri());
+
+        <span class="code-comment">// Content-Dispositionヘッダーで元のファイル名を指定</span>
+        <span class="code-class">String</span> encodedFilename = <span class="code-class">URLEncoder</span>.encode(
+            attachment.getOriginalFilename(), <span class="code-class">StandardCharsets</span>.UTF_8);
+
+        <span class="code-keyword">return</span> <span class="code-class">ResponseEntity</span>.ok()
+            .contentType(<span class="code-class">MediaType</span>.parseMediaType(attachment.getContentType()))
+            .header(<span class="code-class">HttpHeaders</span>.CONTENT_DISPOSITION,
+                <span class="code-string">"attachment; filename*=UTF-8''"</span> + encodedFilename)
+            .body(resource);
+    }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-explanation">
+          <h4><span class="material-icons">lightbulb</span> コード解説</h4>
+          <ul>
+            <li><strong>MultipartFile</strong> - Spring MVCがアップロードファイルを自動的にバインド</li>
+            <li><strong>ResponseEntity&lt;Resource&gt;</strong> - ファイルデータをHTTPレスポンスとして返却</li>
+            <li><strong>Content-Disposition</strong> - ブラウザにダウンロードファイル名を指示</li>
+            <li><strong>filename*=UTF-8''</strong> - 日本語ファイル名に対応するRFC 5987形式</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="diagram-container">
+        <h4><span class="material-icons">schema</span> ファイルアップロードの流れ</h4>
+        <div class="diagram-box">
+          <pre style="color: white; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8;">
+【アップロード処理】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ブラウザ                Controller              Service               Storage
+    │                        │                      │                     │
+    │  POST /todos/1/attach  │                      │                     │
+    │  (multipart/form-data) │                      │                     │
+    │ ─────────────────────→ │                      │                     │
+    │                        │  store(1, file)      │                     │
+    │                        │ ──────────────────→  │                     │
+    │                        │                      │  cleanPath()        │
+    │                        │                      │  UUID生成           │
+    │                        │                      │ ──────────────────→ │
+    │                        │                      │                     │  ファイル保存
+    │                        │                      │  DB保存(メタ情報)   │
+    │                        │                      │ ←────────────────── │
+    │  redirect:/todos/1     │                      │                     │
+    │ ←───────────────────── │                      │                     │
+
+【ダウンロード処理】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ブラウザ                Controller                        Storage
+    │                        │                                │
+    │  GET /attachments/5/   │                                │
+    │      download          │                                │
+    │ ─────────────────────→ │                                │
+    │                        │  DBからメタ情報取得              │
+    │                        │  (originalFilename, storedFilename)
+    │                        │ ──────────────────────────────→ │
+    │                        │                                │  ファイル読込
+    │                        │  ResponseEntity&lt;Resource&gt;      │
+    │ ←───────────────────── │ ←────────────────────────────── │
+    │                        │                                │
+    │  Content-Disposition:  │                                │
+    │  attachment;           │                                │
+    │  filename="report.pdf" │                                │
+    └────────────────────────┴────────────────────────────────┘</pre>
+        </div>
+      </div>
     </section>
 
     <!-- Section 20-3 -->
@@ -194,7 +379,7 @@
       </div>
 
       <div class="prompt-card">
-        <h4><span class="material-icons">smart_toy</span> AIへの入力プロンプト</h4>
+        <h4><span class="material-icons">auto_awesome</span> AIプロンプト</h4>
         <div class="prompt-box">
           <pre id="prompt-20">あなたはJavaプログラマーです。
 

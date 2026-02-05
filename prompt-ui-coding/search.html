@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>検索 - プロンプトUIコーディング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+
+    /* 検索セクション */
+    .search-hero {
+      background: linear-gradient(135deg, #007AFF 0%, #0056B3 100%);
+      padding: 48px 24px;
+      text-align: center;
+      color: white;
+    }
+    .search-hero h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .search-hero p {
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+    .search-box-container {
+      max-width: 600px;
+      margin: 24px auto 0;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      padding: 16px 20px 16px 52px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 12px;
+      outline: none;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+    .search-input::placeholder {
+      color: #999;
+    }
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #999;
+    }
+    .search-clear {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #999;
+      cursor: pointer;
+      display: none;
+    }
+    .search-clear.visible {
+      display: block;
+    }
+
+    /* 検索結果 */
+    .search-results {
+      padding: 32px 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .search-stats {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #eee;
+    }
+    .result-item {
+      background: white;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      color: inherit;
+    }
+    .result-item:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+    .result-chapter {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .result-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1d1d1f;
+      margin-bottom: 8px;
+    }
+    .result-title mark {
+      background: #FFEB3B;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+    .result-excerpt {
+      font-size: 0.9rem;
+      color: #666;
+      line-height: 1.6;
+    }
+    .result-excerpt mark {
+      background: #FFEB3B;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+
+    /* 検索結果なし */
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .no-results-icon {
+      font-size: 4rem;
+      color: #ddd;
+      margin-bottom: 16px;
+    }
+    .no-results h3 {
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .no-results p {
+      color: #999;
+      font-size: 0.9rem;
+    }
+
+    /* 初期状態 */
+    .search-initial {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .search-initial-icon {
+      font-size: 4rem;
+      color: var(--primary-lighter);
+      margin-bottom: 16px;
+    }
+    .search-initial h3 {
+      font-size: 1.1rem;
+      color: #666;
+      margin-bottom: 16px;
+    }
+    .search-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+    .search-suggestion {
+      background: #f5f5f7;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      color: #666;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .search-suggestion:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* カテゴリフィルター */
+    .filter-section {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .filter-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .filter-tag {
+      background: #f5f5f7;
+      border: 1px solid transparent;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-tag:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .filter-tag.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-prompt-ui-coding.js"></script>
+
+  <!-- 検索ヒーロー -->
+  <div class="search-hero">
+    <h1>コンテンツ検索</h1>
+    <p>プロンプトUIコーディングの全章から検索します</p>
+    <div class="search-box-container">
+      <span class="material-icons search-icon">search</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="キーワードを入力..." autofocus>
+      <button class="search-clear" id="searchClear">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- フィルター -->
+  <div class="filter-section" style="padding-top: 24px;">
+    <div class="filter-tags">
+      <button class="filter-tag active" data-filter="all">すべて</button>
+      <button class="filter-tag" data-filter="html">HTML</button>
+      <button class="filter-tag" data-filter="css">CSS</button>
+      <button class="filter-tag" data-filter="javascript">JavaScript</button>
+      <button class="filter-tag" data-filter="prompt">プロンプト</button>
+      <button class="filter-tag" data-filter="component">コンポーネント</button>
+      <button class="filter-tag" data-filter="tailwind">Tailwind</button>
+    </div>
+  </div>
+
+  <!-- 検索結果エリア -->
+  <div class="search-results" id="searchResults">
+    <!-- 初期状態 -->
+    <div class="search-initial" id="searchInitial">
+      <div class="search-initial-icon">
+        <span class="material-icons" style="font-size: inherit;">manage_search</span>
+      </div>
+      <h3>検索キーワードを入力してください</h3>
+      <div class="search-suggestions">
+        <button class="search-suggestion">Flexbox</button>
+        <button class="search-suggestion">レスポンシブ</button>
+        <button class="search-suggestion">フォーム</button>
+        <button class="search-suggestion">カード</button>
+        <button class="search-suggestion">ボタン</button>
+        <button class="search-suggestion">Tailwind</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトUIコーディング - 職業訓練校教材</p>
+  </footer>
+
+  <script>
+    // 検索データ（各章のコンテンツ）
+    const searchData = [
+      {
+        chapter: 1,
+        title: "プロンプトUIコーディングとは",
+        href: "1puic-intro.html",
+        keywords: ["AI", "UI開発", "効率化", "自動生成", "プロンプト"],
+        content: "AIを活用したUI開発の概要。従来のHTML/CSSコーディングとの違い、メリット・デメリット、どのような場面で活用できるかを学びます。"
+      },
+      {
+        chapter: 2,
+        title: "UI生成プロンプトの基本",
+        href: "2puic-prompt-basics.html",
+        keywords: ["プロンプト", "構造化", "指示", "ChatGPT", "Claude"],
+        content: "効果的なUIを生成するためのプロンプトの書き方。構造化の方法、具体的な指示の出し方、改善のサイクルを解説します。"
+      },
+      {
+        chapter: 3,
+        title: "HTMLの自動生成",
+        href: "3puic-html-generation.html",
+        keywords: ["HTML", "セマンティック", "アクセシビリティ", "構造", "タグ"],
+        content: "セマンティックなHTMLをプロンプトで生成する方法。適切なタグの選択、構造の指定、アクセシビリティへの配慮を含みます。"
+      },
+      {
+        chapter: 4,
+        title: "CSSの自動生成",
+        href: "4puic-css-generation.html",
+        keywords: ["CSS", "Flexbox", "Grid", "レイアウト", "カラー", "タイポグラフィ"],
+        content: "レイアウト、カラー、タイポグラフィなどのCSSをプロンプトで生成。FlexboxやGridの効果的な指定方法を学びます。"
+      },
+      {
+        chapter: 5,
+        title: "UIコンポーネント生成",
+        href: "5puic-components.html",
+        keywords: ["コンポーネント", "ボタン", "カード", "ナビゲーション", "フォーム", "モーダル"],
+        content: "ボタン、カード、ナビゲーション、フォームなど、よく使うUIコンポーネントの生成パターンを習得します。"
+      },
+      {
+        chapter: 6,
+        title: "レスポンシブデザイン生成",
+        href: "6puic-responsive.html",
+        keywords: ["レスポンシブ", "モバイル", "メディアクエリ", "ブレイクポイント", "モバイルファースト"],
+        content: "モバイル対応のレスポンシブUIをプロンプトで生成。ブレイクポイント、モバイルファーストの指定方法を解説します。"
+      },
+      {
+        chapter: 7,
+        title: "Tailwind CSSとの連携",
+        href: "7puic-tailwind.html",
+        keywords: ["Tailwind", "ユーティリティ", "クラス", "高速開発", "CSS"],
+        content: "Tailwind CSSを使ったUI生成。ユーティリティクラスの効率的な活用とプロンプトでの指定方法を学びます。"
+      },
+      {
+        chapter: 8,
+        title: "ランディングページ制作",
+        href: "8puic-landing-page.html",
+        keywords: ["LP", "ランディングページ", "ヒーロー", "CTA", "セクション"],
+        content: "ヒーローセクション、特徴、CTA、フッターなど、LP全体をプロンプトで効率的に制作する実践演習。"
+      },
+      {
+        chapter: 9,
+        title: "コードのリファクタリング",
+        href: "9puic-refactoring.html",
+        keywords: ["リファクタリング", "改善", "最適化", "モダン化", "可読性"],
+        content: "既存のHTML/CSSをAIでリファクタリング。可読性向上、パフォーマンス改善、モダン化の手法を学びます。"
+      },
+      {
+        chapter: 10,
+        title: "ベストプラクティス",
+        href: "10puic-best-practices.html",
+        keywords: ["品質", "チェック", "協業", "ベストプラクティス", "注意点"],
+        content: "プロンプトUIコーディングの注意点、品質チェック、AIとの効果的な協業方法をまとめます。"
+      },
+      {
+        chapter: 11,
+        title: "フォームUX改善の20ポイント",
+        href: "11puic-uiux-forms.html",
+        keywords: ["フォーム", "UX", "入力", "バリデーション", "エラー", "ユーザビリティ"],
+        content: "離脱させない入力フォームの設計原則。全体設計、項目設計、エラー表示の20のチェックポイントを図解付きで解説します。"
+      },
+      {
+        chapter: 12,
+        title: "テーブルUIの実装",
+        href: "12puic-table-ui.html",
+        keywords: ["テーブル", "DataTables", "jsGrid", "ソート", "検索", "ページネーション", "CRUD"],
+        content: "DataTables・jsGridで高機能なデータ表示を実現。ソート、検索、ページネーション、CRUD操作の実装方法を解説します。"
+      },
+      {
+        chapter: 13,
+        title: "看板ボードの実装",
+        href: "13puic-kanban.html",
+        keywords: ["カンバン", "看板", "ドラッグ", "ドロップ", "タスク", "SortableJS", "Trello"],
+        content: "ドラッグ&ドロップで直感的なタスク管理UIを構築。SortableJSを使った実装方法とプロンプト例を紹介します。"
+      }
+    ];
+
+    // DOM要素
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+    const searchResults = document.getElementById('searchResults');
+    const searchInitial = document.getElementById('searchInitial');
+    const filterTags = document.querySelectorAll('.filter-tag');
+    const suggestions = document.querySelectorAll('.search-suggestion');
+
+    let currentFilter = 'all';
+
+    // フィルタータグ切り替え
+    filterTags.forEach(tag => {
+      tag.addEventListener('click', () => {
+        filterTags.forEach(t => t.classList.remove('active'));
+        tag.classList.add('active');
+        currentFilter = tag.dataset.filter;
+        performSearch();
+      });
+    });
+
+    // 検索候補クリック
+    suggestions.forEach(btn => {
+      btn.addEventListener('click', () => {
+        searchInput.value = btn.textContent;
+        performSearch();
+      });
+    });
+
+    // 入力イベント
+    searchInput.addEventListener('input', () => {
+      searchClear.classList.toggle('visible', searchInput.value.length > 0);
+      performSearch();
+    });
+
+    // クリアボタン
+    searchClear.addEventListener('click', () => {
+      searchInput.value = '';
+      searchClear.classList.remove('visible');
+      showInitialState();
+    });
+
+    // 検索実行
+    function performSearch() {
+      const query = searchInput.value.trim().toLowerCase();
+
+      if (query.length === 0) {
+        showInitialState();
+        return;
+      }
+
+      let results = searchData.filter(item => {
+        const matchesQuery =
+          item.title.toLowerCase().includes(query) ||
+          item.content.toLowerCase().includes(query) ||
+          item.keywords.some(k => k.toLowerCase().includes(query));
+
+        if (currentFilter === 'all') return matchesQuery;
+
+        const filterMap = {
+          'html': ['HTML', 'タグ', '構造', 'セマンティック'],
+          'css': ['CSS', 'Flexbox', 'Grid', 'レイアウト', 'スタイル'],
+          'javascript': ['JavaScript', 'JS', 'ドラッグ', 'ドロップ', 'イベント'],
+          'prompt': ['プロンプト', '指示', 'AI', '生成'],
+          'component': ['コンポーネント', 'ボタン', 'カード', 'フォーム', 'モーダル', 'テーブル'],
+          'tailwind': ['Tailwind', 'ユーティリティ']
+        };
+
+        const filterKeywords = filterMap[currentFilter] || [];
+        const matchesFilter = filterKeywords.some(fk =>
+          item.keywords.some(k => k.toLowerCase().includes(fk.toLowerCase())) ||
+          item.content.toLowerCase().includes(fk.toLowerCase())
+        );
+
+        return matchesQuery && matchesFilter;
+      });
+
+      displayResults(results, query);
+    }
+
+    // 結果表示
+    function displayResults(results, query) {
+      if (results.length === 0) {
+        searchResults.innerHTML = `
+          <div class="no-results">
+            <div class="no-results-icon">
+              <span class="material-icons" style="font-size: inherit;">search_off</span>
+            </div>
+            <h3>「${escapeHtml(query)}」に一致する結果がありません</h3>
+            <p>別のキーワードで検索してみてください</p>
+          </div>
+        `;
+        return;
+      }
+
+      const statsHtml = `<div class="search-stats">${results.length}件の結果が見つかりました</div>`;
+
+      const resultsHtml = results.map(item => {
+        const highlightedTitle = highlightText(item.title, query);
+        const highlightedContent = highlightText(item.content, query);
+
+        return `
+          <a href="${item.href}" class="result-item">
+            <div class="result-chapter">
+              <span class="material-icons" style="font-size: 14px;">menu_book</span>
+              第${item.chapter}章
+            </div>
+            <div class="result-title">${highlightedTitle}</div>
+            <div class="result-excerpt">${highlightedContent}</div>
+          </a>
+        `;
+      }).join('');
+
+      searchResults.innerHTML = statsHtml + resultsHtml;
+    }
+
+    // 初期状態表示
+    function showInitialState() {
+      searchResults.innerHTML = `
+        <div class="search-initial" id="searchInitial">
+          <div class="search-initial-icon">
+            <span class="material-icons" style="font-size: inherit;">manage_search</span>
+          </div>
+          <h3>検索キーワードを入力してください</h3>
+          <div class="search-suggestions">
+            <button class="search-suggestion">Flexbox</button>
+            <button class="search-suggestion">レスポンシブ</button>
+            <button class="search-suggestion">フォーム</button>
+            <button class="search-suggestion">カード</button>
+            <button class="search-suggestion">ボタン</button>
+            <button class="search-suggestion">Tailwind</button>
+          </div>
+        </div>
+      `;
+
+      // 検索候補の再バインド
+      document.querySelectorAll('.search-suggestion').forEach(btn => {
+        btn.addEventListener('click', () => {
+          searchInput.value = btn.textContent;
+          performSearch();
+        });
+      });
+    }
+
+    // テキストハイライト
+    function highlightText(text, query) {
+      if (!query) return escapeHtml(text);
+      const escaped = escapeHtml(text);
+      const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+      return escaped.replace(regex, '<mark>$1</mark>');
+    }
+
+    // HTMLエスケープ
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 正規表現エスケープ
+    function escapeRegex(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+  </script>
+</body>
+</html>

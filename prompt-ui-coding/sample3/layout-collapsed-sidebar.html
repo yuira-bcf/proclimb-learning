@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>折りたたみサイドバーレイアウト - AdminPanel</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    /* ========== Collapsed Sidebar Layout ========== */
+    :root {
+      --sidebar-width: 260px;
+      --sidebar-collapsed-width: 70px;
+      --transition-speed: 0.3s;
+    }
+
+    /* ========== Sidebar ========== */
+    .sidebar-collapsible {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-width);
+      background: #343a40;
+      overflow: hidden;
+      z-index: 1000;
+      transition: width var(--transition-speed) ease;
+    }
+
+    .sidebar-collapsible.collapsed {
+      width: var(--sidebar-collapsed-width);
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 20px;
+      color: #fff;
+      font-size: 1.25rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .sidebar-brand .material-icons {
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand-text {
+      opacity: 1;
+      transition: opacity var(--transition-speed);
+    }
+
+    .sidebar-collapsible.collapsed .sidebar-brand-text {
+      opacity: 0;
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 12px;
+      right: -12px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: transform var(--transition-speed);
+    }
+
+    .sidebar-toggle .material-icons {
+      font-size: 16px;
+    }
+
+    .sidebar-collapsible.collapsed .sidebar-toggle {
+      transform: rotate(180deg);
+    }
+
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .sidebar-user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #6c757d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .sidebar-user-info {
+      color: #fff;
+      opacity: 1;
+      transition: opacity var(--transition-speed);
+    }
+
+    .sidebar-collapsible.collapsed .sidebar-user-info {
+      opacity: 0;
+    }
+
+    .sidebar-user-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .sidebar-user-role {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .sidebar-nav {
+      padding: 16px 0;
+      overflow-y: auto;
+      height: calc(100% - 130px);
+    }
+
+    .sidebar-section {
+      padding: 8px 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.4);
+      white-space: nowrap;
+      overflow: hidden;
+      opacity: 1;
+      height: 28px;
+      transition: opacity var(--transition-speed), height var(--transition-speed);
+    }
+
+    .sidebar-collapsible.collapsed .sidebar-section {
+      opacity: 0;
+      height: 0;
+      padding: 0 20px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .sidebar-item:hover,
+    .sidebar-item.active {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
+    .sidebar-item .material-icons {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-item-text {
+      opacity: 1;
+      transition: opacity var(--transition-speed);
+    }
+
+    .sidebar-collapsible.collapsed .sidebar-item-text {
+      opacity: 0;
+    }
+
+    /* Tooltip for collapsed state */
+    .sidebar-item .tooltip {
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #333;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      margin-left: 10px;
+      z-index: 1000;
+    }
+
+    .sidebar-item .tooltip::before {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 6px solid transparent;
+      border-right-color: #333;
+    }
+
+    .sidebar-collapsible.collapsed .sidebar-item:hover .tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* ========== Main Content ========== */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+      min-height: 100vh;
+      background: #f4f6f9;
+      transition: margin-left var(--transition-speed) ease;
+    }
+
+    .main-content.expanded {
+      margin-left: var(--sidebar-collapsed-width);
+    }
+
+    /* ========== Top Navigation ========== */
+    .top-nav-static {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      margin: -24px -24px 24px -24px;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .nav-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      flex: 1;
+      max-width: 400px;
+    }
+
+    .nav-search .material-icons {
+      color: #6c757d;
+      font-size: 20px;
+    }
+
+    .nav-search input {
+      border: none;
+      background: none;
+      outline: none;
+      flex: 1;
+      font-size: 0.875rem;
+    }
+
+    .nav-items {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: #6c757d;
+      background: none;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .nav-item:hover {
+      background: #f8f9fa;
+      color: #333;
+    }
+
+    .nav-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: #dc3545;
+      color: #fff;
+      font-size: 0.65rem;
+      padding: 2px 5px;
+      border-radius: 10px;
+    }
+
+    /* ========== Page Header ========== */
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 8px 0;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: #6c757d;
+    }
+
+    .breadcrumb a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    /* ========== Cards ========== */
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    /* ========== Grid ========== */
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0 -12px;
+    }
+
+    .col-6 {
+      flex: 0 0 50%;
+      max-width: 50%;
+      padding: 0 12px;
+    }
+
+    .col-12 {
+      flex: 0 0 100%;
+      max-width: 100%;
+      padding: 0 12px;
+    }
+
+    @media (max-width: 768px) {
+      .col-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+    }
+
+    /* ========== Layout Info ========== */
+    .layout-info {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      color: #333;
+      padding: 32px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    .layout-info h2 {
+      margin: 0 0 16px 0;
+      font-size: 1.5rem;
+    }
+
+    .layout-info p {
+      margin: 0 0 16px 0;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    .layout-info ul {
+      margin: 0;
+      padding-left: 20px;
+      opacity: 0.9;
+    }
+
+    .layout-info li {
+      margin-bottom: 8px;
+    }
+
+    /* ========== Toggle Demo ========== */
+    .toggle-demo {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .toggle-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn-expand {
+      background: #007bff;
+      color: #fff;
+    }
+
+    .toggle-btn-expand:hover {
+      background: #0056b3;
+    }
+
+    .toggle-btn-collapse {
+      background: #6c757d;
+      color: #fff;
+    }
+
+    .toggle-btn-collapse:hover {
+      background: #545b62;
+    }
+
+    /* ========== Responsive ========== */
+    @media (max-width: 992px) {
+      .sidebar-collapsible {
+        transform: translateX(-100%);
+      }
+
+      .sidebar-collapsible.mobile-active {
+        transform: translateX(0);
+      }
+
+      .main-content,
+      .main-content.expanded {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Collapsible Sidebar -->
+  <aside class="sidebar-collapsible" id="sidebar">
+    <button class="sidebar-toggle" id="sidebarToggle">
+      <span class="material-icons">chevron_left</span>
+    </button>
+    <a href="sample-3-dashboard.html" class="sidebar-brand">
+      <span class="material-icons">dashboard</span>
+      <span class="sidebar-brand-text">AdminPanel</span>
+    </a>
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">
+        <span class="material-icons">person</span>
+      </div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">山田 太郎</div>
+        <div class="sidebar-user-role">管理者</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="sample-3-dashboard.html" class="sidebar-item">
+        <span class="material-icons">dashboard</span>
+        <span class="sidebar-item-text">ダッシュボード</span>
+        <span class="tooltip">ダッシュボード</span>
+      </a>
+      <div class="sidebar-section">レイアウト設定</div>
+      <a href="layout-topnav.html" class="sidebar-item">
+        <span class="material-icons">web</span>
+        <span class="sidebar-item-text">トップナビ</span>
+        <span class="tooltip">トップナビ</span>
+      </a>
+      <a href="layout-boxed.html" class="sidebar-item">
+        <span class="material-icons">check_box_outline_blank</span>
+        <span class="sidebar-item-text">ボックス型</span>
+        <span class="tooltip">ボックス型</span>
+      </a>
+      <a href="layout-fixed-sidebar.html" class="sidebar-item">
+        <span class="material-icons">view_sidebar</span>
+        <span class="sidebar-item-text">固定サイドバー</span>
+        <span class="tooltip">固定サイドバー</span>
+      </a>
+      <a href="layout-fixed-navbar.html" class="sidebar-item">
+        <span class="material-icons">web_asset</span>
+        <span class="sidebar-item-text">固定ナビバー</span>
+        <span class="tooltip">固定ナビバー</span>
+      </a>
+      <a href="layout-fixed-footer.html" class="sidebar-item">
+        <span class="material-icons">call_to_action</span>
+        <span class="sidebar-item-text">固定フッター</span>
+        <span class="tooltip">固定フッター</span>
+      </a>
+      <a href="layout-collapsed-sidebar.html" class="sidebar-item active">
+        <span class="material-icons">menu_open</span>
+        <span class="sidebar-item-text">折りたたみサイドバー</span>
+        <span class="tooltip">折りたたみサイドバー</span>
+      </a>
+      <div class="sidebar-section">サンプルメニュー</div>
+      <a href="#" class="sidebar-item">
+        <span class="material-icons">widgets</span>
+        <span class="sidebar-item-text">ウィジェット</span>
+        <span class="tooltip">ウィジェット</span>
+      </a>
+      <a href="#" class="sidebar-item">
+        <span class="material-icons">bar_chart</span>
+        <span class="sidebar-item-text">チャート</span>
+        <span class="tooltip">チャート</span>
+      </a>
+      <a href="#" class="sidebar-item">
+        <span class="material-icons">palette</span>
+        <span class="sidebar-item-text">UI要素</span>
+        <span class="tooltip">UI要素</span>
+      </a>
+      <a href="#" class="sidebar-item">
+        <span class="material-icons">edit_note</span>
+        <span class="sidebar-item-text">フォーム</span>
+        <span class="tooltip">フォーム</span>
+      </a>
+      <a href="#" class="sidebar-item">
+        <span class="material-icons">table_chart</span>
+        <span class="sidebar-item-text">テーブル</span>
+        <span class="tooltip">テーブル</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    <header class="top-nav-static">
+      <div class="nav-search">
+        <span class="material-icons">search</span>
+        <input type="text" placeholder="検索...">
+      </div>
+      <div class="nav-items">
+        <button class="nav-item">
+          <span class="material-icons">notifications</span>
+          <span class="nav-badge">3</span>
+        </button>
+        <button class="nav-item">
+          <span class="material-icons">fullscreen</span>
+        </button>
+        <button class="nav-item">
+          <span class="material-icons">account_circle</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <h1 class="page-title">
+      <span class="page-num-badge">6-6</span>折りたたみサイドバーレイアウト
+      <button class="prompt-btn" data-prompt-id="6-6" data-prompt="折りたたみサイドバーレイアウトを作成してください。
+
+【要件】
+- サイドバーの展開/折りたたみトグル
+- 折りたたみ時はアイコンのみ表示
+- ホバーで一時展開
+- メインコンテンツの幅調整
+
+【技術】
+- CSS変数で幅管理
+- トランジションアニメーション
+- JavaScript でトグル制御" onclick="openPromptModal('6-6')">
+        <span class="material-icons">auto_awesome</span>
+        プロンプト
+      </button>
+      <button class="source-btn" data-source-id="6-6" onclick="openSourceModal('6-6')">
+        <span class="material-icons">code</span>
+        ソース
+      </button>
+    </h1>
+      <div class="breadcrumb">
+        <a href="sample-3-dashboard.html">ホーム</a>
+        <span>/</span>
+        <span>レイアウト設定</span>
+        <span>/</span>
+        <span>折りたたみサイドバー</span>
+      </div>
+    </div>
+
+    <div class="layout-info">
+      <h2>折りたたみサイドバーレイアウト</h2>
+      <p>サイドバーを折りたたんでアイコンのみの表示に切り替えられるレイアウトです。コンテンツエリアを最大化しながらナビゲーションも維持できます。</p>
+      <ul>
+        <li>サイドバーを展開/折りたたみ可能</li>
+        <li>折りたたみ時はアイコンとツールチップで表示</li>
+        <li>コンテンツエリアの幅を柔軟に調整</li>
+        <li>ユーザーの好みに応じて切り替え可能</li>
+      </ul>
+      <div class="toggle-demo">
+        <button class="toggle-btn toggle-btn-expand" id="expandBtn">
+          <span class="material-icons" style="vertical-align: middle; margin-right: 4px;">menu_open</span>
+          展開する
+        </button>
+        <button class="toggle-btn toggle-btn-collapse" id="collapseBtn">
+          <span class="material-icons" style="vertical-align: middle; margin-right: 4px;">menu</span>
+          折りたたむ
+        </button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span class="section-num-badge">6-6-1</span>レイアウトの特徴
+              <button class="prompt-btn" data-prompt-id="6-6-1" data-prompt="折りたたみサイドバーレイアウトの特徴セクションを作成してください。
+
+【内容】
+- 画面スペースを効率的に使いたい場合に最適
+- 主なユースケース（リスト形式）
+  - データ分析ダッシュボード
+  - ワイドなテーブルやグラフの表示
+  - ユーザーカスタマイズ可能なUI
+
+【CSS要件】
+- CSS変数で幅管理: --sidebar-width: 260px; --sidebar-collapsed-width: 70px
+- .sidebar-collapsible: width: var(--sidebar-width); transition: width 0.3s ease
+- .sidebar-collapsible.collapsed: width: var(--sidebar-collapsed-width)
+- 折りたたみ時はテキストをopacity: 0で非表示" onclick="openPromptModal('6-6-1')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="6-6-1" onclick="openSourceModal('6-6-1')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+            <p>折りたたみサイドバーは、画面スペースを効率的に使いたい場合に最適です。</p>
+            <p>主なユースケース:</p>
+            <ul>
+              <li>データ分析ダッシュボード</li>
+              <li>ワイドなテーブルやグラフの表示</li>
+              <li>ユーザーカスタマイズ可能なUI</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span class="section-num-badge">6-6-2</span>実装のポイント
+              <button class="prompt-btn" data-prompt-id="6-6-2" data-prompt="折りたたみサイドバーレイアウトの実装ポイントセクションを作成してください。
+
+【内容】
+- 実装時の注意点（リスト形式）
+  - CSS変数で幅を管理すると切り替えが簡単
+  - transitionでスムーズなアニメーション
+  - 折りたたみ時はツールチップでラベルを表示
+  - ユーザー設定をlocalStorageに保存
+
+【CSS詳細】
+- :root { --sidebar-width: 260px; --sidebar-collapsed-width: 70px; --transition-speed: 0.3s }
+- .sidebar-collapsible: width: var(--sidebar-width); overflow: hidden; transition: width var(--transition-speed) ease
+- .sidebar-collapsible.collapsed .sidebar-item-text: opacity: 0
+- .tooltip: position: absolute; left: 100%; opacity: 0; visibility: hidden
+- .sidebar-collapsible.collapsed .sidebar-item:hover .tooltip: opacity: 1; visibility: visible
+- .main-content: margin-left: var(--sidebar-width); transition: margin-left var(--transition-speed) ease
+- JavaScript: classList.toggle('collapsed')でトグル制御" onclick="openPromptModal('6-6-2')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="6-6-2" onclick="openSourceModal('6-6-2')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+            <p>このレイアウトを実装する際の注意点:</p>
+            <ul>
+              <li>CSS変数で幅を管理すると切り替えが簡単</li>
+              <li>transitionでスムーズなアニメーション</li>
+              <li>折りたたみ時はツールチップでラベルを表示</li>
+              <li>ユーザー設定をlocalStorageに保存</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const expandBtn = document.getElementById('expandBtn');
+    const collapseBtn = document.getElementById('collapseBtn');
+
+    function toggleSidebar() {
+      sidebar.classList.toggle('collapsed');
+      mainContent.classList.toggle('expanded');
+    }
+
+    function expandSidebar() {
+      sidebar.classList.remove('collapsed');
+      mainContent.classList.remove('expanded');
+    }
+
+    function collapseSidebar() {
+      sidebar.classList.add('collapsed');
+      mainContent.classList.add('expanded');
+    }
+
+    sidebarToggle.addEventListener('click', toggleSidebar);
+    expandBtn.addEventListener('click', expandSidebar);
+    collapseBtn.addEventListener('click', collapseSidebar);
+  </script>
+</body>
+</html>

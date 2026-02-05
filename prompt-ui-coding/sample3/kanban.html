@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kanban Board - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .kanban-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .kanban-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .kanban-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .kanban-members {
+      display: flex;
+      align-items: center;
+    }
+
+    .kanban-member {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      margin-left: -8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .kanban-member:first-child {
+      margin-left: 0;
+    }
+
+    .kanban-member:hover {
+      transform: scale(1.1);
+      z-index: 1;
+    }
+
+    .kanban-member.blue { background: linear-gradient(135deg, #17a2b8, #20c997); }
+    .kanban-member.green { background: linear-gradient(135deg, #28a745, #5cb85c); }
+    .kanban-member.orange { background: linear-gradient(135deg, #fd7e14, #ffc107); }
+    .kanban-member.purple { background: linear-gradient(135deg, #6f42c1, #9b59b6); }
+    .kanban-member.pink { background: linear-gradient(135deg, #e83e8c, #fd79a8); }
+
+    .kanban-member.add {
+      background: #e9ecef;
+      color: #6c757d;
+      border-style: dashed;
+      border-color: #dee2e6;
+    }
+
+    .kanban-header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .kanban-filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .kanban-filter-btn:hover {
+      background: #f8f9fa;
+    }
+
+    .kanban-filter-btn .material-icons {
+      font-size: 18px;
+    }
+
+    /* カンバンボード */
+    .kanban-board {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 20px;
+      min-height: calc(100vh - 200px);
+    }
+
+    .kanban-column {
+      min-width: 320px;
+      max-width: 320px;
+      background: #f4f6f9;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .kanban-column-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .kanban-column-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .kanban-column-count {
+      background: #e9ecef;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #6c757d;
+    }
+
+    .kanban-column-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .kanban-column-dot.todo { background: #6c757d; }
+    .kanban-column-dot.progress { background: #17a2b8; }
+    .kanban-column-dot.review { background: #ffc107; }
+    .kanban-column-dot.done { background: #28a745; }
+
+    .kanban-column-menu {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6c757d;
+      transition: all 0.2s;
+    }
+
+    .kanban-column-menu:hover {
+      background: #e9ecef;
+    }
+
+    .kanban-column-body {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* カンバンカード */
+    .kanban-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+      cursor: grab;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .kanban-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .kanban-card:active {
+      cursor: grabbing;
+    }
+
+    .kanban-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .kanban-card-labels {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .kanban-label {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .kanban-label.design { background: #f3e5f5; color: #7b1fa2; }
+    .kanban-label.dev { background: #e3f2fd; color: #1976d2; }
+    .kanban-label.bug { background: #ffebee; color: #c62828; }
+    .kanban-label.feature { background: #e8f5e9; color: #388e3c; }
+    .kanban-label.urgent { background: #fff3e0; color: #f57c00; }
+    .kanban-label.docs { background: #e0f7fa; color: #0097a7; }
+
+    .kanban-card-menu {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #adb5bd;
+      opacity: 0;
+      transition: all 0.2s;
+    }
+
+    .kanban-card:hover .kanban-card-menu {
+      opacity: 1;
+    }
+
+    .kanban-card-menu:hover {
+      background: #f8f9fa;
+      color: #6c757d;
+    }
+
+    .kanban-card-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .kanban-card-image {
+      width: 100%;
+      height: 120px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .kanban-card-image .material-icons {
+      font-size: 40px;
+      opacity: 0.8;
+    }
+
+    .kanban-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kanban-card-meta {
+      display: flex;
+      gap: 12px;
+    }
+
+    .kanban-card-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    .kanban-card-meta-item .material-icons {
+      font-size: 16px;
+    }
+
+    .kanban-card-meta-item.overdue {
+      color: #dc3545;
+    }
+
+    .kanban-card-assignees {
+      display: flex;
+    }
+
+    .kanban-card-assignee {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      margin-left: -6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .kanban-card-assignee:first-child {
+      margin-left: 0;
+    }
+
+    /* チェックリスト進捗 */
+    .kanban-card-progress {
+      margin-bottom: 12px;
+    }
+
+    .kanban-card-progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .kanban-card-progress-label {
+      font-size: 11px;
+      color: #6c757d;
+    }
+
+    .kanban-card-progress-bar {
+      height: 4px;
+      background: #e9ecef;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .kanban-card-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #17a2b8, #20c997);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    /* 新規カード追加 */
+    .kanban-add-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      border: 2px dashed #dee2e6;
+      border-radius: 10px;
+      background: transparent;
+      color: #6c757d;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .kanban-add-card:hover {
+      border-color: #17a2b8;
+      color: #17a2b8;
+      background: rgba(23, 162, 184, 0.05);
+    }
+
+    /* 新規カラム追加 */
+    .kanban-add-column {
+      min-width: 320px;
+      max-width: 320px;
+      background: transparent;
+      border: 2px dashed #dee2e6;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #6c757d;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .kanban-add-column:hover {
+      border-color: #17a2b8;
+      color: #17a2b8;
+      background: rgba(23, 162, 184, 0.05);
+    }
+
+    /* ドラッグ中のスタイル */
+    .kanban-card.dragging {
+      opacity: 0.5;
+      transform: rotate(3deg);
+    }
+
+    .kanban-column.drag-over {
+      background: rgba(23, 162, 184, 0.1);
+    }
+
+    /* 優先度インジケーター */
+    .kanban-card.high-priority {
+      border-left: 3px solid #dc3545;
+    }
+
+    .kanban-card.medium-priority {
+      border-left: 3px solid #ffc107;
+    }
+
+    .kanban-card.low-priority {
+      border-left: 3px solid #28a745;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <nav class="breadcrumb">
+            <a href="sample-3-dashboard.html">ホーム</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>Kanban Board</span>
+          </nav>
+        </div>
+        <div class="header-right">
+          <button class="header-btn">
+            <span class="material-icons">notifications_none</span>
+          </button>
+          <div class="header-user">
+            <div class="header-user-avatar">
+              <span class="material-icons" style="font-size: 16px;">person</span>
+            </div>
+            <span class="header-user-name">山田 太郎</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="kanban-header">
+          <div class="kanban-header-left">
+            <h1 class="kanban-title">
+              <span class="page-num-badge">10-3</span>
+              プロジェクト管理
+              <button class="prompt-btn" data-prompt-id="10-3" data-prompt="カンバンボードUIを作成してください。
+
+【要件】
+- 横スクロール可能なカンバンボード
+- 4つのカラム: To Do, In Progress, Review, Done
+- ドラッグ&ドロップ対応のカードデザイン
+- 新規カード/カラム追加ボタン
+
+【ヘッダー】
+- プロジェクトタイトル
+- チームメンバーアバター（重なり表示、追加ボタン付き）
+- フィルター/並び替えボタン
+- タスク追加ボタン
+
+【カラム】
+- .kanban-column: 320px幅、#f4f6f9背景
+- ヘッダー: カラータイトル、カウントバッジ、メニューボタン
+- カラードット: todo(グレー), progress(青), review(黄), done(緑)
+
+【カンバンカード】
+- .kanban-card: 白背景、角丸10px、影
+- ホバー時に浮き上がりエフェクト
+- ラベル: design(紫), dev(青), bug(赤), feature(緑), urgent(オレンジ), docs(シアン)
+- 優先度インジケーター: 左border（high:赤, medium:黄, low:緑）
+- タイトル、進捗バー、期限、コメント数、担当者アバター
+
+【進捗バー】
+- 6px高さ、角丸
+- グラデーション: #17a2b8→#20c997
+
+【カード追加ボタン】
+- 点線ボーダー、ホバー時に青色に変化" onclick="openPromptModal('10-3')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="10-3" onclick="openSourceModal('10-3')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h1>
+            <div class="kanban-members">
+              <div class="kanban-member blue">山</div>
+              <div class="kanban-member green">鈴</div>
+              <div class="kanban-member orange">田</div>
+              <div class="kanban-member purple">高</div>
+              <div class="kanban-member pink">伊</div>
+              <div class="kanban-member add">
+                <span class="material-icons" style="font-size: 16px;">add</span>
+              </div>
+            </div>
+          </div>
+          <div class="kanban-header-actions">
+            <button class="kanban-filter-btn">
+              <span class="material-icons">filter_list</span>
+              フィルター
+            </button>
+            <button class="kanban-filter-btn">
+              <span class="material-icons">sort</span>
+              並び替え
+            </button>
+            <button class="btn btn-primary">
+              <span class="material-icons">add</span>
+              タスク追加
+            </button>
+          </div>
+        </div>
+
+        <div class="kanban-board">
+          <!-- To Do カラム -->
+          <div class="kanban-column">
+            <div class="kanban-column-header">
+              <div class="kanban-column-title">
+                <span class="kanban-column-dot todo"></span>
+                To Do
+                <span class="kanban-column-count">4</span>
+              </div>
+              <button class="kanban-column-menu">
+                <span class="material-icons">more_horiz</span>
+              </button>
+            </div>
+            <div class="kanban-column-body">
+              <div class="kanban-card high-priority">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label urgent">Urgent</span>
+                    <span class="kanban-label dev">Dev</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-title">ユーザー認証機能のセキュリティ強化</div>
+                <div class="kanban-card-progress">
+                  <div class="kanban-card-progress-header">
+                    <span class="kanban-card-progress-label">0/3 完了</span>
+                  </div>
+                  <div class="kanban-card-progress-bar">
+                    <div class="kanban-card-progress-fill" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item overdue">
+                      <span class="material-icons">schedule</span>
+                      1/20
+                    </div>
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">chat_bubble_outline</span>
+                      5
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member blue">山</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label design">Design</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-image">
+                  <span class="material-icons">image</span>
+                </div>
+                <div class="kanban-card-title">新しいランディングページのデザイン作成</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">schedule</span>
+                      1/25
+                    </div>
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">attach_file</span>
+                      3
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member orange">田</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kanban-card low-priority">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label docs">Docs</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-title">APIドキュメントの更新</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">schedule</span>
+                      1/30
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member purple">高</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label feature">Feature</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-title">ダークモード機能の実装</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">schedule</span>
+                      2/5
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member green">鈴</div>
+                    <div class="kanban-card-assignee kanban-member blue">山</div>
+                  </div>
+                </div>
+              </div>
+
+              <button class="kanban-add-card">
+                <span class="material-icons">add</span>
+                カードを追加
+              </button>
+            </div>
+          </div>
+
+          <!-- In Progress カラム -->
+          <div class="kanban-column">
+            <div class="kanban-column-header">
+              <div class="kanban-column-title">
+                <span class="kanban-column-dot progress"></span>
+                In Progress
+                <span class="kanban-column-count">3</span>
+              </div>
+              <button class="kanban-column-menu">
+                <span class="material-icons">more_horiz</span>
+              </button>
+            </div>
+            <div class="kanban-column-body">
+              <div class="kanban-card medium-priority">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label dev">Dev</span>
+                    <span class="kanban-label feature">Feature</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-title">決済システムの統合実装</div>
+                <div class="kanban-card-progress">
+                  <div class="kanban-card-progress-header">
+                    <span class="kanban-card-progress-label">2/5 完了</span>
+                  </div>
+                  <div class="kanban-card-progress-bar">
+                    <div class="kanban-card-progress-fill" style="width: 40%;"></div>
+                  </div>
+                </div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">schedule</span>
+                      1/22
+                    </div>
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">chat_bubble_outline</span>
+                      12
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member green">鈴</div>
+                    <div class="kanban-card-assignee kanban-member purple">高</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label bug">Bug</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-title">モバイル表示時のレイアウト崩れを修正</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">schedule</span>
+                      1/18
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member orange">田</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label design">Design</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-title">ダッシュボードのUIリデザイン</div>
+                <div class="kanban-card-progress">
+                  <div class="kanban-card-progress-header">
+                    <span class="kanban-card-progress-label">4/6 完了</span>
+                  </div>
+                  <div class="kanban-card-progress-bar">
+                    <div class="kanban-card-progress-fill" style="width: 66%;"></div>
+                  </div>
+                </div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">schedule</span>
+                      1/20
+                    </div>
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">attach_file</span>
+                      8
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member orange">田</div>
+                    <div class="kanban-card-assignee kanban-member pink">伊</div>
+                  </div>
+                </div>
+              </div>
+
+              <button class="kanban-add-card">
+                <span class="material-icons">add</span>
+                カードを追加
+              </button>
+            </div>
+          </div>
+
+          <!-- Review カラム -->
+          <div class="kanban-column">
+            <div class="kanban-column-header">
+              <div class="kanban-column-title">
+                <span class="kanban-column-dot review"></span>
+                Review
+                <span class="kanban-column-count">2</span>
+              </div>
+              <button class="kanban-column-menu">
+                <span class="material-icons">more_horiz</span>
+              </button>
+            </div>
+            <div class="kanban-column-body">
+              <div class="kanban-card">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label dev">Dev</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-title">検索機能のパフォーマンス改善</div>
+                <div class="kanban-card-progress">
+                  <div class="kanban-card-progress-header">
+                    <span class="kanban-card-progress-label">3/3 完了</span>
+                  </div>
+                  <div class="kanban-card-progress-bar">
+                    <div class="kanban-card-progress-fill" style="width: 100%;"></div>
+                  </div>
+                </div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">schedule</span>
+                      1/15
+                    </div>
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">chat_bubble_outline</span>
+                      3
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member purple">高</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label feature">Feature</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-title">通知システムの実装</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">schedule</span>
+                      1/16
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member blue">山</div>
+                    <div class="kanban-card-assignee kanban-member green">鈴</div>
+                  </div>
+                </div>
+              </div>
+
+              <button class="kanban-add-card">
+                <span class="material-icons">add</span>
+                カードを追加
+              </button>
+            </div>
+          </div>
+
+          <!-- Done カラム -->
+          <div class="kanban-column">
+            <div class="kanban-column-header">
+              <div class="kanban-column-title">
+                <span class="kanban-column-dot done"></span>
+                Done
+                <span class="kanban-column-count">3</span>
+              </div>
+              <button class="kanban-column-menu">
+                <span class="material-icons">more_horiz</span>
+              </button>
+            </div>
+            <div class="kanban-column-body">
+              <div class="kanban-card" style="opacity: 0.7;">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label bug">Bug</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-title">ログイン画面のエラーハンドリング修正</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">check_circle</span>
+                      完了
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member green">鈴</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kanban-card" style="opacity: 0.7;">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label design">Design</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-title">アイコンセットの更新</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">check_circle</span>
+                      完了
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member orange">田</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kanban-card" style="opacity: 0.7;">
+                <div class="kanban-card-header">
+                  <div class="kanban-card-labels">
+                    <span class="kanban-label docs">Docs</span>
+                  </div>
+                  <button class="kanban-card-menu">
+                    <span class="material-icons">more_vert</span>
+                  </button>
+                </div>
+                <div class="kanban-card-title">ユーザーマニュアルの作成</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-card-meta">
+                    <div class="kanban-card-meta-item">
+                      <span class="material-icons">check_circle</span>
+                      完了
+                    </div>
+                  </div>
+                  <div class="kanban-card-assignees">
+                    <div class="kanban-card-assignee kanban-member pink">伊</div>
+                  </div>
+                </div>
+              </div>
+
+              <button class="kanban-add-card">
+                <span class="material-icons">add</span>
+                カードを追加
+              </button>
+            </div>
+          </div>
+
+          <!-- 新規カラム追加 -->
+          <div class="kanban-add-column">
+            <span class="material-icons">add</span>
+            カラムを追加
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <script src="common.js"></script>
+</body>
+</html>

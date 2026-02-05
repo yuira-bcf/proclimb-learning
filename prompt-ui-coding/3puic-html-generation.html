@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第3章 HTMLの自動生成 - プロンプトUIコーディング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <link rel="stylesheet" href="../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+
+    /* 実行結果プレビュー */
+    .result-preview {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+    .result-preview-header {
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .result-preview-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .result-preview-title .material-icons {
+      font-size: 18px;
+      color: #28a745;
+    }
+    .result-preview-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .result-preview-tab {
+      padding: 6px 12px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .result-preview-tab:hover {
+      background: #f8f9fa;
+    }
+    .result-preview-tab.active {
+      background: #007AFF;
+      border-color: #007AFF;
+      color: #fff;
+    }
+    .result-preview-content {
+      padding: 24px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .result-preview-code {
+      display: none;
+      padding: 16px;
+      background: #1e1e1e;
+      overflow-x: auto;
+    }
+    .result-preview-code.active {
+      display: block;
+    }
+    .result-preview-code pre {
+      margin: 0;
+      color: #d4d4d4;
+      font-size: 13px;
+      line-height: 1.5;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* サンプルヘッダー */
+    .sample-header {
+      width: 100%;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sample-header-logo {
+      font-weight: 700;
+      font-size: 18px;
+      color: #333;
+    }
+    .sample-header-nav {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .sample-header-nav a {
+      color: #666;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .sample-header-nav a:hover {
+      color: #007AFF;
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-prompt-ui-coding.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">プロンプトUIコーディング</div>
+      <div class="chapter-number">3</div>
+      <h1 class="chapter-title">HTMLの自動生成</h1>
+      <p class="chapter-subtitle">セマンティックなHTMLをAIで生成する</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">3-1</span>セマンティックHTMLの指示</li>
+        <li class="toc-item"><span class="toc-number">3-2</span>ページ構造の生成</li>
+        <li class="toc-item"><span class="toc-number">3-3</span>フォームの生成</li>
+        <li class="toc-item"><span class="toc-number">3-4</span>アクセシビリティへの配慮</li>
+      </ul>
+    </nav>
+
+    <!-- Section 3-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-1</span>
+        <h2 class="section-title">セマンティックHTMLの指示</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>セマンティックHTML</strong>とは、コンテンツの意味に適したタグを使うことです。AIにHTML生成を依頼する際は、セマンティックな構造を明示的に指示しましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>セマンティックタグの指定</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🏗️</span>
+            <span class="prompt-card-label">ページ構造生成</span>
+          </div>
+          <div class="prompt-card-content">以下の構造でHTMLを作成してください。
+セマンティックタグを適切に使用すること。
+
+## 出力　section3-1.html
+
+## ページ構造
+- header: ロゴ + ナビゲーション
+- main: メインコンテンツ
+  - section: ヒーローエリア
+  - section: 特徴紹介（3つの記事）
+  - section: お問い合わせCTA
+- footer: コピーライト + SNSリンク
+
+## 使用するタグ
+- ナビゲーション: nav, ul, li, a
+- 記事: article
+- 画像: figure, figcaption
+- 見出し: 適切なレベルのh1〜h6</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>非セマンティック vs セマンティック</h3>
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #FF3B30; color: white;">非セマンティック</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>&lt;div class="header"&gt;
+  &lt;div class="nav"&gt;
+    &lt;div class="nav-item"&gt;...&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="main"&gt;
+  &lt;div class="section"&gt;...&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="footer"&gt;...&lt;/div&gt;</pre>
+              </div>
+            </div>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #34C759; color: white;">セマンティック</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>&lt;header&gt;
+  &lt;nav&gt;
+    &lt;ul&gt;&lt;li&gt;...&lt;/li&gt;&lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;
+&lt;main&gt;
+  &lt;section&gt;...&lt;/section&gt;
+&lt;/main&gt;
+&lt;footer&gt;...&lt;/footer&gt;</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">セマンティックHTMLのメリット</div>
+          <div class="info-box-content">
+            <ul>
+              <li><strong>SEO向上</strong> - 検索エンジンがコンテンツを理解しやすい</li>
+              <li><strong>アクセシビリティ</strong> - スクリーンリーダーが正しく読み上げ</li>
+              <li><strong>保守性</strong> - コードの意図が明確で理解しやすい</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-2</span>
+        <h2 class="section-title">ページ構造の生成</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>ヘッダー生成プロンプト</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">📌</span>
+            <span class="prompt-card-label">ヘッダー生成</span>
+          </div>
+          <div class="prompt-card-content">企業サイトのヘッダーHTMLを作成してください。
+
+## 要素
+- ロゴ（左寄せ）: リンク付き画像
+- ナビゲーション（右寄せ）: 5項目
+  - ホーム、サービス、事例、会社概要、お問い合わせ
+- モバイルメニューボタン（768px以下で表示）
+
+## 要件
+- headerタグを使用
+- ナビはnav > ul > li > a構造
+- ロゴはh1内に配置（トップページの場合）
+- aria-label属性を適切に設定</div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <div class="sample-header">
+              <div class="sample-header-logo">Company Logo</div>
+              <nav>
+                <ul class="sample-header-nav">
+                  <li><a href="#">ホーム</a></li>
+                  <li><a href="#">サービス</a></li>
+                  <li><a href="#">事例</a></li>
+                  <li><a href="#">会社概要</a></li>
+                  <li><a href="#">お問い合わせ</a></li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;header class="header"&gt;
+  &lt;div class="header__inner"&gt;
+    &lt;h1 class="header__logo"&gt;
+      &lt;a href="/"&gt;
+        &lt;img src="logo.svg" alt="会社名" width="160" height="40"&gt;
+      &lt;/a&gt;
+    &lt;/h1&gt;
+    &lt;nav class="header__nav" aria-label="メインナビゲーション"&gt;
+      &lt;ul class="header__nav-list"&gt;
+        &lt;li&gt;&lt;a href="/" class="header__nav-link"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/service" class="header__nav-link"&gt;サービス&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/works" class="header__nav-link"&gt;事例&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/about" class="header__nav-link"&gt;会社概要&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/contact" class="header__nav-link"&gt;お問い合わせ&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+    &lt;button class="header__menu-btn" aria-label="メニューを開く"&gt;
+      &lt;span&gt;&lt;/span&gt;
+      &lt;span&gt;&lt;/span&gt;
+      &lt;span&gt;&lt;/span&gt;
+    &lt;/button&gt;
+  &lt;/div&gt;
+&lt;/header&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>カード一覧の生成</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🃏</span>
+            <span class="prompt-card-label">カード一覧生成</span>
+          </div>
+          <div class="prompt-card-content">ブログ記事のカード一覧HTMLを作成してください。
+
+## カード構成
+- サムネイル画像
+- カテゴリーラベル
+- タイトル（h3）
+- 抜粋文（2行まで）
+- 投稿日
+- 「続きを読む」リンク
+
+## 要件
+- articleタグを使用
+- 画像はfigure/figcaptionでマークアップ
+- カード全体がリンクになる構造
+- 3つのダミーカードを含む</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-3</span>
+        <h2 class="section-title">フォームの生成</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>フォーム生成の注意点</h3>
+        <div class="highlight-box">
+          <h4>フォームHTML生成で指定すべき項目</h4>
+          <ul>
+            <li><strong>入力項目</strong>: 項目名、type、必須/任意</li>
+            <li><strong>ラベル</strong>: label要素とfor属性の紐付け</li>
+            <li><strong>バリデーション</strong>: required, pattern, maxlength等</li>
+            <li><strong>エラー表示</strong>: エラーメッセージの配置場所</li>
+            <li><strong>送信ボタン</strong>: type="submit"</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>お問い合わせフォームの生成</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">📝</span>
+            <span class="prompt-card-label">フォーム生成</span>
+          </div>
+          <div class="prompt-card-content">お問い合わせフォームのHTMLを作成してください。
+
+## 入力項目
+1. お名前（必須）: text
+2. メールアドレス（必須）: email
+3. 電話番号（任意）: tel
+4. お問い合わせ種別（必須）: select
+   - 選択肢: 製品について、サービスについて、採用について、その他
+5. お問い合わせ内容（必須）: textarea
+
+## 要件
+- formタグのaction, methodは空欄
+- すべてのinputにlabelを紐付け
+- 必須項目にはrequired属性
+- プレースホルダーを設定
+- 各入力欄にエラーメッセージ用のspan要素を配置
+- BEM命名規則を使用</div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <form style="width: 100%; max-width: 400px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 14px; color: #666; margin-bottom: 6px;">お名前 <span style="color: #FF3B30;">*</span></label>
+                <input type="text" placeholder="山田 太郎" style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 16px; box-sizing: border-box;">
+              </div>
+              <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 14px; color: #666; margin-bottom: 6px;">メールアドレス <span style="color: #FF3B30;">*</span></label>
+                <input type="email" placeholder="example@email.com" style="width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 16px; box-sizing: border-box;">
+              </div>
+              <button type="button" style="width: 100%; padding: 14px; background: #007AFF; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer;">送信する</button>
+            </form>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;form class="contact-form" action="" method="post"&gt;
+  &lt;div class="contact-form__group"&gt;
+    &lt;label for="name" class="contact-form__label"&gt;
+      お名前&lt;span class="contact-form__required"&gt;必須&lt;/span&gt;
+    &lt;/label&gt;
+    &lt;input
+      type="text"
+      id="name"
+      name="name"
+      class="contact-form__input"
+      placeholder="山田 太郎"
+      required
+    &gt;
+    &lt;span class="contact-form__error"&gt;&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;div class="contact-form__group"&gt;
+    &lt;label for="email" class="contact-form__label"&gt;
+      メールアドレス&lt;span class="contact-form__required"&gt;必須&lt;/span&gt;
+    &lt;/label&gt;
+    &lt;input
+      type="email"
+      id="email"
+      name="email"
+      class="contact-form__input"
+      placeholder="example@email.com"
+      required
+    &gt;
+    &lt;span class="contact-form__error"&gt;&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;!-- 以下省略 --&gt;
+&lt;/form&gt;</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-4</span>
+        <h2 class="section-title">アクセシビリティへの配慮</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>アクセシビリティ指示の追加</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">♿</span>
+            <span class="prompt-card-label">アクセシビリティ要件</span>
+          </div>
+          <div class="prompt-card-content">## アクセシビリティ要件
+- すべての画像にalt属性を設定
+- アイコンボタンにはaria-labelを設定
+- フォーカス可能な要素にはフォーカスインジケーターを維持
+- 見出しレベルは適切な順序（h1→h2→h3）
+- リンクテキストは遷移先が分かる内容に
+- 色だけに依存しない情報伝達
+- aria-hidden="true"を装飾的要素に適用</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>確認すべきポイント</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>確認内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>画像</td>
+                <td>alt属性が適切か、装飾画像はalt=""か</td>
+              </tr>
+              <tr>
+                <td>見出し</td>
+                <td>h1→h2→h3の順序が正しいか</td>
+              </tr>
+              <tr>
+                <td>リンク</td>
+                <td>「こちら」だけでなく具体的なテキストか</td>
+              </tr>
+              <tr>
+                <td>フォーム</td>
+                <td>label要素が正しく紐付いているか</td>
+              </tr>
+              <tr>
+                <td>ボタン</td>
+                <td>クリック可能な要素が明確か</td>
+              </tr>
+              <tr>
+                <td>コントラスト</td>
+                <td>テキストと背景のコントラスト比は十分か</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第3章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>セマンティックタグ</strong>の使用を明示的に指示する</li>
+          <li>ページ構造は<strong>header, main, footer</strong>で明確に分ける</li>
+          <li>フォームは<strong>label紐付け</strong>と<strong>バリデーション属性</strong>を忘れずに</li>
+          <li><strong>アクセシビリティ要件</strong>をプロンプトに含める</li>
+          <li>生成後は<strong>必ず確認</strong>し、不足があれば修正指示を出す</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="2puic-prompt-basics.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">UI生成プロンプトの基本</div>
+    </a>
+    <a href="4puic-css-generation.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">CSSの自動生成</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトUIコーディング - 職業訓練校教材</p>
+  </footer>
+
+  <script>
+    // Result Preview Tab Functionality
+    document.querySelectorAll('.result-preview').forEach(preview => {
+      const tabs = preview.querySelectorAll('.result-preview-tab');
+      const content = preview.querySelector('.result-preview-content');
+      const code = preview.querySelector('.result-preview-code');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          if (tab.dataset.tab === 'preview') {
+            content.style.display = 'flex';
+            code.classList.remove('active');
+          } else {
+            content.style.display = 'none';
+            code.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

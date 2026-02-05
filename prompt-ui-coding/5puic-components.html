@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第5章 UIコンポーネント生成 - プロンプトUIコーディング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <link rel="stylesheet" href="../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+
+    /* 実行結果プレビュー */
+    .result-preview {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+    .result-preview-header {
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .result-preview-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .result-preview-title .material-icons {
+      font-size: 18px;
+      color: #28a745;
+    }
+    .result-preview-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .result-preview-tab {
+      padding: 6px 12px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .result-preview-tab:hover {
+      background: #f8f9fa;
+    }
+    .result-preview-tab.active {
+      background: #007AFF;
+      border-color: #007AFF;
+      color: #fff;
+    }
+    .result-preview-content {
+      padding: 24px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .result-preview-code {
+      display: none;
+      padding: 16px;
+      background: #1e1e1e;
+      overflow-x: auto;
+    }
+    .result-preview-code.active {
+      display: block;
+    }
+    .result-preview-code pre {
+      margin: 0;
+      color: #d4d4d4;
+      font-size: 13px;
+      line-height: 1.5;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* サンプルボタンセット */
+    .sample-btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    .sample-btn-primary {
+      background: #007AFF;
+      color: white;
+    }
+    .sample-btn-primary:hover {
+      background: #0056B3;
+    }
+    .sample-btn-secondary {
+      background: transparent;
+      border: 2px solid #007AFF;
+      color: #007AFF;
+    }
+    .sample-btn-secondary:hover {
+      background: #E5F1FF;
+    }
+    .sample-btn-ghost {
+      background: transparent;
+      color: #007AFF;
+    }
+    .sample-btn-ghost:hover {
+      background: #F5F5F7;
+    }
+    .sample-btn-danger {
+      background: #FF3B30;
+      color: white;
+    }
+    .sample-btn-danger:hover {
+      background: #D63027;
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-prompt-ui-coding.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">プロンプトUIコーディング</div>
+      <div class="chapter-number">5</div>
+      <h1 class="chapter-title">UIコンポーネント生成</h1>
+      <p class="chapter-subtitle">よく使うUIパーツを効率的に生成する</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">5-1</span>ボタンコンポーネント</li>
+        <li class="toc-item"><span class="toc-number">5-2</span>カードコンポーネント</li>
+        <li class="toc-item"><span class="toc-number">5-3</span>ナビゲーション</li>
+        <li class="toc-item"><span class="toc-number">5-4</span>フォーム要素</li>
+      </ul>
+    </nav>
+
+    <!-- Section 5-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-1</span>
+        <h2 class="section-title">ボタンコンポーネント</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>ボタンは最も頻繁に使うUIコンポーネントです。バリエーションを含めて一度に生成すると効率的です。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>ボタンセット生成プロンプト</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🔘</span>
+            <span class="prompt-card-label">ボタンコンポーネント生成</span>
+          </div>
+          <div class="prompt-card-content">ボタンコンポーネントのHTML/CSSを作成してください。
+
+## バリエーション
+1. プライマリボタン（塗りつぶし、青）
+2. セカンダリボタン（アウトライン、青枠）
+3. ゴーストボタン（テキストのみ）
+4. 危険ボタン（赤、削除用）
+
+## サイズ
+- sm: 高さ32px、フォント14px、padding 0 12px
+- md: 高さ40px、フォント14px、padding 0 16px
+- lg: 高さ48px、フォント16px、padding 0 24px
+
+## 共通仕様
+- 角丸: 8px
+- フォント: 太字
+- カーソル: pointer
+- 無効時: opacity 0.5、カーソル not-allowed
+- トランジション: 0.2s ease
+
+## 状態
+- デフォルト
+- ホバー
+- アクティブ（押下時）
+- フォーカス（アウトライン表示）
+- 無効（disabled）
+
+## 命名規則
+- BEM: .btn, .btn--primary, .btn--sm</div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <button class="sample-btn sample-btn-primary">プライマリ</button>
+            <button class="sample-btn sample-btn-secondary">セカンダリ</button>
+            <button class="sample-btn sample-btn-ghost">ゴースト</button>
+            <button class="sample-btn sample-btn-danger">削除</button>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;button class="btn btn--primary"&gt;プライマリ&lt;/button&gt;
+&lt;button class="btn btn--secondary"&gt;セカンダリ&lt;/button&gt;
+&lt;button class="btn btn--ghost"&gt;ゴースト&lt;/button&gt;
+&lt;button class="btn btn--danger"&gt;削除&lt;/button&gt;
+
+&lt;style&gt;
+.btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+.btn--primary {
+  background: #007AFF;
+  color: white;
+}
+.btn--secondary {
+  background: transparent;
+  border: 2px solid #007AFF;
+  color: #007AFF;
+}
+&lt;/style&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>生成結果のチェックポイント</h3>
+        <div class="highlight-box">
+          <h4>確認すべき項目</h4>
+          <ul>
+            <li>すべてのバリエーションが揃っているか</li>
+            <li>ホバー・アクティブ状態が定義されているか</li>
+            <li>フォーカス時のアウトラインがあるか（アクセシビリティ）</li>
+            <li>disabled状態が適切か</li>
+            <li>クリックしやすいサイズか（最低44px推奨）</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-2</span>
+        <h2 class="section-title">カードコンポーネント</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>基本カード生成プロンプト</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🃏</span>
+            <span class="prompt-card-label">カードコンポーネント生成</span>
+          </div>
+          <div class="prompt-card-content">汎用カードコンポーネントのHTML/CSSを作成してください。
+
+## 構成要素
+- サムネイル画像（上部、アスペクト比16:9）
+- カテゴリバッジ（画像上に重ねて表示）
+- タイトル（h3、2行まで表示、超過は...）
+- 説明文（3行まで表示、超過は...）
+- メタ情報（日付、著者など）
+- アクションボタン
+
+## デザイン仕様
+- 背景: 白
+- 角丸: 12px
+- 影: 軽い影（ホバーで強く）
+- 内側余白: 16px
+- 画像とコンテンツの間: 余白なし
+
+## インタラクション
+- ホバー時: 少し浮き上がる + 影強化
+- カード全体がクリック可能（a要素でラップ）
+- 画像は少しズーム（scale 1.05）
+
+## レスポンシブ
+- 最小幅: 280px
+- 最大幅: 400px</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>カードバリエーション</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>タイプ</th>
+                <th>特徴</th>
+                <th>用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>画像カード</td>
+                <td>上部に大きな画像</td>
+                <td>ブログ、商品一覧</td>
+              </tr>
+              <tr>
+                <td>横型カード</td>
+                <td>左に画像、右にテキスト</td>
+                <td>検索結果、ニュース</td>
+              </tr>
+              <tr>
+                <td>テキストカード</td>
+                <td>画像なし</td>
+                <td>FAQ、機能紹介</td>
+              </tr>
+              <tr>
+                <td>プロフィールカード</td>
+                <td>アバター + 名前 + 説明</td>
+                <td>チーム紹介</td>
+              </tr>
+              <tr>
+                <td>価格カード</td>
+                <td>プラン名 + 価格 + 機能リスト</td>
+                <td>料金表</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-3</span>
+        <h2 class="section-title">ナビゲーション</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>ヘッダーナビ生成プロンプト</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">📍</span>
+            <span class="prompt-card-label">ヘッダーナビゲーション生成</span>
+          </div>
+          <div class="prompt-card-content">レスポンシブ対応のヘッダーナビゲーションを作成してください。
+
+## PC表示（768px以上）
+- ロゴ: 左寄せ
+- ナビリンク: 中央または右寄せ、5項目
+- CTAボタン: 右端
+- 高さ: 64px
+- 背景: 白、下線付き
+
+## モバイル表示（767px以下）
+- ロゴ: 左寄せ
+- ハンバーガーボタン: 右寄せ
+- メニュー: クリックでスライドダウン表示
+- メニュー項目: 縦並び、全幅
+
+## デザイン
+- リンクホバー: 下線または色変化
+- 現在地表示: アクティブ状態のスタイル
+- 影: スクロール時に追加（任意）
+
+## アクセシビリティ
+- aria-label設定
+- フォーカス表示
+- キーボード操作対応</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>その他のナビゲーションパターン</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">view_sidebar</span>
+            </div>
+            <div class="feature-content">
+              <h4>サイドバーナビ</h4>
+              <p>管理画面やダッシュボードで使用。アイコン＋テキスト、折りたたみ対応</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">more_horiz</span>
+            </div>
+            <div class="feature-content">
+              <h4>パンくずリスト</h4>
+              <p>現在地を階層で表示。SEOにも有効</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">tab</span>
+            </div>
+            <div class="feature-content">
+              <h4>タブナビ</h4>
+              <p>コンテンツ切り替え用。アクティブ状態を明示</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #AF52DE;">
+              <span class="material-icons" style="color: white;">navigation</span>
+            </div>
+            <div class="feature-content">
+              <h4>ボトムナビ</h4>
+              <p>モバイルアプリ風。固定配置、アイコン中心</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-4</span>
+        <h2 class="section-title">フォーム要素</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>入力フィールドセット生成プロンプト</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">📝</span>
+            <span class="prompt-card-label">フォーム要素生成</span>
+          </div>
+          <div class="prompt-card-content">フォーム入力要素のコンポーネントセットを作成してください。
+
+## 含める要素
+1. テキスト入力（text, email, password, tel）
+2. テキストエリア
+3. セレクトボックス
+4. チェックボックス
+5. ラジオボタン
+6. 日付入力
+
+## 共通スタイル
+- ラベル: 入力欄の上、14px、グレー
+- 入力欄: 幅100%、高さ44px、padding 12px
+- ボーダー: 1px、グレー、角丸8px
+- フォーカス時: 青ボーダー、影
+- エラー時: 赤ボーダー、エラーメッセージ表示
+- プレースホルダー: 薄いグレー
+
+## 状態
+- デフォルト
+- フォーカス
+- 入力済み
+- エラー
+- 無効
+
+## アクセシビリティ
+- labelとinputの紐付け
+- エラーメッセージのaria-describedby</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>カスタムチェックボックス・ラジオ</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">☑️</span>
+            <span class="prompt-card-label">カスタムチェックボックス</span>
+          </div>
+          <div class="prompt-card-content">カスタムスタイルのチェックボックスを作成してください。
+
+## 仕様
+- ネイティブのinputを非表示
+- カスタムの四角形を表示（20x20px）
+- チェック時: 青背景 + 白いチェックマーク
+- ラベルは右側に配置
+- クリック領域はラベルを含む全体
+- フォーカス時のアウトライン表示
+- アニメーション付き（チェック時）</div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">注意点</div>
+          <div class="info-box-content">
+            <p>カスタムフォーム要素は見た目は良くなりますが、<strong>アクセシビリティを損なわないよう注意</strong>が必要です。ネイティブ要素を完全に隠すのではなく、視覚的に隠しつつスクリーンリーダーには認識されるようにしましょう。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第5章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>ボタン</strong>はバリエーション・サイズ・状態を一度に定義</li>
+          <li><strong>カード</strong>は構成要素とインタラクションを明確に指定</li>
+          <li><strong>ナビゲーション</strong>はレスポンシブとアクセシビリティを考慮</li>
+          <li><strong>フォーム要素</strong>は状態（フォーカス、エラー等）を網羅</li>
+          <li>コンポーネントは<strong>再利用可能な形</strong>で生成する</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="4puic-css-generation.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">CSSの自動生成</div>
+    </a>
+    <a href="6puic-responsive.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">レスポンシブデザイン生成</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトUIコーディング - 職業訓練校教材</p>
+  </footer>
+
+  <script>
+    // Result Preview Tab Functionality
+    document.querySelectorAll('.result-preview').forEach(preview => {
+      const tabs = preview.querySelectorAll('.result-preview-tab');
+      const content = preview.querySelector('.result-preview-content');
+      const code = preview.querySelector('.result-preview-code');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          if (tab.dataset.tab === 'preview') {
+            content.style.display = 'flex';
+            code.classList.remove('active');
+          } else {
+            content.style.display = 'none';
+            code.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

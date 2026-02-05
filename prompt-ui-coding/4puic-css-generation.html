@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第4章 CSSの自動生成 - プロンプトUIコーディング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <link rel="stylesheet" href="../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+
+    /* 実行結果プレビュー */
+    .result-preview {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+    .result-preview-header {
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .result-preview-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .result-preview-title .material-icons {
+      font-size: 18px;
+      color: #28a745;
+    }
+    .result-preview-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .result-preview-tab {
+      padding: 6px 12px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .result-preview-tab:hover {
+      background: #f8f9fa;
+    }
+    .result-preview-tab.active {
+      background: #007AFF;
+      border-color: #007AFF;
+      color: #fff;
+    }
+    .result-preview-content {
+      padding: 24px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .result-preview-code {
+      display: none;
+      padding: 16px;
+      background: #1e1e1e;
+      overflow-x: auto;
+    }
+    .result-preview-code.active {
+      display: block;
+    }
+    .result-preview-code pre {
+      margin: 0;
+      color: #d4d4d4;
+      font-size: 13px;
+      line-height: 1.5;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* サンプルナビゲーション */
+    .sample-nav {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 64px;
+      padding: 0 24px;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+    }
+    .sample-nav-logo {
+      font-weight: 700;
+      font-size: 18px;
+      color: #333;
+    }
+    .sample-nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .sample-nav-links a {
+      color: #666;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    /* サンプルカードグリッド */
+    .sample-card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+    .sample-card {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    .sample-card-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    .sample-card-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+    }
+    /* サンプルスピナー */
+    .sample-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #D2D2D7;
+      border-top-color: #007AFF;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    /* サンプルホバーボタン */
+    .sample-hover-btn {
+      padding: 12px 24px;
+      background: #007AFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .sample-hover-btn:hover {
+      background: #0056B3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-prompt-ui-coding.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">プロンプトUIコーディング</div>
+      <div class="chapter-number">4</div>
+      <h1 class="chapter-title">CSSの自動生成</h1>
+      <p class="chapter-subtitle">レイアウト・デザインをAIで効率的に実装</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">4-1</span>レイアウト指示（Flexbox/Grid）</li>
+        <li class="toc-item"><span class="toc-number">4-2</span>カラー・タイポグラフィ</li>
+        <li class="toc-item"><span class="toc-number">4-3</span>余白・境界線・影</li>
+        <li class="toc-item"><span class="toc-number">4-4</span>アニメーション・トランジション</li>
+      </ul>
+    </nav>
+
+    <!-- Section 4-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-1</span>
+        <h2 class="section-title">レイアウト指示（Flexbox/Grid）</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>現代のCSSレイアウトは<strong>Flexbox</strong>と<strong>CSS Grid</strong>が主流です。AIに生成させる際は、どちらを使うか明示的に指定しましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>Flexboxの指示例</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">📦</span>
+            <span class="prompt-card-label">Flexboxレイアウト</span>
+          </div>
+          <div class="prompt-card-content">以下の仕様でナビゲーションのCSSを作成してください。
+Flexboxを使用すること。
+
+## レイアウト
+- 親要素: 横並び、両端揃え（space-between）
+- ロゴ: 左寄せ
+- ナビリンク: 右寄せ、横並び
+- リンク間の余白: 24px
+
+## 垂直方向
+- 全要素を中央揃え（align-items: center）
+- ナビ全体の高さ: 64px</div>
+        </div>
+
+        <h4>生成結果例</h4>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS</span>
+          </div>
+          <div class="code-content">
+            <pre>.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
+  padding: 0 24px;
+}
+
+.header__nav-list {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}</pre>
+          </div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <div class="sample-nav">
+              <div class="sample-nav-logo">Logo</div>
+              <ul class="sample-nav-links">
+                <li><a href="#">ホーム</a></li>
+                <li><a href="#">サービス</a></li>
+                <li><a href="#">会社概要</a></li>
+                <li><a href="#">お問い合わせ</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;header class="header"&gt;
+  &lt;div class="header__logo"&gt;Logo&lt;/div&gt;
+  &lt;nav&gt;
+    &lt;ul class="header__nav-list"&gt;
+      &lt;li&gt;&lt;a href="#"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#"&gt;サービス&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#"&gt;会社概要&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#"&gt;お問い合わせ&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>CSS Gridの指示例</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🔲</span>
+            <span class="prompt-card-label">CSS Gridレイアウト</span>
+          </div>
+          <div class="prompt-card-content">以下の仕様でカードグリッドのCSSを作成してください。
+CSS Gridを使用すること。
+
+## グリッド設定
+- カラム数: 自動調整（最小280px、最大1fr）
+- 行間・列間: 24px
+- カードが均等に配置されること
+
+## レスポンシブ
+- PC（1024px以上）: 3カラム
+- タブレット（768px〜1023px）: 2カラム
+- モバイル（767px以下）: 1カラム</div>
+        </div>
+
+        <h4>生成結果例</h4>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS</span>
+          </div>
+          <div class="code-content">
+            <pre>.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* または固定カラム数の場合 */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1023px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <div class="sample-card-grid">
+              <div class="sample-card">
+                <div class="sample-card-icon">📊</div>
+                <div class="sample-card-title">ダッシュボード</div>
+              </div>
+              <div class="sample-card">
+                <div class="sample-card-icon">📝</div>
+                <div class="sample-card-title">レポート</div>
+              </div>
+              <div class="sample-card">
+                <div class="sample-card-icon">⚙️</div>
+                <div class="sample-card-title">設定</div>
+              </div>
+            </div>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;div class="card-grid"&gt;
+  &lt;div class="card"&gt;
+    &lt;div class="card__icon"&gt;📊&lt;/div&gt;
+    &lt;div class="card__title"&gt;ダッシュボード&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="card"&gt;
+    &lt;div class="card__icon"&gt;📝&lt;/div&gt;
+    &lt;div class="card__title"&gt;レポート&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="card"&gt;
+    &lt;div class="card__icon"&gt;⚙️&lt;/div&gt;
+    &lt;div class="card__title"&gt;設定&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Flexbox vs Grid の使い分け</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>用途</th>
+                <th>推奨</th>
+                <th>理由</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ナビゲーション</td>
+                <td>Flexbox</td>
+                <td>1次元の横並び配置</td>
+              </tr>
+              <tr>
+                <td>カード一覧</td>
+                <td>Grid</td>
+                <td>2次元のグリッド配置</td>
+              </tr>
+              <tr>
+                <td>ヘッダー/フッター</td>
+                <td>Flexbox</td>
+                <td>要素間の配置調整</td>
+              </tr>
+              <tr>
+                <td>ダッシュボード</td>
+                <td>Grid</td>
+                <td>複雑な2次元レイアウト</td>
+              </tr>
+              <tr>
+                <td>ボタングループ</td>
+                <td>Flexbox</td>
+                <td>横並びで中央揃え</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-2</span>
+        <h2 class="section-title">カラー・タイポグラフィ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>カラーパレットの指定</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🎨</span>
+            <span class="prompt-card-label">カラーパレット定義</span>
+          </div>
+          <div class="prompt-card-content">以下のカラーパレットでCSS変数を定義してください。
+
+## プライマリカラー
+- メイン: #007AFF
+- ホバー: #0056B3
+- ライト: #E5F1FF
+
+## セカンダリカラー
+- メイン: #5856D6
+- ホバー: #4240A8
+
+## グレースケール
+- テキスト（メイン）: #1D1D1F
+- テキスト（サブ）: #6E6E73
+- ボーダー: #D2D2D7
+- 背景（ライト）: #F5F5F7
+- 背景（白）: #FFFFFF
+
+## セマンティックカラー
+- 成功: #34C759
+- 警告: #FF9F0A
+- エラー: #FF3B30
+- 情報: #007AFF</div>
+        </div>
+
+        <h4>生成結果例</h4>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS</span>
+          </div>
+          <div class="code-content">
+            <pre>:root {
+  /* Primary */
+  --color-primary: #007AFF;
+  --color-primary-hover: #0056B3;
+  --color-primary-light: #E5F1FF;
+
+  /* Secondary */
+  --color-secondary: #5856D6;
+  --color-secondary-hover: #4240A8;
+
+  /* Grayscale */
+  --color-text-primary: #1D1D1F;
+  --color-text-secondary: #6E6E73;
+  --color-border: #D2D2D7;
+  --color-bg-light: #F5F5F7;
+  --color-bg-white: #FFFFFF;
+
+  /* Semantic */
+  --color-success: #34C759;
+  --color-warning: #FF9F0A;
+  --color-error: #FF3B30;
+  --color-info: #007AFF;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>タイポグラフィの指定</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🔤</span>
+            <span class="prompt-card-label">タイポグラフィ設定</span>
+          </div>
+          <div class="prompt-card-content">以下のタイポグラフィ設定でCSSを作成してください。
+
+## フォントファミリー
+- 日本語: "Noto Sans JP", sans-serif
+- 英数字: "Inter", sans-serif
+- コード: "JetBrains Mono", monospace
+
+## フォントサイズ（デスクトップ）
+- h1: 48px / line-height: 1.2 / font-weight: 800
+- h2: 36px / line-height: 1.3 / font-weight: 700
+- h3: 24px / line-height: 1.4 / font-weight: 700
+- h4: 20px / line-height: 1.4 / font-weight: 600
+- body: 16px / line-height: 1.7 / font-weight: 400
+- small: 14px / line-height: 1.5 / font-weight: 400
+- caption: 12px / line-height: 1.4 / font-weight: 400
+
+## モバイル（767px以下）
+- h1: 32px
+- h2: 28px
+- h3: 22px</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-3</span>
+        <h2 class="section-title">余白・境界線・影</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>余白（spacing）の統一</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">↔️</span>
+            <span class="prompt-card-label">スペーシングシステム</span>
+          </div>
+          <div class="prompt-card-content">8pxベースの余白システムでCSS変数を定義してください。
+
+## スペーシングスケール
+- xs: 4px
+- sm: 8px
+- md: 16px
+- lg: 24px
+- xl: 32px
+- 2xl: 48px
+- 3xl: 64px
+- 4xl: 96px</div>
+        </div>
+
+        <h4>生成結果例</h4>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS</span>
+          </div>
+          <div class="code-content">
+            <pre>:root {
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>境界線と角丸</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">⬜</span>
+            <span class="prompt-card-label">ボーダー・角丸定義</span>
+          </div>
+          <div class="prompt-card-content">ボーダーと角丸のCSS変数を定義してください。
+
+## ボーダー
+- 細線: 1px solid var(--color-border)
+- 中線: 2px solid var(--color-border)
+- フォーカス: 2px solid var(--color-primary)
+
+## 角丸
+- sm: 4px （小さなボタン、タグ）
+- md: 8px （カード、入力欄）
+- lg: 16px （大きなカード）
+- xl: 24px （モーダル）
+- full: 9999px （ピル型ボタン）</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>影（box-shadow）</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🌓</span>
+            <span class="prompt-card-label">シャドウ定義</span>
+          </div>
+          <div class="prompt-card-content">シャドウのCSS変数を3段階で定義してください。
+
+## シャドウレベル
+- sm: 軽い浮き上がり（カードのデフォルト）
+- md: 中程度の浮き上がり（ホバー時）
+- lg: 強い浮き上がり（モーダル、ドロップダウン）</div>
+        </div>
+
+        <h4>生成結果例</h4>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS</span>
+          </div>
+          <div class="code-content">
+            <pre>:root {
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-4</span>
+        <h2 class="section-title">アニメーション・トランジション</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>トランジションの指定</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">✨</span>
+            <span class="prompt-card-label">ホバーアニメーション</span>
+          </div>
+          <div class="prompt-card-content">ボタンのホバーアニメーションCSSを作成してください。
+
+## トランジション設定
+- 対象プロパティ: background-color, transform, box-shadow
+- 時間: 0.2s
+- イージング: ease-out
+
+## ホバー時の変化
+- 背景色: 10%暗く
+- 少し浮き上がる（translateY: -2px）
+- 影を追加</div>
+        </div>
+
+        <h4>生成結果例</h4>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS</span>
+          </div>
+          <div class="code-content">
+            <pre>.button {
+  background-color: var(--color-primary);
+  transition: background-color 0.2s ease-out,
+              transform 0.2s ease-out,
+              box-shadow 0.2s ease-out;
+}
+
+.button:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.button:active {
+  transform: translateY(0);
+}</pre>
+          </div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <button class="sample-hover-btn">ホバーしてください</button>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;button class="button"&gt;ホバーしてください&lt;/button&gt;
+
+&lt;style&gt;
+.button {
+  padding: 12px 24px;
+  background-color: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease-out,
+              transform 0.2s ease-out,
+              box-shadow 0.2s ease-out;
+}
+
+.button:hover {
+  background-color: #0056B3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+&lt;/style&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>キーフレームアニメーション</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🔄</span>
+            <span class="prompt-card-label">ローディングスピナー</span>
+          </div>
+          <div class="prompt-card-content">ローディングスピナーのCSSアニメーションを作成してください。
+
+## 仕様
+- 円形のスピナー（直径40px）
+- ボーダーで実現（4px、グレー、一部だけ青）
+- 1秒で1回転
+- 無限ループ
+- 滑らかな回転（linear）</div>
+        </div>
+
+        <h4>生成結果例</h4>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS</span>
+          </div>
+          <div class="code-content">
+            <pre>.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}</pre>
+          </div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <div class="sample-spinner"></div>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;div class="spinner"&gt;&lt;/div&gt;
+
+&lt;style&gt;
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #D2D2D7;
+  border-top-color: #007AFF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+&lt;/style&gt;</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第4章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>Flexbox/Grid</strong>は用途に応じて使い分けを明示する</li>
+          <li><strong>カラーパレット</strong>はCSS変数で一元管理</li>
+          <li><strong>タイポグラフィ</strong>はサイズ・行間・太さをセットで指定</li>
+          <li><strong>余白システム</strong>は8pxベースなど統一したスケールを使う</li>
+          <li><strong>トランジション</strong>は対象・時間・イージングを明示</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="3puic-html-generation.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">HTMLの自動生成</div>
+    </a>
+    <a href="5puic-components.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">UIコンポーネント生成</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトUIコーディング - 職業訓練校教材</p>
+  </footer>
+
+  <script>
+    // Result Preview Tab Functionality
+    document.querySelectorAll('.result-preview').forEach(preview => {
+      const tabs = preview.querySelectorAll('.result-preview-tab');
+      const content = preview.querySelector('.result-preview-content');
+      const code = preview.querySelector('.result-preview-code');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          if (tab.dataset.tab === 'preview') {
+            content.style.display = 'flex';
+            code.classList.remove('active');
+          } else {
+            content.style.display = 'none';
+            code.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

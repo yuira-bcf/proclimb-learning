@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第10章 ベストプラクティス - プロンプトUIコーディング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/common.css">
+  <link rel="stylesheet" href="../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+
+    /* 実行結果プレビュー */
+    .result-preview {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+    .result-preview-header {
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .result-preview-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .result-preview-title .material-icons {
+      font-size: 18px;
+      color: #28a745;
+    }
+    .result-preview-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .result-preview-tab {
+      padding: 6px 12px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .result-preview-tab:hover {
+      background: #f8f9fa;
+    }
+    .result-preview-tab.active {
+      background: #007AFF;
+      border-color: #007AFF;
+      color: #fff;
+    }
+    .result-preview-content {
+      padding: 24px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .result-preview-code {
+      display: none;
+      padding: 16px;
+      background: #1e1e1e;
+      overflow-x: auto;
+    }
+    .result-preview-code.active {
+      display: block;
+    }
+    .result-preview-code pre {
+      margin: 0;
+      color: #d4d4d4;
+      font-size: 13px;
+      line-height: 1.5;
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../shared/js/nav-prompt-ui-coding.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">プロンプトUIコーディング</div>
+      <div class="chapter-number">10</div>
+      <h1 class="chapter-title">ベストプラクティス</h1>
+      <p class="chapter-subtitle">AIとの効果的な協業で品質を高める</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">10-1</span>品質チェックの習慣</li>
+        <li class="toc-item"><span class="toc-number">10-2</span>AIとの効果的な協業</li>
+        <li class="toc-item"><span class="toc-number">10-3</span>よくある失敗と対策</li>
+        <li class="toc-item"><span class="toc-number">10-4</span>継続的な学習</li>
+      </ul>
+    </nav>
+
+    <!-- Section 10-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 10-1</span>
+        <h2 class="section-title">品質チェックの習慣</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>AIが生成したコードは、必ず人間の目で確認する必要があります。品質チェックを習慣化することで、問題を早期に発見・修正できます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>生成コードのチェックリスト</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>カテゴリ</th>
+                <th>チェック項目</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td rowspan="3"><strong>HTML</strong></td>
+                <td>セマンティックタグが適切に使われているか</td>
+              </tr>
+              <tr>
+                <td>見出しレベル（h1→h2→h3）が正しい順序か</td>
+              </tr>
+              <tr>
+                <td>alt属性、aria属性が適切か</td>
+              </tr>
+              <tr>
+                <td rowspan="3"><strong>CSS</strong></td>
+                <td>不要なスタイルや重複がないか</td>
+              </tr>
+              <tr>
+                <td>!importantが乱用されていないか</td>
+              </tr>
+              <tr>
+                <td>メディアクエリが適切に設定されているか</td>
+              </tr>
+              <tr>
+                <td rowspan="3"><strong>レスポンシブ</strong></td>
+                <td>モバイル、タブレット、PCで崩れないか</td>
+              </tr>
+              <tr>
+                <td>タップターゲットが十分なサイズか</td>
+              </tr>
+              <tr>
+                <td>横スクロールが発生していないか</td>
+              </tr>
+              <tr>
+                <td rowspan="2"><strong>パフォーマンス</strong></td>
+                <td>無駄に複雑なセレクタがないか</td>
+              </tr>
+              <tr>
+                <td>アニメーションが重くないか</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>確認ツールの活用</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #4285F4;">
+              <span class="material-icons" style="color: white;">bug_report</span>
+            </div>
+            <div class="feature-content">
+              <h4>ブラウザ開発者ツール</h4>
+              <p>要素の検証、レスポンシブ確認、コンソールエラーチェック</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF6B6B;">
+              <span class="material-icons" style="color: white;">check_circle</span>
+            </div>
+            <div class="feature-content">
+              <h4>HTML/CSSバリデーター</h4>
+              <p>W3Cバリデーターで文法エラーをチェック</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #00C853;">
+              <span class="material-icons" style="color: white;">speed</span>
+            </div>
+            <div class="feature-content">
+              <h4>Lighthouse</h4>
+              <p>パフォーマンス、アクセシビリティ、SEOを自動チェック</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 10-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 10-2</span>
+        <h2 class="section-title">AIとの効果的な協業</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>協業のマインドセット</h3>
+        <div class="highlight-box">
+          <h4>AIは「アシスタント」であり「完璧な答え」ではない</h4>
+          <ul>
+            <li>AIの出力を<strong>出発点</strong>として捉える</li>
+            <li>最終的な判断は<strong>人間が行う</strong></li>
+            <li>AIの間違いを<strong>学習の機会</strong>にする</li>
+            <li><strong>対話的に</strong>改善していく姿勢を持つ</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>効果的なワークフロー</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">looks_one</span>
+            </div>
+            <div class="feature-content">
+              <h4>1. 要件を整理する</h4>
+              <p>AIに依頼する前に、作りたいものを明確にする</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">looks_two</span>
+            </div>
+            <div class="feature-content">
+              <h4>2. 具体的なプロンプトを書く</h4>
+              <p>曖昧さを排除し、数値や仕様を明示する</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">looks_3</span>
+            </div>
+            <div class="feature-content">
+              <h4>3. 生成結果を検証する</h4>
+              <p>ブラウザで確認、コードを読んで理解する</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #AF52DE;">
+              <span class="material-icons" style="color: white;">looks_4</span>
+            </div>
+            <div class="feature-content">
+              <h4>4. 修正指示を出す</h4>
+              <p>問題点を具体的に伝え、改善を依頼する</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF3B30;">
+              <span class="material-icons" style="color: white;">looks_5</span>
+            </div>
+            <div class="feature-content">
+              <h4>5. 最終調整は手作業で</h4>
+              <p>細かい微調整は自分で行うほうが早いことも</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>プロンプトテンプレートの蓄積</h3>
+        <div class="info-box">
+          <div class="info-box-title">おすすめの習慣</div>
+          <div class="info-box-content">
+            <p>うまくいったプロンプトは<strong>テンプレートとして保存</strong>しておきましょう。次回以降、類似の作業で再利用できます。</p>
+            <ul>
+              <li>ボタン生成プロンプト</li>
+              <li>カード生成プロンプト</li>
+              <li>フォーム生成プロンプト</li>
+              <li>LP各セクション生成プロンプト</li>
+              <li>リファクタリング依頼プロンプト</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 10-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 10-3</span>
+        <h2 class="section-title">よくある失敗と対策</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>失敗パターンと対策</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>失敗パターン</th>
+                <th>原因</th>
+                <th>対策</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>意図と違うデザイン</td>
+                <td>プロンプトが曖昧</td>
+                <td>具体的な数値、参考画像、詳細な仕様を提示</td>
+              </tr>
+              <tr>
+                <td>レスポンシブが崩れる</td>
+                <td>ブレイクポイント未指定</td>
+                <td>各デバイスでの表示を明示的に指示</td>
+              </tr>
+              <tr>
+                <td>アクセシビリティ不足</td>
+                <td>要件に含めていない</td>
+                <td>アクセシビリティ要件をプロンプトに追加</td>
+              </tr>
+              <tr>
+                <td>コードが冗長</td>
+                <td>最適化を依頼していない</td>
+                <td>「重複を削減」「最小限のコードで」と指示</td>
+              </tr>
+              <tr>
+                <td>古い書き方が混在</td>
+                <td>技術要件が不明確</td>
+                <td>「モダンな書き方で」「Flexbox/Gridを使用」と指定</td>
+              </tr>
+              <tr>
+                <td>出力が途中で切れる</td>
+                <td>依頼内容が多すぎる</td>
+                <td>セクションごとに分割して依頼</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>AIの限界を理解する</h3>
+        <div class="highlight-box">
+          <h4>AIが苦手なこと</h4>
+          <ul>
+            <li><strong>複雑なインタラクション</strong> - 高度なJavaScript連携</li>
+            <li><strong>ブランド固有のニュアンス</strong> - 企業の世界観を完璧に再現</li>
+            <li><strong>最新の仕様</strong> - 学習データ以降の新機能</li>
+            <li><strong>ピクセルパーフェクト</strong> - デザインカンプの完全再現</li>
+            <li><strong>プロジェクト固有の制約</strong> - 既存コードベースとの整合性</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 10-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 10-4</span>
+        <h2 class="section-title">継続的な学習</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>基礎力を磨く重要性</h3>
+        <div class="intro-text">
+          <p>AIを使いこなすためには、<strong>基礎的なHTML/CSS/JavaScriptの知識</strong>が不可欠です。AIが出力したコードを理解し、評価し、修正できる力が求められます。</p>
+        </div>
+
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #007AFF; color: white;">学び続けるべきこと</div>
+            <ul>
+              <li>HTML/CSSの基礎と新機能</li>
+              <li>レスポンシブデザインの原則</li>
+              <li>アクセシビリティのガイドライン</li>
+              <li>パフォーマンス最適化の手法</li>
+              <li>デザインの基礎（余白、色、タイポグラフィ）</li>
+            </ul>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #34C759; color: white;">AIで効率化すること</div>
+            <ul>
+              <li>定型的なコード生成</li>
+              <li>コードの雛形作成</li>
+              <li>リファクタリングの提案</li>
+              <li>デバッグのヒント取得</li>
+              <li>新しい書き方の学習</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>学習リソース</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF6B6B;">
+              <span class="material-icons" style="color: white;">school</span>
+            </div>
+            <div class="feature-content">
+              <h4>MDN Web Docs</h4>
+              <p>HTML/CSS/JavaScriptの公式リファレンス</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #4ECDC4;">
+              <span class="material-icons" style="color: white;">play_circle</span>
+            </div>
+            <div class="feature-content">
+              <h4>CSS-Tricks</h4>
+              <p>CSSのテクニックやチュートリアル</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #45B7D1;">
+              <span class="material-icons" style="color: white;">accessibility_new</span>
+            </div>
+            <div class="feature-content">
+              <h4>WebAIM</h4>
+              <p>アクセシビリティのガイドラインとツール</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>最後に</h3>
+        <div class="highlight-box">
+          <h4>プロンプトUIコーディングの心得</h4>
+          <ol>
+            <li><strong>AIは道具</strong> - 使いこなすのは人間の役割</li>
+            <li><strong>基礎が大事</strong> - 知識があるほどAIを活用できる</li>
+            <li><strong>検証を怠らない</strong> - 生成コードは必ず確認</li>
+            <li><strong>継続的に学ぶ</strong> - Web技術もAIも進化し続ける</li>
+            <li><strong>楽しむ</strong> - 新しい開発スタイルを楽しもう</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第10章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>品質チェック</strong>を習慣化し、ツールを活用する</li>
+          <li>AIは<strong>アシスタント</strong>として捉え、最終判断は人間が行う</li>
+          <li>よくある<strong>失敗パターン</strong>を知り、事前に対策する</li>
+          <li><strong>基礎力</strong>を磨き続けることでAI活用の幅が広がる</li>
+          <li>プロンプトテンプレートを<strong>蓄積</strong>して効率化する</li>
+        </ul>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-title"><span class="material-icons">arrow_forward</span> 次の章へ</div>
+        <div class="info-box-content">
+          <p>次章では、フォームUX改善の20ポイントを学びます。離脱させない入力フォームの設計原則を習得しましょう。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="9puic-refactoring.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">コードのリファクタリング</div>
+    </a>
+    <a href="11puic-uiux-forms.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">フォームUX改善の20ポイント</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトUIコーディング - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

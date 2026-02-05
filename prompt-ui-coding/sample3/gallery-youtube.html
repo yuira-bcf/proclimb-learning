@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube風ギャラリー - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    /* フィルターチップ */
+    .yt-filters {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .yt-filter {
+      padding: 8px 16px;
+      background: #f2f2f2;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #0f0f0f;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .yt-filter:hover {
+      background: #e5e5e5;
+    }
+
+    .yt-filter.active {
+      background: #0f0f0f;
+      color: #fff;
+    }
+
+    /* 動画グリッド */
+    .yt-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 1200px) {
+      .yt-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 992px) {
+      .yt-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 576px) {
+      .yt-grid { grid-template-columns: 1fr; }
+    }
+
+    .yt-card {
+      cursor: pointer;
+    }
+
+    .yt-thumbnail {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .yt-thumbnail-bg {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .yt-card:nth-child(1) .yt-thumbnail-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .yt-card:nth-child(2) .yt-thumbnail-bg { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .yt-card:nth-child(3) .yt-thumbnail-bg { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .yt-card:nth-child(4) .yt-thumbnail-bg { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .yt-card:nth-child(5) .yt-thumbnail-bg { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .yt-card:nth-child(6) .yt-thumbnail-bg { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+    .yt-card:nth-child(7) .yt-thumbnail-bg { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+    .yt-card:nth-child(8) .yt-thumbnail-bg { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+    .yt-card:nth-child(9) .yt-thumbnail-bg { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); }
+    .yt-card:nth-child(10) .yt-thumbnail-bg { background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); }
+    .yt-card:nth-child(11) .yt-thumbnail-bg { background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%); }
+    .yt-card:nth-child(12) .yt-thumbnail-bg { background: linear-gradient(135deg, #fddb92 0%, #d1fdff 100%); }
+
+    .yt-thumbnail-bg .material-icons {
+      font-size: 64px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .yt-thumbnail:hover .yt-preview {
+      opacity: 1;
+    }
+
+    .yt-preview {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .yt-play-btn {
+      width: 60px;
+      height: 60px;
+      background: rgba(255,0,0,0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .yt-play-btn .material-icons {
+      font-size: 36px;
+      color: #fff;
+      margin-left: 4px;
+    }
+
+    .yt-duration {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      padding: 3px 6px;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 4px;
+    }
+
+    .yt-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      background: #ff0000;
+      border-radius: 0 0 0 12px;
+    }
+
+    .yt-info {
+      display: flex;
+      gap: 12px;
+    }
+
+    .yt-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .yt-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .yt-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #0f0f0f;
+      line-height: 1.4;
+      margin-bottom: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .yt-title:hover {
+      color: #0f0f0f;
+    }
+
+    .yt-channel {
+      font-size: 13px;
+      color: #606060;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+
+    .yt-channel:hover {
+      color: #0f0f0f;
+    }
+
+    .yt-verified {
+      color: #606060;
+      font-size: 14px;
+    }
+
+    .yt-stats {
+      font-size: 13px;
+      color: #606060;
+    }
+
+    .yt-menu {
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .yt-card:hover .yt-menu {
+      opacity: 1;
+    }
+
+    .yt-menu-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #606060;
+    }
+
+    .yt-menu-btn:hover {
+      background: #e5e5e5;
+    }
+
+    /* ライブバッジ */
+    .yt-live {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      padding: 3px 6px;
+      background: #cc0000;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 2px;
+      text-transform: uppercase;
+    }
+
+    /* プレミアムバッジ */
+    .yt-premiere {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      padding: 3px 6px;
+      background: #065fd4;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 2px;
+    }
+
+    /* ショート動画スタイル */
+    .yt-shorts-section {
+      margin-top: 32px;
+    }
+
+    .yt-shorts-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .yt-shorts-icon {
+      width: 40px;
+      height: 40px;
+      background: #ff0000;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .yt-shorts-icon .material-icons {
+      font-size: 24px;
+      color: #fff;
+    }
+
+    .yt-shorts-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #0f0f0f;
+    }
+
+    .yt-shorts-grid {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 16px;
+    }
+
+    .yt-short-card {
+      min-width: 180px;
+      cursor: pointer;
+    }
+
+    .yt-short-thumbnail {
+      position: relative;
+      width: 180px;
+      height: 320px;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .yt-short-thumbnail-bg {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .yt-short-card:nth-child(1) .yt-short-thumbnail-bg { background: linear-gradient(180deg, #667eea 0%, #764ba2 100%); }
+    .yt-short-card:nth-child(2) .yt-short-thumbnail-bg { background: linear-gradient(180deg, #f093fb 0%, #f5576c 100%); }
+    .yt-short-card:nth-child(3) .yt-short-thumbnail-bg { background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%); }
+    .yt-short-card:nth-child(4) .yt-short-thumbnail-bg { background: linear-gradient(180deg, #43e97b 0%, #38f9d7 100%); }
+    .yt-short-card:nth-child(5) .yt-short-thumbnail-bg { background: linear-gradient(180deg, #fa709a 0%, #fee140 100%); }
+    .yt-short-card:nth-child(6) .yt-short-thumbnail-bg { background: linear-gradient(180deg, #a18cd1 0%, #fbc2eb 100%); }
+
+    .yt-short-thumbnail-bg .material-icons {
+      font-size: 48px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .yt-short-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 60px 12px 12px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      color: #fff;
+    }
+
+    .yt-short-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .yt-short-views {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <nav class="breadcrumb">
+            <a href="sample-3-dashboard.html">ホーム</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>ギャラリー</span>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>YouTube風</span>
+          </nav>
+        </div>
+        <div class="header-right">
+          <button class="header-btn">
+            <span class="material-icons">notifications_none</span>
+          </button>
+          <div class="header-user">
+            <div class="header-user-avatar">
+              <span class="material-icons" style="font-size: 16px;">person</span>
+            </div>
+            <span class="header-user-name">山田 太郎</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-header">
+          <h1 class="page-title"><span class="page-num-badge">9-4</span>YouTube風ギャラリー
+            <button class="prompt-btn" data-prompt-id="9-4" data-prompt="YouTube風ギャラリーを作成してください。
+
+【要件】
+- フィルターチップ（カテゴリ切替）
+- 動画サムネイルグリッド（4列）
+- 再生時間・進捗バー表示
+- ライブ・プレミア公開バッジ
+- ショート動画セクション
+
+【デザイン】
+- 16:9アスペクト比サムネイル
+- ホバーで再生ボタン表示
+- チャンネルアバターと認証バッジ
+- 視聴回数・投稿日表示
+- 縦長ショート動画カード" onclick="openPromptModal('9-4')">
+              <span class="material-icons">auto_awesome</span>
+              プロンプト
+            </button>
+            <button class="source-btn" data-source-id="9-4" onclick="openSourceModal('9-4')">
+              <span class="material-icons">code</span>
+              ソース
+            </button>
+          </h1>
+          <p class="page-subtitle">動画サムネイルグリッドレイアウト</p>
+        </div>
+
+        <!-- フィルター -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-4-1</span>
+              <span class="material-icons">filter_list</span>
+              フィルターチップ
+              <button class="prompt-btn" data-prompt-id="9-4-1" data-prompt="YouTube風フィルターチップを作成してください。
+
+【HTML構造】
+- .yt-filters: display: flex、gap: 12px、margin-bottom: 24px、overflow-x: auto、padding-bottom: 8px
+
+【フィルターボタン】
+- .yt-filter: padding: 8px 16px、background: #f2f2f2、border: none、border-radius: 8px、font-size: 14px、font-weight: 500、color: #0f0f0f、cursor: pointer、white-space: nowrap、transition: all 0.2s
+- .yt-filter:hover: background: #e5e5e5
+- .yt-filter.active: background: #0f0f0f、color: #fff
+
+【フィルター例】
+- すべて（デフォルト選択）
+- ゲーム
+- 音楽
+- ライブ
+- 料理
+- 最近アップロードされた動画
+- 新しい動画
+- 視聴済み
+
+【特徴】
+- 横スクロール対応
+- アクティブ状態でダークカラーに反転
+- クリックでカテゴリフィルタリング" onclick="openPromptModal('9-4-1')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-4-1" onclick="openSourceModal('9-4-1')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+        <div class="yt-filters">
+          <button class="yt-filter active">すべて</button>
+          <button class="yt-filter">ゲーム</button>
+          <button class="yt-filter">音楽</button>
+          <button class="yt-filter">ライブ</button>
+          <button class="yt-filter">料理</button>
+          <button class="yt-filter">最近アップロードされた動画</button>
+          <button class="yt-filter">新しい動画</button>
+          <button class="yt-filter">視聴済み</button>
+        </div>
+          </div>
+        </div>
+
+        <!-- 動画グリッド -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-4-2</span>
+              <span class="material-icons">video_library</span>
+              動画サムネイルグリッド
+              <button class="prompt-btn" data-prompt-id="9-4-2" data-prompt="YouTube風動画サムネイルグリッドを作成してください。
+
+【HTML構造】
+- .yt-grid: display: grid、grid-template-columns: repeat(4, 1fr)、gap: 16px
+- レスポンシブ: 1200px以下で3列、992px以下で2列、576px以下で1列
+
+【動画カード】
+- .yt-card: cursor: pointer
+
+【サムネイル】
+- .yt-thumbnail: position: relative、width: 100%、aspect-ratio: 16/9、border-radius: 12px、overflow: hidden、margin-bottom: 12px
+- .yt-thumbnail-bg: width: 100%、height: 100%、display: flex、align-items: center、justify-content: center、グラデーション背景
+- .yt-thumbnail-bg .material-icons: font-size: 64px、color: rgba(255,255,255,0.7)
+
+【再生プレビュー】
+- .yt-preview: position: absolute、top/left/right/bottom: 0、background: rgba(0,0,0,0.6)、display: flex、align-items: center、justify-content: center、opacity: 0、transition: opacity 0.2s
+- .yt-thumbnail:hover .yt-preview: opacity: 1
+- .yt-play-btn: width: 60px、height: 60px、background: rgba(255,0,0,0.9)、border-radius: 50%
+- .yt-play-btn .material-icons: font-size: 36px、color: #fff、margin-left: 4px
+
+【バッジ】
+- .yt-duration: position: absolute、bottom: 8px、right: 8px、padding: 3px 6px、background: rgba(0,0,0,0.8)、color: #fff、font-size: 12px、border-radius: 4px
+- .yt-progress: position: absolute、bottom: 0、left: 0、height: 4px、background: #ff0000（視聴済み進捗）
+- .yt-live: position: absolute、top: 8px、left: 8px、background: #cc0000、color: #fff、font-size: 11px、font-weight: 600
+- .yt-premiere: position: absolute、top: 8px、left: 8px、background: #065fd4、color: #fff、font-size: 11px
+
+【動画情報】
+- .yt-info: display: flex、gap: 12px
+- .yt-avatar: width: 36px、height: 36px、border-radius: 50%、グラデーション背景
+- .yt-meta: flex: 1、min-width: 0
+- .yt-title: font-size: 14px、font-weight: 500、color: #0f0f0f、-webkit-line-clamp: 2
+- .yt-channel: font-size: 13px、color: #606060、display: flex、align-items: center、gap: 4px
+- .yt-verified: color: #606060、font-size: 14px
+- .yt-stats: font-size: 13px、color: #606060
+
+【メニュー】
+- .yt-menu: opacity: 0、.yt-card:hover .yt-menu: opacity: 1
+- .yt-menu-btn: width: 36px、height: 36px、border: none、background: none、border-radius: 50%、hover: background: #e5e5e5" onclick="openPromptModal('9-4-2')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-4-2" onclick="openSourceModal('9-4-2')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+        <div class="yt-grid">
+          <div class="yt-card">
+            <div class="yt-thumbnail">
+              <div class="yt-thumbnail-bg">
+                <span class="material-icons">code</span>
+              </div>
+              <div class="yt-preview">
+                <div class="yt-play-btn">
+                  <span class="material-icons">play_arrow</span>
+                </div>
+              </div>
+              <span class="yt-duration">12:34</span>
+              <div class="yt-progress" style="width: 45%;"></div>
+            </div>
+            <div class="yt-info">
+              <div class="yt-avatar">山</div>
+              <div class="yt-meta">
+                <div class="yt-title">【初心者向け】Webデザインの基礎を30分で完全解説！</div>
+                <div class="yt-channel">
+                  山田チャンネル
+                  <span class="material-icons yt-verified">verified</span>
+                </div>
+                <div class="yt-stats">15万回視聴 ・ 3日前</div>
+              </div>
+              <div class="yt-menu">
+                <button class="yt-menu-btn"><span class="material-icons">more_vert</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="yt-card">
+            <div class="yt-thumbnail">
+              <div class="yt-thumbnail-bg">
+                <span class="material-icons">palette</span>
+              </div>
+              <div class="yt-preview">
+                <div class="yt-play-btn">
+                  <span class="material-icons">play_arrow</span>
+                </div>
+              </div>
+              <span class="yt-live">ライブ</span>
+            </div>
+            <div class="yt-info">
+              <div class="yt-avatar" style="background: linear-gradient(135deg, #f093fb, #f5576c);">鈴</div>
+              <div class="yt-meta">
+                <div class="yt-title">【生配信】UIデザインをリアルタイムで制作！質問受付中</div>
+                <div class="yt-channel">
+                  鈴木デザイン
+                  <span class="material-icons yt-verified">verified</span>
+                </div>
+                <div class="yt-stats">1,234人が視聴中</div>
+              </div>
+              <div class="yt-menu">
+                <button class="yt-menu-btn"><span class="material-icons">more_vert</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="yt-card">
+            <div class="yt-thumbnail">
+              <div class="yt-thumbnail-bg">
+                <span class="material-icons">terminal</span>
+              </div>
+              <div class="yt-preview">
+                <div class="yt-play-btn">
+                  <span class="material-icons">play_arrow</span>
+                </div>
+              </div>
+              <span class="yt-duration">45:21</span>
+            </div>
+            <div class="yt-info">
+              <div class="yt-avatar" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">田</div>
+              <div class="yt-meta">
+                <div class="yt-title">React + TypeScript で本格的なアプリを作ろう【2024年最新版】</div>
+                <div class="yt-channel">田中プログラミング教室</div>
+                <div class="yt-stats">8.2万回視聴 ・ 1週間前</div>
+              </div>
+              <div class="yt-menu">
+                <button class="yt-menu-btn"><span class="material-icons">more_vert</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="yt-card">
+            <div class="yt-thumbnail">
+              <div class="yt-thumbnail-bg">
+                <span class="material-icons">brush</span>
+              </div>
+              <div class="yt-preview">
+                <div class="yt-play-btn">
+                  <span class="material-icons">play_arrow</span>
+                </div>
+              </div>
+              <span class="yt-premiere">プレミア公開</span>
+            </div>
+            <div class="yt-info">
+              <div class="yt-avatar" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">高</div>
+              <div class="yt-meta">
+                <div class="yt-title">【Figma】実践的なプロトタイピング手法を完全解説</div>
+                <div class="yt-channel">高橋UIラボ</div>
+                <div class="yt-stats">本日 20:00 プレミア公開</div>
+              </div>
+              <div class="yt-menu">
+                <button class="yt-menu-btn"><span class="material-icons">more_vert</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="yt-card">
+            <div class="yt-thumbnail">
+              <div class="yt-thumbnail-bg">
+                <span class="material-icons">auto_fix_high</span>
+              </div>
+              <div class="yt-preview">
+                <div class="yt-play-btn">
+                  <span class="material-icons">play_arrow</span>
+                </div>
+              </div>
+              <span class="yt-duration">18:45</span>
+            </div>
+            <div class="yt-info">
+              <div class="yt-avatar" style="background: linear-gradient(135deg, #fa709a, #fee140);">伊</div>
+              <div class="yt-meta">
+                <div class="yt-title">CSS アニメーション完全ガイド - 基礎から応用まで</div>
+                <div class="yt-channel">
+                  伊藤Web塾
+                  <span class="material-icons yt-verified">verified</span>
+                </div>
+                <div class="yt-stats">5.6万回視聴 ・ 2週間前</div>
+              </div>
+              <div class="yt-menu">
+                <button class="yt-menu-btn"><span class="material-icons">more_vert</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="yt-card">
+            <div class="yt-thumbnail">
+              <div class="yt-thumbnail-bg">
+                <span class="material-icons">smartphone</span>
+              </div>
+              <div class="yt-preview">
+                <div class="yt-play-btn">
+                  <span class="material-icons">play_arrow</span>
+                </div>
+              </div>
+              <span class="yt-duration">22:10</span>
+              <div class="yt-progress" style="width: 80%;"></div>
+            </div>
+            <div class="yt-info">
+              <div class="yt-avatar" style="background: linear-gradient(135deg, #a18cd1, #fbc2eb);">渡</div>
+              <div class="yt-meta">
+                <div class="yt-title">レスポンシブデザイン2024年のベストプラクティス</div>
+                <div class="yt-channel">渡辺テック</div>
+                <div class="yt-stats">3.2万回視聴 ・ 5日前</div>
+              </div>
+              <div class="yt-menu">
+                <button class="yt-menu-btn"><span class="material-icons">more_vert</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="yt-card">
+            <div class="yt-thumbnail">
+              <div class="yt-thumbnail-bg">
+                <span class="material-icons">speed</span>
+              </div>
+              <div class="yt-preview">
+                <div class="yt-play-btn">
+                  <span class="material-icons">play_arrow</span>
+                </div>
+              </div>
+              <span class="yt-duration">8:52</span>
+            </div>
+            <div class="yt-info">
+              <div class="yt-avatar" style="background: linear-gradient(135deg, #ff9a9e, #fecfef);">佐</div>
+              <div class="yt-meta">
+                <div class="yt-title">Webサイトを爆速にする7つのテクニック</div>
+                <div class="yt-channel">佐藤パフォーマンス</div>
+                <div class="yt-stats">12万回視聴 ・ 1か月前</div>
+              </div>
+              <div class="yt-menu">
+                <button class="yt-menu-btn"><span class="material-icons">more_vert</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="yt-card">
+            <div class="yt-thumbnail">
+              <div class="yt-thumbnail-bg">
+                <span class="material-icons">cloud</span>
+              </div>
+              <div class="yt-preview">
+                <div class="yt-play-btn">
+                  <span class="material-icons">play_arrow</span>
+                </div>
+              </div>
+              <span class="yt-duration">35:18</span>
+            </div>
+            <div class="yt-info">
+              <div class="yt-avatar" style="background: linear-gradient(135deg, #ffecd2, #fcb69f);">中</div>
+              <div class="yt-meta">
+                <div class="yt-title">AWS入門 - クラウドインフラの基礎を学ぼう</div>
+                <div class="yt-channel">
+                  中村クラウド
+                  <span class="material-icons yt-verified">verified</span>
+                </div>
+                <div class="yt-stats">9.8万回視聴 ・ 3週間前</div>
+              </div>
+              <div class="yt-menu">
+                <button class="yt-menu-btn"><span class="material-icons">more_vert</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <!-- ショート動画セクション -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-4-3</span>
+              <span class="material-icons">bolt</span>
+              ショート動画セクション
+              <button class="prompt-btn" data-prompt-id="9-4-3" data-prompt="YouTube Shorts風セクションを作成してください。
+
+【HTML構造】
+- .yt-shorts-section: margin-top: 32px
+
+【ヘッダー】
+- .yt-shorts-header: display: flex、align-items: center、gap: 12px、margin-bottom: 16px
+- .yt-shorts-icon: width: 40px、height: 40px、background: #ff0000、border-radius: 8px、display: flex、align-items: center、justify-content: center
+- .yt-shorts-icon .material-icons: font-size: 24px、color: #fff（bolt アイコン）
+- .yt-shorts-title: font-size: 20px、font-weight: 600、color: #0f0f0f
+
+【グリッド】
+- .yt-shorts-grid: display: flex、gap: 16px、overflow-x: auto、padding-bottom: 16px
+
+【ショートカード】
+- .yt-short-card: min-width: 180px、cursor: pointer
+
+【サムネイル】
+- .yt-short-thumbnail: position: relative、width: 180px、height: 320px、border-radius: 12px、overflow: hidden、margin-bottom: 8px
+- .yt-short-thumbnail-bg: width: 100%、height: 100%、display: flex、align-items: center、justify-content: center、グラデーション背景（縦方向: 180deg）
+- .yt-short-thumbnail-bg .material-icons: font-size: 48px、color: rgba(255,255,255,0.7)
+
+【情報オーバーレイ】
+- .yt-short-info: position: absolute、bottom: 0、left: 0、right: 0、padding: 60px 12px 12px
+- background: linear-gradient(transparent, rgba(0,0,0,0.8))、color: #fff
+- .yt-short-title: font-size: 14px、font-weight: 500、margin-bottom: 4px、-webkit-line-clamp: 2
+- .yt-short-views: font-size: 12px、opacity: 0.8
+
+【グラデーション例】
+- linear-gradient(180deg, #667eea 0%, #764ba2 100%)
+- linear-gradient(180deg, #f093fb 0%, #f5576c 100%)
+- linear-gradient(180deg, #4facfe 0%, #00f2fe 100%)
+- linear-gradient(180deg, #43e97b 0%, #38f9d7 100%)
+- linear-gradient(180deg, #fa709a 0%, #fee140 100%)
+- linear-gradient(180deg, #a18cd1 0%, #fbc2eb 100%)" onclick="openPromptModal('9-4-3')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-4-3" onclick="openSourceModal('9-4-3')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+        <div class="yt-shorts-section">
+          <div class="yt-shorts-header">
+            <div class="yt-shorts-icon">
+              <span class="material-icons">bolt</span>
+            </div>
+            <h2 class="yt-shorts-title">ショート</h2>
+          </div>
+          <div class="yt-shorts-grid">
+            <div class="yt-short-card">
+              <div class="yt-short-thumbnail">
+                <div class="yt-short-thumbnail-bg">
+                  <span class="material-icons">tips_and_updates</span>
+                </div>
+                <div class="yt-short-info">
+                  <div class="yt-short-title">1分で分かるCSS Tips</div>
+                  <div class="yt-short-views">120万回視聴</div>
+                </div>
+              </div>
+            </div>
+            <div class="yt-short-card">
+              <div class="yt-short-thumbnail">
+                <div class="yt-short-thumbnail-bg">
+                  <span class="material-icons">code</span>
+                </div>
+                <div class="yt-short-info">
+                  <div class="yt-short-title">知らないと損するJSテクニック</div>
+                  <div class="yt-short-views">85万回視聴</div>
+                </div>
+              </div>
+            </div>
+            <div class="yt-short-card">
+              <div class="yt-short-thumbnail">
+                <div class="yt-short-thumbnail-bg">
+                  <span class="material-icons">design_services</span>
+                </div>
+                <div class="yt-short-info">
+                  <div class="yt-short-title">デザインの黄金比とは？</div>
+                  <div class="yt-short-views">56万回視聴</div>
+                </div>
+              </div>
+            </div>
+            <div class="yt-short-card">
+              <div class="yt-short-thumbnail">
+                <div class="yt-short-thumbnail-bg">
+                  <span class="material-icons">auto_awesome</span>
+                </div>
+                <div class="yt-short-info">
+                  <div class="yt-short-title">AIでデザイン作成してみた</div>
+                  <div class="yt-short-views">230万回視聴</div>
+                </div>
+              </div>
+            </div>
+            <div class="yt-short-card">
+              <div class="yt-short-thumbnail">
+                <div class="yt-short-thumbnail-bg">
+                  <span class="material-icons">bug_report</span>
+                </div>
+                <div class="yt-short-info">
+                  <div class="yt-short-title">最も遭遇するバグTOP3</div>
+                  <div class="yt-short-views">45万回視聴</div>
+                </div>
+              </div>
+            </div>
+            <div class="yt-short-card">
+              <div class="yt-short-thumbnail">
+                <div class="yt-short-thumbnail-bg">
+                  <span class="material-icons">rocket_launch</span>
+                </div>
+                <div class="yt-short-info">
+                  <div class="yt-short-title">スタートアップの裏側</div>
+                  <div class="yt-short-views">67万回視聴</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <script src="common.js"></script>
+</body>
+</html>

@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>バナースライド - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    /* メインバナー */
+    .banner-main {
+      position: relative;
+      height: 300px;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .banner-slides {
+      display: flex;
+      height: 100%;
+      transition: transform 0.5s ease;
+    }
+
+    .banner-slide {
+      min-width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 40px;
+    }
+
+    .banner-slide:nth-child(1) { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .banner-slide:nth-child(2) { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .banner-slide:nth-child(3) { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+
+    .banner-content {
+      flex: 1;
+      color: #fff;
+      z-index: 1;
+    }
+
+    .banner-label {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .banner-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .banner-description {
+      font-size: 16px;
+      opacity: 0.9;
+      margin-bottom: 20px;
+      max-width: 400px;
+    }
+
+    .banner-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: #fff;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .banner-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .banner-image {
+      position: absolute;
+      right: 40px;
+      bottom: 0;
+      height: 280px;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .banner-image .material-icons {
+      font-size: 200px;
+      color: rgba(255,255,255,0.2);
+    }
+
+    .banner-nav {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+    }
+
+    .banner-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .banner-dot.active {
+      background: #fff;
+      width: 24px;
+      border-radius: 4px;
+    }
+
+    /* 小バナーグリッド */
+    .banner-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .banner-small {
+      height: 180px;
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .banner-small:hover {
+      transform: translateY(-4px);
+    }
+
+    .banner-small:nth-child(1) { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .banner-small:nth-child(2) { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .banner-small:nth-child(3) { background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%); }
+
+    .banner-small-icon {
+      position: absolute;
+      right: -20px;
+      bottom: -20px;
+      font-size: 120px;
+      opacity: 0.2;
+    }
+
+    .banner-small-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    .banner-small-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .banner-small-text {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    /* カルーセルバナー */
+    .carousel-section {
+      margin-bottom: 24px;
+    }
+
+    .carousel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .carousel-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .carousel-nav {
+      display: flex;
+      gap: 8px;
+    }
+
+    .carousel-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .carousel-btn:hover {
+      background: #17a2b8;
+      border-color: #17a2b8;
+      color: #fff;
+    }
+
+    .carousel-track {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      padding-bottom: 8px;
+    }
+
+    .carousel-track::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .carousel-track::-webkit-scrollbar-thumb {
+      background: #dee2e6;
+      border-radius: 2px;
+    }
+
+    .carousel-item {
+      min-width: 280px;
+      height: 160px;
+      border-radius: 12px;
+      padding: 20px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .carousel-item:hover {
+      transform: scale(1.02);
+    }
+
+    .carousel-item:nth-child(1) { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+    .carousel-item:nth-child(2) { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .carousel-item:nth-child(3) { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .carousel-item:nth-child(4) { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .carousel-item:nth-child(5) { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .carousel-item:nth-child(6) { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+
+    .carousel-item-discount {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      align-self: flex-start;
+    }
+
+    .carousel-item-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .carousel-item-subtitle {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    /* プロモーションバナー */
+    .promo-banner {
+      display: flex;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .promo-content {
+      flex: 1;
+      padding: 40px;
+      color: #fff;
+    }
+
+    .promo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #ffc107;
+      color: #333;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .promo-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .promo-text {
+      font-size: 15px;
+      opacity: 0.9;
+      margin-bottom: 24px;
+      max-width: 400px;
+    }
+
+    .promo-features {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .promo-feature {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .promo-feature .material-icons {
+      font-size: 20px;
+      color: #4ade80;
+    }
+
+    .promo-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #ffc107, #ffdb4d);
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .promo-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .promo-image {
+      width: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .promo-image .material-icons {
+      font-size: 150px;
+      color: rgba(255,255,255,0.3);
+    }
+
+    /* CTAバナー */
+    .cta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .cta-banner {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 24px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .cta-banner:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    .cta-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .cta-icon .material-icons {
+      font-size: 28px;
+      color: #fff;
+    }
+
+    .cta-banner:nth-child(1) .cta-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .cta-banner:nth-child(2) .cta-icon { background: linear-gradient(135deg, #f093fb, #f5576c); }
+    .cta-banner:nth-child(3) .cta-icon { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+    .cta-banner:nth-child(4) .cta-icon { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+    .cta-content {
+      flex: 1;
+    }
+
+    .cta-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .cta-text {
+      font-size: 13px;
+      color: #6c757d;
+    }
+
+    .cta-arrow {
+      color: #17a2b8;
+    }
+
+    @media (max-width: 992px) {
+      .banner-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .promo-banner {
+        flex-direction: column;
+      }
+
+      .promo-image {
+        width: 100%;
+        height: 150px;
+      }
+
+      .cta-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .banner-main {
+        height: 250px;
+      }
+
+      .banner-title {
+        font-size: 24px;
+      }
+
+      .banner-image {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <nav class="breadcrumb">
+            <a href="sample-3-dashboard.html">ホーム</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>ギャラリー</span>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>バナースライド</span>
+          </nav>
+        </div>
+        <div class="header-right">
+          <button class="header-btn">
+            <span class="material-icons">notifications_none</span>
+          </button>
+          <div class="header-user">
+            <div class="header-user-avatar">
+              <span class="material-icons" style="font-size: 16px;">person</span>
+            </div>
+            <span class="header-user-name">山田 太郎</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-header">
+          <h1 class="page-title"><span class="page-num-badge">9-3</span>バナースライド
+            <button class="prompt-btn" data-prompt-id="9-3" data-prompt="バナースライド・プロモーションを作成してください。
+
+【要件】
+- メインバナースライダー
+- 小バナーグリッド（3列）
+- 横スクロールカルーセル
+- プロモーションバナー
+- CTAバナーグリッド
+
+【デザイン】
+- グラデーション背景の各種バナー
+- ラベル・タイトル・説明・CTAボタン
+- 自動スライドとドットナビ
+- ホバーエフェクト
+- 複数バナーパターンの展示" onclick="openPromptModal('9-3')">
+              <span class="material-icons">auto_awesome</span>
+              プロンプト
+            </button>
+            <button class="source-btn" data-source-id="9-3" onclick="openSourceModal('9-3')">
+              <span class="material-icons">code</span>
+              ソース
+            </button>
+          </h1>
+          <p class="page-subtitle">プロモーション用バナーコンポーネント</p>
+        </div>
+
+        <!-- メインバナー -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-3-1</span>
+              <span class="material-icons">view_carousel</span>
+              メインバナースライダー
+              <button class="prompt-btn" data-prompt-id="9-3-1" data-prompt="メインバナースライダーを作成してください。
+
+【HTML構造】
+- .banner-main: position: relative、height: 300px、border-radius: 16px、overflow: hidden、margin-bottom: 24px
+
+【スライド】
+- .banner-slides: display: flex、height: 100%、transition: transform 0.5s ease
+- .banner-slide: min-width: 100%、height: 100%、display: flex、align-items: center、padding: 40px、グラデーション背景
+
+【コンテンツ】
+- .banner-content: flex: 1、color: #fff、z-index: 1
+- .banner-label: display: inline-block、padding: 4px 12px、background: rgba(255,255,255,0.2)、border-radius: 4px、font-size: 12px、font-weight: 600
+- .banner-title: font-size: 32px、font-weight: 700、margin-bottom: 12px
+- .banner-description: font-size: 16px、opacity: 0.9、margin-bottom: 20px、max-width: 400px
+- .banner-btn: display: inline-flex、padding: 12px 24px、background: #fff、color: #333、border-radius: 8px、hover: transform: scale(1.05)
+
+【装飾画像】
+- .banner-image: position: absolute、right: 40px、bottom: 0、height: 280px
+- .banner-image .material-icons: font-size: 200px、color: rgba(255,255,255,0.2)
+
+【ナビゲーション】
+- .banner-nav: position: absolute、bottom: 20px、left: 50%、transform: translateX(-50%)、display: flex、gap: 8px
+- .banner-dot: width: 8px、height: 8px、border-radius: 50%、background: rgba(255,255,255,0.5)
+- .banner-dot.active: background: #fff、width: 24px、border-radius: 4px
+
+【グラデーション】
+- linear-gradient(135deg, #667eea 0%, #764ba2 100%)
+- linear-gradient(135deg, #f093fb 0%, #f5576c 100%)
+- linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" onclick="openPromptModal('9-3-1')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-3-1" onclick="openSourceModal('9-3-1')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body" style="padding: 0;">
+        <div class="banner-main" id="bannerMain">
+          <div class="banner-slides" id="bannerSlides">
+            <div class="banner-slide">
+              <div class="banner-content">
+                <span class="banner-label">SALE</span>
+                <h2 class="banner-title">最大50% OFF</h2>
+                <p class="banner-description">期間限定セール開催中！人気商品がお得な価格で手に入るチャンス。</p>
+                <button class="banner-btn">
+                  今すぐ購入
+                  <span class="material-icons">arrow_forward</span>
+                </button>
+              </div>
+              <div class="banner-image">
+                <span class="material-icons">shopping_bag</span>
+              </div>
+            </div>
+            <div class="banner-slide">
+              <div class="banner-content">
+                <span class="banner-label">NEW</span>
+                <h2 class="banner-title">新商品入荷</h2>
+                <p class="banner-description">最新のトレンドアイテムが続々入荷中。今すぐチェック！</p>
+                <button class="banner-btn">
+                  詳しく見る
+                  <span class="material-icons">arrow_forward</span>
+                </button>
+              </div>
+              <div class="banner-image">
+                <span class="material-icons">new_releases</span>
+              </div>
+            </div>
+            <div class="banner-slide">
+              <div class="banner-content">
+                <span class="banner-label">MEMBER</span>
+                <h2 class="banner-title">会員限定特典</h2>
+                <p class="banner-description">今なら新規会員登録で500ポイントプレゼント！</p>
+                <button class="banner-btn">
+                  会員登録
+                  <span class="material-icons">arrow_forward</span>
+                </button>
+              </div>
+              <div class="banner-image">
+                <span class="material-icons">card_membership</span>
+              </div>
+            </div>
+          </div>
+          <div class="banner-nav">
+            <button class="banner-dot active" onclick="goToBanner(0)"></button>
+            <button class="banner-dot" onclick="goToBanner(1)"></button>
+            <button class="banner-dot" onclick="goToBanner(2)"></button>
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <!-- 小バナーグリッド -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-3-2</span>
+              <span class="material-icons">dashboard</span>
+              フィーチャーバナーグリッド
+              <button class="prompt-btn" data-prompt-id="9-3-2" data-prompt="フィーチャーバナーグリッドを作成してください。
+
+【HTML構造】
+- .banner-grid: display: grid、grid-template-columns: repeat(3, 1fr)、gap: 16px、margin-bottom: 24px
+
+【小バナー】
+- .banner-small: height: 180px、border-radius: 12px、padding: 20px、display: flex、flex-direction: column、justify-content: space-between、color: #fff、position: relative、overflow: hidden、cursor: pointer、transition: transform 0.2s
+- .banner-small:hover: transform: translateY(-4px)
+
+【背景アイコン】
+- .banner-small-icon: position: absolute、right: -20px、bottom: -20px、font-size: 120px、opacity: 0.2
+
+【テキスト】
+- .banner-small-label: font-size: 11px、font-weight: 600、text-transform: uppercase、opacity: 0.8
+- .banner-small-title: font-size: 20px、font-weight: 700、margin-bottom: 8px
+- .banner-small-text: font-size: 13px、opacity: 0.9
+
+【グラデーション】
+- linear-gradient(135deg, #fa709a 0%, #fee140 100%)（ピンク-黄）
+- linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)（緑-シアン）
+- linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)（ピンク-ピーチ）
+
+【用途例】
+- 送料無料（local_shipping）
+- 24時間サポート（support_agent）
+- 簡単返品（replay）" onclick="openPromptModal('9-3-2')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-3-2" onclick="openSourceModal('9-3-2')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+        <div class="banner-grid">
+          <div class="banner-small">
+            <span class="material-icons banner-small-icon">local_shipping</span>
+            <span class="banner-small-label">Free Shipping</span>
+            <div>
+              <div class="banner-small-title">送料無料</div>
+              <div class="banner-small-text">5,000円以上のご注文で</div>
+            </div>
+          </div>
+          <div class="banner-small">
+            <span class="material-icons banner-small-icon">support_agent</span>
+            <span class="banner-small-label">24/7 Support</span>
+            <div>
+              <div class="banner-small-title">24時間サポート</div>
+              <div class="banner-small-text">いつでもお問い合わせ可能</div>
+            </div>
+          </div>
+          <div class="banner-small">
+            <span class="material-icons banner-small-icon">replay</span>
+            <span class="banner-small-label">Easy Return</span>
+            <div>
+              <div class="banner-small-title">簡単返品</div>
+              <div class="banner-small-text">30日間返品保証</div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <!-- カルーセルバナー -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-3-3</span>
+              <span class="material-icons">view_week</span>
+              横スクロールカルーセル
+              <button class="prompt-btn" data-prompt-id="9-3-3" data-prompt="横スクロールカルーセルを作成してください。
+
+【HTML構造】
+- .carousel-section: margin-bottom: 24px
+
+【ヘッダー】
+- .carousel-header: display: flex、justify-content: space-between、align-items: center、margin-bottom: 16px
+- .carousel-title: font-size: 18px、font-weight: 600、color: #333
+- .carousel-nav: display: flex、gap: 8px
+
+【ナビボタン】
+- .carousel-btn: width: 36px、height: 36px、border: 1px solid #dee2e6、background: #fff、border-radius: 50%、cursor: pointer
+- .carousel-btn:hover: background: #17a2b8、border-color: #17a2b8、color: #fff
+
+【カルーセルトラック】
+- .carousel-track: display: flex、gap: 16px、overflow-x: auto、scroll-behavior: smooth、padding-bottom: 8px
+- カスタムスクロールバー: height: 4px、thumb: #dee2e6、border-radius: 2px
+
+【カルーセルアイテム】
+- .carousel-item: min-width: 280px、height: 160px、border-radius: 12px、padding: 20px、color: #fff、display: flex、flex-direction: column、justify-content: space-between、flex-shrink: 0、cursor: pointer
+- .carousel-item:hover: transform: scale(1.02)
+- .carousel-item-discount: display: inline-block、padding: 4px 10px、background: rgba(255,255,255,0.25)、border-radius: 4px、font-size: 12px、font-weight: 700、align-self: flex-start
+- .carousel-item-title: font-size: 18px、font-weight: 600
+- .carousel-item-subtitle: font-size: 13px、opacity: 0.9
+
+【JavaScript】
+scrollCarousel(direction)でスクロール操作（scrollBy: 300px）" onclick="openPromptModal('9-3-3')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-3-3" onclick="openSourceModal('9-3-3')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+        <div class="carousel-section">
+          <div class="carousel-header">
+            <h3 class="carousel-title">本日のおすすめ</h3>
+            <div class="carousel-nav">
+              <button class="carousel-btn" onclick="scrollCarousel(-1)">
+                <span class="material-icons">chevron_left</span>
+              </button>
+              <button class="carousel-btn" onclick="scrollCarousel(1)">
+                <span class="material-icons">chevron_right</span>
+              </button>
+            </div>
+          </div>
+          <div class="carousel-track" id="carouselTrack">
+            <div class="carousel-item">
+              <span class="carousel-item-discount">30% OFF</span>
+              <div>
+                <div class="carousel-item-title">スプリングセール</div>
+                <div class="carousel-item-subtitle">春物アイテム特集</div>
+              </div>
+            </div>
+            <div class="carousel-item">
+              <span class="carousel-item-discount">20% OFF</span>
+              <div>
+                <div class="carousel-item-title">電子機器フェア</div>
+                <div class="carousel-item-subtitle">最新ガジェット</div>
+              </div>
+            </div>
+            <div class="carousel-item">
+              <span class="carousel-item-discount">40% OFF</span>
+              <div>
+                <div class="carousel-item-title">ファッション特集</div>
+                <div class="carousel-item-subtitle">人気ブランド集結</div>
+              </div>
+            </div>
+            <div class="carousel-item">
+              <span class="carousel-item-discount">25% OFF</span>
+              <div>
+                <div class="carousel-item-title">インテリアセール</div>
+                <div class="carousel-item-subtitle">お部屋を模様替え</div>
+              </div>
+            </div>
+            <div class="carousel-item">
+              <span class="carousel-item-discount">15% OFF</span>
+              <div>
+                <div class="carousel-item-title">健康グッズ特集</div>
+                <div class="carousel-item-subtitle">ウェルネスアイテム</div>
+              </div>
+            </div>
+            <div class="carousel-item">
+              <span class="carousel-item-discount">50% OFF</span>
+              <div>
+                <div class="carousel-item-title">クリアランスセール</div>
+                <div class="carousel-item-subtitle">在庫限り特価</div>
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <!-- プロモーションバナー -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-3-4</span>
+              <span class="material-icons">campaign</span>
+              プロモーションバナー
+              <button class="prompt-btn" data-prompt-id="9-3-4" data-prompt="プロモーションバナーを作成してください。
+
+【HTML構造】
+- .promo-banner: display: flex、border-radius: 16px、overflow: hidden、margin-bottom: 24px
+- background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)（ダークブルー）
+
+【コンテンツエリア】
+- .promo-content: flex: 1、padding: 40px、color: #fff
+- .promo-badge: display: inline-flex、align-items: center、gap: 6px、padding: 6px 12px、background: #ffc107、color: #333、border-radius: 4px、font-size: 12px、font-weight: 700、margin-bottom: 16px
+- .promo-title: font-size: 28px、font-weight: 700、margin-bottom: 12px
+- .promo-text: font-size: 15px、opacity: 0.9、margin-bottom: 24px、max-width: 400px
+
+【フィーチャーリスト】
+- .promo-features: display: flex、gap: 24px、margin-bottom: 24px
+- .promo-feature: display: flex、align-items: center、gap: 8px、font-size: 14px
+- .promo-feature .material-icons: font-size: 20px、color: #4ade80（グリーン）
+- check_circleアイコンで機能を列挙
+
+【CTAボタン】
+- .promo-btn: display: inline-flex、align-items: center、gap: 8px、padding: 14px 28px
+- background: linear-gradient(135deg, #ffc107, #ffdb4d)、color: #333、border-radius: 8px
+- hover: transform: scale(1.05)
+
+【画像エリア】
+- .promo-image: width: 300px、display: flex、align-items: center、justify-content: center、background: rgba(255,255,255,0.1)
+- .promo-image .material-icons: font-size: 150px、color: rgba(255,255,255,0.3)" onclick="openPromptModal('9-3-4')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-3-4" onclick="openSourceModal('9-3-4')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body" style="padding: 0;">
+        <div class="promo-banner">
+          <div class="promo-content">
+            <div class="promo-badge">
+              <span class="material-icons" style="font-size: 16px;">star</span>
+              Premium Plan
+            </div>
+            <h2 class="promo-title">プレミアムプランに登録</h2>
+            <p class="promo-text">すべての機能にアクセス可能。今なら初月50%オフでお試しいただけます。</p>
+            <div class="promo-features">
+              <div class="promo-feature">
+                <span class="material-icons">check_circle</span>
+                無制限ストレージ
+              </div>
+              <div class="promo-feature">
+                <span class="material-icons">check_circle</span>
+                優先サポート
+              </div>
+              <div class="promo-feature">
+                <span class="material-icons">check_circle</span>
+                高度な分析
+              </div>
+            </div>
+            <button class="promo-btn">
+              今すぐ登録
+              <span class="material-icons">arrow_forward</span>
+            </button>
+          </div>
+          <div class="promo-image">
+            <span class="material-icons">workspace_premium</span>
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <!-- CTAバナー -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-3-5</span>
+              <span class="material-icons">touch_app</span>
+              CTAバナーグリッド
+              <button class="prompt-btn" data-prompt-id="9-3-5" data-prompt="CTAバナーグリッドを作成してください。
+
+【HTML構造】
+- .cta-grid: display: grid、grid-template-columns: repeat(2, 1fr)、gap: 16px
+
+【CTAバナー】
+- .cta-banner: display: flex、align-items: center、gap: 20px、padding: 24px、background: #fff、border-radius: 12px、box-shadow: 0 2px 8px rgba(0,0,0,0.06)、cursor: pointer、transition: all 0.2s
+- .cta-banner:hover: transform: translateY(-2px)、box-shadow: 0 4px 16px rgba(0,0,0,0.1)
+
+【アイコン】
+- .cta-icon: width: 60px、height: 60px、border-radius: 12px、display: flex、align-items: center、justify-content: center、flex-shrink: 0
+- .cta-icon .material-icons: font-size: 28px、color: #fff
+- 各バナーで異なるグラデーション背景:
+  - linear-gradient(135deg, #667eea, #764ba2)
+  - linear-gradient(135deg, #f093fb, #f5576c)
+  - linear-gradient(135deg, #4facfe, #00f2fe)
+  - linear-gradient(135deg, #43e97b, #38f9d7)
+
+【コンテンツ】
+- .cta-content: flex: 1
+- .cta-title: font-size: 16px、font-weight: 600、color: #333、margin-bottom: 4px
+- .cta-text: font-size: 13px、color: #6c757d
+
+【矢印】
+- .cta-arrow: color: #17a2b8
+- chevron_rightアイコン
+
+【用途例】
+- カスタマーサポート（headphones）
+- ギフトカード（redeem）
+- クーポン（local_offer）
+- 店舗を探す（store）" onclick="openPromptModal('9-3-5')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-3-5" onclick="openSourceModal('9-3-5')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+        <div class="cta-grid">
+          <div class="cta-banner">
+            <div class="cta-icon">
+              <span class="material-icons">headphones</span>
+            </div>
+            <div class="cta-content">
+              <div class="cta-title">カスタマーサポート</div>
+              <div class="cta-text">24時間年中無休でサポート</div>
+            </div>
+            <span class="material-icons cta-arrow">chevron_right</span>
+          </div>
+          <div class="cta-banner">
+            <div class="cta-icon">
+              <span class="material-icons">redeem</span>
+            </div>
+            <div class="cta-content">
+              <div class="cta-title">ギフトカード</div>
+              <div class="cta-text">大切な人へのプレゼントに</div>
+            </div>
+            <span class="material-icons cta-arrow">chevron_right</span>
+          </div>
+          <div class="cta-banner">
+            <div class="cta-icon">
+              <span class="material-icons">local_offer</span>
+            </div>
+            <div class="cta-content">
+              <div class="cta-title">クーポン</div>
+              <div class="cta-text">お得なクーポンをゲット</div>
+            </div>
+            <span class="material-icons cta-arrow">chevron_right</span>
+          </div>
+          <div class="cta-banner">
+            <div class="cta-icon">
+              <span class="material-icons">store</span>
+            </div>
+            <div class="cta-content">
+              <div class="cta-title">店舗を探す</div>
+              <div class="cta-text">お近くの店舗を検索</div>
+            </div>
+            <span class="material-icons cta-arrow">chevron_right</span>
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <script src="common.js"></script>
+  <script>
+    let currentBanner = 0;
+
+    function goToBanner(index) {
+      currentBanner = index;
+      const slides = document.getElementById('bannerSlides');
+      const dots = document.querySelectorAll('.banner-dot');
+
+      slides.style.transform = `translateX(-${currentBanner * 100}%)`;
+      dots.forEach((dot, i) => dot.classList.toggle('active', i === currentBanner));
+    }
+
+    function scrollCarousel(direction) {
+      const track = document.getElementById('carouselTrack');
+      track.scrollBy({ left: direction * 300, behavior: 'smooth' });
+    }
+
+    // 自動スライド
+    setInterval(() => {
+      currentBanner = (currentBanner + 1) % 3;
+      goToBanner(currentBanner);
+    }, 5000);
+  </script>
+</body>
+</html>

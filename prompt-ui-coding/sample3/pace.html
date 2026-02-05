@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pace (ローディング) - AdminPanel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .pace-demo {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .pace-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .pace-card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .pace-card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
+
+    .pace-card-body {
+      padding: 24px 20px;
+    }
+
+    .loader-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Top Bar Loader */
+    .pace-top {
+      position: relative;
+      width: 100%;
+      height: 4px;
+      background: #e9ecef;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .pace-top::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 30%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      animation: topLoader 1.5s ease-in-out infinite;
+    }
+
+    @keyframes topLoader {
+      0% { left: -30%; }
+      100% { left: 100%; }
+    }
+
+    /* Spinner */
+    .pace-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e9ecef;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Dots */
+    .pace-dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .pace-dots span {
+      width: 12px;
+      height: 12px;
+      background: #667eea;
+      border-radius: 50%;
+      animation: dots 1.4s ease-in-out infinite;
+    }
+
+    .pace-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .pace-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes dots {
+      0%, 100% { transform: scale(0.3); opacity: 0.3; }
+      50% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Pulse */
+    .pace-pulse {
+      width: 50px;
+      height: 50px;
+      background: #667eea;
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.5; }
+      100% { transform: scale(0.8); opacity: 1; }
+    }
+
+    /* Progress Bar */
+    .pace-progress {
+      width: 100%;
+      height: 8px;
+      background: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .pace-progress-bar {
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      animation: progress 2s ease-in-out infinite;
+    }
+
+    @keyframes progress {
+      0% { width: 0%; }
+      50% { width: 70%; }
+      100% { width: 100%; }
+    }
+
+    /* Bars */
+    .pace-bars {
+      display: flex;
+      gap: 4px;
+      height: 40px;
+      align-items: flex-end;
+    }
+
+    .pace-bars span {
+      width: 6px;
+      background: #667eea;
+      border-radius: 3px;
+      animation: bars 1s ease-in-out infinite;
+    }
+
+    .pace-bars span:nth-child(1) { animation-delay: 0s; }
+    .pace-bars span:nth-child(2) { animation-delay: 0.1s; }
+    .pace-bars span:nth-child(3) { animation-delay: 0.2s; }
+    .pace-bars span:nth-child(4) { animation-delay: 0.3s; }
+    .pace-bars span:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes bars {
+      0%, 100% { height: 10px; }
+      50% { height: 40px; }
+    }
+
+    .loader-label {
+      font-size: 0.875rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <nav class="breadcrumb">
+            <a href="sample-3-dashboard.html">ホーム</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>Pace (ローディング)</span>
+          </nav>
+        </div>
+        <div class="header-right">
+          <button class="header-btn">
+            <span class="material-icons">notifications_none</span>
+          </button>
+          <div class="header-user">
+            <div class="header-user-avatar">
+              <span class="material-icons" style="font-size: 16px;">person</span>
+            </div>
+            <span class="header-user-name">山田 太郎</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-header">
+          <h1 class="page-title">Pace (ローディング)</h1>
+          <p class="page-subtitle">様々なローディングアニメーション</p>
+        </div>
+
+        <div class="pace-demo">
+          <div class="pace-card">
+            <div class="pace-card-header">
+              <h3 class="pace-card-title">
+                <span class="section-num-badge">10-5-1</span>トップバー
+                <button class="prompt-btn" data-prompt-id="10-5-1" data-prompt="トップバー型ローディングアニメーションを作成してください。
+
+【要件】
+- ページ上部に表示される水平プログレスバー
+- 左から右へ無限ループアニメーション
+- グラデーション背景（#667eea→#764ba2）
+
+【構造】
+- .pace-top: コンテナ（100%幅、4px高さ、#e9ecef背景、角丸2px）
+- ::after疑似要素でアニメーションバー（30%幅）
+
+【アニメーション】
+- @keyframes topLoader
+- 0%: left: -30%
+- 100%: left: 100%
+- duration: 1.5s, ease-in-out, infinite" onclick="openPromptModal('10-5-1')">
+                  <span class="material-icons">auto_awesome</span>
+                  プロンプト
+                </button>
+                <button class="source-btn" data-source-id="10-5-1" onclick="openSourceModal('10-5-1')">
+                  <span class="material-icons">code</span>
+                  ソース
+                </button>
+              </h3>
+            </div>
+            <div class="pace-card-body">
+              <div class="loader-container">
+                <div class="pace-top"></div>
+                <span class="loader-label">ページ読み込み中...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pace-card">
+            <div class="pace-card-header">
+              <h3 class="pace-card-title">
+                <span class="section-num-badge">10-5-2</span>スピナー
+                <button class="prompt-btn" data-prompt-id="10-5-2" data-prompt="スピナー型ローディングアニメーションを作成してください。
+
+【要件】
+- 円形のスピナー（回転アニメーション）
+- 上部のみ色付きで回転する効果
+
+【構造】
+- .pace-spinner: 50x50px、円形
+- border: 4px solid #e9ecef（全体）
+- border-top-color: #667eea（上部のみ色付き）
+
+【アニメーション】
+- @keyframes spin
+- to: transform: rotate(360deg)
+- duration: 1s, linear, infinite" onclick="openPromptModal('10-5-2')">
+                  <span class="material-icons">auto_awesome</span>
+                  プロンプト
+                </button>
+                <button class="source-btn" data-source-id="10-5-2" onclick="openSourceModal('10-5-2')">
+                  <span class="material-icons">code</span>
+                  ソース
+                </button>
+              </h3>
+            </div>
+            <div class="pace-card-body">
+              <div class="loader-container">
+                <div class="pace-spinner"></div>
+                <span class="loader-label">読み込み中...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pace-card">
+            <div class="pace-card-header">
+              <h3 class="pace-card-title">
+                <span class="section-num-badge">10-5-3</span>ドット
+                <button class="prompt-btn" data-prompt-id="10-5-3" data-prompt="ドット型ローディングアニメーションを作成してください。
+
+【要件】
+- 3つのドットが順番に拡大縮小
+- 波打つような視覚効果
+
+【構造】
+- .pace-dots: flexコンテナ（gap: 8px）
+- span: 12x12px、円形、#667eea背景
+
+【アニメーション】
+- @keyframes dots
+- 0%, 100%: transform: scale(0.3), opacity: 0.3
+- 50%: transform: scale(1), opacity: 1
+- duration: 1.4s, ease-in-out, infinite
+- 各ドットにanimation-delay: 0s, 0.2s, 0.4s" onclick="openPromptModal('10-5-3')">
+                  <span class="material-icons">auto_awesome</span>
+                  プロンプト
+                </button>
+                <button class="source-btn" data-source-id="10-5-3" onclick="openSourceModal('10-5-3')">
+                  <span class="material-icons">code</span>
+                  ソース
+                </button>
+              </h3>
+            </div>
+            <div class="pace-card-body">
+              <div class="loader-container">
+                <div class="pace-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span class="loader-label">処理中...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pace-card">
+            <div class="pace-card-header">
+              <h3 class="pace-card-title">
+                <span class="section-num-badge">10-5-4</span>パルス
+                <button class="prompt-btn" data-prompt-id="10-5-4" data-prompt="パルス型ローディングアニメーションを作成してください。
+
+【要件】
+- 円形が拡大縮小しながら透明度も変化
+- 心臓の鼓動のような視覚効果
+
+【構造】
+- .pace-pulse: 50x50px、円形、#667eea背景
+
+【アニメーション】
+- @keyframes pulse
+- 0%: transform: scale(0.8), opacity: 1
+- 50%: transform: scale(1.2), opacity: 0.5
+- 100%: transform: scale(0.8), opacity: 1
+- duration: 1.5s, ease-in-out, infinite" onclick="openPromptModal('10-5-4')">
+                  <span class="material-icons">auto_awesome</span>
+                  プロンプト
+                </button>
+                <button class="source-btn" data-source-id="10-5-4" onclick="openSourceModal('10-5-4')">
+                  <span class="material-icons">code</span>
+                  ソース
+                </button>
+              </h3>
+            </div>
+            <div class="pace-card-body">
+              <div class="loader-container">
+                <div class="pace-pulse"></div>
+                <span class="loader-label">同期中...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pace-card">
+            <div class="pace-card-header">
+              <h3 class="pace-card-title">
+                <span class="section-num-badge">10-5-5</span>プログレスバー
+                <button class="prompt-btn" data-prompt-id="10-5-5" data-prompt="プログレスバー型ローディングアニメーションを作成してください。
+
+【要件】
+- 水平バーが0%から100%まで伸びるアニメーション
+- グラデーション背景
+
+【構造】
+- .pace-progress: 100%幅、8px高さ、#e9ecef背景、角丸4px
+- .pace-progress-bar: グラデーション背景（#667eea→#764ba2）
+
+【アニメーション】
+- @keyframes progress
+- 0%: width: 0%
+- 50%: width: 70%
+- 100%: width: 100%
+- duration: 2s, ease-in-out, infinite" onclick="openPromptModal('10-5-5')">
+                  <span class="material-icons">auto_awesome</span>
+                  プロンプト
+                </button>
+                <button class="source-btn" data-source-id="10-5-5" onclick="openSourceModal('10-5-5')">
+                  <span class="material-icons">code</span>
+                  ソース
+                </button>
+              </h3>
+            </div>
+            <div class="pace-card-body">
+              <div class="loader-container">
+                <div class="pace-progress">
+                  <div class="pace-progress-bar"></div>
+                </div>
+                <span class="loader-label">ダウンロード中...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pace-card">
+            <div class="pace-card-header">
+              <h3 class="pace-card-title">
+                <span class="section-num-badge">10-5-6</span>バー
+                <button class="prompt-btn" data-prompt-id="10-5-6" data-prompt="バー型ローディングアニメーション（イコライザー風）を作成してください。
+
+【要件】
+- 5本の縦バーが順番に高さ変化
+- 音楽のイコライザーのような視覚効果
+
+【構造】
+- .pace-bars: flexコンテナ（gap: 4px、height: 40px、align-items: flex-end）
+- span: 6px幅、#667eea背景、角丸3px
+
+【アニメーション】
+- @keyframes bars
+- 0%, 100%: height: 10px
+- 50%: height: 40px
+- duration: 1s, ease-in-out, infinite
+- 各バーにanimation-delay: 0s, 0.1s, 0.2s, 0.3s, 0.4s" onclick="openPromptModal('10-5-6')">
+                  <span class="material-icons">auto_awesome</span>
+                  プロンプト
+                </button>
+                <button class="source-btn" data-source-id="10-5-6" onclick="openSourceModal('10-5-6')">
+                  <span class="material-icons">code</span>
+                  ソース
+                </button>
+              </h3>
+            </div>
+            <div class="pace-card-body">
+              <div class="loader-container">
+                <div class="pace-bars">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span class="loader-label">分析中...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="common.js"></script>
+</body>
+</html>

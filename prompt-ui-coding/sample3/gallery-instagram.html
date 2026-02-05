@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram風ギャラリー - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    /* プロフィールヘッダー */
+    .insta-profile {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      padding: 30px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 24px;
+    }
+
+    .insta-avatar {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+      padding: 4px;
+      flex-shrink: 0;
+    }
+
+    .insta-avatar-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #fff;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .insta-avatar-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 48px;
+    }
+
+    .insta-info {
+      flex: 1;
+    }
+
+    .insta-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .insta-username {
+      font-size: 28px;
+      font-weight: 400;
+      color: #333;
+    }
+
+    .insta-verified {
+      color: #3897f0;
+      font-size: 24px;
+    }
+
+    .insta-follow-btn {
+      padding: 8px 24px;
+      background: #0095f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .insta-follow-btn:hover {
+      background: #1877f2;
+    }
+
+    .insta-message-btn {
+      padding: 8px 24px;
+      background: #efefef;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .insta-message-btn:hover {
+      background: #dbdbdb;
+    }
+
+    .insta-stats {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 16px;
+    }
+
+    .insta-stat {
+      font-size: 16px;
+      color: #333;
+    }
+
+    .insta-stat strong {
+      font-weight: 600;
+    }
+
+    .insta-bio {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    .insta-bio-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    /* タブ */
+    .insta-tabs {
+      display: flex;
+      justify-content: center;
+      border-top: 1px solid #dbdbdb;
+      background: #fff;
+      border-radius: 0 0 16px 16px;
+      margin-bottom: 24px;
+    }
+
+    .insta-tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 16px 24px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #8e8e8e;
+      cursor: pointer;
+      border-top: 1px solid transparent;
+      margin-top: -1px;
+      transition: all 0.2s;
+    }
+
+    .insta-tab:hover {
+      color: #333;
+    }
+
+    .insta-tab.active {
+      color: #333;
+      border-top-color: #333;
+    }
+
+    .insta-tab .material-icons {
+      font-size: 16px;
+    }
+
+    /* グリッドギャラリー */
+    .insta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+
+    .insta-item {
+      position: relative;
+      aspect-ratio: 1;
+      background: #f0f0f0;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .insta-item-bg {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .insta-item:nth-child(1) .insta-item-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .insta-item:nth-child(2) .insta-item-bg { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .insta-item:nth-child(3) .insta-item-bg { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .insta-item:nth-child(4) .insta-item-bg { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .insta-item:nth-child(5) .insta-item-bg { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .insta-item:nth-child(6) .insta-item-bg { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+    .insta-item:nth-child(7) .insta-item-bg { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+    .insta-item:nth-child(8) .insta-item-bg { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+    .insta-item:nth-child(9) .insta-item-bg { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); }
+    .insta-item:nth-child(10) .insta-item-bg { background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); }
+    .insta-item:nth-child(11) .insta-item-bg { background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%); }
+    .insta-item:nth-child(12) .insta-item-bg { background: linear-gradient(135deg, #fddb92 0%, #d1fdff 100%); }
+
+    .insta-item-bg .material-icons {
+      font-size: 48px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .insta-item-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .insta-item:hover .insta-item-overlay {
+      opacity: 1;
+    }
+
+    .insta-item-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .insta-item-stat .material-icons {
+      font-size: 20px;
+    }
+
+    .insta-item-type {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #fff;
+    }
+
+    .insta-item-type .material-icons {
+      font-size: 24px;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    }
+
+    /* ストーリーハイライト */
+    .insta-highlights {
+      display: flex;
+      gap: 16px;
+      padding: 20px 0;
+      overflow-x: auto;
+      margin-bottom: 20px;
+    }
+
+    .insta-highlight {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .insta-highlight-ring {
+      width: 77px;
+      height: 77px;
+      border-radius: 50%;
+      background: #dbdbdb;
+      padding: 3px;
+    }
+
+    .insta-highlight-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #fff;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .insta-highlight-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .insta-highlight-img .material-icons {
+      font-size: 32px;
+      color: #8e8e8e;
+    }
+
+    .insta-highlight-add .insta-highlight-img {
+      background: #fff;
+      border: 1px solid #dbdbdb;
+    }
+
+    .insta-highlight-add .material-icons {
+      color: #0095f6;
+    }
+
+    .insta-highlight-name {
+      font-size: 12px;
+      color: #333;
+      max-width: 75px;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .insta-profile {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+      }
+
+      .insta-avatar {
+        width: 100px;
+        height: 100px;
+      }
+
+      .insta-header {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .insta-stats {
+        justify-content: center;
+      }
+
+      .insta-grid {
+        gap: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <span class="material-icons">menu</span>
+          </button>
+          <nav class="breadcrumb">
+            <a href="sample-3-dashboard.html">ホーム</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>ギャラリー</span>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>Instagram風</span>
+          </nav>
+        </div>
+        <div class="header-right">
+          <button class="header-btn">
+            <span class="material-icons">notifications_none</span>
+          </button>
+          <div class="header-user">
+            <div class="header-user-avatar">
+              <span class="material-icons" style="font-size: 16px;">person</span>
+            </div>
+            <span class="header-user-name">山田 太郎</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-header">
+          <h1 class="page-title"><span class="page-num-badge">9-2</span>Instagram風ギャラリー
+            <button class="prompt-btn" data-prompt-id="9-2" data-prompt="Instagram風ギャラリーを作成してください。
+
+【要件】
+- プロフィールヘッダー（アバター、統計、バイオ）
+- ストーリーハイライト
+- 3カラムグリッドギャラリー
+- タブ切り替え（投稿、リール、保存済み）
+
+【デザイン】
+- グラデーションボーダーのアバター
+- 認証バッジ付きユーザー名
+- ホバーでいいね・コメント数表示
+- 複数投稿・動画アイコンバッジ
+- ハイライトの円形サムネイル" onclick="openPromptModal('9-2')">
+              <span class="material-icons">auto_awesome</span>
+              プロンプト
+            </button>
+            <button class="source-btn" data-source-id="9-2" onclick="openSourceModal('9-2')">
+              <span class="material-icons">code</span>
+              ソース
+            </button>
+          </h1>
+          <p class="page-subtitle">写真グリッドとプロフィールレイアウト</p>
+        </div>
+
+        <!-- プロフィールセクション -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-2-1</span>
+              <span class="material-icons">account_circle</span>
+              プロフィールヘッダー
+              <button class="prompt-btn" data-prompt-id="9-2-1" data-prompt="Instagram風プロフィールヘッダーを作成してください。
+
+【HTML構造】
+- .insta-profile: display: flex、align-items: center、gap: 40px、padding: 30px、background: #fff、border-radius: 16px、box-shadow: 0 2px 8px rgba(0,0,0,0.06)
+
+【アバター】
+- .insta-avatar: width: 150px、height: 150px、border-radius: 50%、padding: 4px
+- background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)（Instagram風グラデーション）
+- .insta-avatar-inner: width: 100%、height: 100%、border-radius: 50%、background: #fff、padding: 4px
+- .insta-avatar-img: width: 100%、height: 100%、border-radius: 50%、グラデーション背景
+
+【ユーザー情報】
+- .insta-info: flex: 1
+- .insta-header: display: flex、align-items: center、gap: 20px、margin-bottom: 20px
+- .insta-username: font-size: 28px、font-weight: 400、color: #333
+- .insta-verified: color: #3897f0、font-size: 24px（verified icon）
+- .insta-follow-btn: padding: 8px 24px、background: #0095f6、color: #fff、border-radius: 8px
+- .insta-message-btn: padding: 8px 24px、background: #efefef、color: #333、border-radius: 8px
+
+【統計】
+- .insta-stats: display: flex、gap: 40px、margin-bottom: 16px
+- .insta-stat: font-size: 16px、color: #333、数値は<strong>で囲む
+
+【バイオ】
+- .insta-bio: font-size: 14px、color: #333、line-height: 1.5
+- .insta-bio-name: font-weight: 600、margin-bottom: 4px" onclick="openPromptModal('9-2-1')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-2-1" onclick="openSourceModal('9-2-1')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body" style="padding: 0;">
+        <div class="insta-profile">
+          <div class="insta-avatar">
+            <div class="insta-avatar-inner">
+              <div class="insta-avatar-img">
+                <span class="material-icons" style="font-size: 48px;">person</span>
+              </div>
+            </div>
+          </div>
+          <div class="insta-info">
+            <div class="insta-header">
+              <span class="insta-username">admin_dashboard</span>
+              <span class="material-icons insta-verified">verified</span>
+              <button class="insta-follow-btn">フォロー</button>
+              <button class="insta-message-btn">メッセージ</button>
+            </div>
+            <div class="insta-stats">
+              <span class="insta-stat"><strong>248</strong> 投稿</span>
+              <span class="insta-stat"><strong>12.5K</strong> フォロワー</span>
+              <span class="insta-stat"><strong>892</strong> フォロー中</span>
+            </div>
+            <div class="insta-bio">
+              <div class="insta-bio-name">Admin Dashboard Official</div>
+              <div>管理画面デザインのサンプル集</div>
+              <div>最新のUIトレンドを発信中</div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <!-- ストーリーハイライト -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-2-2</span>
+              <span class="material-icons">auto_stories</span>
+              ストーリーハイライト
+              <button class="prompt-btn" data-prompt-id="9-2-2" data-prompt="Instagram風ストーリーハイライトを作成してください。
+
+【HTML構造】
+- .insta-highlights: display: flex、gap: 16px、padding: 20px 0、overflow-x: auto、margin-bottom: 20px
+
+【ハイライトアイテム】
+- .insta-highlight: display: flex、flex-direction: column、align-items: center、gap: 8px、cursor: pointer
+- .insta-highlight-ring: width: 77px、height: 77px、border-radius: 50%、background: #dbdbdb、padding: 3px
+- .insta-highlight-inner: width: 100%、height: 100%、border-radius: 50%、background: #fff、padding: 2px
+- .insta-highlight-img: width: 100%、height: 100%、border-radius: 50%、background: #f0f0f0またはグラデーション
+- .insta-highlight-name: font-size: 12px、color: #333、max-width: 75px、text-align: center、text-overflow: ellipsis
+
+【新規追加ボタン】
+- .insta-highlight-add .insta-highlight-img: background: #fff、border: 1px solid #dbdbdb
+- アイコン: add（Material Icons）、color: #0095f6
+
+【グラデーション例】
+各ハイライトに異なるグラデーション背景:
+- linear-gradient(135deg, #667eea, #764ba2)
+- linear-gradient(135deg, #f093fb, #f5576c)
+- linear-gradient(135deg, #4facfe, #00f2fe)
+- linear-gradient(135deg, #43e97b, #38f9d7)" onclick="openPromptModal('9-2-2')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-2-2" onclick="openSourceModal('9-2-2')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body">
+        <div class="insta-highlights">
+          <div class="insta-highlight insta-highlight-add">
+            <div class="insta-highlight-ring">
+              <div class="insta-highlight-inner">
+                <div class="insta-highlight-img">
+                  <span class="material-icons">add</span>
+                </div>
+              </div>
+            </div>
+            <span class="insta-highlight-name">新規</span>
+          </div>
+          <div class="insta-highlight">
+            <div class="insta-highlight-ring">
+              <div class="insta-highlight-inner">
+                <div class="insta-highlight-img" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                  <span class="material-icons" style="color: #fff;">dashboard</span>
+                </div>
+              </div>
+            </div>
+            <span class="insta-highlight-name">Dashboard</span>
+          </div>
+          <div class="insta-highlight">
+            <div class="insta-highlight-ring">
+              <div class="insta-highlight-inner">
+                <div class="insta-highlight-img" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                  <span class="material-icons" style="color: #fff;">palette</span>
+                </div>
+              </div>
+            </div>
+            <span class="insta-highlight-name">Design</span>
+          </div>
+          <div class="insta-highlight">
+            <div class="insta-highlight-ring">
+              <div class="insta-highlight-inner">
+                <div class="insta-highlight-img" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                  <span class="material-icons" style="color: #fff;">code</span>
+                </div>
+              </div>
+            </div>
+            <span class="insta-highlight-name">Coding</span>
+          </div>
+          <div class="insta-highlight">
+            <div class="insta-highlight-ring">
+              <div class="insta-highlight-inner">
+                <div class="insta-highlight-img" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                  <span class="material-icons" style="color: #fff;">tips_and_updates</span>
+                </div>
+              </div>
+            </div>
+            <span class="insta-highlight-name">Tips</span>
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <!-- タブ -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-2-3</span>
+              <span class="material-icons">tab</span>
+              コンテンツタブ
+              <button class="prompt-btn" data-prompt-id="9-2-3" data-prompt="Instagram風コンテンツタブを作成してください。
+
+【HTML構造】
+- .insta-tabs: display: flex、justify-content: center、border-top: 1px solid #dbdbdb、background: #fff、border-radius: 0 0 16px 16px、margin-bottom: 24px
+
+【タブアイテム】
+- .insta-tab: display: flex、align-items: center、gap: 6px、padding: 16px 24px、font-size: 12px、font-weight: 600、text-transform: uppercase、letter-spacing: 1px、color: #8e8e8e、cursor: pointer、border-top: 1px solid transparent、margin-top: -1px、transition: all 0.2s
+- .insta-tab:hover: color: #333
+- .insta-tab.active: color: #333、border-top-color: #333
+- .insta-tab .material-icons: font-size: 16px
+
+【タブ内容】
+- 投稿（grid_on アイコン）
+- リール（video_library アイコン）
+- 保存済み（bookmark_border アイコン）
+- タグ付け（account_box アイコン）" onclick="openPromptModal('9-2-3')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-2-3" onclick="openSourceModal('9-2-3')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body" style="padding: 0;">
+        <div class="insta-tabs">
+          <div class="insta-tab active">
+            <span class="material-icons">grid_on</span>
+            投稿
+          </div>
+          <div class="insta-tab">
+            <span class="material-icons">video_library</span>
+            リール
+          </div>
+          <div class="insta-tab">
+            <span class="material-icons">bookmark_border</span>
+            保存済み
+          </div>
+          <div class="insta-tab">
+            <span class="material-icons">account_box</span>
+            タグ付け
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <!-- グリッド -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <span class="section-num-badge">9-2-4</span>
+              <span class="material-icons">grid_on</span>
+              フォトグリッド
+              <button class="prompt-btn" data-prompt-id="9-2-4" data-prompt="Instagram風フォトグリッドを作成してください。
+
+【HTML構造】
+- .insta-grid: display: grid、grid-template-columns: repeat(3, 1fr)、gap: 4px
+
+【グリッドアイテム】
+- .insta-item: position: relative、aspect-ratio: 1、background: #f0f0f0、cursor: pointer、overflow: hidden
+- .insta-item-bg: width: 100%、height: 100%、display: flex、align-items: center、justify-content: center、グラデーション背景
+- .insta-item-bg .material-icons: font-size: 48px、color: rgba(255,255,255,0.7)
+
+【オーバーレイ】
+- .insta-item-overlay: position: absolute、top/left/right/bottom: 0、background: rgba(0,0,0,0.3)、display: flex、align-items: center、justify-content: center、gap: 24px、opacity: 0、transition: opacity 0.2s
+- .insta-item:hover .insta-item-overlay: opacity: 1
+
+【統計表示】
+- .insta-item-stat: display: flex、align-items: center、gap: 6px、color: #fff、font-size: 16px、font-weight: 600
+- .insta-item-stat .material-icons: font-size: 20px
+- favorite（いいね数）、chat_bubble（コメント数）、play_arrow（再生回数）
+
+【タイプバッジ】
+- .insta-item-type: position: absolute、top: 10px、right: 10px、color: #fff
+- .insta-item-type .material-icons: font-size: 24px、filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3))
+- collections（複数投稿）、play_circle（動画）" onclick="openPromptModal('9-2-4')">
+                <span class="material-icons">auto_awesome</span>
+                プロンプト
+              </button>
+              <button class="source-btn" data-source-id="9-2-4" onclick="openSourceModal('9-2-4')">
+                <span class="material-icons">code</span>
+                ソース
+              </button>
+            </h3>
+          </div>
+          <div class="card-body" style="padding: 0;">
+        <div class="insta-grid">
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">dashboard</span>
+            </div>
+            <span class="insta-item-type"><span class="material-icons">collections</span></span>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">favorite</span> 1,234</span>
+              <span class="insta-item-stat"><span class="material-icons">chat_bubble</span> 56</span>
+            </div>
+          </div>
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">bar_chart</span>
+            </div>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">favorite</span> 892</span>
+              <span class="insta-item-stat"><span class="material-icons">chat_bubble</span> 23</span>
+            </div>
+          </div>
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">smart_toy</span>
+            </div>
+            <span class="insta-item-type"><span class="material-icons">play_circle</span></span>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">play_arrow</span> 15.2K</span>
+            </div>
+          </div>
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">palette</span>
+            </div>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">favorite</span> 2,105</span>
+              <span class="insta-item-stat"><span class="material-icons">chat_bubble</span> 89</span>
+            </div>
+          </div>
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">code</span>
+            </div>
+            <span class="insta-item-type"><span class="material-icons">collections</span></span>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">favorite</span> 756</span>
+              <span class="insta-item-stat"><span class="material-icons">chat_bubble</span> 31</span>
+            </div>
+          </div>
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">rocket_launch</span>
+            </div>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">favorite</span> 3,421</span>
+              <span class="insta-item-stat"><span class="material-icons">chat_bubble</span> 142</span>
+            </div>
+          </div>
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">auto_awesome</span>
+            </div>
+            <span class="insta-item-type"><span class="material-icons">play_circle</span></span>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">play_arrow</span> 8.7K</span>
+            </div>
+          </div>
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">design_services</span>
+            </div>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">favorite</span> 1,089</span>
+              <span class="insta-item-stat"><span class="material-icons">chat_bubble</span> 45</span>
+            </div>
+          </div>
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">widgets</span>
+            </div>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">favorite</span> 567</span>
+              <span class="insta-item-stat"><span class="material-icons">chat_bubble</span> 18</span>
+            </div>
+          </div>
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">analytics</span>
+            </div>
+            <span class="insta-item-type"><span class="material-icons">collections</span></span>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">favorite</span> 2,890</span>
+              <span class="insta-item-stat"><span class="material-icons">chat_bubble</span> 76</span>
+            </div>
+          </div>
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">speed</span>
+            </div>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">favorite</span> 1,567</span>
+              <span class="insta-item-stat"><span class="material-icons">chat_bubble</span> 52</span>
+            </div>
+          </div>
+          <div class="insta-item">
+            <div class="insta-item-bg">
+              <span class="material-icons">security</span>
+            </div>
+            <span class="insta-item-type"><span class="material-icons">play_circle</span></span>
+            <div class="insta-item-overlay">
+              <span class="insta-item-stat"><span class="material-icons">play_arrow</span> 21.3K</span>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <script src="common.js"></script>
+</body>
+</html>

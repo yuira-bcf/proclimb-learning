@@ -22,12 +22,35 @@
     .level-intermediate { background: #fef9c3; color: #854d0e; }
     .level-advanced { background: #ffedd5; color: #9a3412; }
     .level-expert { background: #fee2e2; color: #991b1b; }
-    .prompt-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
-    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-    .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-card { background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; color: white; }
+    .prompt-box { background: rgba(0,0,0,0.3); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
     .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
-    .copy-btn { background: white; color: #667eea; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn { background: white; color: #4285F4; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
     .copy-btn:hover { background: #f0f0f0; }
+    .diagram-container { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .diagram-container h4 { margin: 0 0 16px 0; color: white; display: flex; align-items: center; gap: 8px; }
+    .diagram-box { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; }
+    .code-explanation { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 20px; margin: 16px 0; }
+    .code-explanation h4 { margin: 0 0 12px 0; color: #92400e; display: flex; align-items: center; gap: 8px; }
+    .code-explanation ul { margin: 0; padding-left: 20px; color: #78350f; }
+    .code-explanation li { margin-bottom: 8px; line-height: 1.6; }
+    /* コードブロック（spring/style.css準拠） */
+    .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .code-dot.red { background: #ff5f56; }
+    .code-dot.yellow { background: #ffbd2e; }
+    .code-dot.green { background: #27ca40; }
+    .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .code-content { padding: 16px; overflow-x: auto; }
+    .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+    .code-keyword { color: #c084fc; }
+    .code-class { color: #67e8f9; }
+    .code-string { color: #86efac; }
+    .code-comment { color: #94a3b8; }
+    .code-annotation { color: #fbbf24; }
   </style>
 </head>
 <body>
@@ -164,6 +187,129 @@
           <li><strong>propagation</strong> - トランザクションの伝播 デフォルト: REQUIRED</li>
         </ul>
       </div>
+
+      <div class="subsection">
+        <h3>サンプルソースコード</h3>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">TodoService.java</span>
+          </div>
+          <div class="code-content">
+            <pre><span class="code-annotation">@Service</span>
+<span class="code-keyword">public class</span> <span class="code-class">TodoService</span> {
+
+    <span class="code-keyword">private final</span> <span class="code-class">TodoMapper</span> todoMapper;
+    <span class="code-keyword">private final</span> <span class="code-class">HistoryMapper</span> historyMapper;
+    <span class="code-keyword">private final</span> <span class="code-class">AuditService</span> auditService;
+
+    <span class="code-comment">// 基本的なトランザクション - 更新系処理</span>
+    <span class="code-annotation">@Transactional</span>
+    <span class="code-keyword">public void</span> <span class="code-class">save</span>(<span class="code-class">Todo</span> todo) {
+        todoMapper.insert(todo);
+        historyMapper.insert(<span class="code-keyword">new</span> <span class="code-class">History</span>(todo, <span class="code-string">"CREATE"</span>));
+        <span class="code-comment">// どちらかで例外発生 → 両方ロールバック</span>
+    }
+
+    <span class="code-comment">// 読み取り専用トランザクション - 参照系処理</span>
+    <span class="code-annotation">@Transactional(readOnly = true)</span>
+    <span class="code-keyword">public</span> <span class="code-class">List</span>&lt;<span class="code-class">Todo</span>&gt; <span class="code-class">findAll</span>() {
+        <span class="code-keyword">return</span> todoMapper.findAll();
+    }
+
+    <span class="code-comment">// チェック例外もロールバック対象に含める</span>
+    <span class="code-annotation">@Transactional(rollbackFor = Exception.class)</span>
+    <span class="code-keyword">public void</span> <span class="code-class">updateWithValidation</span>(<span class="code-class">Todo</span> todo) <span class="code-keyword">throws</span> <span class="code-class">ValidationException</span> {
+        validate(todo);  <span class="code-comment">// チェック例外でもロールバック</span>
+        todoMapper.update(todo);
+    }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-explanation">
+          <h4><span class="material-icons">lightbulb</span> コード解説</h4>
+          <ul>
+            <li><strong>@Transactional</strong> - メソッド内の全DB操作を1つのトランザクションとして実行</li>
+            <li><strong>readOnly = true</strong> - 読み取り専用を明示し、DBの最適化ヒントを提供</li>
+            <li><strong>rollbackFor = Exception.class</strong> - チェック例外もロールバック対象に含める（デフォルトはRuntimeExceptionのみ）</li>
+            <li><strong>複数テーブル更新</strong> - todo + historyを同時に更新し、どちらかが失敗したら両方ロールバック</li>
+          </ul>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">AuditService.java（独立トランザクション）</span>
+          </div>
+          <div class="code-content">
+            <pre><span class="code-annotation">@Service</span>
+<span class="code-keyword">public class</span> <span class="code-class">AuditService</span> {
+
+    <span class="code-keyword">private final</span> <span class="code-class">AuditLogMapper</span> auditLogMapper;
+
+    <span class="code-comment">// REQUIRES_NEW: 呼び出し元と独立したトランザクション</span>
+    <span class="code-annotation">@Transactional(propagation = Propagation.REQUIRES_NEW)</span>
+    <span class="code-keyword">public void</span> <span class="code-class">log</span>(<span class="code-class">String</span> action, <span class="code-class">String</span> detail) {
+        <span class="code-class">AuditLog</span> log = <span class="code-keyword">new</span> <span class="code-class">AuditLog</span>(action, detail, <span class="code-class">LocalDateTime</span>.now());
+        auditLogMapper.insert(log);
+        <span class="code-comment">// 呼び出し元がロールバックしても、監査ログは残る</span>
+    }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-explanation">
+          <h4><span class="material-icons">lightbulb</span> コード解説</h4>
+          <ul>
+            <li><strong>Propagation.REQUIRES_NEW</strong> - 常に新しいトランザクションを開始（呼び出し元とは独立）</li>
+            <li><strong>監査ログの独立性</strong> - 本体処理がロールバックしても、「処理を試みた」記録は残す</li>
+            <li><strong>セキュリティ要件</strong> - 監査ログは改ざん防止のため、本体と分離することが多い</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="diagram-container">
+        <h4><span class="material-icons">schema</span> トランザクション伝播の図解</h4>
+        <div class="diagram-box">
+          <pre style="color: white; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8;">
+┌─────────────────────────────────────────────────────────────┐
+│  TodoService.save() @Transactional                          │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  トランザクション A                                      │ │
+│  │                                                        │ │
+│  │  1. todoMapper.insert(todo)                            │ │
+│  │  2. historyMapper.insert(history)                      │ │
+│  │  3. auditService.log()                                 │ │
+│  │        ↓                                               │ │
+│  │  ┌──────────────────────────────────┐                  │ │
+│  │  │  トランザクション B (REQUIRES_NEW) │                  │ │
+│  │  │  auditLogMapper.insert()         │ ← 独立コミット   │ │
+│  │  └──────────────────────────────────┘                  │ │
+│  │                                                        │ │
+│  │  4. 例外発生！→ トランザクションAのみロールバック        │ │
+│  │     (todo, history は取り消し、auditLog は残る)        │ │
+│  └────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+
+【Propagation（伝播）の種類】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ REQUIRED      │ 既存トランザクションがあれば参加、なければ新規作成（デフォルト）
+ REQUIRES_NEW  │ 常に新しいトランザクションを作成（既存は一時停止）
+ MANDATORY     │ 既存トランザクション必須（なければ例外）
+ SUPPORTS      │ 既存があれば参加、なければトランザクションなしで実行
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</pre>
+        </div>
+      </div>
     </section>
 
     <!-- Section 19-3 -->
@@ -178,7 +324,7 @@
       </div>
 
       <div class="prompt-card">
-        <h4><span class="material-icons">smart_toy</span> AIへの入力プロンプト</h4>
+        <h4><span class="material-icons">auto_awesome</span> AIプロンプト</h4>
         <div class="prompt-box">
           <pre id="prompt-19">あなたはJavaプログラマーです。
 
