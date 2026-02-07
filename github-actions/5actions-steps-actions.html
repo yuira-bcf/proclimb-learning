@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第5章 ステップとアクション活用 - GitHub Actions入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #2088FF;
+        --primary-dark: #1A6FD6;
+        --primary-light: #E8F1FF;
+        --primary-lighter: #B3D4FF;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #eef5ff 0%, #e8f1ff 100%);
+        border-radius: 16px; border: 1px solid #b3d4ff;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #2088FF; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #2088FF; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(32,136,255,0.08);
+      }
+      .vd-box.accent { background: #2088FF; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #2088FF; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #e8f1ff; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #2088FF; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-github-actions.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">5</div>
+            <h1 class="chapter-title">ステップとアクション活用</h1>
+            <p class="chapter-lead">ワークフローの最小実行単位「ステップ」の詳細な設定方法と、Marketplaceのアクションを活用してワークフローを効率化する方法を学びます。</p>
+        </header>
+
+        <!-- セクション1: ステップの基本 -->
+        <section class="section" id="step-basics">
+            <h2><span class="material-icons">list_alt</span> ステップの基本</h2>
+
+            <p>ステップはジョブ内で実行される個々のタスクです。シェルコマンドの実行（<code>run</code>）または外部アクションの利用（<code>uses</code>）のいずれかを行います。</p>
+
+            <h3>ステップの主要キーワード</h3>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">ステップで使用できる主要キーワード</div>
+                <div class="vd-grid">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">🏷️</span>
+                        <span class="vd-label">name</span>
+                        <span class="vd-sub">ステップの表示名<br>ログで識別しやすく</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">▶️</span>
+                        <span class="vd-label">run</span>
+                        <span class="vd-sub">シェルコマンド実行<br>bash / pwsh / python</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">📦</span>
+                        <span class="vd-label">uses</span>
+                        <span class="vd-sub">外部アクション使用<br>Marketplace等</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">⚙️</span>
+                        <span class="vd-label">with</span>
+                        <span class="vd-sub">アクションへの入力<br>パラメータ設定</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">🌐</span>
+                        <span class="vd-label">env</span>
+                        <span class="vd-sub">環境変数設定<br>ステップスコープ</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">❓</span>
+                        <span class="vd-label">if</span>
+                        <span class="vd-sub">条件実行<br>式がtrueで実行</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>run: シェルコマンドの実行</h3>
+
+            <pre><code>steps:
+  # 単一コマンド
+  - name: Show greeting
+    run: echo "Hello World"
+
+  # 複数行コマンド（| を使用）
+  - name: Build and test
+    run: |
+      echo "Installing dependencies..."
+      npm ci
+      echo "Running tests..."
+      npm test
+      echo "Building..."
+      npm run build
+
+  # 作業ディレクトリの指定
+  - name: Build frontend
+    run: npm run build
+    working-directory: ./frontend
+
+  # シェルの指定
+  - name: Run Python script
+    run: |
+      import json
+      data = {"status": "success"}
+      print(json.dumps(data))
+    shell: python
+
+  # PowerShell（Windows）
+  - name: Windows command
+    run: Get-Process | Select-Object -First 5
+    shell: pwsh</code></pre>
+
+            <h3>uses: 外部アクションの利用</h3>
+
+            <pre><code>steps:
+  # GitHubの公式アクション
+  - uses: actions/checkout@v4
+
+  # パラメータ付き
+  - uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+      cache: 'npm'
+
+  # サードパーティアクション
+  - uses: peaceiris/actions-gh-pages@v4
+    with:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      publish_dir: ./dist
+
+  # 同じリポジトリ内のアクション
+  - uses: ./.github/actions/my-custom-action
+    with:
+      input1: value1</code></pre>
+
+            <h3>if: 条件実行</h3>
+
+            <pre><code>steps:
+  - name: Run on main branch only
+    if: github.ref == 'refs/heads/main'
+    run: echo "This is the main branch"
+
+  - name: Run on pull request
+    if: github.event_name == 'pull_request'
+    run: echo "This is a PR"
+
+  # 前のステップが失敗しても実行
+  - name: Cleanup on failure
+    if: failure()
+    run: echo "Something failed, cleaning up..."
+
+  # 常に実行（成功/失敗/キャンセルに関わらず）
+  - name: Always notify
+    if: always()
+    run: echo "Workflow completed with status: ${{ job.status }}"
+
+  # 複合条件
+  - name: Deploy to production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    run: echo "Deploying to production..."
+
+  # 環境変数による条件分岐
+  - name: Run expensive tests
+    if: env.RUN_FULL_TESTS == 'true'
+    run: npm run test:full</code></pre>
+
+            <h3>env: ステップレベルの環境変数</h3>
+
+            <pre><code># 環境変数のスコープ（3つのレベル）
+env:
+  # ワークフローレベル（全ジョブ・全ステップ）
+  APP_NAME: my-application
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # ジョブレベル（このジョブ内のステップ）
+      NODE_ENV: production
+
+    steps:
+      - name: Build with env
+        env:
+          # ステップレベル（このステップのみ）
+          BUILD_TARGET: dist
+        run: |
+          echo "App: $APP_NAME"
+          echo "Env: $NODE_ENV"
+          echo "Target: $BUILD_TARGET"</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">環境変数のスコープ階層</div>
+                <div style="max-width: 400px; margin: 0 auto;">
+                    <div style="border: 3px solid #1565C0; border-radius: 16px; padding: 18px; background: rgba(21,101,192,0.03);">
+                        <div style="text-align: center; font-weight: 700; color: #1565C0; font-size: 0.82rem; margin-bottom: 10px;">Workflow env（全体）</div>
+                        <div style="border: 2px solid #42A5F5; border-radius: 12px; padding: 16px; background: rgba(66,165,245,0.04);">
+                            <div style="text-align: center; font-weight: 700; color: #42A5F5; font-size: 0.8rem; margin-bottom: 10px;">Job env（ジョブ内）</div>
+                            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                                <div style="background: #E3F2FD; border: 1px solid #90CAF9; border-radius: 8px; padding: 10px 14px; font-size: 0.72rem; font-weight: 600; color: #1565C0; text-align: center;">
+                                    Step env<br><span style="font-size: 0.65rem; font-weight: 400;">(そのステップのみ)</span>
+                                </div>
+                                <div style="background: #E3F2FD; border: 1px solid #90CAF9; border-radius: 8px; padding: 10px 14px; font-size: 0.72rem; font-weight: 600; color: #1565C0; text-align: center;">
+                                    Step env<br><span style="font-size: 0.65rem; font-weight: 400;">(そのステップのみ)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; font-size: 0.7rem; color: #666; margin-top: 10px;">内側のスコープは外側の値を上書き可能</div>
+                </div>
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 5-1</div>
+                <p><strong>問題:</strong> 以下の要件を満たすステップを記述してください。</p>
+                <ul>
+                    <li>mainブランチへのpush時のみ「Production build」を実行（npm run build:prod）</li>
+                    <li>それ以外のブランチでは「Development build」を実行（npm run build:dev）</li>
+                    <li>ビルドが失敗した場合、「Build failed」というメッセージを表示するクリーンアップステップを追加</li>
+                </ul>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <pre><code>steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+  - run: npm ci
+
+  - name: Production build
+    if: github.ref == 'refs/heads/main'
+    run: npm run build:prod
+
+  - name: Development build
+    if: github.ref != 'refs/heads/main'
+    run: npm run build:dev
+
+  - name: Cleanup on failure
+    if: failure()
+    run: echo "Build failed! Check the logs above."</code></pre>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- セクション2: actions/checkout -->
+        <section class="section" id="actions-checkout">
+            <h2><span class="material-icons">download</span> actions/checkout</h2>
+
+            <p><code>actions/checkout</code>は、最も基本的で最も使用頻度の高いアクションです。リポジトリのソースコードをランナーにチェックアウト（ダウンロード）します。</p>
+
+            <h3>基本的な使い方</h3>
+
+            <pre><code>steps:
+  # 最小構成（デフォルト設定）
+  - uses: actions/checkout@v4
+
+  # カレントリポジトリの現在のブランチがチェックアウトされる</code></pre>
+
+            <h3>主要パラメータ</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>パラメータ</th>
+                        <th>デフォルト</th>
+                        <th>説明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>ref</code></td>
+                        <td>トリガーのref</td>
+                        <td>チェックアウトするブランチ/タグ/SHA</td>
+                    </tr>
+                    <tr>
+                        <td><code>fetch-depth</code></td>
+                        <td>1</td>
+                        <td>取得するコミット履歴の深さ（0=全履歴）</td>
+                    </tr>
+                    <tr>
+                        <td><code>token</code></td>
+                        <td>github.token</td>
+                        <td>認証に使用するトークン</td>
+                    </tr>
+                    <tr>
+                        <td><code>repository</code></td>
+                        <td>現在のリポジトリ</td>
+                        <td>チェックアウトするリポジトリ</td>
+                    </tr>
+                    <tr>
+                        <td><code>path</code></td>
+                        <td>.</td>
+                        <td>チェックアウト先ディレクトリ</td>
+                    </tr>
+                    <tr>
+                        <td><code>submodules</code></td>
+                        <td>false</td>
+                        <td>サブモジュールもチェックアウトするか</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>実践的な使用例</h3>
+
+            <pre><code>steps:
+  # 特定のブランチをチェックアウト
+  - uses: actions/checkout@v4
+    with:
+      ref: develop
+
+  # 全コミット履歴を取得（changelog生成やgit blame用）
+  - uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
+
+  # 別リポジトリをチェックアウト（PATが必要）
+  - uses: actions/checkout@v4
+    with:
+      repository: owner/other-repo
+      token: ${{ secrets.PAT_TOKEN }}
+      path: other-repo
+
+  # サブモジュールも含めてチェックアウト
+  - uses: actions/checkout@v4
+    with:
+      submodules: recursive
+
+  # 複数リポジトリのチェックアウト
+  - uses: actions/checkout@v4
+    with:
+      path: main-repo
+  - uses: actions/checkout@v4
+    with:
+      repository: owner/shared-lib
+      token: ${{ secrets.PAT_TOKEN }}
+      path: shared-lib</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">fetch-depth による取得範囲の違い</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">1️⃣</span>
+                        <span class="vd-label">fetch-depth: 1</span>
+                        <span class="vd-sub">最新コミットのみ<br>最速・最小<br>ビルド/テスト向き</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">🔢</span>
+                        <span class="vd-label">fetch-depth: N</span>
+                        <span class="vd-sub">直近Nコミット<br>差分確認に便利<br>git log -N が使える</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">📚</span>
+                        <span class="vd-label">fetch-depth: 0</span>
+                        <span class="vd-sub">全履歴取得<br>時間がかかる<br>changelog/tag操作向き</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="point-box">
+                <div class="point-title"><span class="material-icons">lightbulb</span> ベストプラクティス</div>
+                <p>通常のCI（ビルド・テスト）ではデフォルトの<code>fetch-depth: 1</code>で十分です。<code>fetch-depth: 0</code>は、git logの全履歴が必要な場合（バージョニング、changelog生成等）にのみ使用してください。</p>
+            </div>
+        </section>
+
+        <!-- セクション3: setup系アクション -->
+        <section class="section" id="setup-actions">
+            <h2><span class="material-icons">build</span> setup系アクション</h2>
+
+            <p>GitHubは、各種プログラミング言語やツールの環境を構築するための公式setup系アクションを提供しています。バージョン指定やキャッシュ機能が組み込まれています。</p>
+
+            <h3>actions/setup-node</h3>
+
+            <pre><code>steps:
+  - uses: actions/checkout@v4
+
+  # 基本的な使い方
+  - uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+
+  # npmキャッシュを有効化
+  - uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+      cache: 'npm'          # npm / yarn / pnpm
+
+  # バージョン範囲指定
+  - uses: actions/setup-node@v4
+    with:
+      node-version: '>=18'
+
+  # .nvmrc / .node-version ファイルからバージョンを読み取り
+  - uses: actions/setup-node@v4
+    with:
+      node-version-file: '.nvmrc'
+      cache: 'npm'
+
+  # npmレジストリの設定（パッケージ公開用）
+  - uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+      registry-url: 'https://registry.npmjs.org'</code></pre>
+
+            <h3>actions/setup-python</h3>
+
+            <pre><code>steps:
+  - uses: actions/checkout@v4
+
+  - uses: actions/setup-python@v5
+    with:
+      python-version: '3.12'
+      cache: 'pip'           # pip / pipenv / poetry
+
+  - run: pip install -r requirements.txt
+  - run: python -m pytest</code></pre>
+
+            <h3>actions/setup-java</h3>
+
+            <pre><code>steps:
+  - uses: actions/checkout@v4
+
+  - uses: actions/setup-java@v4
+    with:
+      java-version: '21'
+      distribution: 'temurin'   # temurin / corretto / zulu 等
+      cache: 'maven'            # maven / gradle
+
+  - run: mvn test</code></pre>
+
+            <h3>その他の主要setup系アクション</h3>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">主要なsetup系アクション一覧</div>
+                <div class="vd-grid">
+                    <div class="vd-card green">
+                        <span class="vd-icon">🟢</span>
+                        <span class="vd-label">setup-node</span>
+                        <span class="vd-sub">Node.js<br>npm/yarn/pnpmキャッシュ</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">🐍</span>
+                        <span class="vd-label">setup-python</span>
+                        <span class="vd-sub">Python<br>pip/pipenv/poetryキャッシュ</span>
+                    </div>
+                    <div class="vd-card red">
+                        <span class="vd-icon">☕</span>
+                        <span class="vd-label">setup-java</span>
+                        <span class="vd-sub">Java<br>maven/gradleキャッシュ</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">🔵</span>
+                        <span class="vd-label">setup-go</span>
+                        <span class="vd-sub">Go<br>module cacheキャッシュ</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">💎</span>
+                        <span class="vd-label">ruby/setup-ruby</span>
+                        <span class="vd-sub">Ruby<br>bundlerキャッシュ</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">🦀</span>
+                        <span class="vd-label">dtolnay/rust-toolchain</span>
+                        <span class="vd-sub">Rust<br>stable/nightly</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>バージョン指定のパターン</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>指定方法</th>
+                        <th>例</th>
+                        <th>説明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>完全指定</td>
+                        <td><code>'20.11.0'</code></td>
+                        <td>特定のバージョンを使用</td>
+                    </tr>
+                    <tr>
+                        <td>メジャーバージョン</td>
+                        <td><code>'20'</code></td>
+                        <td>v20系の最新を使用</td>
+                    </tr>
+                    <tr>
+                        <td>範囲指定</td>
+                        <td><code>'>=18'</code></td>
+                        <td>18以上の最新を使用</td>
+                    </tr>
+                    <tr>
+                        <td>ファイル参照</td>
+                        <td><code>node-version-file: '.nvmrc'</code></td>
+                        <td>設定ファイルからバージョンを読み取り</td>
+                    </tr>
+                    <tr>
+                        <td>最新安定版</td>
+                        <td><code>'lts/*'</code></td>
+                        <td>最新のLTSバージョンを使用</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 5-2</div>
+                <p><strong>問題:</strong> フルスタック（Node.js + Python）アプリケーションのCI用ステップを記述してください。要件:</p>
+                <ul>
+                    <li>Node.js 20（npmキャッシュ有効）</li>
+                    <li>Python 3.12（pipキャッシュ有効）</li>
+                    <li>フロントエンド（npm test）とバックエンド（pytest）の両方をテスト</li>
+                </ul>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <pre><code>steps:
+  - uses: actions/checkout@v4
+
+  # Node.js のセットアップ
+  - uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+      cache: 'npm'
+
+  # Python のセットアップ
+  - uses: actions/setup-python@v5
+    with:
+      python-version: '3.12'
+      cache: 'pip'
+
+  # フロントエンド
+  - name: Install frontend dependencies
+    run: npm ci
+
+  - name: Test frontend
+    run: npm test
+
+  # バックエンド
+  - name: Install backend dependencies
+    run: pip install -r requirements.txt
+
+  - name: Test backend
+    run: python -m pytest</code></pre>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- セクション4: Marketplace活用 -->
+        <section class="section" id="marketplace">
+            <h2><span class="material-icons">store</span> Marketplace活用</h2>
+
+            <p>GitHub Marketplaceには20,000以上のアクションが公開されており、よくある処理を簡単に実装できます。ただし、セキュリティや品質の観点から、使用するアクションは慎重に選定する必要があります。</p>
+
+            <h3>アクションの検索方法</h3>
+            <ol>
+                <li><a href="https://github.com/marketplace?type=actions" target="_blank">GitHub Marketplace</a> で検索</li>
+                <li>GitHub 検索で <code>topic:github-actions</code> を使用</li>
+                <li><a href="https://github.com/sdras/awesome-actions" target="_blank">awesome-actions</a> などのキュレーションリスト</li>
+            </ol>
+
+            <h3>アクションの指定方法</h3>
+
+            <pre><code>steps:
+  # owner/repo@ref の形式で指定
+
+  # タグ（推奨: メジャーバージョンタグ）
+  - uses: actions/checkout@v4
+
+  # 完全なバージョンタグ
+  - uses: actions/checkout@v4.1.7
+
+  # コミットSHA（最もセキュア）
+  - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+  # ブランチ名（非推奨: 内容が変わる可能性がある）
+  - uses: actions/checkout@main</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">アクションのバージョン指定方法（セキュリティレベル順）</div>
+                <div class="vd-flow">
+                    <div class="vd-box" style="border-color: #4caf50;">
+                        <span class="vd-icon">🔒</span>
+                        <span class="vd-label">SHA指定</span>
+                        <span class="vd-sub">最も安全<br>@b4ffde65...</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box" style="border-color: #2196f3;">
+                        <span class="vd-icon">🏷️</span>
+                        <span class="vd-label">バージョンタグ</span>
+                        <span class="vd-sub">推奨<br>@v4.1.7</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box" style="border-color: #ff9800;">
+                        <span class="vd-icon">📌</span>
+                        <span class="vd-label">メジャータグ</span>
+                        <span class="vd-sub">一般的<br>@v4</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box" style="border-color: #f44336;">
+                        <span class="vd-icon">⚠️</span>
+                        <span class="vd-label">ブランチ名</span>
+                        <span class="vd-sub">非推奨<br>@main</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>信頼性の確認ポイント</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>確認項目</th>
+                        <th>良い兆候</th>
+                        <th>注意が必要</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>提供元</td>
+                        <td>actions/*（GitHub公式）、Verified Creator</td>
+                        <td>不明な個人アカウント</td>
+                    </tr>
+                    <tr>
+                        <td>Star数</td>
+                        <td>1,000以上</td>
+                        <td>数十以下</td>
+                    </tr>
+                    <tr>
+                        <td>更新頻度</td>
+                        <td>最近のコミットあり</td>
+                        <td>1年以上更新なし</td>
+                    </tr>
+                    <tr>
+                        <td>ソースコード</td>
+                        <td>コードが公開・読みやすい</td>
+                        <td>難読化されている</td>
+                    </tr>
+                    <tr>
+                        <td>ドキュメント</td>
+                        <td>READMEが充実</td>
+                        <td>ドキュメントがない</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>よく使われるMarketplaceアクション</h3>
+
+            <pre><code># Slack通知
+- uses: slackapi/slack-github-action@v2.0.0
+  with:
+    webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+    webhook-type: incoming-webhook
+    payload: |
+      {"text": "Build ${{ job.status }}!"}
+
+# GitHub Pages デプロイ
+- uses: peaceiris/actions-gh-pages@v4
+  with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    publish_dir: ./dist
+
+# Docker イメージのビルド＆プッシュ
+- uses: docker/build-push-action@v6
+  with:
+    push: true
+    tags: user/app:latest
+
+# CodeQL セキュリティ分析
+- uses: github/codeql-action/analyze@v3
+
+# ラベル自動付与
+- uses: actions/labeler@v5
+  with:
+    repo-token: ${{ secrets.GITHUB_TOKEN }}</code></pre>
+
+            <div class="point-box">
+                <div class="point-title"><span class="material-icons">security</span> セキュリティに関する注意</div>
+                <p>サードパーティアクションは、ワークフロー内でコードやシークレットにアクセスする可能性があります。信頼できる提供元のアクションを選び、可能であればSHA指定で固定してください。<code>permissions</code>キーで最小限の権限を付与することも重要です。</p>
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 5-3</div>
+                <p><strong>問題:</strong> 以下のアクション指定について、セキュリティの観点から問題点を指摘してください。</p>
+                <pre><code>steps:
+  - uses: actions/checkout@main
+  - uses: unknown-user/deploy-action@v1
+  - uses: actions/setup-node@v4</code></pre>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <ol>
+                            <li><code>actions/checkout@main</code> — ブランチ名での指定は非推奨。mainブランチの内容は随時変更される可能性がある。<code>@v4</code> またはSHA指定に変更すべき。</li>
+                            <li><code>unknown-user/deploy-action@v1</code> — 提供元が不明な個人アカウント。GitHub公式やVerified Creatorでない場合、ソースコードを確認し、Star数や更新頻度を確認する必要がある。特にデプロイ系はシークレットにアクセスする可能性が高い。</li>
+                            <li><code>actions/setup-node@v4</code> — GitHub公式アクションのメジャーバージョンタグ指定で、一般的に問題なし。より厳密にはSHA指定にするとなお良い。</li>
+                        </ol>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- セクション5: ステップ間のデータ共有 -->
+        <section class="section" id="data-sharing">
+            <h2><span class="material-icons">share</span> ステップ間のデータ共有</h2>
+
+            <p>同じジョブ内のステップ間でデータを受け渡す方法は複数あります。ステップの出力値（outputs）やGITHUB_OUTPUTファイル、GITHUB_ENVファイルを活用します。</p>
+
+            <h3>GITHUB_OUTPUT: ステップ出力</h3>
+            <p>あるステップの結果を後続のステップで参照する最も基本的な方法です。</p>
+
+            <pre><code>steps:
+  # 出力を設定するステップ（id が必須）
+  - name: Get version
+    id: version
+    run: |
+      VERSION=$(node -p "require('./package.json').version")
+      echo "pkg_version=$VERSION" >> $GITHUB_OUTPUT
+      echo "build_time=$(date -u +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+
+  # 出力を参照するステップ
+  - name: Use version
+    run: |
+      echo "Version: ${{ steps.version.outputs.pkg_version }}"
+      echo "Build time: ${{ steps.version.outputs.build_time }}"
+
+  # 条件分岐に使用
+  - name: Deploy if major version
+    if: startsWith(steps.version.outputs.pkg_version, '2.')
+    run: echo "Deploying v2.x!"</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">GITHUB_OUTPUT によるステップ間データ共有の流れ</div>
+                <div class="vd-flow">
+                    <div class="vd-box accent">
+                        <span class="vd-icon">📤</span>
+                        <span class="vd-label">Step A (id: step_a)</span>
+                        <span class="vd-sub">echo "key=value"<br>&gt;&gt; $GITHUB_OUTPUT</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box" style="border-color: #4caf50;">
+                        <span class="vd-icon">📥</span>
+                        <span class="vd-label">Step B</span>
+                        <span class="vd-sub">${{ steps.step_a<br>.outputs.key }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>GITHUB_ENV: 環境変数の設定</h3>
+            <p>後続のステップで使える環境変数を動的に設定できます。</p>
+
+            <pre><code>steps:
+  - name: Set environment variables
+    run: |
+      echo "APP_VERSION=1.2.3" >> $GITHUB_ENV
+      echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+      echo "DEPLOY_ENV=staging" >> $GITHUB_ENV
+
+  # 後続のステップで通常の環境変数として利用可能
+  - name: Use environment variables
+    run: |
+      echo "Version: $APP_VERSION"
+      echo "Build: $BUILD_NUMBER"
+      echo "Env: $DEPLOY_ENV"
+
+  # if条件でも使用可能
+  - name: Production only
+    if: env.DEPLOY_ENV == 'production'
+    run: echo "This is production!"</code></pre>
+
+            <h3>GITHUB_OUTPUT vs GITHUB_ENV の使い分け</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>項目</th>
+                        <th>GITHUB_OUTPUT</th>
+                        <th>GITHUB_ENV</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>用途</td>
+                        <td>ステップの出力値</td>
+                        <td>環境変数の設定</td>
+                    </tr>
+                    <tr>
+                        <td>参照方法</td>
+                        <td><code>${{ steps.id.outputs.key }}</code></td>
+                        <td><code>${{ env.KEY }}</code> または <code>$KEY</code></td>
+                    </tr>
+                    <tr>
+                        <td>スコープ</td>
+                        <td>同一ジョブ内のステップ</td>
+                        <td>設定以降のすべてのステップ</td>
+                    </tr>
+                    <tr>
+                        <td>if条件</td>
+                        <td>使用可能</td>
+                        <td>使用可能</td>
+                    </tr>
+                    <tr>
+                        <td>推奨場面</td>
+                        <td>計算結果の受け渡し</td>
+                        <td>設定値の共有</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>ジョブ間のデータ共有（outputs）</h3>
+            <p>ジョブレベルでoutputsを定義すると、<code>needs</code>で依存するジョブから参照できます。</p>
+
+            <pre><code>jobs:
+  build:
+    runs-on: ubuntu-latest
+    # ジョブレベルのoutputs定義
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      sha_short: ${{ steps.get-sha.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version
+        id: get-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get short SHA
+        id: get-sha
+        run: echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy version
+        run: |
+          echo "Deploying version: ${{ needs.build.outputs.version }}"
+          echo "Commit: ${{ needs.build.outputs.sha_short }}"</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">ジョブ間のデータ共有フロー</div>
+                <div style="max-width: 480px; margin: 0 auto;">
+                    <div style="border: 2px solid #2196F3; border-radius: 14px; padding: 16px; margin-bottom: 12px; background: rgba(33,150,243,0.03);">
+                        <div style="font-weight: 700; color: #2196F3; font-size: 0.84rem; margin-bottom: 8px; text-align: center;">Job: build</div>
+                        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px;">
+                            <div style="background: #E3F2FD; border-radius: 6px; padding: 6px 10px; font-size: 0.7rem;">step (id: get-version)</div>
+                            <div style="background: #E3F2FD; border-radius: 6px; padding: 6px 10px; font-size: 0.7rem;">step (id: get-sha)</div>
+                        </div>
+                        <div style="background: #E8F5E9; border: 1px solid #A5D6A7; border-radius: 8px; padding: 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: #2E7D32;">
+                            outputs: version, sha_short
+                        </div>
+                    </div>
+                    <div style="text-align: center; color: #2088FF; font-size: 1.3rem; font-weight: 700; margin: 8px 0;">↓ needs: build</div>
+                    <div style="border: 2px solid #42A5F5; border-radius: 14px; padding: 16px; background: rgba(66,165,245,0.03);">
+                        <div style="font-weight: 700; color: #42A5F5; font-size: 0.84rem; margin-bottom: 8px; text-align: center;">Job: deploy</div>
+                        <div style="background: #FFF3E0; border: 1px solid #FFE082; border-radius: 8px; padding: 8px; text-align: center; font-size: 0.72rem; color: #E65100;">
+                            ${{ needs.build.outputs.version }}<br>
+                            ${{ needs.build.outputs.sha_short }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>実践例: ビルド情報の活用</h3>
+
+            <pre><code>name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact_name: ${{ steps.build-info.outputs.artifact_name }}
+      version: ${{ steps.build-info.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Set build info
+        id: build-info
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          ARTIFACT="app-${VERSION}-${GITHUB_SHA::7}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "artifact_name=$ARTIFACT" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: npm run build
+        env:
+          APP_VERSION: ${{ steps.build-info.outputs.version }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build-info.outputs.artifact_name }}
+          path: dist/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
+
+      - name: Deploy
+        run: |
+          echo "Deploying ${{ needs.build.outputs.artifact_name }}"
+          echo "Version: ${{ needs.build.outputs.version }}"
+          ls -la</code></pre>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 5-4</div>
+                <p><strong>問題:</strong> 以下の要件を満たすワークフローを作成してください。</p>
+                <ul>
+                    <li><code>check</code>ジョブ: package.json からバージョンを取得し、ジョブのoutputsとして公開</li>
+                    <li><code>build</code>ジョブ: checkジョブからバージョンを受け取り、ビルドコマンドの環境変数に設定して使用</li>
+                </ul>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <pre><code>name: Version Build
+
+on: push
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      app_version: ${{ steps.get-ver.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get version from package.json
+        id: get-ver
+        run: |
+          VER=$(node -p "require('./package.json').version")
+          echo "version=$VER" >> $GITHUB_OUTPUT
+          echo "Detected version: $VER"
+
+  build:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Build with version
+        run: npm run build
+        env:
+          APP_VERSION: ${{ needs.check.outputs.app_version }}</code></pre>
+                    </div>
+                </details>
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 5-5（総合問題）</div>
+                <p><strong>問題:</strong> 以下の完全なCI/CDワークフローを作成してください。</p>
+                <ol>
+                    <li>mainブランチへのpush時にトリガー</li>
+                    <li>checkoutとNode.js 20のセットアップ（npmキャッシュ有効）</li>
+                    <li>依存関係インストール、リント、テスト、ビルドを順に実行</li>
+                    <li>ビルドステップでpackage.jsonのバージョンを環境変数として使用</li>
+                    <li>テスト失敗時にSlackに通知するステップを追加（コマンドは echo で代替可）</li>
+                </ol>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <pre><code>name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Get version
+        id: pkg
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: npm run build
+        env:
+          APP_VERSION: ${{ steps.pkg.outputs.version }}
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "CI failed! Sending Slack notification..."
+          echo "Build version: ${{ steps.pkg.outputs.version }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"</code></pre>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- ページナビゲーション -->
+        <nav class="chapter-nav">
+            <a href="4actions-jobs-runners.html" class="prev"><span class="material-icons">arrow_back</span> 前の章</a>
+            <a href="index.html" class="home"><span class="material-icons">home</span> 目次</a>
+            <a href="6actions-env-secrets.html" class="next">次の章 <span class="material-icons">arrow_forward</span></a>
+        </nav>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+</body>
+</html>
