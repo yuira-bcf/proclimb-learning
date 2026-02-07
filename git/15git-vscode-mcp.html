@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第15章 VSCode GitHub MCP活用 - Git & GitHub完全ガイド</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #F05032;
+        --primary-dark: #D63F20;
+        --primary-light: #FBE9E7;
+        --primary-lighter: #FFCCBC;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef5f3 0%, #fbe9e7 100%);
+        border-radius: 16px; border: 1px solid #ffccbc;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F05032; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F05032; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(240,80,50,0.08);
+      }
+      .vd-box.accent { background: #F05032; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F05032; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fbe9e7; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F05032; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-git.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">15</div>
+            <h1 class="chapter-title">VSCode GitHub MCP活用</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">15-1</span><span>MCPとは（Model Context Protocol）</span></li>
+                <li class="toc-item"><span class="toc-number">15-2</span><span>VSCodeでGitHub MCPを設定する</span></li>
+                <li class="toc-item"><span class="toc-number">15-3</span><span>Claude CodeでGitHub MCPを設定する</span></li>
+                <li class="toc-item"><span class="toc-number">15-4</span><span>AIを使ったGit操作の自動化</span></li>
+                <li class="toc-item"><span class="toc-number">15-5</span><span>MCPを使ったIssue・PR管理</span></li>
+                <li class="toc-item"><span class="toc-number">15-6</span><span>開発効率化のヒント</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 15-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 15-1</span>
+                <h2 class="section-title">MCPとは（Model Context Protocol）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>MCP（Model Context Protocol）は、Anthropic社が開発した<strong>AIモデルと外部ツール・データソースを接続するためのオープンプロトコル</strong>です。MCPを使うことで、AIアシスタント（Claude、GitHub Copilotなど）がGitHub APIなどの外部サービスに直接アクセスし、より高度な支援を行えるようになります。</p>
+            </div>
+
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#128279; MCPのアーキテクチャ</div>
+    <div class="vd-flow">
+        <div class="vd-box blue" style="border-color:#90caf9;background:#e3f2fd;">
+            <span class="vd-icon">&#128187;</span>
+            <span class="vd-label" style="color:#1565C0;">MCPクライアント</span>
+            <span class="vd-sub">VSCode / Claude<br>AIアシスタント</span>
+        </div>
+        <div class="vd-arrow">&#8596;</div>
+        <div class="vd-box accent">
+            <span class="vd-icon">&#128295;</span>
+            <span class="vd-label">MCPサーバー</span>
+            <span class="vd-sub">GitHub MCP Server<br>ツール・リソース提供</span>
+        </div>
+        <div class="vd-arrow">&#8596;</div>
+        <div class="vd-box green" style="border-color:#a5d6a7;background:#f1f8e9;">
+            <span class="vd-icon">&#127760;</span>
+            <span class="vd-label" style="color:#2E7D32;">GitHub API</span>
+            <span class="vd-sub">リポジトリ / Issues<br>PR / Actions</span>
+        </div>
+    </div>
+</div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 MCPの基本概念</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>用語</th>
+                                <th>役割</th>
+                                <th>例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>MCPクライアント</strong></td>
+                                <td>AIアシスタントが動作するアプリケーション</td>
+                                <td>VSCode、Claude Desktop、Cursor</td>
+                            </tr>
+                            <tr>
+                                <td><strong>MCPサーバー</strong></td>
+                                <td>外部サービスへの接続を提供するサーバー</td>
+                                <td>GitHub MCP Server、Filesystem Server</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ツール（Tools）</strong></td>
+                                <td>AIが実行できるアクション</td>
+                                <td>Issue作成、PR一覧取得、ファイル検索</td>
+                            </tr>
+                            <tr>
+                                <td><strong>リソース（Resources）</strong></td>
+                                <td>AIが参照できるデータ</td>
+                                <td>リポジトリの情報、ファイル内容</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.2 なぜMCPが重要なのか</h3>
+                <div class="content-block">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128268;</div>
+                            <div class="feature-content">
+                                <h4>統一されたインターフェース</h4>
+                                <p>MCPにより、様々な外部サービスとAIの接続が標準化されます。各サービスごとに独自のプラグインを開発する必要がなくなります。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128640;</div>
+                            <div class="feature-content">
+                                <h4>開発効率の飛躍的向上</h4>
+                                <p>AIアシスタントにGitHubの操作を任せることで、IssueやPRの管理、コード検索などの作業を自然言語で指示できるようになります。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128274;</div>
+                            <div class="feature-content">
+                                <h4>安全なアクセス管理</h4>
+                                <p>MCPはPersonal Access Token（PAT）を使って認証を行い、必要最小限の権限でサービスにアクセスします。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">MCPのエコシステム</span>
+                        </div>
+                        <p>GitHub以外にも、ファイルシステム、データベース（PostgreSQL）、Slack、Google Drive、Notionなど、様々なMCPサーバーが公開されています。MCPサーバーの一覧は <a href="https://github.com/modelcontextprotocol/servers" target="_blank">MCP Servers リポジトリ</a> で確認できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 15-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 15-2</span>
+                <h2 class="section-title">VSCodeでGitHub MCPを設定する</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>VSCodeでGitHub MCPサーバーを設定し、AIアシスタント（Copilot Chat等）からGitHubの操作を行えるようにしましょう。MCPサーバーの実行には<strong>Docker経由を推奨</strong>します（環境の隔離・バージョン固定のメリットがあります）。Dockerの基礎は<a href="../docker/index.html">Docker構築入門</a>で学べます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 前提条件</h3>
+                <div class="content-block">
+                    <ul class="bullet-list">
+                        <li><strong>VSCode</strong> が最新バージョンにアップデートされていること</li>
+                        <li><strong>GitHub Copilot</strong> 拡張機能がインストールされていること（MCP対応のAIチャット機能が必要）</li>
+                        <li><strong>GitHub Personal Access Token（PAT）</strong> が発行されていること</li>
+                        <li><strong>Docker Desktop</strong> がインストールされていること（<a href="../docker/2docker-setup.html">第2章 Docker Desktopの導入</a>参照）</li>
+                    </ul>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">なぜDockerを使うのか？</span>
+                        </div>
+                        <p>Docker経由でMCPサーバーを実行すると、<strong>環境の隔離</strong>（MCPサーバーがホストOSのファイルにアクセスできない）、<strong>バージョン固定</strong>（チーム全員が同じ環境）、<strong>クリーンなアンインストール</strong>といったメリットがあります。詳しくは<a href="../docker/10docker-ai-mcp.html">Docker構築入門 第10章</a>を参照してください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 Personal Access Tokenの発行</h3>
+                <div class="content-block">
+                    <ol class="bullet-list">
+                        <li>GitHubの<strong>Settings</strong>を開く（右上のアイコン → Settings）</li>
+                        <li>左メニューの<strong>Developer settings</strong>をクリック</li>
+                        <li><strong>Personal access tokens → Tokens (classic)</strong>を選択</li>
+                        <li><strong>Generate new token (classic)</strong>をクリック</li>
+                        <li>必要なスコープを選択：<code>repo</code>、<code>read:org</code>、<code>read:project</code></li>
+                        <li><strong>Generate token</strong>をクリックしてトークンをコピー</li>
+                    </ol>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">トークンの管理に注意</span>
+                        </div>
+                        <p>Personal Access Tokenは<strong>パスワードと同等の重要な秘密情報</strong>です。トークンをコードにハードコードしたり、Gitリポジトリにコミットしたりしないでください。環境変数として安全に管理しましょう。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.3 MCP設定ファイルの作成</h3>
+                <div class="content-block">
+                    <p>プロジェクトのルートに<code>.vscode/mcp.json</code>ファイルを作成し、GitHub MCPサーバーの設定を記述します。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">.vscode/mcp.json - GitHub MCPサーバーの設定</span>
+                            <span class="code-lang">JSON</span>
+                        </div>
+                        <pre class="code-content"><code>{
+  "servers": {
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}"
+      }
+    }
+  }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">環境変数の設定（macOS/Linux）</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># .bashrc や .zshrc に追加
+export GITHUB_TOKEN="ghp_xxxxxxxxxxxxxxxxxxxx"
+
+# 設定を反映
+$ source ~/.zshrc</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">環境変数の設定（Windows PowerShell）</span>
+                            <span class="code-lang">PowerShell</span>
+                        </div>
+                        <pre class="code-content"><code># ユーザー環境変数に設定
+[System.Environment]::SetEnvironmentVariable("GITHUB_TOKEN", "ghp_xxxxxxxxxxxxxxxxxxxx", "User")</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">Dockerが使えない場合（npx代替）</span>
+                        </div>
+                        <p>Docker環境が用意できない場合は、Node.jsの<code>npx</code>コマンドでもMCPサーバーを起動できます。<code>"command": "npx"</code>、<code>"args": ["-y", "@modelcontextprotocol/server-github"]</code> のように設定します（Node.js 18以上が必要）。ただし環境の隔離ができないため、<strong>業務ではDocker経由を推奨</strong>します。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.4 MCPサーバーの動作確認</h3>
+                <div class="content-block">
+                    <ol class="bullet-list">
+                        <li>VSCodeでプロジェクトを開く</li>
+                        <li>Copilot Chat（またはMCP対応のAIチャット）を開く</li>
+                        <li>チャット入力欄の横にある<strong>ツールアイコン</strong>をクリック</li>
+                        <li>GitHub MCPサーバーのツール一覧が表示されれば成功</li>
+                    </ol>
+
+                    <p>ツール一覧には、<code>create_issue</code>、<code>list_issues</code>、<code>create_pull_request</code>などが表示されます。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 15-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 15-3</span>
+                <h2 class="section-title">Claude CodeでGitHub MCPを設定する</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Claude Code（Anthropic公式のCLIツール）でもMCPサーバーを利用できます。ターミナルから直接GitHub操作を行えるため、コマンドライン中心の開発ワークフローに最適です。</p>
+            </div>
+
+            <!-- 図解: Claude Code MCP -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128187; Claude Code × MCP のワークフロー</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128104;&#8205;&#128187;</span>
+                        <span class="vd-label">開発者</span>
+                        <span class="vd-sub">自然言語で指示</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#129302;</span>
+                        <span class="vd-label">Claude Code</span>
+                        <span class="vd-sub">CLI / VSCode拡張</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128268;</span>
+                        <span class="vd-label">MCP Server</span>
+                        <span class="vd-sub">GitHub API</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128025;</span>
+                        <span class="vd-label">GitHub</span>
+                        <span class="vd-sub">Issue / PR / Repo</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 Claude Codeとは</h3>
+                <div class="content-block">
+                    <p>Claude CodeはAnthropicが提供する<strong>AIコーディングエージェント</strong>です。ターミナル上で動作し、コードの読み書き・ファイル操作・Git操作・MCP連携などをAIが自律的に行えます。</p>
+
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128187;</div>
+                            <div class="feature-content">
+                                <h4>ターミナルで動作</h4>
+                                <p>コマンドラインから<code>claude</code>コマンドで起動。VSCode拡張としても利用可能です。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128295;</div>
+                            <div class="feature-content">
+                                <h4>Git操作が組み込み</h4>
+                                <p>MCP無しでも<code>git add</code>、<code>git commit</code>、<code>git push</code>などの基本操作が可能。<code>/commit</code>コマンドで変更を自動コミットできます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128268;</div>
+                            <div class="feature-content">
+                                <h4>MCP対応</h4>
+                                <p>GitHub MCPサーバーを追加することで、Issue作成・PR管理・コード検索などのGitHub API操作が可能になります。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 Claude Codeのインストール</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Claude Codeのインストール（npm）</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># npmでグローバルインストール
+$ npm install -g @anthropic-ai/claude-code
+
+# インストール確認
+$ claude --version
+
+# 起動（プロジェクトディレクトリで実行）
+$ claude</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">前提条件</span>
+                        </div>
+                        <p>Claude Codeの利用には<strong>Node.js 18以上</strong>と<strong>Anthropic APIキー</strong>（またはClaude Pro/Maxプラン）が必要です。初回起動時に認証設定を行います。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.3 MCPサーバーの追加</h3>
+                <div class="content-block">
+                    <p>Claude Codeでは、<code>claude mcp add</code>コマンドでMCPサーバーを簡単に追加できます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">GitHub MCPサーバーの追加</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># GitHub MCPサーバーを追加（Docker経由 - 推奨）
+$ claude mcp add github \
+    -e GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxxxxxxxxxx \
+    -- docker run -i --rm \
+    -e GITHUB_PERSONAL_ACCESS_TOKEN \
+    ghcr.io/github/github-mcp-server
+
+# Dockerが使えない場合（npx代替）
+$ claude mcp add github \
+    -e GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxxxxxxxxxx \
+    -- npx -y @modelcontextprotocol/server-github</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">MCPサーバーの管理コマンド</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># 登録済みMCPサーバーの一覧を確認
+$ claude mcp list
+
+# MCPサーバーの詳細を確認
+$ claude mcp get github
+
+# MCPサーバーを削除
+$ claude mcp remove github</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">スコープの指定</span>
+                        </div>
+                        <p>MCPサーバーは<code>--scope</code>オプションで適用範囲を指定できます。<code>local</code>（現在のプロジェクトのみ）、<code>project</code>（プロジェクト共有）、<code>user</code>（全プロジェクト共通）の3つから選べます。デフォルトは<code>local</code>です。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.4 Claude Codeでの操作例</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Claude CodeでのGitHub操作例</span>
+                            <span class="code-lang">Claude Code</span>
+                        </div>
+                        <pre class="code-content"><code># Claude Codeの対話画面での操作例
+
+> このリポジトリのオープンなIssueを一覧表示して
+→ GitHub MCPの list_issues ツールでIssue一覧を取得・表示
+
+> 「ログイン画面のバリデーション追加」というIssueを作成して
+→ create_issue ツールでIssueを自動作成
+
+> 現在の変更をコミットしてプッシュして
+→ git add → git commit → git push を自動実行
+
+> この変更内容でプルリクエストを作成して
+→ create_pull_request ツールでPRを自動作成
+
+> /commit
+→ 変更内容を分析し、適切なコミットメッセージを自動生成してコミット</code></pre>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>操作</th>
+                                <th>VSCode + Copilot</th>
+                                <th>Claude Code</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Git基本操作</td>
+                                <td>GUI / ターミナル</td>
+                                <td>自然言語で指示（組み込み）</td>
+                            </tr>
+                            <tr>
+                                <td>MCP設定</td>
+                                <td><code>.vscode/mcp.json</code></td>
+                                <td><code>claude mcp add</code>コマンド</td>
+                            </tr>
+                            <tr>
+                                <td>Issue管理</td>
+                                <td>MCPツール経由</td>
+                                <td>MCPツール経由</td>
+                            </tr>
+                            <tr>
+                                <td>PR作成</td>
+                                <td>MCPツール経由</td>
+                                <td>MCPツール + <code>gh</code>コマンド</td>
+                            </tr>
+                            <tr>
+                                <td>コード編集</td>
+                                <td>Copilot補完</td>
+                                <td>ファイルの読み書きを自律実行</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.5 VSCode拡張としてのClaude Code</h3>
+                <div class="content-block">
+                    <p>Claude CodeはVSCode拡張機能としても利用できます。VSCodeのサイドパネルからClaude Codeを起動し、エディタと統合された環境でAI操作が行えます。</p>
+
+                    <ol class="bullet-list">
+                        <li>VSCode拡張機能で<strong>「Claude Code」</strong>を検索してインストール</li>
+                        <li>サイドパネルに表示されるClaude Codeアイコンをクリック</li>
+                        <li>Anthropicアカウントで認証を完了</li>
+                        <li>チャット欄から自然言語でGit操作やMCPツールの呼び出しが可能</li>
+                    </ol>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">ターミナルとVSCode拡張の使い分け</span>
+                        </div>
+                        <p>ターミナル版はスクリプトやCI/CDとの連携に、VSCode拡張版はエディタでコードを見ながらの作業に適しています。MCP設定はどちらでも共有されるため、同じGitHub MCPサーバーを利用できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 15-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 15-4</span>
+                <h2 class="section-title">AIを使ったGit操作の自動化</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>MCP設定が完了すると、AIアシスタントに自然言語で指示するだけで、GitHubの様々な操作を行えるようになります。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 自然言語でのGitHub操作例</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">AIへの指示例とその結果</span>
+                            <span class="code-lang">チャット</span>
+                        </div>
+                        <pre class="code-content"><code># リポジトリの情報を確認
+ユーザー: 「team-portfolioリポジトリの最新のIssueを5件表示して」
+AI: GitHub MCPの list_issues ツールを使って結果を表示
+
+# Issueの作成
+ユーザー: 「team-portfolioリポジトリに、ヘッダーのレスポンシブ対応
+         というタイトルでIssueを作成して。ラベルはenhancementで。」
+AI: create_issue ツールを使ってIssueを自動作成
+
+# ブランチの確認
+ユーザー: 「現在オープンなプルリクエストの一覧を見せて」
+AI: list_pull_requests ツールを使ってPR一覧を表示
+
+# コードの検索
+ユーザー: 「リポジトリ内でconsole.logが使われている箇所を検索して」
+AI: search_code ツールを使ってコード検索を実行</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 GitHub MCPで利用できる主なツール</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ツール名</th>
+                                <th>機能</th>
+                                <th>使用例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>create_issue</code></td>
+                                <td>Issueの作成</td>
+                                <td>バグ報告や機能要望のIssueを作成</td>
+                            </tr>
+                            <tr>
+                                <td><code>list_issues</code></td>
+                                <td>Issue一覧の取得</td>
+                                <td>未対応のIssueを確認</td>
+                            </tr>
+                            <tr>
+                                <td><code>create_pull_request</code></td>
+                                <td>PRの作成</td>
+                                <td>変更内容の説明を自動生成してPR作成</td>
+                            </tr>
+                            <tr>
+                                <td><code>get_pull_request</code></td>
+                                <td>PR詳細の取得</td>
+                                <td>特定のPRの状態やレビュー状況を確認</td>
+                            </tr>
+                            <tr>
+                                <td><code>search_code</code></td>
+                                <td>コード検索</td>
+                                <td>リポジトリ内の特定のコードパターンを検索</td>
+                            </tr>
+                            <tr>
+                                <td><code>get_file_contents</code></td>
+                                <td>ファイル内容の取得</td>
+                                <td>特定ファイルの中身をAIに読み込ませる</td>
+                            </tr>
+                            <tr>
+                                <td><code>push_files</code></td>
+                                <td>ファイルの追加・更新</td>
+                                <td>AIが生成したコードを直接コミット</td>
+                            </tr>
+                            <tr>
+                                <td><code>create_branch</code></td>
+                                <td>ブランチの作成</td>
+                                <td>新しい作業ブランチを作成</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 15-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 15-5</span>
+                <h2 class="section-title">MCPを使ったIssue・PR管理</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>MCPを活用すると、Issue管理やPRのワークフローを大幅に効率化できます。具体的なユースケースを見ていきましょう。</p>
+            </div>
+
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#9889; MCPで自動化できるタスク一覧</div>
+    <div class="vd-grid">
+        <div class="vd-card green">
+            <span class="vd-icon">&#128221;</span>
+            <span class="vd-label">Issue作成</span>
+            <span class="vd-sub">自然言語からIssueを<br>自動生成</span>
+        </div>
+        <div class="vd-card blue">
+            <span class="vd-icon">&#128270;</span>
+            <span class="vd-label">コード検索</span>
+            <span class="vd-sub">リポジトリ内の<br>パターン検索</span>
+        </div>
+        <div class="vd-card purple">
+            <span class="vd-icon">&#128172;</span>
+            <span class="vd-label">PR作成</span>
+            <span class="vd-sub">変更内容の説明を<br>自動生成</span>
+        </div>
+        <div class="vd-card amber">
+            <span class="vd-icon">&#128196;</span>
+            <span class="vd-label">コードレビュー</span>
+            <span class="vd-sub">PR内容を要約して<br>レビューポイント提示</span>
+        </div>
+        <div class="vd-card red">
+            <span class="vd-icon">&#128202;</span>
+            <span class="vd-label">進捗確認</span>
+            <span class="vd-sub">Issue/PRのステータスを<br>一覧で確認</span>
+        </div>
+        <div class="vd-card">
+            <span class="vd-icon">&#127793;</span>
+            <span class="vd-label">ブランチ管理</span>
+            <span class="vd-sub">ブランチの作成・<br>切り替え</span>
+        </div>
+    </div>
+</div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 Issue管理の自動化</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">AIアシスタントへのIssue管理指示例</span>
+                            <span class="code-lang">チャット</span>
+                        </div>
+                        <pre class="code-content"><code># バグ報告のIssueを構造的に作成
+ユーザー: 「ログインページでメールアドレスを空欄のまま送信すると
+         500エラーが発生するバグをIssueとして登録して。
+         再現手順も含めて詳しく書いて。ラベルはbugで。」
+
+# AIが作成するIssue:
+# タイトル: ログインページで空メール送信時に500エラーが発生する
+# 本文:
+# ## 概要
+# ログインページで、メールアドレス欄を空欄のまま送信ボタンを
+# クリックすると500エラーが返される。
+#
+# ## 再現手順
+# 1. /login ページにアクセス
+# 2. メールアドレス欄を空欄のままにする
+# 3. パスワードを入力する
+# 4. 「ログイン」ボタンをクリック
+#
+# ## 期待される動作
+# バリデーションエラーメッセージが表示される
+#
+# ## 実際の動作
+# 500 Internal Server Error が返される</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 プルリクエストの効率化</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">AIアシスタントへのPR管理指示例</span>
+                            <span class="code-lang">チャット</span>
+                        </div>
+                        <pre class="code-content"><code># PRの内容を要約
+ユーザー: 「PR #15の変更内容を要約して、レビューすべきポイントを教えて」
+
+# AIの応答例:
+# PR #15「Add user authentication feature」の要約:
+# - 新規ファイル: auth.js, login.html, register.html
+# - 変更ファイル: app.js（ルーティング追加）, package.json
+#
+# レビューポイント:
+# 1. auth.js のパスワードハッシュ化処理は安全か
+# 2. エラーハンドリングは適切か
+# 3. 入力バリデーションは十分か
+
+# オープンなPRのステータスを一括確認
+ユーザー: 「オープンなPRの一覧と、それぞれのレビュー状況を表示して」</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">MCPとGitHub Actionsの組み合わせ</span>
+                        </div>
+                        <p>MCPでPRを作成し、GitHub Actionsで自動テストを実行するという組み合わせが非常に強力です。AIがコードの変更を行い、自動テストが品質を保証し、人間がレビューで最終確認するという効率的なワークフローが実現できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 15-6 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 15-6</span>
+                <h2 class="section-title">開発効率化のヒント</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>MCPを含む最新のAIツールを活用して、日々の開発作業をさらに効率化するためのヒントをまとめます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">6.1 AIアシスタントの活用パターン</h3>
+                <div class="content-block">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128221;</div>
+                            <div class="feature-content">
+                                <h4>コミットメッセージの自動生成</h4>
+                                <p>変更内容をAIに分析させて、Conventional Commitsに準拠した適切なコミットメッセージを生成してもらいましょう。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128196;</div>
+                            <div class="feature-content">
+                                <h4>PRの説明文自動生成</h4>
+                                <p>差分の内容をAIに読み込ませて、PRの概要・変更点・テスト方法などを自動で記述させることができます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128270;</div>
+                            <div class="feature-content">
+                                <h4>コードレビューの補助</h4>
+                                <p>AIにPRのコードを分析させて、潜在的なバグやセキュリティリスク、改善点を指摘してもらいましょう。人間のレビューの前段階として活用できます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128218;</div>
+                            <div class="feature-content">
+                                <h4>ドキュメントの自動生成</h4>
+                                <p>コードの変更履歴からCHANGELOGを生成したり、READMEのAPI仕様を更新したりすることもAIに任せられます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">6.2 複数のMCPサーバーの組み合わせ</h3>
+                <div class="content-block">
+                    <p>GitHub MCP以外にも、様々なMCPサーバーを組み合わせることで、より強力な開発環境を構築できます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">.vscode/mcp.json - 複数サーバーの設定例</span>
+                            <span class="code-lang">JSON</span>
+                        </div>
+                        <pre class="code-content"><code>{
+  "servers": {
+    "github": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${workspaceFolder}"
+      ]
+    }
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">6.3 AI活用時の注意点</h3>
+                <div class="content-block">
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">AIの出力は必ず確認する</span>
+                        </div>
+                        <p>AIが生成したコード、コミットメッセージ、Issue内容は必ず<strong>人間が確認</strong>してから使用してください。AIは間違いを含む可能性があり、特にセキュリティに関わるコードは慎重に検証する必要があります。</p>
+                    </div>
+
+                    <ul class="bullet-list">
+                        <li><strong>秘密情報の取り扱い：</strong>AIにAPIキーやパスワードを入力しないよう注意する</li>
+                        <li><strong>著作権の考慮：</strong>AIが生成したコードの著作権やライセンスに注意する</li>
+                        <li><strong>過度な依存の回避：</strong>AIはあくまで補助ツール。基本的なGit操作は自分で理解しておく</li>
+                        <li><strong>チームのルールに従う：</strong>AIツールの使用範囲はチームで合意を取ってから導入する</li>
+                    </ul>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">これからの開発者に求められるスキル</span>
+                        </div>
+                        <p>AI時代の開発者に求められるのは、AIに適切な指示を出せる<strong>プロンプトエンジニアリング</strong>のスキルと、AIの出力を評価できる<strong>技術的な基礎力</strong>の両方です。この講座で学んだGit & GitHubの基礎知識は、AIツールを効果的に使いこなすための土台になります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">15章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>MCPの正式名称として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>Model Communication Protocol</li>
+                            <li>Model Context Protocol</li>
+                            <li>Machine Context Protocol</li>
+                            <li>Model Connection Platform</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>VSCodeでGitHub MCPサーバーの設定ファイルを配置する場所はどこですか？</p>
+                        <ol type="A">
+                            <li><code>.github/mcp.json</code></li>
+                            <li><code>.vscode/mcp.json</code></li>
+                            <li><code>mcp/settings.json</code></li>
+                            <li><code>.config/mcp.json</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>AI開発ツールを活用する際の注意点として、正しくないものはどれですか？</p>
+                        <ol type="A">
+                            <li>AIが生成したコードは必ず人間が確認する</li>
+                            <li>秘密情報はAIに入力しないよう注意する</li>
+                            <li>AIの出力はすべて正確なので、そのまま使用してよい</li>
+                            <li>チームでAIツールの使用ルールを合意する</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">15章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p>MCPは<strong>Model Context Protocol</strong>の略称です。Anthropic社が開発した、AIモデルと外部ツール・データソースを接続するためのオープンプロトコルです。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p>VSCodeのMCP設定ファイルは、プロジェクトルートの<strong><code>.vscode/mcp.json</code></strong>に配置します。このファイルにMCPサーバーの起動コマンドや環境変数を定義します。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: C</div>
+                    <div class="answer-content">
+                        <p>「AIの出力はすべて正確なので、そのまま使用してよい」は<strong>正しくありません</strong>。AIは間違いを含む可能性があるため、生成されたコードやテキストは必ず人間が確認・検証してから使用する必要があります。特にセキュリティに関わる部分は慎重なチェックが求められます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="14git-project.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第14章 実践：チームプロジェクト演習</div>
+            </div>
+        </a>
+        <a href="index.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">コース目次</div>
+                <div class="page-nav-title">Git & GitHub完全ガイド</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../shared/demo.js"></script>
+</body>
+</html>

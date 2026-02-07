@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第6章 ボリュームとネットワーク - Docker構築入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #2496ED;
+        --primary-dark: #1976D2;
+        --primary-light: #E3F2FD;
+        --primary-lighter: #BBDEFB;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #f0f7fe 0%, #e3f2fd 100%);
+        border-radius: 16px; border: 1px solid #bbdefb;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #2496ED; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #2496ED; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(36,150,237,0.08);
+      }
+      .vd-box.accent { background: #2496ED; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #2496ED; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #e3f2fd; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #2496ED; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-docker.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">6</div>
+            <h1 class="chapter-title">ボリュームとネットワーク</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">6-1</span><span>データの永続化が必要な理由</span></li>
+                <li class="toc-item"><span class="toc-number">6-2</span><span>ボリュームの種類と使い方</span></li>
+                <li class="toc-item"><span class="toc-number">6-3</span><span>バインドマウント</span></li>
+                <li class="toc-item"><span class="toc-number">6-4</span><span>Dockerネットワークの基礎</span></li>
+                <li class="toc-item"><span class="toc-number">6-5</span><span>コンテナ間通信の実践</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 6-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-1</span>
+                <h2 class="section-title">データの永続化が必要な理由</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Dockerコンテナは「使い捨て」が基本です。コンテナを削除すると、その中に保存したデータもすべて失われます。データベースやアップロードファイルなど、残しておきたいデータを安全に保持するための仕組みが「ボリューム」です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 コンテナのデータは消える</h3>
+                <div class="content-block">
+                    <p>コンテナ内で作成・変更したファイルは、コンテナのライフサイクルに紐付いています。<code>docker rm</code>でコンテナを削除すると、内部のデータは完全に失われます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">データが消える例</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># コンテナを起動してファイルを作成
+docker run -it --name mycontainer ubuntu bash
+root@abc123:/# echo "大切なデータ" > /data.txt
+root@abc123:/# exit
+
+# コンテナを削除
+docker rm mycontainer
+
+# 再度起動しても data.txt は存在しない
+docker run -it ubuntu bash
+root@def456:/# cat /data.txt
+# → No such file or directory</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">本番環境でのデータ消失に注意</span>
+                        </div>
+                        <p>データベースコンテナをボリュームなしで運用すると、コンテナの再作成時に全データが消失します。本番環境では必ずボリュームを設定してください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.2 永続化が必要なケース</h3>
+                <div class="content-block">
+                    <p>以下のようなケースでは、コンテナの外にデータを保持する仕組みが不可欠です。</p>
+                    <ul>
+                        <li><strong>データベース</strong>: MySQL、PostgreSQLなどのテーブルデータ</li>
+                        <li><strong>ファイルアップロード</strong>: ユーザーがアップロードした画像やドキュメント</li>
+                        <li><strong>ログファイル</strong>: アプリケーションのアクセスログやエラーログ</li>
+                        <li><strong>設定ファイル</strong>: 環境ごとに異なる設定をコンテナ外部から注入したい場合</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 6-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-2</span>
+                <h2 class="section-title">ボリュームの種類と使い方</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Dockerには3種類のデータ永続化の方法があります。それぞれの特徴を理解して、用途に応じて使い分けましょう。</p>
+            </div>
+
+            <!-- 図解: ボリュームの種類比較 -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">3種類のデータ永続化方式の比較</div>
+                <div class="vd-grid">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#128230;</span>
+                        <span class="vd-label">Named Volume</span>
+                        <span class="vd-sub">Docker管理のボリューム</span>
+                        <span class="vd-sub" style="margin-top:8px; font-weight:600; color:#1976D2;">推奨: DB等の永続化</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128194;</span>
+                        <span class="vd-label">Bind Mount</span>
+                        <span class="vd-sub">ホストのディレクトリを直接マウント</span>
+                        <span class="vd-sub" style="margin-top:8px; font-weight:600; color:#2e7d32;">推奨: 開発時のソースコード</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#9889;</span>
+                        <span class="vd-label">tmpfs Mount</span>
+                        <span class="vd-sub">メモリ上の一時領域</span>
+                        <span class="vd-sub" style="margin-top:8px; font-weight:600; color:#f57f17;">用途: 一時的な機密データ</span>
+                    </div>
+                </div>
+                <p style="text-align:center;font-size:0.7rem;color:#666;margin-top:14px;">一般的な用途では<strong>Named Volume</strong>と<strong>Bind Mount</strong>を使い分ける</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 Named Volume（名前付きボリューム）</h3>
+                <div class="content-block">
+                    <p>DockerエンジンがホストOS上の専用ディレクトリでデータを管理します。最も推奨される永続化方式です。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Named Volumeの作成と使用</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># ボリュームを作成
+docker volume create mydata
+
+# ボリュームの一覧を確認
+docker volume ls
+
+# ボリュームをマウントしてコンテナを起動
+docker run -d --name db \
+  -v mydata:/var/lib/mysql \
+  mysql:8.0
+
+# ボリュームの詳細を確認
+docker volume inspect mydata</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">Named Volumeのメリット</span>
+                        </div>
+                        <p>Named VolumeはDockerが自動的にデータの保存場所を管理するため、ホスト側のパスを意識する必要がありません。また、<code>docker volume</code>コマンドでバックアップや移行も簡単に行えます。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 ボリュームの管理コマンド</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">ボリューム管理の基本コマンド</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># ボリュームの一覧
+docker volume ls
+
+# ボリュームの詳細情報
+docker volume inspect mydata
+
+# 使われていないボリュームを一括削除
+docker volume prune
+
+# 特定のボリュームを削除
+docker volume rm mydata</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">volume prune に注意</span>
+                        </div>
+                        <p><code>docker volume prune</code>は、どのコンテナにもマウントされていないボリュームをすべて削除します。重要なデータのバックアップを取ってから実行してください。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 6-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-3</span>
+                <h2 class="section-title">バインドマウント</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>バインドマウントは、ホストマシンの特定のディレクトリをコンテナに直接マウントする方法です。開発時にソースコードをコンテナと共有する際に特に便利です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 バインドマウントの基本</h3>
+                <div class="content-block">
+                    <p>ホストのディレクトリパスを指定してコンテナにマウントします。ファイルの変更がリアルタイムに反映されるため、開発時のホットリロードに最適です。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">バインドマウントの使い方</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># -v オプションでバインドマウント
+docker run -d --name webapp \
+  -v $(pwd)/src:/app/src \
+  -p 3000:3000 \
+  node:20
+
+# --mount オプション（より明示的な書き方）
+docker run -d --name webapp \
+  --mount type=bind,source=$(pwd)/src,target=/app/src \
+  -p 3000:3000 \
+  node:20</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">-v と --mount の違い</span>
+                        </div>
+                        <p><code>-v</code>はシンプルな書き方で、<code>--mount</code>はより明示的で読みやすい書き方です。機能は同じですが、公式ドキュメントでは<code>--mount</code>の使用が推奨されています。存在しないパスを指定した場合、<code>-v</code>は自動作成しますが、<code>--mount</code>はエラーを返します。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 Docker Composeでのバインドマウント</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">docker-compose.yml でのバインドマウント</span>
+                            <span class="code-lang">YAML</span>
+                        </div>
+                        <pre class="code-content"><code>services:
+  webapp:
+    image: node:20
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src:/app/src          # バインドマウント
+      - node_modules:/app/node_modules  # Named Volume
+
+volumes:
+  node_modules:   # node_modules はNamed Volumeで管理</code></pre>
+                    </div>
+                    <p>この例では、ソースコードはバインドマウントでリアルタイム同期し、<code>node_modules</code>はNamed Volumeで管理しています。こうすることで、ホスト側の<code>node_modules</code>とコンテナ内の依存関係が混在する問題を防げます。</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.3 読み取り専用マウント</h3>
+                <div class="content-block">
+                    <p>設定ファイルなど、コンテナから変更されたくないファイルは読み取り専用でマウントできます。</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">読み取り専用マウント</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># :ro を付けて読み取り専用にする
+docker run -d --name nginx \
+  -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf:ro \
+  -p 80:80 \
+  nginx:alpine</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 6-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-4</span>
+                <h2 class="section-title">Dockerネットワークの基礎</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Dockerネットワークは、コンテナ同士やコンテナと外部の通信を制御する仕組みです。デフォルトではbridgeネットワークが使用されますが、用途に応じて使い分けることが重要です。</p>
+            </div>
+
+            <!-- 図解: Dockerネットワーク ブリッジ通信 -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">Docker Bridge ネットワークのコンテナ間通信</div>
+                <div style="text-align:center; margin-bottom:16px;">
+                    <div class="vd-box accent" style="display:inline-block; min-width:240px; margin-bottom:12px;">
+                        <span class="vd-icon">&#127760;</span>
+                        <span class="vd-label">ホストマシン</span>
+                        <span class="vd-sub">ポートフォワーディングで外部に公開</span>
+                    </div>
+                </div>
+                <div style="text-align:center; margin-bottom:12px;">
+                    <span class="vd-arrow">&#8595;</span>
+                </div>
+                <div class="vd-box" style="max-width:400px; margin:0 auto; padding:20px; border-color:#1976D2; background:#f0f7fe;">
+                    <span class="vd-label" style="font-size:0.85rem; color:#1976D2; margin-bottom:12px;">my-network (bridge)</span>
+                    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:12px;">
+                        <div class="vd-box" style="min-width:100px; border-color:#43a047;">
+                            <span class="vd-icon">&#128187;</span>
+                            <span class="vd-label" style="color:#43a047;">webapp</span>
+                            <span class="vd-sub">:3000</span>
+                        </div>
+                        <div style="display:flex;align-items:center;">
+                            <span class="vd-arrow">&#8596;</span>
+                        </div>
+                        <div class="vd-box" style="min-width:100px; border-color:#e65100;">
+                            <span class="vd-icon">&#128451;</span>
+                            <span class="vd-label" style="color:#e65100;">database</span>
+                            <span class="vd-sub">:3306</span>
+                        </div>
+                    </div>
+                </div>
+                <p style="text-align:center;font-size:0.7rem;color:#666;margin-top:14px;">同じネットワーク内のコンテナは<strong>コンテナ名</strong>で通信可能（DNS自動解決）</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 ネットワークの種類</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ドライバ</th>
+                                <th>説明</th>
+                                <th>用途</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>bridge</strong></td>
+                                <td>デフォルト。同一ホスト上のコンテナ間通信</td>
+                                <td>一般的な開発・単一ホスト運用</td>
+                            </tr>
+                            <tr>
+                                <td><strong>host</strong></td>
+                                <td>ホストのネットワークを直接使用</td>
+                                <td>高パフォーマンスが必要な場合</td>
+                            </tr>
+                            <tr>
+                                <td><strong>none</strong></td>
+                                <td>ネットワーク接続なし</td>
+                                <td>セキュリティ重視のバッチ処理</td>
+                            </tr>
+                            <tr>
+                                <td><strong>overlay</strong></td>
+                                <td>複数ホストにまたがるネットワーク</td>
+                                <td>Docker Swarm / クラスタ構成</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 ネットワークの管理コマンド</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">ネットワーク操作の基本コマンド</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># ネットワーク一覧
+docker network ls
+
+# カスタムネットワークの作成
+docker network create my-network
+
+# ネットワークの詳細を確認
+docker network inspect my-network
+
+# コンテナをネットワークに接続
+docker network connect my-network webapp
+
+# コンテナをネットワークから切断
+docker network disconnect my-network webapp
+
+# ネットワークの削除
+docker network rm my-network</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 6-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-5</span>
+                <h2 class="section-title">コンテナ間通信の実践</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>カスタムネットワークを作成して、WebアプリケーションとデータベースのコンテナをDNS名で通信させる実践例を学びます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 カスタムネットワークでの通信</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">ネットワークを使ったコンテナ間通信</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># カスタムネットワークを作成
+docker network create app-network
+
+# MySQLコンテナを起動（ネットワークに接続）
+docker run -d --name mysql-db \
+  --network app-network \
+  -e MYSQL_ROOT_PASSWORD=secret \
+  -e MYSQL_DATABASE=myapp \
+  -v mysql-data:/var/lib/mysql \
+  mysql:8.0
+
+# Webアプリコンテナを起動（同じネットワークに接続）
+docker run -d --name webapp \
+  --network app-network \
+  -e DB_HOST=mysql-db \
+  -e DB_PORT=3306 \
+  -p 3000:3000 \
+  my-webapp:latest</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">コンテナ名によるDNS解決</span>
+                        </div>
+                        <p>カスタムネットワーク上では、コンテナ名がDNS名として自動的に登録されます。上記の例では、webappコンテナから<code>mysql-db:3306</code>でMySQLに接続できます。IPアドレスを指定する必要はありません。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 Docker Composeでのネットワーク</h3>
+                <div class="content-block">
+                    <p>Docker Composeでは、同じ<code>docker-compose.yml</code>に定義されたサービスは自動的に同じネットワークに接続されます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Docker Composeでのネットワーク設定</span>
+                            <span class="code-lang">YAML</span>
+                        </div>
+                        <pre class="code-content"><code>services:
+  webapp:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: mysql-db   # サービス名で接続
+      DB_PORT: 3306
+    depends_on:
+      - mysql-db
+    networks:
+      - backend
+
+  mysql-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: myapp
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  mysql-data:</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.3 ネットワークの確認とデバッグ</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">ネットワーク接続の確認方法</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># ネットワーク内のコンテナ一覧を確認
+docker network inspect app-network
+
+# コンテナ内から名前解決を確認
+docker exec webapp ping mysql-db
+
+# コンテナ内からポート接続を確認
+docker exec webapp nc -zv mysql-db 3306</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">6章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Named VolumeとBind Mountの違いとして正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>Named VolumeはLinuxでしか使えない</li>
+                            <li>Bind Mountはホストの特定のディレクトリをコンテナに直接マウントする</li>
+                            <li>Named Volumeは読み取り専用でしか使えない</li>
+                            <li>Bind Mountはデータの永続化ができない</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>カスタムネットワーク上でコンテナ間通信を行う際、接続先をどのように指定しますか？</p>
+                        <ol type="A">
+                            <li>コンテナのIPアドレスを指定する</li>
+                            <li>localhost を使用する</li>
+                            <li>コンテナ名（サービス名）をDNS名として使用する</li>
+                            <li>ポート番号だけを指定する</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>使われていないDockerボリュームを一括削除するコマンドはどれですか？</p>
+                        <ol type="A">
+                            <li><code>docker volume delete --all</code></li>
+                            <li><code>docker volume prune</code></li>
+                            <li><code>docker volume rm *</code></li>
+                            <li><code>docker volume clean</code></li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">6章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p>Bind Mountはホストマシンの特定のディレクトリパスをコンテナにマウントします。Named VolumeはDockerが管理する領域にデータを保存し、ホスト側のパスを意識する必要がありません。両方ともデータの永続化が可能で、読み書きもできます。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: C</div>
+                    <div class="answer-content">
+                        <p>カスタムネットワーク上では、Dockerの組み込みDNSにより、コンテナ名（またはDocker Composeのサービス名）をホスト名として使用できます。IPアドレスはコンテナの再作成時に変わる可能性があるため、名前解決を利用するのがベストプラクティスです。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>docker volume prune</code>コマンドは、どのコンテナにもマウントされていない（未使用の）ボリュームを一括削除します。実行前に確認プロンプトが表示されるので、大切なデータがないことを確認してから実行しましょう。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="5docker-compose.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第5章 Docker Composeの基礎</div>
+            </div>
+        </a>
+        <a href="7docker-webapp.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第7章 実践：Webアプリのコンテナ化</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

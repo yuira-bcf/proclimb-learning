@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第8章 CI実践：テスト自動化 - GitHub Actions入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #2088FF;
+        --primary-dark: #1A6FD6;
+        --primary-light: #E8F1FF;
+        --primary-lighter: #B3D4FF;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #eef5ff 0%, #e8f1ff 100%);
+        border-radius: 16px; border: 1px solid #b3d4ff;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #2088FF; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #2088FF; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(32,136,255,0.08);
+      }
+      .vd-box.accent { background: #2088FF; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #2088FF; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #e8f1ff; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #2088FF; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-github-actions.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">8</div>
+            <h1 class="chapter-title">CI実践：テスト自動化</h1>
+            <p class="chapter-lead">継続的インテグレーション（CI）の核心であるテスト自動化を実践的に学びます。ユニットテスト、Lint、コードカバレッジの自動実行から、PRのステータスチェックまで、品質を守るパイプラインを構築しましょう。</p>
+        </header>
+
+        <!-- セクション1: CIパイプラインの設計 -->
+        <section class="section" id="ci-design">
+            <h2><span class="material-icons">architecture</span> CIパイプラインの設計</h2>
+
+            <p>効果的なCIパイプラインを設計するためには、各チェックの順序と失敗時の動作を適切に決めることが重要です。<strong>早期フィードバック</strong>の原則に従い、高速に実行できるチェックを先に配置します。</p>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">CIパイプラインの推奨実行順序</div>
+                <div class="vd-flow">
+                    <div class="vd-box" style="border-color: #4CAF50;">
+                        <span class="vd-icon">&#x1F4DD;</span>
+                        <span class="vd-label">Lint</span>
+                        <span class="vd-sub">最速 (数秒)</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #2196F3;">
+                        <span class="vd-icon">&#x1F9EA;</span>
+                        <span class="vd-label">Unit Test</span>
+                        <span class="vd-sub">高速 (数十秒)</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #FF9800;">
+                        <span class="vd-icon">&#x1F3D7;</span>
+                        <span class="vd-label">Build</span>
+                        <span class="vd-sub">中速 (1-5分)</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #9C27B0;">
+                        <span class="vd-icon">&#x1F310;</span>
+                        <span class="vd-label">E2E Test</span>
+                        <span class="vd-sub">低速 (5-15分)</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>早期フィードバックの原則</h3>
+            <p>CIパイプラインでは、問題を早く検出するほど修正コストが低くなります。以下の原則を守りましょう。</p>
+            <ul>
+                <li><strong>高速なチェックを先に</strong>: Lintは数秒で完了するため最初に実行</li>
+                <li><strong>並列実行の活用</strong>: 独立したジョブは並列に実行して時間を短縮</li>
+                <li><strong>失敗時の早期終了</strong>: <code>fail-fast</code> でマトリックスの残りをキャンセル</li>
+                <li><strong>キャッシュの活用</strong>: 依存関係のインストール時間を短縮</li>
+            </ul>
+
+            <h3>基本的なCIワークフロー</h3>
+            <pre><code>name: CI Pipeline
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint    # Lint 通過後にテスト実行
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test    # テスト通過後にビルド
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">直列 vs 並列パイプラインの比較</div>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                    <div style="flex: 1; min-width: 220px;">
+                        <p style="text-align: center; font-weight: 700; font-size: 0.8rem; color: #e53935; margin-bottom: 8px;">直列実行（依存関係あり）</p>
+                        <div class="vd-bar">
+                            <div class="vd-bar-seg" style="background: #43A047; flex: 1;">Lint<br>10秒</div>
+                            <div class="vd-bar-seg" style="background: #1976D2; flex: 3;">Test<br>30秒</div>
+                            <div class="vd-bar-seg" style="background: #F57C00; flex: 5;">Build<br>50秒</div>
+                        </div>
+                        <p style="text-align: center; font-size: 0.75rem; color: #666;">合計: 約90秒</p>
+                    </div>
+                    <div style="flex: 1; min-width: 220px;">
+                        <p style="text-align: center; font-weight: 700; font-size: 0.8rem; color: #43A047; margin-bottom: 8px;">並列実行（独立ジョブ）</p>
+                        <div class="vd-bar">
+                            <div class="vd-bar-seg" style="background: #43A047; flex: 1;">Lint 10秒</div>
+                            <div class="vd-bar-seg" style="background: #1976D2; flex: 3;">Test 30秒</div>
+                            <div class="vd-bar-seg" style="background: #F57C00; flex: 5;">Build 50秒</div>
+                        </div>
+                        <p style="text-align: center; font-size: 0.75rem; color: #666;">合計: 約50秒（最長ジョブ分のみ）</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>並列実行のワークフロー</h3>
+            <pre><code>jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    # needs を省略 → lint と並列実行
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, test]    # 両方の完了を待つ
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run build</code></pre>
+        </section>
+
+        <!-- セクション2: ユニットテストの自動化 -->
+        <section class="section" id="unit-test">
+            <h2><span class="material-icons">science</span> ユニットテストの自動化</h2>
+
+            <p>ユニットテストの自動実行は、CIパイプラインの最も基本的な構成要素です。言語やフレームワークに応じたテスト自動化の設定を見ていきましょう。</p>
+
+            <h3>Jest（JavaScript / TypeScript）</h3>
+            <pre><code>name: Node.js CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Run tests
+        run: npm test -- --ci --reporters=default --reporters=jest-junit
+        env:
+          JEST_JUNIT_OUTPUT_DIR: ./test-results
+          JEST_JUNIT_OUTPUT_NAME: junit.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-node-${{ matrix.node-version }}
+          path: ./test-results/junit.xml</code></pre>
+
+            <h3>pytest（Python）</h3>
+            <pre><code>name: Python CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-html
+
+      - name: Run tests
+        run: |
+          pytest tests/ \
+            --junitxml=test-results/junit.xml \
+            --html=test-results/report.html \
+            --self-contained-html \
+            -v
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-python-${{ matrix.python-version }}
+          path: test-results/</code></pre>
+
+            <h3>JUnit（Java / Maven）</h3>
+            <pre><code>name: Java CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run tests
+        run: mvn test --batch-mode
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">主要テストフレームワーク一覧</div>
+                <div class="vd-grid">
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#x1F7E2;</span>
+                        <span class="vd-label">Jest</span>
+                        <span class="vd-sub">JavaScript / TypeScript</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#x1F40D;</span>
+                        <span class="vd-label">pytest</span>
+                        <span class="vd-sub">Python</span>
+                    </div>
+                    <div class="vd-card red">
+                        <span class="vd-icon">&#x2615;</span>
+                        <span class="vd-label">JUnit</span>
+                        <span class="vd-sub">Java</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#x1F48E;</span>
+                        <span class="vd-label">RSpec</span>
+                        <span class="vd-sub">Ruby</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">&#x1F500;</span>
+                        <span class="vd-label">Go test</span>
+                        <span class="vd-sub">Go</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#x1F9F2;</span>
+                        <span class="vd-label">PHPUnit</span>
+                        <span class="vd-sub">PHP</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習1: マルチバージョンテスト
+                </div>
+                <div class="exercise-body">
+                    <p>以下の要件を満たすワークフローを作成してください。</p>
+                    <ol>
+                        <li>Node.js 18、20、22 の3バージョンでテストを並列実行</li>
+                        <li>Ubuntu と macOS の2つのOSでテストを実行（マトリックス戦略）</li>
+                        <li>1つのバージョンが失敗しても他のバージョンのテストは継続する（<code>fail-fast: false</code>）</li>
+                        <li>テスト結果をアーティファクトとしてアップロード</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション3: Lint・コード品質チェック -->
+        <section class="section" id="lint-quality">
+            <h2><span class="material-icons">rule</span> Lint・コード品質チェック</h2>
+
+            <p>Lintツールはコードのスタイルや潜在的なバグを自動検出します。CIパイプラインにLintを組み込むことで、コードレビューの負担を軽減し、コード品質を一定に保てます。</p>
+
+            <h3>ESLint + Prettier（JavaScript / TypeScript）</h3>
+            <pre><code>name: Code Quality
+on: pull_request
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: ESLint チェック
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx --format json --output-file eslint-report.json
+        continue-on-error: true
+
+      - name: Prettier フォーマットチェック
+        run: npx prettier --check "src/**/*.{js,jsx,ts,tsx,css,md}"
+
+      - name: TypeScript 型チェック
+        run: npx tsc --noEmit
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eslint-report
+          path: eslint-report.json</code></pre>
+
+            <h3>Super-Linter（多言語対応）</h3>
+            <p>GitHub公式の <strong>Super-Linter</strong> は、1つのアクションで20以上の言語のLintを自動実行できる便利なツールです。</p>
+
+            <pre><code>name: Super Linter
+on: pull_request
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 変更差分の検出に必要
+
+      - name: Run Super-Linter
+        uses: super-linter/super-linter@v6
+        env:
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 変更されたファイルのみチェック
+          VALIDATE_ALL_CODEBASE: false
+          # 特定の言語のみ有効化
+          VALIDATE_JAVASCRIPT_ES: true
+          VALIDATE_TYPESCRIPT_ES: true
+          VALIDATE_CSS: true
+          VALIDATE_HTML: true
+          VALIDATE_MARKDOWN: true
+          VALIDATE_YAML: true</code></pre>
+
+            <h3>Python の品質チェック</h3>
+            <pre><code>jobs:
+  python-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install linters
+        run: pip install flake8 black isort mypy
+
+      - name: flake8 (スタイルチェック)
+        run: flake8 src/ tests/ --max-line-length 120
+
+      - name: black (フォーマットチェック)
+        run: black --check src/ tests/
+
+      - name: isort (import順チェック)
+        run: isort --check-only src/ tests/
+
+      - name: mypy (型チェック)
+        run: mypy src/</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">コード品質チェックの種類と検出範囲</div>
+                <div class="vd-grid">
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#x1F4CF;</span>
+                        <span class="vd-label">フォーマッター</span>
+                        <span class="vd-sub">Prettier, Black<br>コードスタイルの統一</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#x1F50D;</span>
+                        <span class="vd-label">リンター</span>
+                        <span class="vd-sub">ESLint, flake8<br>潜在的バグの検出</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#x1F3AF;</span>
+                        <span class="vd-label">型チェッカー</span>
+                        <span class="vd-sub">TypeScript, mypy<br>型安全性の検証</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">&#x1F6E1;</span>
+                        <span class="vd-label">セキュリティ</span>
+                        <span class="vd-sub">CodeQL, Snyk<br>脆弱性の検出</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習2: Lint パイプラインの構築
+                </div>
+                <div class="exercise-body">
+                    <p>以下の要件を満たすコード品質チェックワークフローを作成してください。</p>
+                    <ol>
+                        <li>PRイベントで起動する</li>
+                        <li>ESLint、Prettier、TypeScriptの型チェックを実行する</li>
+                        <li>各チェックは独立したステップとして実行する</li>
+                        <li>1つのチェックが失敗しても残りのチェックは実行を続ける（<code>continue-on-error: true</code>）</li>
+                        <li>全てのチェック結果をサマリーとして表示する最終ステップを追加する</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション4: コードカバレッジ -->
+        <section class="section" id="coverage">
+            <h2><span class="material-icons">analytics</span> コードカバレッジ</h2>
+
+            <p>コードカバレッジ（テストカバレッジ）は、テストがコードのどの程度をカバーしているかを数値化した指標です。CIパイプラインでカバレッジを自動計測し、品質の変化を追跡しましょう。</p>
+
+            <h3>Jest でのカバレッジ計測</h3>
+            <pre><code>name: Test with Coverage
+on: pull_request
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage --coverageReporters=text --coverageReporters=lcov --coverageReporters=json-summary
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: Check coverage threshold
+        run: |
+          # カバレッジサマリーから行カバレッジを抽出
+          COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+          echo "Line coverage: ${COVERAGE}%"
+
+          # 80%未満の場合は失敗
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "::error::Coverage is below 80%: ${COVERAGE}%"
+            exit 1
+          fi</code></pre>
+
+            <h3>PRにカバレッジコメントを追加</h3>
+            <pre><code>      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const summary = JSON.parse(
+              fs.readFileSync('coverage/coverage-summary.json', 'utf8')
+            );
+            const { lines, branches, functions, statements } = summary.total;
+
+            const body = `## テストカバレッジレポート
+
+            | 指標 | カバレッジ | 対象 |
+            |------|-----------|------|
+            | Lines | ${lines.pct}% | ${lines.covered}/${lines.total} |
+            | Branches | ${branches.pct}% | ${branches.covered}/${branches.total} |
+            | Functions | ${functions.pct}% | ${functions.covered}/${functions.total} |
+            | Statements | ${statements.pct}% | ${statements.covered}/${statements.total} |
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });</code></pre>
+
+            <h3>pytest でのカバレッジ計測</h3>
+            <pre><code>      - name: Run tests with coverage
+        run: |
+          pip install pytest-cov
+          pytest tests/ \
+            --cov=src \
+            --cov-report=html:coverage-html \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term \
+            --cov-fail-under=80
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage-html/</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">カバレッジの種類と計測対象</div>
+                <div class="vd-grid">
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#x1F4CA;</span>
+                        <span class="vd-label">Line Coverage</span>
+                        <span class="vd-sub">実行された行の割合<br>最も一般的な指標</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#x1F500;</span>
+                        <span class="vd-label">Branch Coverage</span>
+                        <span class="vd-sub">分岐の網羅率<br>if/else の各経路</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#x2699;</span>
+                        <span class="vd-label">Function Coverage</span>
+                        <span class="vd-sub">呼び出された関数の割合</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">&#x1F4DD;</span>
+                        <span class="vd-label">Statement Coverage</span>
+                        <span class="vd-sub">実行された文の割合</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip">
+                <span class="material-icons">lightbulb</span>
+                <strong>ポイント:</strong> カバレッジ100%を目指す必要はありません。一般的に80%程度が良いバランスとされています。重要なのは、カバレッジの推移を追跡し、コードの変更でカバレッジが大幅に下がっていないか監視することです。
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習3: カバレッジレポートの設定
+                </div>
+                <div class="exercise-body">
+                    <p>以下の要件を満たすワークフローを作成してください。</p>
+                    <ol>
+                        <li>Jestでテストを実行し、カバレッジを計測する</li>
+                        <li>カバレッジが75%未満の場合、ワークフローを失敗させる</li>
+                        <li>HTMLカバレッジレポートをアーティファクトとして保存する</li>
+                        <li>PRの場合、カバレッジ数値をPRコメントとして投稿する</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション5: PRステータスチェック -->
+        <section class="section" id="status-checks">
+            <h2><span class="material-icons">verified</span> PRステータスチェック</h2>
+
+            <p>CIパイプラインの結果をPRのマージ条件として強制することで、品質の低いコードがmainブランチに入ることを防ぎます。これが <strong>Branch Protection Rules</strong> とステータスチェックです。</p>
+
+            <h3>Branch Protection Rules の設定</h3>
+            <ol>
+                <li>リポジトリの <strong>Settings</strong> &gt; <strong>Branches</strong> を開く</li>
+                <li><strong>Add branch protection rule</strong> をクリック</li>
+                <li>Branch name pattern に <code>main</code> を入力</li>
+                <li><strong>Require status checks to pass before merging</strong> を有効化</li>
+                <li>必要なステータスチェック（ジョブ名）を追加</li>
+            </ol>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">Branch Protection によるPRフロー</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#x1F4DD;</span>
+                        <span class="vd-label">PR作成</span>
+                        <span class="vd-sub">feature → main</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #FF9800;">
+                        <span class="vd-icon">&#x23F3;</span>
+                        <span class="vd-label">CI実行</span>
+                        <span class="vd-sub">Lint + Test + Build</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #4CAF50;">
+                        <span class="vd-icon">&#x2705;</span>
+                        <span class="vd-label">全チェック通過</span>
+                        <span class="vd-sub">Required checks OK</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#x1F500;</span>
+                        <span class="vd-label">マージ可能</span>
+                        <span class="vd-sub">Merge button 有効化</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>ステータスバッジ</h3>
+            <p>READMEにCIのステータスバッジを表示することで、プロジェクトの健全性を一目で確認できます。</p>
+
+            <pre><code># README.md にバッジを追加
+![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg?branch=main)
+
+# 特定のブランチのバッジ
+![develop](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg?branch=develop)</code></pre>
+
+            <h3>Required Status Checks の実践的設定</h3>
+            <pre><code>name: CI
+on:
+  pull_request:
+    branches: [main]
+
+# このワークフローの各ジョブ名が status check として使える
+jobs:
+  lint:
+    name: "Lint Check"    # ← この名前で status check を設定
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run lint
+
+  test:
+    name: "Unit Tests"    # ← この名前で status check を設定
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm test
+
+  build:
+    name: "Build Check"   # ← この名前で status check を設定
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run build</code></pre>
+
+            <h3>Branch Protection の主要設定</h3>
+            <table>
+                <thead>
+                    <tr><th>設定項目</th><th>説明</th><th>推奨</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Require status checks</td><td>指定したCIジョブの通過を必須にする</td><td>有効</td></tr>
+                    <tr><td>Require branches to be up to date</td><td>マージ前にベースブランチの最新取り込みを必須にする</td><td>有効</td></tr>
+                    <tr><td>Require pull request reviews</td><td>PRのレビュー承認を必須にする</td><td>有効</td></tr>
+                    <tr><td>Require conversation resolution</td><td>全コメントの解決を必須にする</td><td>任意</td></tr>
+                    <tr><td>Include administrators</td><td>管理者にもルールを適用する</td><td>有効</td></tr>
+                </tbody>
+            </table>
+
+            <h3>完全なCI ワークフロー例</h3>
+            <pre><code>name: Complete CI Pipeline
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+      - run: npm run lint
+      - run: npx prettier --check "src/**/*.{ts,tsx}"
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+      - name: Run tests with coverage
+        run: npm test -- --coverage --ci
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/</code></pre>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習4: 完全なCIパイプライン
+                </div>
+                <div class="exercise-body">
+                    <p>以下の要件を満たすCIパイプラインを構築してください。</p>
+                    <ol>
+                        <li>PRイベントとmainブランチへのpushイベントで起動</li>
+                        <li>Lint、テスト、ビルドの3ジョブ構成</li>
+                        <li>Lintとテストは並列実行、ビルドは両方の成功後に実行</li>
+                        <li>テストジョブにはカバレッジ計測を含める</li>
+                        <li>ビルド成果物をアーティファクトとして保存</li>
+                        <li>Branch Protection Rules で「Lint Check」と「Unit Tests」を必須に設定する手順を説明してください</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- ページナビゲーション -->
+        <nav class="chapter-nav">
+            <a href="7actions-cache-artifacts.html" class="prev"><span class="material-icons">arrow_back</span> 前の章</a>
+            <a href="index.html" class="home"><span class="material-icons">home</span> 目次</a>
+            <a href="9actions-cd-deploy.html" class="next">次の章 <span class="material-icons">arrow_forward</span></a>
+        </nav>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+</body>
+</html>

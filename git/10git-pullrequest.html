@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第10章 プルリクエストとIssue管理 - Git & GitHub完全ガイド</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #F05032;
+        --primary-dark: #D63F20;
+        --primary-light: #FBE9E7;
+        --primary-lighter: #FFCCBC;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef5f3 0%, #fbe9e7 100%);
+        border-radius: 16px; border: 1px solid #ffccbc;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F05032; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F05032; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(240,80,50,0.08);
+      }
+      .vd-box.accent { background: #F05032; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F05032; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fbe9e7; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F05032; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-git.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">10</div>
+            <h1 class="chapter-title">プルリクエストとIssue管理</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">10-1</span><span>プルリクエストとは</span></li>
+                <li class="toc-item"><span class="toc-number">10-2</span><span>プルリクエストの作成手順</span></li>
+                <li class="toc-item"><span class="toc-number">10-3</span><span>コードレビューの進め方</span></li>
+                <li class="toc-item"><span class="toc-number">10-4</span><span>Issueの活用方法</span></li>
+                <li class="toc-item"><span class="toc-number">10-5</span><span>IssueとPRの連携</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 10-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 10-1</span>
+                <h2 class="section-title">プルリクエストとは</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>プルリクエスト（Pull Request、略してPR）は、GitHubの最も重要な機能の一つです。自分のブランチでの変更を、別のブランチ（通常はmain）にマージしてほしいとリクエストする仕組みです。単にコードをマージするだけでなく、<strong>コードレビュー</strong>の場としても機能します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 なぜプルリクエストが必要なのか</h3>
+                <div class="content-block">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128269;</div>
+                            <div class="feature-content">
+                                <h4>コードレビュー</h4>
+                                <p>他のメンバーが変更内容を確認し、バグや改善点を指摘できます。コードの品質向上に直結します。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128172;</div>
+                            <div class="feature-content">
+                                <h4>議論の場</h4>
+                                <p>コード行ごとにコメントを付けたり、全体的なフィードバックを共有したりできます。技術的な議論の記録が残ります。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128737;</div>
+                            <div class="feature-content">
+                                <h4>品質の担保</h4>
+                                <p>mainブランチへの直接プッシュを禁止し、PRを通じてのみマージを許可するルールを設定できます（ブランチ保護）。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128200;</div>
+                            <div class="feature-content">
+                                <h4>変更履歴の可視化</h4>
+                                <p>どの変更がいつ、誰によって、なぜ行われたかが明確に記録されます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 10-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 10-2</span>
+                <h2 class="section-title">プルリクエストの作成手順</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>プルリクエストの作成には、Gitコマンドでの準備とGitHub上での操作の2段階があります。全体の流れを理解しましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 PRワークフロー全体像</h3>
+                <div class="content-block">
+
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#128260; プルリクエスト ワークフロー</div>
+    <div class="vd-flow">
+        <div class="vd-box">
+            <span class="vd-icon">&#127807;</span>
+            <span class="vd-label">1. ブランチ作成</span>
+            <span class="vd-sub">git switch -c</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box">
+            <span class="vd-icon">&#128221;</span>
+            <span class="vd-label">2. コミット</span>
+            <span class="vd-sub">変更を記録</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box">
+            <span class="vd-icon">&#128640;</span>
+            <span class="vd-label">3. プッシュ</span>
+            <span class="vd-sub">git push -u</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box accent">
+            <span class="vd-icon">&#128196;</span>
+            <span class="vd-label">4. PR作成</span>
+            <span class="vd-sub">GitHub上で作成</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box">
+            <span class="vd-icon">&#128269;</span>
+            <span class="vd-label">5. レビュー</span>
+            <span class="vd-sub">コードの確認</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box" style="border-color: #4CAF50;">
+            <span class="vd-icon">&#9989;</span>
+            <span class="vd-label">6. マージ</span>
+            <span class="vd-sub">mainに統合</span>
+        </div>
+    </div>
+</div>
+
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 Step 1-3: ターミナルでの準備</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">PR作成のためのGit操作</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># 1. mainブランチを最新にする
+git switch main
+git pull origin main
+
+# 2. 新しいブランチを作成して切り替え
+git switch -c feature/add-contact-page
+
+# 3. ファイルを作成・編集
+# ... 開発作業 ...
+
+# 4. 変更をコミット
+git add contact.html style.css
+git commit -m "お問い合わせページを追加"
+
+# 必要に応じて追加のコミット
+git add contact.html
+git commit -m "お問い合わせフォームのバリデーションを追加"
+
+# 5. リモートにプッシュ
+git push -u origin feature/add-contact-page</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.3 Step 4: GitHub上でのPR作成</h3>
+                <div class="content-block">
+                    <ol class="bullet-list" style="list-style-type: decimal;">
+                        <li>プッシュ後、GitHubのリポジトリページに「Compare & pull request」ボタンが表示されるのでクリック</li>
+                        <li><strong>base</strong>（マージ先）が<code>main</code>、<strong>compare</strong>（マージ元）が自分のブランチであることを確認</li>
+                        <li><strong>タイトル</strong>を入力（変更内容を簡潔に表現する）</li>
+                        <li><strong>説明（Description）</strong>を記入（変更の詳細、背景、テスト方法など）</li>
+                        <li>必要に応じて<strong>Reviewers</strong>（レビュー担当者）、<strong>Assignees</strong>（担当者）、<strong>Labels</strong>（ラベル）を設定</li>
+                        <li><strong>Create pull request</strong>ボタンをクリック</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">PRの説明文テンプレート例</span>
+                            <span class="code-lang">Markdown</span>
+                        </div>
+                        <pre class="code-content"><code>## 概要
+お問い合わせページを新規追加しました。
+
+## 変更内容
+- お問い合わせフォーム（名前、メール、本文）を作成
+- フォームのバリデーションを実装
+- レスポンシブデザインに対応
+
+## 関連Issue
+Closes #42
+
+## テスト方法
+1. contact.html をブラウザで開く
+2. 空の状態で送信ボタンを押し、エラーメッセージが表示されることを確認
+3. 正しい値を入力して送信できることを確認
+
+## スクリーンショット
+（必要に応じてスクリーンショットを添付）</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">良いPRの書き方</span>
+                        </div>
+                        <p>PRの説明は丁寧に書きましょう。「何を変更したか」だけでなく、「なぜ変更したか」「どうテストしたか」を含めると、レビューアーの理解が格段に深まります。変更が大きい場合はスクリーンショットや動画を添付するとさらに効果的です。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.4 マージ方法の種類</h3>
+                <div class="content-block">
+                    <p>PRをマージする際、GitHubでは3つのマージ方法を選択できます。</p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>方法</th>
+                                <th>説明</th>
+                                <th>コミット履歴</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Create a merge commit</strong></td>
+                                <td>マージコミットを作成して統合</td>
+                                <td>ブランチの全コミット + マージコミットが残る</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Squash and merge</strong></td>
+                                <td>複数のコミットを1つにまとめてマージ</td>
+                                <td>1つのコミットに圧縮される</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Rebase and merge</strong></td>
+                                <td>リベースしてからFast-forwardマージ</td>
+                                <td>一直線の履歴になる</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">Squash and mergeが便利</span>
+                        </div>
+                        <p>開発中に「typo修正」「デバッグコード削除」などの細かいコミットを重ねた場合、<strong>Squash and merge</strong>を使えば1つのきれいなコミットにまとめられます。mainブランチの履歴がすっきりして見やすくなるため、多くのチームで採用されています。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 10-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 10-3</span>
+                <h2 class="section-title">コードレビューの進め方</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>コードレビューは、PRを通じて他のメンバーがコードを確認し、フィードバックを行うプロセスです。バグの発見だけでなく、チーム内の知識共有やコード品質の向上に大きく貢献します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 レビューの種類</h3>
+                <div class="content-block">
+                    <p>GitHubでは、PRに対して3つの種類のレビューを送信できます。</p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>レビュー種類</th>
+                                <th>意味</th>
+                                <th>アイコン</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Approve</strong></td>
+                                <td>変更を承認する（マージOK）</td>
+                                <td>緑のチェックマーク</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Request changes</strong></td>
+                                <td>修正を要求する（修正後に再レビュー）</td>
+                                <td>赤のバツマーク</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Comment</strong></td>
+                                <td>コメントのみ（承認でも却下でもない）</td>
+                                <td>グレーのコメントアイコン</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 レビュアーとしてのベストプラクティス</h3>
+                <div class="content-block">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128073;</div>
+                            <div class="feature-content">
+                                <h4>建設的なフィードバック</h4>
+                                <p>「ここがダメ」ではなく、「こうするとさらに良くなります」という表現を心がけましょう。改善案を具体的に示すとなお良いです。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128161;</div>
+                            <div class="feature-content">
+                                <h4>nits / suggestion の使い分け</h4>
+                                <p>「nit:」は些細な指摘（命名の提案など、必須ではない）、「suggestion:」は改善提案を意味します。重要度を明確にすると、作者が優先順位を判断しやすくなります。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#9200;</div>
+                            <div class="feature-content">
+                                <h4>レスポンスは早めに</h4>
+                                <p>PRが長時間放置されると開発が滞ります。24時間以内にレビューするのが理想的です。すぐにレビューできない場合は、その旨をコメントしましょう。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">自分のPRを自分でApproveしない</span>
+                        </div>
+                        <p>コードレビューの目的は「第三者の目」で品質を確認することです。自分が作成したPRを自分でApproveすることは、レビューの意味がなくなるため避けましょう。チームでは必ず別のメンバーにレビューを依頼してください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.3 レビュー後の対応</h3>
+                <div class="content-block">
+                    <p>レビューで修正を求められた場合は、同じブランチで修正してプッシュすれば、PRに自動的に反映されます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">レビュー指摘への対応</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># レビュー指摘に基づいてファイルを修正
+# ... 修正作業 ...
+
+# 修正をコミット
+git add contact.html
+git commit -m "レビュー指摘: バリデーションメッセージを修正"
+
+# 同じブランチにプッシュ（PRに自動反映される）
+git push origin feature/add-contact-page</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 10-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 10-4</span>
+                <h2 class="section-title">Issueの活用方法</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Issue（イシュー）は、GitHubのプロジェクト管理機能です。バグ報告、機能要望、タスク管理、質問など、プロジェクトに関するあらゆるトピックをIssueとして記録・追跡できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 Issueの構成要素</h3>
+                <div class="content-block">
+
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#128203; Issue管理の要素</div>
+    <div class="vd-grid">
+        <div class="vd-card green">
+            <span class="vd-icon">&#127991;</span>
+            <span class="vd-label">ラベル（Labels）</span>
+            <span class="vd-sub">bug, feature, docs など<br>Issueの分類に使用</span>
+        </div>
+        <div class="vd-card blue">
+            <span class="vd-icon">&#127919;</span>
+            <span class="vd-label">マイルストーン</span>
+            <span class="vd-sub">v1.0, Sprint 3 など<br>リリース単位で管理</span>
+        </div>
+        <div class="vd-card amber">
+            <span class="vd-icon">&#128100;</span>
+            <span class="vd-label">アサイニー</span>
+            <span class="vd-sub">担当者の割り当て<br>誰が対応するか明確に</span>
+        </div>
+        <div class="vd-card purple">
+            <span class="vd-icon">&#128196;</span>
+            <span class="vd-label">テンプレート</span>
+            <span class="vd-sub">バグ報告テンプレート<br>統一されたフォーマット</span>
+        </div>
+    </div>
+</div>
+
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 Issueの作成</h3>
+                <div class="content-block">
+                    <ol class="bullet-list" style="list-style-type: decimal;">
+                        <li>リポジトリの<strong>Issues</strong>タブを開く</li>
+                        <li><strong>New issue</strong>ボタンをクリック</li>
+                        <li><strong>タイトル</strong>を入力（問題や要望を簡潔に記述）</li>
+                        <li><strong>説明</strong>をMarkdownで記入</li>
+                        <li>右サイドバーで<strong>Labels</strong>、<strong>Assignees</strong>、<strong>Milestone</strong>を設定</li>
+                        <li><strong>Submit new issue</strong>をクリック</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">バグ報告Issueの例</span>
+                            <span class="code-lang">Markdown</span>
+                        </div>
+                        <pre class="code-content"><code>## バグの概要
+お問い合わせフォームの送信後に確認メッセージが表示されない
+
+## 再現手順
+1. /contact にアクセス
+2. フォームに正しい値を入力
+3. 「送信」ボタンをクリック
+4. ページが遷移するが確認メッセージが表示されない
+
+## 期待される動作
+送信後に「送信が完了しました」というメッセージが表示される
+
+## 実際の動作
+何も表示されずに空白ページが表示される
+
+## 環境
+- ブラウザ: Chrome 120
+- OS: macOS 14.2
+- 画面サイズ: 1920x1080</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.3 ラベルの活用</h3>
+                <div class="content-block">
+                    <p>ラベルを使うとIssueを分類でき、フィルタリングや一覧表示が便利になります。</p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ラベル名</th>
+                                <th>色の例</th>
+                                <th>用途</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>bug</strong></td>
+                                <td>赤</td>
+                                <td>バグの報告</td>
+                            </tr>
+                            <tr>
+                                <td><strong>feature</strong></td>
+                                <td>緑</td>
+                                <td>新機能の要望</td>
+                            </tr>
+                            <tr>
+                                <td><strong>enhancement</strong></td>
+                                <td>青</td>
+                                <td>既存機能の改善</td>
+                            </tr>
+                            <tr>
+                                <td><strong>documentation</strong></td>
+                                <td>紫</td>
+                                <td>ドキュメントの修正・追加</td>
+                            </tr>
+                            <tr>
+                                <td><strong>good first issue</strong></td>
+                                <td>黄</td>
+                                <td>初心者向けのタスク</td>
+                            </tr>
+                            <tr>
+                                <td><strong>help wanted</strong></td>
+                                <td>オレンジ</td>
+                                <td>助けが必要なタスク</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 10-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 10-5</span>
+                <h2 class="section-title">IssueとPRの連携</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>GitHubでは、IssueとPRを連携させることで、「どのIssueがどのPRで解決されたか」を追跡できます。PRがマージされた際に、関連するIssueを自動的にクローズすることも可能です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 PRからIssueを自動クローズする</h3>
+                <div class="content-block">
+                    <p>PRの説明文やコミットメッセージに特定のキーワードとIssue番号を記載すると、PRのマージ時にIssueが自動的にクローズされます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Issueを自動クローズするキーワード</span>
+                            <span class="code-lang">Markdown</span>
+                        </div>
+                        <pre class="code-content"><code># PRの説明文やコミットメッセージで使用可能なキーワード
+
+Closes #42         # Issue #42を自動クローズ
+Fixes #42          # Issue #42を自動クローズ
+Resolves #42       # Issue #42を自動クローズ
+
+# 複数のIssueを同時にクローズ
+Closes #42, Closes #43
+
+# コミットメッセージで使う場合
+git commit -m "お問い合わせフォームを修正 Fixes #42"</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">IssueとPRの連携フロー</span>
+                        </div>
+                        <p>推奨されるワークフローは以下の通りです。(1) 作業の前にIssueを作成する (2) Issueに基づいてブランチを作成する（例: <code>feature/42-contact-form</code>） (3) PRの説明文に<code>Closes #42</code>を記載する (4) PRがマージされるとIssue #42が自動的にクローズされる。これにより、全ての変更がIssueとして追跡可能になります。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 Issueからブランチを作成する</h3>
+                <div class="content-block">
+                    <p>GitHubのIssueページから直接ブランチを作成することもできます。Issueのサイドバーにある「Create a branch」リンクをクリックすると、Issue番号を含むブランチが自動的に作成されます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Issueベースのブランチ運用例</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># Issue #42 "お問い合わせフォームの追加" に対応するブランチ
+git switch -c feature/42-add-contact-form
+
+# 作業してコミット
+git add .
+git commit -m "お問い合わせフォームを追加 #42"
+# → #42 でIssueへのリンクが自動的に生成される
+
+# プッシュしてPRを作成
+git push -u origin feature/42-add-contact-form
+# PRの説明文に "Closes #42" を記載</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.3 プロジェクト管理の全体像</h3>
+                <div class="content-block">
+                    <p>IssueとPRを適切に連携させることで、プロジェクト全体の進捗を可視化できます。</p>
+
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128203;</div>
+                            <div class="feature-content">
+                                <h4>GitHub Projects</h4>
+                                <p>カンバンボード形式でIssueやPRを「Todo」「In Progress」「Done」のように管理できます。チームの作業状況が一目で分かります。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#127919;</div>
+                            <div class="feature-content">
+                                <h4>Milestone（マイルストーン）</h4>
+                                <p>Issueをマイルストーン（例: v1.0リリース）にグループ化して、リリースに必要なタスクの進捗を追跡できます。進捗バーで完了率が表示されます。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">Issueを作らずにいきなりコードを書かない</span>
+                        </div>
+                        <p>チーム開発では、コードを書き始める前にまずIssueを作成する習慣をつけましょう。Issueを通じてチームメンバーと方針を共有し、合意を得てから開発を始めることで、手戻りを防ぎ、効率的に開発を進められます。「Issue駆動開発」はチーム開発の基本です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">10章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>PRの説明文に記載すると、マージ時にIssue #15を自動的にクローズするキーワードはどれですか？</p>
+                        <ol type="A">
+                            <li><code>Close #15</code>（先頭が大文字のClose）</li>
+                            <li><code>Closes #15</code></li>
+                            <li><code>Related #15</code></li>
+                            <li><code>Done #15</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>コードレビューで修正を求められた場合、正しい対応方法はどれですか？</p>
+                        <ol type="A">
+                            <li>新しいPRを作成し直す</li>
+                            <li>同じブランチで修正してプッシュすれば、PRに自動反映される</li>
+                            <li>mainブランチで直接修正してプッシュする</li>
+                            <li>PRを一度クローズしてから修正する</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>PRのマージ方法のうち、複数のコミットを1つにまとめてマージするのはどれですか？</p>
+                        <ol type="A">
+                            <li>Create a merge commit</li>
+                            <li>Rebase and merge</li>
+                            <li>Squash and merge</li>
+                            <li>Fast-forward merge</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">10章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>Closes #15</code>、<code>Fixes #15</code>、<code>Resolves #15</code>がIssueの自動クローズに対応するキーワードです。実はAの<code>Close #15</code>も機能しますが、一般的には<code>Closes</code>（三人称単数形）が最も広く使われています。<code>Related</code>や<code>Done</code>はGitHubの自動クローズキーワードには含まれません。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p>レビュー指摘を受けた場合、同じブランチで修正をコミットし、<code>git push</code>するだけで、既存のPRに変更が自動的に反映されます。新しいPRを作り直す必要はありません。レビュアーは追加されたコミットの差分を確認して、再度レビューを行います。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: C</div>
+                    <div class="answer-content">
+                        <p><strong>Squash and merge</strong>は、PRに含まれる全てのコミットを1つのコミットに圧縮してからmainブランチにマージします。開発中の細かいコミット（typo修正、デバッグコード削除など）をまとめてくれるため、mainブランチの履歴がきれいに保たれます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="9git-remote.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第9章 リモート操作とコラボレーション</div>
+            </div>
+        </a>
+        <a href="11git-conflict.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第11章 コンフリクトの解決</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../shared/demo.js"></script>
+</body>
+</html>

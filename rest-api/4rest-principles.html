@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第4章 RESTの設計原則 - REST API & JSON入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #0097A7;
+        --primary-dark: #00838F;
+        --primary-light: #E0F7FA;
+        --primary-lighter: #B2EBF2;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #f8fdfe 0%, #e6f7f9 100%);
+        border-radius: 16px; border: 1px solid #b2ebf2;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #0097A7; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #0097A7; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(0,151,167,0.08);
+      }
+      .vd-box.accent { background: #0097A7; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #0097A7; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #e0f7fa; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #0097A7; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-rest-api.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">4</div>
+            <h1 class="chapter-title">RESTの設計原則</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">4-1</span><span>RESTとは</span></li>
+                <li class="toc-item"><span class="toc-number">4-2</span><span>RESTの6つの制約</span></li>
+                <li class="toc-item"><span class="toc-number">4-3</span><span>リソースとURI</span></li>
+                <li class="toc-item"><span class="toc-number">4-4</span><span>RESTfulなAPI設計パターン</span></li>
+                <li class="toc-item"><span class="toc-number">4-5</span><span>RESTとRESTfulの違い</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 4-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-1</span>
+                <h2 class="section-title">RESTとは</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>REST（REpresentational State Transfer）は、2000年にRoy Fieldingが博士論文で提唱したWebのアーキテクチャスタイルです。HTTPの設計思想を活かし、シンプルで拡張性の高いAPI設計を実現する考え方です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 RESTの基本概念</h3>
+                <div class="content-block">
+                    <p>RESTは「プロトコル」や「仕様書」ではなく、設計の<strong>「スタイル」「考え方」</strong>です。以下の点が重要です。</p>
+
+                    <ul class="bullet-list">
+                        <li>Web上の全てのものを<strong>リソース</strong>（資源）として捉える</li>
+                        <li>各リソースに固有の<strong>URI</strong>（アドレス）を割り当てる</li>
+                        <li>HTTPメソッド（GET, POST等）でリソースを操作する</li>
+                        <li>データの表現形式（JSON等）でリソースの状態をやりとりする</li>
+                    </ul>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">RESTは仕様ではない</span>
+                        </div>
+                        <p>RESTはHTTPのような厳密な仕様書ではなく、API設計の「ガイドライン」に近い概念です。そのため、実装には解釈の幅があり、完全にRESTに準拠したAPIは実務ではあまり多くありません。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-2</span>
+                <h2 class="section-title">RESTの6つの制約</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Roy Fieldingは、RESTアーキテクチャを定義する6つの制約を提唱しました。これらの制約に従うことで、スケーラブルで保守しやすいシステムを構築できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 6つの制約の詳細</h3>
+                <div class="content-block">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128187;</div>
+                            <div class="feature-content">
+                                <h4>1. クライアント-サーバー分離</h4>
+                                <p>UIの関心事（クライアント）とデータ処理の関心事（サーバー）を分離します。フロントエンドとバックエンドを独立して開発・デプロイでき、それぞれが進化しやすくなります。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128196;</div>
+                            <div class="feature-content">
+                                <h4>2. ステートレス</h4>
+                                <p>サーバーはクライアントの状態を保持しません。各リクエストには処理に必要な全ての情報を含める必要があります。これにより、サーバーのスケーラビリティが向上します。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128230;</div>
+                            <div class="feature-content">
+                                <h4>3. キャッシュ可能</h4>
+                                <p>レスポンスにはキャッシュ可否の情報を含めます。キャッシュを活用することで、ネットワーク通信を削減し、レスポンス速度を向上させます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128279;</div>
+                            <div class="feature-content">
+                                <h4>4. 統一インターフェース</h4>
+                                <p>全てのリソースに対して統一された方法（URI + HTTPメソッド）でアクセスします。これにより、APIの使い方がシンプルで予測可能になります。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128209;</div>
+                            <div class="feature-content">
+                                <h4>5. 階層化システム</h4>
+                                <p>クライアントは、直接サーバーと通信しているのか、中間サーバー（ロードバランサー、プロキシ等）を経由しているのかを意識する必要がありません。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128187;</div>
+                            <div class="feature-content">
+                                <h4>6. コードオンデマンド（任意）</h4>
+                                <p>サーバーがクライアントに実行可能なコード（JavaScriptなど）を送信できます。これは唯一のオプション制約で、必ずしも適用する必要はありません。</p>
+                            </div>
+                        </div>
+                    </div>
+
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#127959; RESTの6つの制約</div>
+    <div class="vd-grid">
+        <div class="vd-card blue"><span class="vd-icon"><span class="material-icons">devices</span></span><span class="vd-label">クライアント-<br>サーバー</span><span class="vd-sub">責務の分離</span></div>
+        <div class="vd-card green"><span class="vd-icon"><span class="material-icons">sync_disabled</span></span><span class="vd-label">ステートレス</span><span class="vd-sub">状態を保持しない</span></div>
+        <div class="vd-card amber"><span class="vd-icon"><span class="material-icons">cached</span></span><span class="vd-label">キャッシュ可能</span><span class="vd-sub">効率的な通信</span></div>
+        <div class="vd-card purple"><span class="vd-icon"><span class="material-icons">hub</span></span><span class="vd-label">統一<br>インターフェース</span><span class="vd-sub">一貫したアクセス</span></div>
+        <div class="vd-card"><span class="vd-icon"><span class="material-icons">layers</span></span><span class="vd-label">階層化<br>システム</span><span class="vd-sub">中間層の活用</span></div>
+        <div class="vd-card" style="border-style:dashed;"><span class="vd-icon"><span class="material-icons">code</span></span><span class="vd-label">コード<br>オンデマンド</span><span class="vd-sub">任意の制約</span></div>
+    </div>
+</div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">最も重要な2つの制約</span>
+                        </div>
+                        <p>実務で特に重要なのは<strong>ステートレス</strong>と<strong>統一インターフェース</strong>です。ステートレスにより水平スケーリング（サーバー台数の増加）が容易になり、統一インターフェースによりAPIの学習コストが下がります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-3</span>
+                <h2 class="section-title">リソースとURI</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>REST APIにおいて、<strong>リソース</strong>はAPIが扱うデータや概念を指し、<strong>URI</strong>はそのリソースを一意に識別するアドレスです。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 リソース指向設計</h3>
+                <div class="content-block">
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#128161; RESTful URI設計 — 良い例 vs 悪い例</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="background:#e8f5e9;border:2px solid #66bb6a;border-radius:12px;padding:16px;">
+            <div style="font-weight:700;color:#2e7d32;margin-bottom:10px;font-size:0.85rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;">check_circle</span> 良い設計（名詞ベース）</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;line-height:2;">
+                GET /users<br>GET /users/123<br>POST /users<br>DELETE /users/123
+            </div>
+        </div>
+        <div style="background:#fce4ec;border:2px solid #ef5350;border-radius:12px;padding:16px;">
+            <div style="font-weight:700;color:#c62828;margin-bottom:10px;font-size:0.85rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;">cancel</span> 悪い設計（動詞ベース）</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;line-height:2;">
+                GET /getUsers<br>GET /getUserById?id=123<br>POST /createUser<br>POST /deleteUser/123
+            </div>
+        </div>
+    </div>
+</div>
+
+                    <p>REST APIのURLは<strong>名詞（リソース名）</strong>を使って設計します。「何を」操作するかはURLで、「どう」操作するかはHTTPメソッドで表現します。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">良い設計（名詞ベース）</span>
+                            <span class="code-lang">URI</span>
+                        </div>
+                        <pre class="code-content"><code>GET    /users          ← ユーザー一覧を取得
+GET    /users/123      ← ID=123のユーザーを取得
+POST   /users          ← 新しいユーザーを作成
+PUT    /users/123      ← ID=123のユーザーを更新
+DELETE /users/123      ← ID=123のユーザーを削除</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">悪い設計（動詞ベース）</span>
+                            <span class="code-lang">URI</span>
+                        </div>
+                        <pre class="code-content"><code>GET    /getUsers             ← NG: 動詞を使っている
+GET    /getUserById?id=123   ← NG: 動詞を使っている
+POST   /createUser           ← NG: 動詞を使っている
+POST   /deleteUser/123       ← NG: メソッドと意味が不一致</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">URI設計の鉄則</span>
+                        </div>
+                        <p>URLにはリソース名（<strong>名詞</strong>）を使い、操作（get, create, delete等の<strong>動詞</strong>）は含めません。操作はHTTPメソッドで表現するのがRESTの基本です。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 コレクションと個別リソース</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>URI</th>
+                                <th>種類</th>
+                                <th>説明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>/users</code></td>
+                                <td>コレクション</td>
+                                <td>ユーザー全体の集合を表す</td>
+                            </tr>
+                            <tr>
+                                <td><code>/users/123</code></td>
+                                <td>個別リソース</td>
+                                <td>ID=123の特定ユーザーを表す</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>コレクション名は<strong>複数形</strong>を使うのが慣例です（<code>/users</code>、<code>/products</code>、<code>/orders</code>）。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-4</span>
+                <h2 class="section-title">RESTfulなAPI設計パターン</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>実際のアプリケーションでは、リソース同士が関連を持つことが多くあります。ネストしたURIで親子関係を表現します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 ネストしたリソース</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">親子関係のあるリソース</span>
+                            <span class="code-lang">URI</span>
+                        </div>
+                        <pre class="code-content"><code>/users/{userId}/orders           ← ユーザーの注文一覧
+/users/{userId}/orders/{orderId} ← 特定の注文
+/products/{productId}/reviews    ← 商品のレビュー一覧
+/teams/{teamId}/members          ← チームのメンバー一覧</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">ネストの深さ</span>
+                        </div>
+                        <p>ネストが3階層以上（例: <code>/users/1/orders/2/items/3</code>）になる場合は、設計を見直した方がよいことが多いです。深いネストはURLが長くなり、使いづらくなります。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 CRUD操作の対応表</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>操作</th>
+                                <th>HTTPメソッド</th>
+                                <th>URI例</th>
+                                <th>説明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>一覧取得</strong></td>
+                                <td>GET</td>
+                                <td><code>/users</code></td>
+                                <td>全ユーザーの一覧を取得</td>
+                            </tr>
+                            <tr>
+                                <td><strong>個別取得</strong></td>
+                                <td>GET</td>
+                                <td><code>/users/1</code></td>
+                                <td>ID=1のユーザーを取得</td>
+                            </tr>
+                            <tr>
+                                <td><strong>新規作成</strong></td>
+                                <td>POST</td>
+                                <td><code>/users</code></td>
+                                <td>新しいユーザーを作成</td>
+                            </tr>
+                            <tr>
+                                <td><strong>全体更新</strong></td>
+                                <td>PUT</td>
+                                <td><code>/users/1</code></td>
+                                <td>ID=1のユーザーを全体更新</td>
+                            </tr>
+                            <tr>
+                                <td><strong>部分更新</strong></td>
+                                <td>PATCH</td>
+                                <td><code>/users/1</code></td>
+                                <td>ID=1のユーザーを部分更新</td>
+                            </tr>
+                            <tr>
+                                <td><strong>削除</strong></td>
+                                <td>DELETE</td>
+                                <td><code>/users/1</code></td>
+                                <td>ID=1のユーザーを削除</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-5</span>
+                <h2 class="section-title">RESTとRESTfulの違い</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>「REST」と「RESTful」は似た言葉ですが、意味が少し異なります。その違いと、実務での使われ方を理解しましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 定義の違い</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>用語</th>
+                                <th>意味</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>REST</strong></td>
+                                <td>Roy Fieldingが提唱したアーキテクチャスタイル（理論・概念）</td>
+                            </tr>
+                            <tr>
+                                <td><strong>RESTful</strong></td>
+                                <td>RESTの原則に従って設計・実装されたAPI（実装物）</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 実務での適用状況</h3>
+                <div class="content-block">
+                    <p>完全にREST制約に準拠したAPIは現実には少なく、多くの「RESTful API」はRESTの一部の原則を適用しています。</p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>REST制約</th>
+                                <th>実務での適用度</th>
+                                <th>備考</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>クライアント-サーバー</td>
+                                <td>ほぼ全てで適用</td>
+                                <td>SPA + API構成が主流</td>
+                            </tr>
+                            <tr>
+                                <td>ステートレス</td>
+                                <td>ほぼ全てで適用</td>
+                                <td>JWT等のトークン認証で実現</td>
+                            </tr>
+                            <tr>
+                                <td>統一インターフェース</td>
+                                <td>多くで適用</td>
+                                <td>URI + HTTPメソッドの規約</td>
+                            </tr>
+                            <tr>
+                                <td>キャッシュ可能</td>
+                                <td>部分的に適用</td>
+                                <td>Cache-Controlヘッダーの活用</td>
+                            </tr>
+                            <tr>
+                                <td>階層化システム</td>
+                                <td>部分的に適用</td>
+                                <td>CDN、ロードバランサーの利用</td>
+                            </tr>
+                            <tr>
+                                <td>HATEOAS</td>
+                                <td>ほとんど適用されない</td>
+                                <td>レスポンスに次のアクションリンクを含める</td>
+                            </tr>
+                            <tr>
+                                <td>コードオンデマンド</td>
+                                <td>ほとんど適用されない</td>
+                                <td>オプション制約</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">実務での考え方</span>
+                        </div>
+                        <p>実務では「完全なREST準拠」よりも「実用的で分かりやすいAPI」を優先する場面が多くあります。RESTの原則を理解した上で、プロジェクトの要件に合わせて柔軟に設計することが大切です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">4章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>RESTの6つの制約のうち、唯一のオプション（任意）制約はどれですか？</p>
+                        <ol type="A">
+                            <li>ステートレス</li>
+                            <li>キャッシュ可能</li>
+                            <li>コードオンデマンド</li>
+                            <li>統一インターフェース</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>RESTfulなURI設計として最も適切なものはどれですか？</p>
+                        <ol type="A">
+                            <li><code>GET /getUser?id=1</code></li>
+                            <li><code>POST /createUser</code></li>
+                            <li><code>GET /users/1</code></li>
+                            <li><code>GET /api/fetchUserData/1</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>「ステートレス」の説明として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>サーバーがクライアントの過去のリクエスト情報を全て記憶する</li>
+                            <li>各リクエストは独立しており、処理に必要な情報を全て含める</li>
+                            <li>クライアントがサーバーの状態を管理する</li>
+                            <li>通信が暗号化されていること</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">4章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: C</div>
+                    <div class="answer-content">
+                        <p>コードオンデマンド（サーバーからクライアントに実行可能コードを送信する機能）は、RESTの6つの制約の中で唯一のオプション制約です。他の5つは必須の制約です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: C</div>
+                    <div class="answer-content">
+                        <p><code>GET /users/1</code>は、名詞ベースのリソース名（users）とHTTPメソッド（GET）で操作を表現しており、RESTfulな設計です。A、B、Dは動詞（get, create, fetch）を含んでいるためRESTfulではありません。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: B</div>
+                    <div class="answer-content">
+                        <p>ステートレスとは、サーバーがクライアントの状態を保持せず、各リクエストが処理に必要な全ての情報を自己完結的に含むことを意味します。これによりサーバーのスケーラビリティが向上します。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="3http-protocol.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第3章 HTTP通信の仕組み</div>
+            </div>
+        </a>
+        <a href="5rest-api-design.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第5章 REST APIの設計</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../shared/demo.js"></script>
+</body>
+</html>

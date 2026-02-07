@@ -19,9 +19,13 @@ const navData = {
         { href: "5-typography.html", num: "5", text: "タイポグラフィ" },
         { href: "6-layout-grid.html", num: "6", text: "レイアウトとグリッド" },
         { href: "7-color-basics.html", num: "7", text: "色彩基礎1" },
-        { href: "8-color-scheme.html", num: "8", text: "色彩基礎2（配色）" },
-        { href: "9-color-effects.html", num: "9", text: "色彩の影響と効果" },
-        { href: "10-web-color.html", num: "10", text: "Webの色の実用知識" }
+        { href: "8-color-history.html", num: "8", text: "色彩基礎2" },
+        { href: "9-visual-effects.html", num: "9", text: "視覚効果" },
+        { href: "10-color-psychology.html", num: "10", text: "色彩心理・カラーイメージ" },
+        { href: "11-color-rules.html", num: "11", text: "配色ルール" },
+        { href: "12-universal-design.html", num: "12", text: "ユニバーサルデザイン" },
+        { href: "13-usability-accessibility.html", num: "13", text: "ユーザビリティとアクセシビリティ" },
+        { href: "14-web-future.html", num: "14", text: "Webの未来と新しいトレンド" }
     ],
     appendix: [],
     categories: [

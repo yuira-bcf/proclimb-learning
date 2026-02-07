@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第1章 CI/CDとGitHub Actions入門 - GitHub Actions入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #2088FF;
+        --primary-dark: #1A6FD6;
+        --primary-light: #E8F1FF;
+        --primary-lighter: #B3D4FF;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #eef5ff 0%, #e8f1ff 100%);
+        border-radius: 16px; border: 1px solid #b3d4ff;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #2088FF; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #2088FF; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(32,136,255,0.08);
+      }
+      .vd-box.accent { background: #2088FF; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #2088FF; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #e8f1ff; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #2088FF; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-github-actions.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">1</div>
+            <h1 class="chapter-title">CI/CDとGitHub Actions入門</h1>
+            <p class="chapter-lead">ソフトウェア開発を加速させる継続的インテグレーション・デリバリーの世界と、GitHub Actionsの基本を理解しましょう。</p>
+        </header>
+
+        <!-- セクション1: CI/CDとは何か -->
+        <section class="section" id="what-is-cicd">
+            <h2><span class="material-icons">sync</span> CI/CDとは何か</h2>
+
+            <p><strong>CI/CD</strong>は、現代のソフトウェア開発において不可欠な自動化プラクティスです。手動で行っていたテストやデプロイ作業を自動化することで、開発チームの生産性とソフトウェア品質を大幅に向上させます。</p>
+
+            <h3>CI（継続的インテグレーション）とは</h3>
+            <p><strong>Continuous Integration（継続的インテグレーション）</strong>とは、開発者がコードの変更を頻繁にメインブランチへ統合し、その都度自動的にビルドとテストを実行するプラクティスです。</p>
+            <ul>
+                <li>コードの変更を頻繁に（1日に何度も）共有リポジトリにマージ</li>
+                <li>マージのたびに自動ビルド・自動テストを実行</li>
+                <li>問題を早期に発見し、修正コストを最小化</li>
+                <li>「インテグレーション地獄」（統合時の大量のコンフリクト）を回避</li>
+            </ul>
+
+            <h3>CD（継続的デリバリー / 継続的デプロイメント）とは</h3>
+            <p><strong>Continuous Delivery（継続的デリバリー）</strong>は、CIで検証されたコードを本番環境にリリースできる状態に常に保つプラクティスです。<strong>Continuous Deployment（継続的デプロイメント）</strong>は、さらに進んで本番環境への反映まで自動化します。</p>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">CI/CDパイプラインの全体像</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">💻</span>
+                        <span class="vd-label">コード変更</span>
+                        <span class="vd-sub">git push</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">🔨</span>
+                        <span class="vd-label">ビルド</span>
+                        <span class="vd-sub">コンパイル・バンドル</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">🧪</span>
+                        <span class="vd-label">テスト</span>
+                        <span class="vd-sub">自動テスト実行</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">📦</span>
+                        <span class="vd-label">デリバリー</span>
+                        <span class="vd-sub">リリース準備</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box">
+                        <span class="vd-icon">🚀</span>
+                        <span class="vd-label">デプロイ</span>
+                        <span class="vd-sub">本番環境反映</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>手動テスト・デプロイの問題点</h3>
+            <p>CI/CDを導入していない開発現場では、以下のような問題が日常的に発生します。</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>問題</th>
+                        <th>具体例</th>
+                        <th>CI/CDによる解決</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>テスト漏れ</td>
+                        <td>手動テストでは全パターンの確認が困難</td>
+                        <td>毎回同じテストを自動実行</td>
+                    </tr>
+                    <tr>
+                        <td>デプロイミス</td>
+                        <td>手順書の読み飛ばし、環境設定ミス</td>
+                        <td>デプロイ手順をコード化</td>
+                    </tr>
+                    <tr>
+                        <td>統合の遅れ</td>
+                        <td>リリース直前に大量のコンフリクト発生</td>
+                        <td>頻繁な統合で問題を早期発見</td>
+                    </tr>
+                    <tr>
+                        <td>リリース頻度の低下</td>
+                        <td>手動作業が面倒でリリースを避ける</td>
+                        <td>ワンクリック（または自動）でリリース</td>
+                    </tr>
+                    <tr>
+                        <td>属人化</td>
+                        <td>「あの人しかデプロイできない」状態</td>
+                        <td>手順がコードとして共有される</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="point-box">
+                <div class="point-title"><span class="material-icons">lightbulb</span> 重要ポイント</div>
+                <p>CI/CDの本質は「自動化」と「頻度の向上」です。小さな変更を頻繁に統合・テスト・デプロイすることで、問題の早期発見と修正コストの削減を実現します。</p>
+            </div>
+        </section>
+
+        <!-- セクション2: GitHub Actionsの概要 -->
+        <section class="section" id="github-actions-overview">
+            <h2><span class="material-icons">hub</span> GitHub Actionsの概要</h2>
+
+            <p><strong>GitHub Actions</strong>は、GitHubが提供するCI/CDプラットフォームです。リポジトリ内にYAMLファイルを配置するだけで、コードのビルド、テスト、デプロイを自動化できます。</p>
+
+            <h3>GitHub Actionsの特徴</h3>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">GitHub Actionsの主要特徴</div>
+                <div class="vd-grid">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">🔗</span>
+                        <span class="vd-label">GitHub統合</span>
+                        <span class="vd-sub">リポジトリに組み込み<br>追加ツール不要</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">📝</span>
+                        <span class="vd-label">YAML定義</span>
+                        <span class="vd-sub">設定ファイルで<br>ワークフロー記述</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">🛒</span>
+                        <span class="vd-label">Marketplace</span>
+                        <span class="vd-sub">20,000以上の<br>再利用可能アクション</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">🖥️</span>
+                        <span class="vd-label">マルチOS</span>
+                        <span class="vd-sub">Linux/Windows/macOS<br>で実行可能</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">🆓</span>
+                        <span class="vd-label">無料枠あり</span>
+                        <span class="vd-sub">パブリックリポジトリ<br>は無制限</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">📊</span>
+                        <span class="vd-label">マトリックス</span>
+                        <span class="vd-sub">複数環境で<br>同時テスト</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>無料枠について</h3>
+            <p>GitHub Actionsは、アカウントプランに応じて無料枠が提供されています。</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>プラン</th>
+                        <th>ストレージ</th>
+                        <th>実行時間/月</th>
+                        <th>備考</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Free</td>
+                        <td>500 MB</td>
+                        <td>2,000分</td>
+                        <td>パブリックリポジトリは無制限</td>
+                    </tr>
+                    <tr>
+                        <td>Team</td>
+                        <td>2 GB</td>
+                        <td>3,000分</td>
+                        <td>Organization向け</td>
+                    </tr>
+                    <tr>
+                        <td>Enterprise</td>
+                        <td>50 GB</td>
+                        <td>50,000分</td>
+                        <td>大規模チーム向け</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="point-box">
+                <div class="point-title"><span class="material-icons">info</span> 注意</div>
+                <p>Windows/macOSランナーはLinuxランナーと比較して実行時間の消費倍率が異なります（Windows: 2倍、macOS: 10倍）。学習時はubuntu-latestを使用しましょう。</p>
+            </div>
+
+            <h3>基本的な仕組み</h3>
+            <p>GitHub Actionsは以下の流れで動作します。</p>
+            <ol>
+                <li>リポジトリの <code>.github/workflows/</code> ディレクトリにYAMLファイルを配置</li>
+                <li>指定したイベント（push、pull_request等）が発生</li>
+                <li>GitHub側のランナー（仮想マシン）でワークフローが実行</li>
+                <li>結果がActionsタブに表示される</li>
+            </ol>
+
+            <pre><code># 最小限のワークフロー例
+name: My First Workflow
+
+on: push
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello World
+        run: echo "Hello, GitHub Actions!"</code></pre>
+        </section>
+
+        <!-- セクション3: 他のCI/CDツールとの比較 -->
+        <section class="section" id="comparison">
+            <h2><span class="material-icons">compare_arrows</span> 他のCI/CDツールとの比較</h2>
+
+            <p>CI/CDツールは多数存在します。それぞれの特徴を理解し、プロジェクトに最適なツールを選択することが重要です。</p>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">主要CI/CDツール比較マップ</div>
+                <div class="vd-grid">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">⚡</span>
+                        <span class="vd-label">GitHub Actions</span>
+                        <span class="vd-sub">GitHub統合<br>YAML定義・無料枠大</span>
+                    </div>
+                    <div class="vd-card red">
+                        <span class="vd-icon">🏗️</span>
+                        <span class="vd-label">Jenkins</span>
+                        <span class="vd-sub">OSS・自己ホスト<br>プラグイン豊富</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">🔄</span>
+                        <span class="vd-label">CircleCI</span>
+                        <span class="vd-sub">高速ビルド<br>Docker特化</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">🦊</span>
+                        <span class="vd-label">GitLab CI</span>
+                        <span class="vd-sub">GitLab統合<br>オールインワン</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">☁️</span>
+                        <span class="vd-label">AWS CodePipeline</span>
+                        <span class="vd-sub">AWS統合<br>エンタープライズ向け</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">🔵</span>
+                        <span class="vd-label">Azure DevOps</span>
+                        <span class="vd-sub">Microsoft統合<br>企業向け包括機能</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>詳細比較表</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>項目</th>
+                        <th>GitHub Actions</th>
+                        <th>Jenkins</th>
+                        <th>CircleCI</th>
+                        <th>GitLab CI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ホスティング</td>
+                        <td>クラウド（GitHub）</td>
+                        <td>セルフホスト</td>
+                        <td>クラウド</td>
+                        <td>クラウド/セルフ</td>
+                    </tr>
+                    <tr>
+                        <td>設定方式</td>
+                        <td>YAML</td>
+                        <td>Groovy / GUI</td>
+                        <td>YAML</td>
+                        <td>YAML</td>
+                    </tr>
+                    <tr>
+                        <td>無料枠</td>
+                        <td>2,000分/月</td>
+                        <td>完全無料（OSS）</td>
+                        <td>6,000分/月</td>
+                        <td>400分/月</td>
+                    </tr>
+                    <tr>
+                        <td>セットアップ</td>
+                        <td>非常に簡単</td>
+                        <td>サーバー構築が必要</td>
+                        <td>簡単</td>
+                        <td>簡単</td>
+                    </tr>
+                    <tr>
+                        <td>エコシステム</td>
+                        <td>Marketplace</td>
+                        <td>プラグイン</td>
+                        <td>Orbs</td>
+                        <td>テンプレート</td>
+                    </tr>
+                    <tr>
+                        <td>GitHub連携</td>
+                        <td>ネイティブ</td>
+                        <td>プラグイン経由</td>
+                        <td>Webhook</td>
+                        <td>ミラーリング</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>GitHub Actionsを選ぶ場面</h3>
+            <ul>
+                <li><strong>GitHubでソースコードを管理</strong>している場合 → 最もスムーズに導入可能</li>
+                <li><strong>小〜中規模のプロジェクト</strong> → 無料枠で十分対応可能</li>
+                <li><strong>複数OS/言語でテスト</strong>が必要 → マトリックスビルドが強力</li>
+                <li><strong>素早く導入したい</strong> → サーバー構築不要、YAML記述だけでスタート</li>
+            </ul>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 1-1</div>
+                <p><strong>問題:</strong> あなたのチームは以下の条件でCI/CDツールを選択する必要があります。最適なツールとその理由を答えてください。</p>
+                <ul>
+                    <li>ソースコードはGitHubで管理</li>
+                    <li>チームは5人の小規模チーム</li>
+                    <li>Node.jsのWebアプリケーション開発</li>
+                    <li>予算は限られている</li>
+                </ul>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <p><strong>GitHub Actions</strong>が最適です。理由:</p>
+                        <ul>
+                            <li>GitHubとネイティブに統合されており、追加のサーバー構築やツール設定が不要</li>
+                            <li>パブリックリポジトリなら無制限、プライベートでも月2,000分の無料枠がある</li>
+                            <li>Node.jsのセットアップアクション（actions/setup-node）が公式提供されている</li>
+                            <li>小規模チームでの運用コスト（サーバー管理等）が発生しない</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- セクション4: GitHub Actionsのメリット -->
+        <section class="section" id="advantages">
+            <h2><span class="material-icons">star</span> GitHub Actionsのメリット</h2>
+
+            <h3>1. GitHubとのシームレスな統合</h3>
+            <p>GitHub Actionsは、GitHubのイベントシステムと完全に統合されています。push、pull_request、issue作成、リリース公開など、GitHub上のあらゆるイベントをトリガーにワークフローを実行できます。</p>
+
+            <pre><code># Pull Requestのイベントに反応する例
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test</code></pre>
+
+            <p>この例のように、Pull Requestが作成・更新された際に自動的にリントチェックとテストを実行し、結果をPull Request上に表示できます。</p>
+
+            <h3>2. 豊富なMarketplace</h3>
+            <p>GitHub Marketplace には20,000以上のアクションが公開されています。よくある処理は既存のアクションを <code>uses</code> キーワードで呼び出すだけで利用可能です。</p>
+
+            <pre><code># Marketplaceのアクションを活用した実践例
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # リポジトリをチェックアウト
+      - uses: actions/checkout@v4
+
+      # Node.jsセットアップ
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 依存関係インストール・ビルド
+      - run: npm ci
+      - run: npm run build
+
+      # S3にデプロイ（Marketplaceアクション）
+      - uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --delete
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}</code></pre>
+
+            <h3>3. マトリックスビルド</h3>
+            <p>複数のOS・言語バージョンの組み合わせでテストを自動実行できます。</p>
+
+            <pre><code># マトリックスビルドの例
+name: Cross-platform Test
+
+on: push
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm test</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">マトリックスビルドによる組み合わせテスト（3 OS x 3 Node.js = 9ジョブ）</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="vd-card blue">
+                        <span class="vd-label">Ubuntu + Node 18</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-label">Ubuntu + Node 20</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-label">Ubuntu + Node 22</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-label">Windows + Node 18</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-label">Windows + Node 20</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-label">Windows + Node 22</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-label">macOS + Node 18</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-label">macOS + Node 20</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-label">macOS + Node 22</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>4. その他のメリット</h3>
+            <ul>
+                <li><strong>セットアップが容易</strong>: YAMLファイルを配置するだけ。サーバー構築不要</li>
+                <li><strong>Secrets管理</strong>: APIキーやパスワードを安全に管理・利用可能</li>
+                <li><strong>キャッシュ機能</strong>: 依存関係のキャッシュでビルド時間を短縮</li>
+                <li><strong>アーティファクト</strong>: ビルド成果物の保存・共有が可能</li>
+                <li><strong>再利用可能ワークフロー</strong>: 共通処理をテンプレート化して複数リポジトリで再利用</li>
+                <li><strong>環境保護ルール</strong>: デプロイ前の承認フロー設定が可能</li>
+            </ul>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 1-2</div>
+                <p><strong>問題:</strong> 以下のシナリオで、GitHub Actionsのどのメリットが特に活かされるか答えてください。</p>
+                <p>「Node.jsのライブラリを開発しており、Node.js 18, 20, 22の3バージョンと、Ubuntu、Windows、macOSの3つのOSでテストを実行したい。」</p>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <p><strong>マトリックスビルド</strong>が最も活かされます。</p>
+                        <p><code>strategy.matrix</code>で<code>os</code>と<code>node-version</code>を定義するだけで、3 x 3 = 9通りの組み合わせテストが自動的に並列実行されます。手動で9つのジョブを書く必要はありません。</p>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- セクション5: 学習ロードマップ -->
+        <section class="section" id="roadmap">
+            <h2><span class="material-icons">route</span> 学習ロードマップ</h2>
+
+            <p>この講座では、GitHub Actionsを基礎から実践まで、全10章にわたって体系的に学習します。各章を順番に進めることで、実務でCI/CDパイプラインを構築・運用できるスキルが身につきます。</p>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">GitHub Actions入門 全10章ロードマップ</div>
+                <div class="vd-bar">
+                    <div class="vd-bar-seg" style="background: #1565C0;">基礎</div>
+                    <div class="vd-bar-seg" style="background: #1976D2;">構造</div>
+                    <div class="vd-bar-seg" style="background: #1E88E5;">トリガー</div>
+                    <div class="vd-bar-seg" style="background: #2196F3;">ジョブ</div>
+                    <div class="vd-bar-seg" style="background: #42A5F5;">ステップ</div>
+                    <div class="vd-bar-seg" style="background: #29B6F6;">環境変数</div>
+                    <div class="vd-bar-seg" style="background: #26C6DA;">キャッシュ</div>
+                    <div class="vd-bar-seg" style="background: #26A69A;">デプロイ</div>
+                    <div class="vd-bar-seg" style="background: #66BB6A;">カスタム</div>
+                    <div class="vd-bar-seg" style="background: #43A047;">実践</div>
+                </div>
+                <div class="vd-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 16px;">
+                    <div class="vd-card blue">
+                        <span class="vd-label">第1章 CI/CDとGitHub Actions入門</span>
+                        <span class="vd-sub">CI/CDの基礎知識と概要</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-label">第2章 ワークフローの基本構造</span>
+                        <span class="vd-sub">YAML基礎・3層構造</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-label">第3章 トリガーとイベント</span>
+                        <span class="vd-sub">push/PR/schedule/手動</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-label">第4章 ジョブとランナー</span>
+                        <span class="vd-sub">並列実行・マトリックス</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-label">第5章 ステップとアクション活用</span>
+                        <span class="vd-sub">Marketplace・データ共有</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-label">第6章 環境変数とシークレット</span>
+                        <span class="vd-sub">env/secrets/GITHUB_TOKEN</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-label">第7章 キャッシュとアーティファクト</span>
+                        <span class="vd-sub">ビルド高速化・成果物管理</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-label">第8章 デプロイ自動化</span>
+                        <span class="vd-sub">GitHub Pages/AWS/Docker</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-label">第9章 カスタムアクション作成</span>
+                        <span class="vd-sub">composite/Docker/JS</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-label">第10章 実践プロジェクト</span>
+                        <span class="vd-sub">総合演習・ベストプラクティス</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>各章の詳細</h3>
+
+            <h4>第1〜4章: 基礎編</h4>
+            <ul>
+                <li><strong>第1章</strong>（本章）: CI/CDの概念とGitHub Actionsの全体像を理解</li>
+                <li><strong>第2章</strong>: ワークフローファイルの構造（YAML、Workflow → Job → Step）</li>
+                <li><strong>第3章</strong>: ワークフローを起動するトリガー（push、pull_request、schedule等）</li>
+                <li><strong>第4章</strong>: ジョブの依存関係、ランナーの種類、マトリックスビルド</li>
+            </ul>
+
+            <h4>第5〜7章: 中級編</h4>
+            <ul>
+                <li><strong>第5章</strong>: ステップの詳細、Marketplaceアクション活用、データ共有</li>
+                <li><strong>第6章</strong>: 環境変数・シークレットの安全な管理方法</li>
+                <li><strong>第7章</strong>: キャッシュによるビルド高速化、アーティファクトの管理</li>
+            </ul>
+
+            <h4>第8〜10章: 実践編</h4>
+            <ul>
+                <li><strong>第8章</strong>: 実際のデプロイ自動化（GitHub Pages、AWS、Docker Hub等）</li>
+                <li><strong>第9章</strong>: オリジナルアクションの作成方法（composite、Docker、JavaScript）</li>
+                <li><strong>第10章</strong>: 総合プロジェクトで全知識を統合した実践演習</li>
+            </ul>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 1-3</div>
+                <p><strong>問題:</strong> 以下の各タスクは、この講座のどの章で学ぶ内容に該当しますか？それぞれ章番号を答えてください。</p>
+                <ol>
+                    <li>毎日午前3時に自動テストを実行したい</li>
+                    <li>APIキーをワークフロー内で安全に使用したい</li>
+                    <li>npm install の結果をキャッシュしてビルドを高速化したい</li>
+                    <li>Node.js 18/20/22 の3バージョンでテストしたい</li>
+                    <li>自作のリントツールをアクションとして公開したい</li>
+                </ol>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <ol>
+                            <li><strong>第3章</strong>（トリガーとイベント） — cron構文によるスケジュール実行</li>
+                            <li><strong>第6章</strong>（環境変数とシークレット） — secrets管理</li>
+                            <li><strong>第7章</strong>（キャッシュとアーティファクト） — actions/cacheの活用</li>
+                            <li><strong>第4章</strong>（ジョブとランナー） — マトリックスビルド</li>
+                            <li><strong>第9章</strong>（カスタムアクション作成） — アクションの作成と公開</li>
+                        </ol>
+                    </div>
+                </details>
+            </div>
+
+            <div class="point-box">
+                <div class="point-title"><span class="material-icons">school</span> 学習のポイント</div>
+                <p>各章は前の章の知識を前提としています。順番に進めることを推奨しますが、CI/CDの基礎知識がある方は第2章から始めても問題ありません。各章には実践的な演習問題が含まれていますので、必ず手を動かして学習しましょう。</p>
+            </div>
+        </section>
+
+        <!-- ページナビゲーション -->
+        <nav class="chapter-nav">
+            <a href="index.html" class="home"><span class="material-icons">home</span> 目次</a>
+            <a href="2actions-workflow-basics.html" class="next">次の章 <span class="material-icons">arrow_forward</span></a>
+        </nav>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+</body>
+</html>

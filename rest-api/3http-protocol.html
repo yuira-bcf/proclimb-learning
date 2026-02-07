@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3章 HTTP通信の仕組み - REST API & JSON入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #0097A7;
+        --primary-dark: #00838F;
+        --primary-light: #E0F7FA;
+        --primary-lighter: #B2EBF2;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #f8fdfe 0%, #e6f7f9 100%);
+        border-radius: 16px; border: 1px solid #b2ebf2;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #0097A7; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #0097A7; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(0,151,167,0.08);
+      }
+      .vd-box.accent { background: #0097A7; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #0097A7; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #e0f7fa; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #0097A7; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-rest-api.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">3</div>
+            <h1 class="chapter-title">HTTP通信の仕組み</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">3-1</span><span>HTTPプロトコルとは</span></li>
+                <li class="toc-item"><span class="toc-number">3-2</span><span>リクエストの構造</span></li>
+                <li class="toc-item"><span class="toc-number">3-3</span><span>HTTPメソッド</span></li>
+                <li class="toc-item"><span class="toc-number">3-4</span><span>ステータスコード</span></li>
+                <li class="toc-item"><span class="toc-number">3-5</span><span>リクエスト/レスポンスヘッダー</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 3-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-1</span>
+                <h2 class="section-title">HTTPプロトコルとは</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>HTTP（HyperText Transfer Protocol）は、Webにおけるデータ通信の基盤となるプロトコル（通信規約）です。1991年にTim Berners-Leeが考案し、ブラウザとサーバー間の通信をはじめ、API通信にも広く利用されています。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 HTTPの基本的な特徴</h3>
+                <div class="content-block">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128220;</div>
+                            <div class="feature-content">
+                                <h4>テキストベースのプロトコル</h4>
+                                <p>HTTPメッセージは人間が読めるテキスト形式で構成されています。開発者ツールで簡単に内容を確認できます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128259;</div>
+                            <div class="feature-content">
+                                <h4>リクエスト-レスポンスモデル</h4>
+                                <p>クライアントがリクエストを送り、サーバーがレスポンスを返す、一問一答形式の通信です。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128196;</div>
+                            <div class="feature-content">
+                                <h4>ステートレス</h4>
+                                <p>各リクエストは独立しており、サーバーは前回のリクエスト情報を覚えていません。毎回必要な情報を全て送る必要があります。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.2 HTTPとHTTPSの違い</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>HTTP</th>
+                                <th>HTTPS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>暗号化</strong></td>
+                                <td>なし（平文通信）</td>
+                                <td>SSL/TLSで暗号化</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ポート番号</strong></td>
+                                <td>80</td>
+                                <td>443</td>
+                            </tr>
+                            <tr>
+                                <td><strong>安全性</strong></td>
+                                <td>盗聴・改ざんのリスクあり</td>
+                                <td>通信内容が保護される</td>
+                            </tr>
+                            <tr>
+                                <td><strong>URL</strong></td>
+                                <td>http://example.com</td>
+                                <td>https://example.com</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">HTTPSが必須の時代</span>
+                        </div>
+                        <p>現在のWebでは<strong>HTTPS</strong>が標準です。Google Chromeなどのブラウザは、HTTPサイトに「保護されていない通信」と警告を表示します。API通信でも、認証情報や個人データを扱う場合はHTTPSが必須です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 3-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-2</span>
+                <h2 class="section-title">リクエストの構造</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>HTTPリクエストは、クライアントからサーバーへ送られるメッセージです。メソッド、URL、ヘッダー、ボディの4つの要素で構成されます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 リクエストの4要素</h3>
+                <div class="content-block">
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#128230; HTTPリクエストの4つの構成要素</div>
+    <div class="vd-flow">
+        <div class="vd-box accent"><span class="vd-icon"><span class="material-icons" style="font-size:1.6rem;">send</span></span><span class="vd-label">メソッド</span><span class="vd-sub" style="color:rgba(255,255,255,0.8);">GET / POST</span></div>
+        <span class="vd-arrow">+</span>
+        <div class="vd-box"><span class="vd-icon"><span class="material-icons" style="font-size:1.6rem;">link</span></span><span class="vd-label">URL</span><span class="vd-sub">/api/users</span></div>
+        <span class="vd-arrow">+</span>
+        <div class="vd-box"><span class="vd-icon"><span class="material-icons" style="font-size:1.6rem;">description</span></span><span class="vd-label">ヘッダー</span><span class="vd-sub">メタ情報</span></div>
+        <span class="vd-arrow">+</span>
+        <div class="vd-box"><span class="vd-icon"><span class="material-icons" style="font-size:1.6rem;">data_object</span></span><span class="vd-label">ボディ</span><span class="vd-sub">JSON等</span></div>
+    </div>
+</div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>要素</th>
+                                <th>説明</th>
+                                <th>例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>メソッド</strong></td>
+                                <td>何をしたいかを示す動詞</td>
+                                <td>GET, POST, PUT, DELETE</td>
+                            </tr>
+                            <tr>
+                                <td><strong>URL</strong></td>
+                                <td>リソースの場所（アドレス）</td>
+                                <td>/api/users/1</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ヘッダー</strong></td>
+                                <td>リクエストのメタ情報</td>
+                                <td>Content-Type, Authorization</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ボディ</strong></td>
+                                <td>送信するデータ本体（POST/PUT時）</td>
+                                <td>JSON形式のデータ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 GETリクエストの例</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">GETリクエスト（データ取得）</span>
+                            <span class="code-lang">HTTP</span>
+                        </div>
+                        <pre class="code-content"><code>GET /api/users/1 HTTP/1.1
+Host: api.example.com
+Accept: application/json
+Authorization: Bearer token123</code></pre>
+                    </div>
+                    <p>GETリクエストにはボディがありません。必要な情報はURLとヘッダーで送ります。</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.3 POSTリクエストの例</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">POSTリクエスト（データ作成）</span>
+                            <span class="code-lang">HTTP</span>
+                        </div>
+                        <pre class="code-content"><code>POST /api/users HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+Authorization: Bearer token123
+
+{
+  "name": "田中太郎",
+  "email": "tanaka@example.com",
+  "role": "member"
+}</code></pre>
+                    </div>
+                    <p>POSTリクエストではボディにJSON形式のデータを含めます。<code>Content-Type: application/json</code> ヘッダーで、データ形式がJSONであることをサーバーに伝えます。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 3-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-3</span>
+                <h2 class="section-title">HTTPメソッド</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>HTTPメソッドは、リソースに対して「何をしたいか」を表す動詞です。REST APIでは、主に5つのメソッドを使い分けます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 主要なHTTPメソッド</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>メソッド</th>
+                                <th>用途</th>
+                                <th>ボディ</th>
+                                <th>冪等性</th>
+                                <th>安全性</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>GET</strong></td>
+                                <td>データの取得</td>
+                                <td>なし</td>
+                                <td>あり</td>
+                                <td>安全</td>
+                            </tr>
+                            <tr>
+                                <td><strong>POST</strong></td>
+                                <td>データの新規作成</td>
+                                <td>あり</td>
+                                <td>なし</td>
+                                <td>非安全</td>
+                            </tr>
+                            <tr>
+                                <td><strong>PUT</strong></td>
+                                <td>データの全体更新</td>
+                                <td>あり</td>
+                                <td>あり</td>
+                                <td>非安全</td>
+                            </tr>
+                            <tr>
+                                <td><strong>PATCH</strong></td>
+                                <td>データの部分更新</td>
+                                <td>あり</td>
+                                <td>なし</td>
+                                <td>非安全</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DELETE</strong></td>
+                                <td>データの削除</td>
+                                <td>なし</td>
+                                <td>あり</td>
+                                <td>非安全</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">冪等性（べきとうせい）とは</span>
+                        </div>
+                        <p>同じリクエストを何度送っても、結果が同じになる性質のことです。例えば、GETでユーザー情報を10回取得しても同じデータが返り、DELETEで同じリソースを何度削除しても結果は「削除済み」です。一方、POSTは送るたびに新しいリソースが作成されるため、冪等ではありません。</p>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">注意: GETリクエストにボディを含めない</span>
+                        </div>
+                        <p>HTTP仕様上、GETリクエストにボディを含めることは推奨されていません。検索条件などはURLのクエリパラメータ（例: <code>?name=tanaka&amp;age=28</code>）で送るのが正しい方法です。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 PUTとPATCHの違い</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">PUT: リソース全体を置き換え</span>
+                            <span class="code-lang">HTTP</span>
+                        </div>
+                        <pre class="code-content"><code>PUT /api/users/1
+Content-Type: application/json
+
+{
+  "name": "田中太郎",
+  "email": "tanaka-new@example.com",
+  "role": "admin"
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">PATCH: 指定フィールドのみ更新</span>
+                            <span class="code-lang">HTTP</span>
+                        </div>
+                        <pre class="code-content"><code>PATCH /api/users/1
+Content-Type: application/json
+
+{
+  "email": "tanaka-new@example.com"
+}</code></pre>
+                    </div>
+                    <p>PUTはリソース全体を送信して置き換え、PATCHは変更したいフィールドだけを送信します。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 3-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-4</span>
+                <h2 class="section-title">ステータスコード</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>ステータスコードは、サーバーがリクエストの処理結果をクライアントに伝える3桁の数字です。5つのカテゴリに分類されます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 ステータスコードのカテゴリ</h3>
+                <div class="content-block">
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#127918; ステータスコードの5つのカテゴリ</div>
+    <div class="vd-bar">
+        <div class="vd-bar-seg" style="background:#64b5f6;">1xx<br>情報</div>
+        <div class="vd-bar-seg" style="background:#66bb6a;">2xx<br>成功</div>
+        <div class="vd-bar-seg" style="background:#ffa726;">3xx<br>転送</div>
+        <div class="vd-bar-seg" style="background:#ef5350;">4xx<br>クライアント<br>エラー</div>
+        <div class="vd-bar-seg" style="background:#78909c;">5xx<br>サーバー<br>エラー</div>
+    </div>
+    <div class="vd-grid" style="margin-top: 12px;">
+        <div class="vd-card green"><span class="vd-label">200 OK</span><span class="vd-sub">成功</span></div>
+        <div class="vd-card green"><span class="vd-label">201 Created</span><span class="vd-sub">作成成功</span></div>
+        <div class="vd-card red"><span class="vd-label">400 Bad Request</span><span class="vd-sub">不正リクエスト</span></div>
+        <div class="vd-card red"><span class="vd-label">401 Unauthorized</span><span class="vd-sub">認証必要</span></div>
+        <div class="vd-card red"><span class="vd-label">404 Not Found</span><span class="vd-sub">リソース無し</span></div>
+        <div class="vd-card" style="border-color:#b0bec5;background:#eceff1;"><span class="vd-label">500 Server Error</span><span class="vd-sub">サーバー障害</span></div>
+    </div>
+</div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>範囲</th>
+                                <th>カテゴリ</th>
+                                <th>意味</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1xx</strong></td>
+                                <td>情報</td>
+                                <td>リクエストを受け付け、処理中</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2xx</strong></td>
+                                <td>成功</td>
+                                <td>リクエストが正常に処理された</td>
+                            </tr>
+                            <tr>
+                                <td><strong>3xx</strong></td>
+                                <td>リダイレクト</td>
+                                <td>別のURLへの転送が必要</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4xx</strong></td>
+                                <td>クライアントエラー</td>
+                                <td>リクエスト側に問題がある</td>
+                            </tr>
+                            <tr>
+                                <td><strong>5xx</strong></td>
+                                <td>サーバーエラー</td>
+                                <td>サーバー側に問題がある</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 よく使うステータスコード</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>コード</th>
+                                <th>名前</th>
+                                <th>意味</th>
+                                <th>よくある場面</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>200</strong></td>
+                                <td>OK</td>
+                                <td>成功</td>
+                                <td>GET/PUT/PATCHが成功した時</td>
+                            </tr>
+                            <tr>
+                                <td><strong>201</strong></td>
+                                <td>Created</td>
+                                <td>作成成功</td>
+                                <td>POSTで新規リソースを作成した時</td>
+                            </tr>
+                            <tr>
+                                <td><strong>204</strong></td>
+                                <td>No Content</td>
+                                <td>成功（返却データなし）</td>
+                                <td>DELETEが成功した時</td>
+                            </tr>
+                            <tr>
+                                <td><strong>400</strong></td>
+                                <td>Bad Request</td>
+                                <td>不正なリクエスト</td>
+                                <td>バリデーションエラー、JSON構文エラー</td>
+                            </tr>
+                            <tr>
+                                <td><strong>401</strong></td>
+                                <td>Unauthorized</td>
+                                <td>認証が必要</td>
+                                <td>トークンが未送信・期限切れ</td>
+                            </tr>
+                            <tr>
+                                <td><strong>403</strong></td>
+                                <td>Forbidden</td>
+                                <td>アクセス権限なし</td>
+                                <td>認証済みだが権限が不足</td>
+                            </tr>
+                            <tr>
+                                <td><strong>404</strong></td>
+                                <td>Not Found</td>
+                                <td>リソースが見つからない</td>
+                                <td>存在しないURLへのリクエスト</td>
+                            </tr>
+                            <tr>
+                                <td><strong>429</strong></td>
+                                <td>Too Many Requests</td>
+                                <td>リクエスト過多</td>
+                                <td>レート制限に達した時</td>
+                            </tr>
+                            <tr>
+                                <td><strong>500</strong></td>
+                                <td>Internal Server Error</td>
+                                <td>サーバー内部エラー</td>
+                                <td>サーバー側のバグや障害</td>
+                            </tr>
+                            <tr>
+                                <td><strong>503</strong></td>
+                                <td>Service Unavailable</td>
+                                <td>サービス利用不可</td>
+                                <td>メンテナンス中・過負荷</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">401と403の違い</span>
+                        </div>
+                        <p><strong>401 Unauthorized</strong>は「誰だか分からない」（認証されていない）、<strong>403 Forbidden</strong>は「誰だか分かるが許可されていない」（認可されていない）という違いがあります。ログインしていなければ401、ログイン済みだが管理者権限がなければ403が返ります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 3-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-5</span>
+                <h2 class="section-title">リクエスト/レスポンスヘッダー</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>HTTPヘッダーは、リクエストやレスポンスに付加されるメタ情報です。データ形式、認証情報、キャッシュ制御など、通信に関する重要な情報を伝えます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 よく使うヘッダー</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ヘッダー名</th>
+                                <th>用途</th>
+                                <th>値の例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Content-Type</strong></td>
+                                <td>送信データの形式を指定</td>
+                                <td><code>application/json</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Accept</strong></td>
+                                <td>受け入れ可能なデータ形式</td>
+                                <td><code>application/json</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Authorization</strong></td>
+                                <td>認証情報（トークン等）</td>
+                                <td><code>Bearer eyJhbGc...</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cache-Control</strong></td>
+                                <td>キャッシュの制御</td>
+                                <td><code>no-cache</code>, <code>max-age=3600</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Content-Length</strong></td>
+                                <td>ボディのサイズ（バイト）</td>
+                                <td><code>256</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>User-Agent</strong></td>
+                                <td>クライアントの種類</td>
+                                <td><code>Mozilla/5.0 ...</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 レスポンス全体の例</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">完全なHTTPレスポンス</span>
+                            <span class="code-lang">HTTP</span>
+                        </div>
+                        <pre class="code-content"><code>HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Content-Length: 128
+Cache-Control: no-cache
+X-Request-Id: abc-123-def
+
+{
+  "id": 1,
+  "name": "田中太郎",
+  "email": "tanaka@example.com",
+  "createdAt": "2025-04-01T10:30:00Z"
+}</code></pre>
+                    </div>
+                    <p>レスポンスは「ステータスライン → ヘッダー → 空行 → ボディ」の順で構成されます。ヘッダーとボディの間には必ず空行が入ります。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">3章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>新しいユーザーを作成するために使用するHTTPメソッドとして最も適切なものはどれですか？</p>
+                        <ol type="A">
+                            <li>GET</li>
+                            <li>POST</li>
+                            <li>PUT</li>
+                            <li>DELETE</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>ステータスコード「404」の意味として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>認証が必要</li>
+                            <li>リクエストが不正</li>
+                            <li>リソースが見つからない</li>
+                            <li>サーバー内部エラー</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>Content-Type ヘッダーの役割として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>認証トークンを送信する</li>
+                            <li>送信データの形式を指定する</li>
+                            <li>キャッシュの有効期限を設定する</li>
+                            <li>リクエストのサイズを制限する</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">3章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p>新しいリソースの作成にはPOSTメソッドを使用します。GETはデータ取得、PUTは既存データの更新、DELETEはデータの削除に使います。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: C</div>
+                    <div class="answer-content">
+                        <p>404 Not Foundは、指定されたURLにリソースが存在しないことを意味します。401が認証必要、400が不正リクエスト、500がサーバー内部エラーです。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: B</div>
+                    <div class="answer-content">
+                        <p>Content-Typeヘッダーは、リクエストボディやレスポンスボディのデータ形式（MIMEタイプ）を指定します。例えば<code>application/json</code>はJSON形式であることを示します。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="2json-basics.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第2章 JSONの基礎</div>
+            </div>
+        </a>
+        <a href="4rest-principles.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第4章 RESTの設計原則</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../shared/demo.js"></script>
+</body>
+</html>

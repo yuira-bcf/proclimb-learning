@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第9章 リモート操作とコラボレーション - Git & GitHub完全ガイド</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #F05032;
+        --primary-dark: #D63F20;
+        --primary-light: #FBE9E7;
+        --primary-lighter: #FFCCBC;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef5f3 0%, #fbe9e7 100%);
+        border-radius: 16px; border: 1px solid #ffccbc;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F05032; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F05032; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(240,80,50,0.08);
+      }
+      .vd-box.accent { background: #F05032; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F05032; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fbe9e7; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F05032; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-git.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">9</div>
+            <h1 class="chapter-title">リモート操作とコラボレーション</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">9-1</span><span>リモートリポジトリとは</span></li>
+                <li class="toc-item"><span class="toc-number">9-2</span><span>リモートの追加と確認（git remote）</span></li>
+                <li class="toc-item"><span class="toc-number">9-3</span><span>プッシュとプル（git push, git pull）</span></li>
+                <li class="toc-item"><span class="toc-number">9-4</span><span>クローンとフェッチ（git clone, git fetch）</span></li>
+                <li class="toc-item"><span class="toc-number">9-5</span><span>コラボレーターの招待と権限管理</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 9-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-1</span>
+                <h2 class="section-title">リモートリポジトリとは</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>リモートリポジトリとは、ネットワーク上（インターネットやイントラネット）に存在するGitリポジトリのことです。GitHubやGitLabなどのサービス上に作成され、複数の開発者がコードを共有するための中央の保管場所として機能します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 ローカルとリモートの関係</h3>
+                <div class="content-block">
+                    <p>Gitは<strong>分散型バージョン管理システム</strong>です。各開発者のPCにある「ローカルリポジトリ」と、GitHubなどにある「リモートリポジトリ」を同期しながら開発を進めます。</p>
+
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128187;</div>
+                            <div class="feature-content">
+                                <h4>ローカルリポジトリ</h4>
+                                <p>自分のPC上に存在するリポジトリ。オフラインでもコミットや履歴の確認ができます。直接ファイルを編集して作業します。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#9729;</div>
+                            <div class="feature-content">
+                                <h4>リモートリポジトリ</h4>
+                                <p>GitHub等のサーバー上に存在するリポジトリ。チームメンバー全員がアクセスできる共有の場所です。バックアップとしても機能します。</p>
+                            </div>
+                        </div>
+                    </div>
+
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#128260; ローカル &#8596; リモートの操作フロー</div>
+    <div style="display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;">
+        <div style="background: white; border: 2px solid #F05032; border-radius: 16px; padding: 20px; min-width: 160px; text-align: center;">
+            <div style="font-size: 2rem;">&#128187;</div>
+            <div style="font-size: 0.82rem; font-weight: 700; color: #F05032;">ローカルリポジトリ</div>
+            <div style="font-size: 0.68rem; color: #666; margin-top: 4px;">あなたのPC</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; min-width: 120px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 0.72rem; font-weight: 700; color: #2e7d32;">git push</span>
+                <span style="color: #2e7d32; font-size: 1.2rem;">&#8594;</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #1565c0; font-size: 1.2rem;">&#8592;</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #1565c0;">git pull</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #e65100; font-size: 1.2rem;">&#8592;</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #e65100;">git fetch</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #6a1b9a; font-size: 1.2rem;">&#8592;</span>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #6a1b9a;">git clone</span>
+            </div>
+        </div>
+        <div style="background: #F05032; border: 2px solid #D63F20; border-radius: 16px; padding: 20px; min-width: 160px; text-align: center; color: white;">
+            <div style="font-size: 2rem;">&#9729;</div>
+            <div style="font-size: 0.82rem; font-weight: 700;">リモートリポジトリ</div>
+            <div style="font-size: 0.68rem; opacity: 0.8; margin-top: 4px;">GitHub</div>
+        </div>
+    </div>
+    <p style="text-align:center; font-size:0.72rem; color:#888; margin-top:14px;">push=ローカルからリモートへ送信 / pull=リモートからローカルへ取得してマージ / fetch=取得のみ / clone=初回コピー</p>
+</div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">originとは</span>
+                        </div>
+                        <p>リモートリポジトリにはエイリアス（ニックネーム）を付けて管理します。最も一般的な名前が<strong>origin</strong>です。<code>git clone</code>でリポジトリをコピーした場合、クローン元のリモートリポジトリが自動的に<code>origin</code>という名前で登録されます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 9-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-2</span>
+                <h2 class="section-title">リモートの追加と確認（git remote）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><code>git remote</code>コマンドを使って、リモートリポジトリの登録、確認、変更、削除を行います。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 リモートの確認</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">リモートの確認コマンド</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># 登録されているリモート名の一覧
+git remote
+# 出力例: origin
+
+# URLも含めて詳細表示
+git remote -v
+# 出力例:
+# origin  git@github.com:username/my-project.git (fetch)
+# origin  git@github.com:username/my-project.git (push)
+
+# 特定のリモートの詳細情報
+git remote show origin
+# 出力例:
+# * remote origin
+#   Fetch URL: git@github.com:username/my-project.git
+#   Push  URL: git@github.com:username/my-project.git
+#   HEAD branch: main
+#   Remote branches:
+#     main tracked
+#     feature/login tracked</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 リモートの追加・変更・削除</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">リモートの操作</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># リモートを追加
+git remote add origin git@github.com:username/my-project.git
+
+# 複数のリモートを登録することも可能
+git remote add upstream git@github.com:original-author/project.git
+
+# リモート名を変更
+git remote rename origin github
+
+# リモートURLを変更
+git remote set-url origin git@github.com:username/new-project.git
+
+# リモートを削除
+git remote remove upstream</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">upstreamリモートの使い方</span>
+                        </div>
+                        <p>OSSにコントリビュートする場合、フォーク元のリポジトリを<code>upstream</code>として登録することがよくあります。これにより、自分のフォーク（<code>origin</code>）とオリジナルのリポジトリ（<code>upstream</code>）の両方を管理できます。<code>git fetch upstream</code>で最新の変更を取得できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 9-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-3</span>
+                <h2 class="section-title">プッシュとプル（git push, git pull）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>リモートリポジトリとの間でデータをやり取りする最も基本的な操作が、プッシュ（push）とプル（pull）です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 git push - ローカルの変更をリモートに送信</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">git pushの使い方</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># 基本的なプッシュ
+git push origin main
+# → originリモートのmainブランチにプッシュ
+
+# 初回プッシュ（上流ブランチの設定）
+git push -u origin main
+# → -u オプションで上流ブランチを設定
+# → 以降は git push だけでプッシュ可能
+
+# 現在のブランチをプッシュ（上流ブランチ設定済みの場合）
+git push
+
+# 新しいブランチをリモートにプッシュ
+git switch -c feature/new-page
+# ... 作業してコミット ...
+git push -u origin feature/new-page
+
+# リモートのブランチを削除
+git push origin --delete feature/old-branch</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">force pushは危険</span>
+                        </div>
+                        <p><code>git push --force</code>（または<code>-f</code>）はリモートの履歴を強制的に上書きします。他のメンバーの作業が消える可能性があるため、原則として使用しないでください。どうしても必要な場合は<code>git push --force-with-lease</code>を使うと、他の人が変更を加えていた場合にプッシュが拒否されるため、より安全です。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 git pull - リモートの変更をローカルに取得</h3>
+                <div class="content-block">
+                    <p><code>git pull</code>は、リモートリポジトリの最新の変更を取得し、ローカルブランチにマージする操作です。内部的には<code>git fetch</code>+<code>git merge</code>と同等の動作をします。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">git pullの使い方</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># リモートの最新を取得してマージ
+git pull origin main
+
+# 上流ブランチが設定されていれば省略可能
+git pull
+
+# rebaseモードでpull（マージコミットを作らない）
+git pull --rebase origin main
+
+# pullのデフォルトをrebaseに設定
+git config --global pull.rebase true</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">pullする前にcommitしよう</span>
+                        </div>
+                        <p><code>git pull</code>を実行する前に、ローカルの変更をコミットしておくことをおすすめします。未コミットの変更がある状態でpullすると、コンフリクトが発生した場合に複雑になることがあります。<code>git stash</code>で一時退避するのも一つの方法です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 9-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-4</span>
+                <h2 class="section-title">クローンとフェッチ（git clone, git fetch）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>リモートリポジトリからの初回のコピーには<code>git clone</code>を、最新情報の取得には<code>git fetch</code>を使います。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 git clone - リポジトリのコピー</h3>
+                <div class="content-block">
+                    <p><code>git clone</code>は、リモートリポジトリの全てのコミット履歴を含む完全なコピーをローカルに作成します。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">git cloneの使い方</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># SSH URLでクローン（推奨）
+git clone git@github.com:username/my-project.git
+
+# HTTPS URLでクローン
+git clone https://github.com/username/my-project.git
+
+# ディレクトリ名を指定してクローン
+git clone git@github.com:username/my-project.git my-folder
+
+# 特定のブランチだけクローン
+git clone -b develop git@github.com:username/my-project.git
+
+# 浅いクローン（最新のコミットだけ取得、高速）
+git clone --depth 1 git@github.com:username/my-project.git</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 git fetch - リモートの情報を取得</h3>
+                <div class="content-block">
+                    <p><code>git fetch</code>は、リモートリポジトリの最新情報を取得しますが、ローカルのブランチには統合しません。取得した情報は<code>origin/main</code>のような<strong>リモート追跡ブランチ</strong>に保存されます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">git fetchの使い方</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># リモートの最新情報を取得（マージしない）
+git fetch origin
+
+# 取得した情報を確認
+git log origin/main --oneline
+# リモートのmainブランチの履歴が確認できる
+
+# ローカルとリモートの差分を確認
+git diff main origin/main
+
+# 問題なければ手動でマージ
+git merge origin/main
+
+# 不要になったリモート追跡ブランチを削除
+git fetch --prune</code></pre>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>コマンド</th>
+                                <th>取得</th>
+                                <th>マージ</th>
+                                <th>安全性</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>git fetch</strong></td>
+                                <td>リモートの情報を取得する</td>
+                                <td>マージしない</td>
+                                <td>安全（ローカルを変更しない）</td>
+                            </tr>
+                            <tr>
+                                <td><strong>git pull</strong></td>
+                                <td>リモートの情報を取得する</td>
+                                <td>自動でマージする</td>
+                                <td>コンフリクトの可能性あり</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">fetchを先に使う習慣</span>
+                        </div>
+                        <p>チーム開発では、いきなり<code>git pull</code>するのではなく、まず<code>git fetch</code>で変更内容を確認してから手動でマージする方が安全です。特に大規模な変更がある場合や、コンフリクトが予想される場合は、<code>git fetch</code> + <code>git diff</code> + <code>git merge</code>の手順がおすすめです。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 9-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-5</span>
+                <h2 class="section-title">コラボレーターの招待と権限管理</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>GitHubでは、リポジトリに他の開発者を<strong>コラボレーター</strong>として招待し、共同で開発を進めることができます。権限レベルを設定することで、メンバーごとにできる操作を制限できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 コラボレーターの招待方法</h3>
+                <div class="content-block">
+                    <ol class="bullet-list" style="list-style-type: decimal;">
+                        <li>リポジトリの<strong>Settings</strong>タブを開く</li>
+                        <li>左メニューから<strong>Collaborators</strong>（または<strong>Manage access</strong>）をクリック</li>
+                        <li><strong>Add people</strong>ボタンをクリック</li>
+                        <li>招待したい人のGitHubユーザー名またはメールアドレスを入力</li>
+                        <li>権限レベルを選択して招待を送信</li>
+                        <li>相手が招待を承認すれば、コラボレーターとして参加完了</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 権限レベル</h3>
+                <div class="content-block">
+
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#128101; コラボレーター権限レベル</div>
+    <div class="vd-grid">
+        <div class="vd-card">
+            <span class="vd-icon">&#128065;</span>
+            <span class="vd-label">Read</span>
+            <span class="vd-sub">コードの閲覧<br>Issueの作成</span>
+        </div>
+        <div class="vd-card blue">
+            <span class="vd-icon">&#128203;</span>
+            <span class="vd-label">Triage</span>
+            <span class="vd-sub">Issueの管理<br>ラベル付与</span>
+        </div>
+        <div class="vd-card green">
+            <span class="vd-icon">&#128221;</span>
+            <span class="vd-label">Write</span>
+            <span class="vd-sub">コードのプッシュ<br>PRのマージ</span>
+        </div>
+        <div class="vd-card amber">
+            <span class="vd-icon">&#128295;</span>
+            <span class="vd-label">Maintain</span>
+            <span class="vd-sub">リポジトリ管理<br>設定の一部変更</span>
+        </div>
+        <div class="vd-card red">
+            <span class="vd-icon">&#128081;</span>
+            <span class="vd-label">Admin</span>
+            <span class="vd-sub">全ての操作が可能<br>リポジトリ削除も可</span>
+        </div>
+    </div>
+    <div class="vd-bar" style="margin-top: 16px;">
+        <div class="vd-bar-seg" style="background: #9e9e9e;">Read</div>
+        <div class="vd-bar-seg" style="background: #42a5f5;">Triage</div>
+        <div class="vd-bar-seg" style="background: #66bb6a;">Write</div>
+        <div class="vd-bar-seg" style="background: #ffa726;">Maintain</div>
+        <div class="vd-bar-seg" style="background: #ef5350;">Admin</div>
+    </div>
+    <p style="text-align:center; font-size:0.72rem; color:#888;">&#8592; 権限が低い &#12288;&#12288;&#12288;&#12288; 権限が高い &#8594;</p>
+</div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>権限レベル</th>
+                                <th>できること</th>
+                                <th>適する人</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Read</strong></td>
+                                <td>コード閲覧、Issue作成、PR作成</td>
+                                <td>外部のレビュアー、閲覧者</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Triage</strong></td>
+                                <td>Read + Issueの管理（ラベル、アサイン、クローズ）</td>
+                                <td>プロジェクトマネージャー</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Write</strong></td>
+                                <td>Triage + コードのプッシュ、PRのマージ</td>
+                                <td>開発メンバー</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Maintain</strong></td>
+                                <td>Write + リポジトリの一部設定変更</td>
+                                <td>プロジェクトリーダー</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Admin</strong></td>
+                                <td>全ての操作（削除含む）</td>
+                                <td>リポジトリオーナー</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">最小権限の原則</span>
+                        </div>
+                        <p>セキュリティの観点から、各メンバーには<strong>必要最小限の権限</strong>を付与しましょう。全員にAdmin権限を与えてしまうと、誤ってリポジトリを削除したり、設定を変更してしまうリスクがあります。一般の開発メンバーには<strong>Write</strong>権限で十分です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">9章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p><code>git pull</code>は内部的にどの2つのコマンドと同等の動作をしますか？</p>
+                        <ol type="A">
+                            <li><code>git clone</code> + <code>git merge</code></li>
+                            <li><code>git fetch</code> + <code>git merge</code></li>
+                            <li><code>git fetch</code> + <code>git rebase</code></li>
+                            <li><code>git push</code> + <code>git merge</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>初めてローカルブランチをリモートにプッシュする際、上流ブランチを設定するオプションはどれですか？</p>
+                        <ol type="A">
+                            <li><code>git push --force origin main</code></li>
+                            <li><code>git push -u origin main</code></li>
+                            <li><code>git push --set origin main</code></li>
+                            <li><code>git push --track origin main</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p><code>git fetch</code>と<code>git pull</code>の違いとして正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>fetchはリモートの変更を取得しマージまで行い、pullは取得のみ</li>
+                            <li>fetchはリモートの変更を取得するのみで、pullは取得とマージを行う</li>
+                            <li>fetchとpullは全く同じ動作をする</li>
+                            <li>fetchはローカルの変更をリモートに送信する</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">9章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>git pull</code>は、<code>git fetch</code>（リモートの情報を取得）と<code>git merge</code>（ローカルブランチに統合）を一度に行うコマンドです。<code>git pull --rebase</code>オプションを使うと、merge の代わりに rebase で統合します。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>-u</code>（<code>--set-upstream</code>の短縮形）オプションは、ローカルブランチとリモートブランチの紐付け（上流ブランチの設定）を行います。一度設定すれば、以降は<code>git push</code>や<code>git pull</code>でブランチ名を省略できるようになります。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>git fetch</code>はリモートの最新情報をリモート追跡ブランチ（<code>origin/main</code>など）に取得するだけで、ローカルのブランチには変更を加えません。<code>git pull</code>は取得と同時にローカルブランチにマージまで行います。安全に確認したい場合は<code>git fetch</code>+<code>git diff</code>+<code>git merge</code>の手順がおすすめです。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="8github-basics.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第8章 GitHubの基礎と設定</div>
+            </div>
+        </a>
+        <a href="10git-pullrequest.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第10章 プルリクエストとIssue管理</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../shared/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第4章 Dockerfileの書き方 - Docker構築入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #2496ED;
+        --primary-dark: #1976D2;
+        --primary-light: #E3F2FD;
+        --primary-lighter: #BBDEFB;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #f0f7fe 0%, #e3f2fd 100%);
+        border-radius: 16px; border: 1px solid #bbdefb;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #2496ED; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #2496ED; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(36,150,237,0.08);
+      }
+      .vd-box.accent { background: #2496ED; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #2496ED; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #e3f2fd; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #2496ED; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-docker.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">4</div>
+            <h1 class="chapter-title">Dockerfileの書き方</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">4-1</span><span>Dockerfileの基本構造</span></li>
+                <li class="toc-item"><span class="toc-number">4-2</span><span>主要な命令（FROM/RUN/COPY/CMD）</span></li>
+                <li class="toc-item"><span class="toc-number">4-3</span><span>イメージのビルド</span></li>
+                <li class="toc-item"><span class="toc-number">4-4</span><span>レイヤーとキャッシュの仕組み</span></li>
+                <li class="toc-item"><span class="toc-number">4-5</span><span>マルチステージビルドと.dockerignore</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 4-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-1</span>
+                <h2 class="section-title">Dockerfileの基本構造</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Dockerfile は、Docker イメージを作成するための命令を記述したテキストファイルです。環境構築の手順をコードとして管理できるため、「Infrastructure as Code（IaC）」の実践において重要な役割を果たします。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">Dockerfileの基本ルール</h3>
+                <ul>
+                    <li>ファイル名は <code>Dockerfile</code>（拡張子なし、先頭大文字が慣例）</li>
+                    <li>各行に1つの命令を記述する</li>
+                    <li>命令は大文字で記述するのが慣例（<code>FROM</code>、<code>RUN</code> など）</li>
+                    <li><code>#</code> で始まる行はコメント</li>
+                    <li>命令は上から順に実行され、各命令がイメージのレイヤーを生成する</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">最小限のDockerfile</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">シンプルな Dockerfile の例</span>
+                        <span class="code-lang">Dockerfile</span>
+                    </div>
+                    <pre class="code-content"><code># ベースイメージを指定
+FROM node:18-alpine
+
+# 作業ディレクトリを設定
+WORKDIR /app
+
+# パッケージファイルをコピー
+COPY package*.json ./
+
+# 依存パッケージをインストール
+RUN npm install
+
+# アプリケーションのソースコードをコピー
+COPY . .
+
+# ポートを公開
+EXPOSE 3000
+
+# アプリケーションを起動
+CMD ["node", "server.js"]</code></pre>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p>Dockerfile は「どのベースイメージを使うか」「何をインストールするか」「どのファイルをコピーするか」「どのコマンドで起動するか」という4つの要素を定義するのが基本パターンです。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-2</span>
+                <h2 class="section-title">主要な命令（FROM/RUN/COPY/CMD）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Dockerfile には多数の命令がありますが、まず最も重要な命令を確実に理解しましょう。これらの命令だけで大半のイメージを作成できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">FROM - ベースイメージの指定</h3>
+                <p><code>FROM</code> は Dockerfile の最初に記述する命令で、ベースとなるイメージを指定します。すべての Dockerfile は <code>FROM</code> から始まります。</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">FROM の使い方</span>
+                        <span class="code-lang">Dockerfile</span>
+                    </div>
+                    <pre class="code-content"><code># 公式の Node.js イメージ（Alpine Linux ベース）
+FROM node:18-alpine
+
+# 公式の Python イメージ
+FROM python:3.12-slim
+
+# 最小限の Linux イメージ
+FROM alpine:3.19
+
+# Ubuntu ベースイメージ
+FROM ubuntu:22.04</code></pre>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p><code>alpine</code> タグが付くイメージは Alpine Linux ベースで、サイズが非常に小さいのが特徴です。<code>slim</code> タグは不要なパッケージを削除した軽量版です。本番環境ではこれらの軽量イメージを使うことが推奨されます。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">RUN - コマンドの実行</h3>
+                <p><code>RUN</code> はイメージのビルド時にコマンドを実行します。パッケージのインストールやファイルの作成などに使います。</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">RUN の使い方</span>
+                        <span class="code-lang">Dockerfile</span>
+                    </div>
+                    <pre class="code-content"><code># パッケージのインストール
+RUN apt-get update && apt-get install -y curl
+
+# 複数のコマンドを && でつなげる（レイヤー節約）
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    vim \
+    git && \
+    rm -rf /var/lib/apt/lists/*
+
+# npm パッケージのインストール
+RUN npm install --production
+
+# ディレクトリの作成
+RUN mkdir -p /app/logs</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">COPY / ADD - ファイルのコピー</h3>
+                <p><code>COPY</code> はホストのファイルをイメージにコピーします。<code>ADD</code> も同様ですが、URL からのダウンロードや tar ファイルの自動展開機能があります。</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">COPY と ADD の使い方</span>
+                        <span class="code-lang">Dockerfile</span>
+                    </div>
+                    <pre class="code-content"><code># ファイルをコピー（推奨）
+COPY package.json /app/
+
+# ディレクトリごとコピー
+COPY src/ /app/src/
+
+# 全ファイルをコピー
+COPY . /app/
+
+# ADD は tar ファイルを自動展開する
+ADD archive.tar.gz /app/</code></pre>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-title">注意</div>
+                    <div class="warning-box-content">
+                        <p>Docker公式ドキュメントでは、<code>ADD</code> よりも <code>COPY</code> の使用が推奨されています。<code>COPY</code> の方が動作が明確で予測しやすいためです。<code>ADD</code> は tar 展開が必要な場合にのみ使いましょう。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">CMD / ENTRYPOINT - 起動コマンド</h3>
+                <p><code>CMD</code> はコンテナ起動時に実行されるデフォルトのコマンドを定義します。<code>ENTRYPOINT</code> はコンテナの実行コマンドを固定する場合に使います。</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">CMD と ENTRYPOINT の使い方</span>
+                        <span class="code-lang">Dockerfile</span>
+                    </div>
+                    <pre class="code-content"><code># CMD - exec 形式（推奨）
+CMD ["node", "server.js"]
+
+# CMD - shell 形式
+CMD node server.js
+
+# ENTRYPOINT - コマンドを固定
+ENTRYPOINT ["python"]
+CMD ["app.py"]
+# → python app.py が実行される
+# → docker run myapp test.py で python test.py に変更可能</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">その他の重要な命令</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>命令</th>
+                                <th>説明</th>
+                                <th>例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>WORKDIR</code></td>
+                                <td>作業ディレクトリを設定</td>
+                                <td><code>WORKDIR /app</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>EXPOSE</code></td>
+                                <td>コンテナが使用するポートを宣言</td>
+                                <td><code>EXPOSE 3000</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>ENV</code></td>
+                                <td>環境変数を設定</td>
+                                <td><code>ENV NODE_ENV=production</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>ARG</code></td>
+                                <td>ビルド時の引数を定義</td>
+                                <td><code>ARG VERSION=1.0</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>VOLUME</code></td>
+                                <td>マウントポイントを作成</td>
+                                <td><code>VOLUME /data</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>USER</code></td>
+                                <td>実行ユーザーを指定</td>
+                                <td><code>USER node</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-3</span>
+                <h2 class="section-title">イメージのビルド</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Dockerfile を作成したら、<code>docker build</code> コマンドでイメージをビルド（作成）します。ビルドの基本操作と実践的な使い方を学びましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">docker build の基本</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">イメージのビルド</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># 基本的なビルド（カレントディレクトリの Dockerfile を使用）
+$ docker build -t myapp:1.0 .
+
+# タグを指定してビルド
+$ docker build -t myapp:latest -t myapp:1.0 .
+
+# Dockerfile のパスを指定
+$ docker build -f docker/Dockerfile.dev -t myapp-dev .
+
+# ビルド引数を渡す
+$ docker build --build-arg VERSION=2.0 -t myapp:2.0 .
+
+# キャッシュを使わずにビルド
+$ docker build --no-cache -t myapp:latest .</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">実践例：Node.js アプリのビルド</h3>
+                <p>実際の開発を想定して、Node.js アプリケーションのイメージをビルドしてみましょう。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">プロジェクト構成</span>
+                        <span class="code-lang">Text</span>
+                    </div>
+                    <pre class="code-content"><code>myapp/
+  ├── Dockerfile
+  ├── package.json
+  ├── package-lock.json
+  ├── server.js
+  └── .dockerignore</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Dockerfile</span>
+                        <span class="code-lang">Dockerfile</span>
+                    </div>
+                    <pre class="code-content"><code>FROM node:18-alpine
+
+WORKDIR /app
+
+# 依存パッケージの定義ファイルを先にコピー（キャッシュ活用）
+COPY package*.json ./
+RUN npm ci --production
+
+# アプリケーションのソースコードをコピー
+COPY . .
+
+EXPOSE 3000
+CMD ["node", "server.js"]</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">ビルドと実行</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># イメージをビルド
+$ docker build -t myapp:1.0 .
+[+] Building 15.2s (10/10) FINISHED
+ => [1/5] FROM node:18-alpine
+ => [2/5] WORKDIR /app
+ => [3/5] COPY package*.json ./
+ => [4/5] RUN npm ci --production
+ => [5/5] COPY . .
+ ...
+ => naming to docker.io/library/myapp:1.0
+
+# ビルドしたイメージを確認
+$ docker images myapp
+REPOSITORY   TAG   IMAGE ID       CREATED         SIZE
+myapp        1.0   abc123def456   10 seconds ago  120MB
+
+# コンテナを起動してテスト
+$ docker run -d -p 3000:3000 --name myapp myapp:1.0</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-4</span>
+                <h2 class="section-title">レイヤーとキャッシュの仕組み</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Docker イメージは複数のレイヤー（層）が積み重なった構造をしています。このレイヤーの仕組みとビルドキャッシュを理解することで、効率的な Dockerfile の設計ができるようになります。</p>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128203; Docker イメージのレイヤー構造</div>
+                <div style="max-width: 400px; margin: 0 auto;">
+                    <div class="vd-card blue" style="margin-bottom: 4px; border-radius: 12px 12px 4px 4px;">
+                        <span class="vd-label" style="color: #1565c0;">Layer 5: CMD ["node", "server.js"]</span>
+                        <span class="vd-sub">起動コマンドの定義</span>
+                    </div>
+                    <div class="vd-card green" style="margin-bottom: 4px; border-radius: 4px;">
+                        <span class="vd-label" style="color: #2e7d32;">Layer 4: COPY . .</span>
+                        <span class="vd-sub">ソースコードをコピー</span>
+                    </div>
+                    <div class="vd-card amber" style="margin-bottom: 4px; border-radius: 4px;">
+                        <span class="vd-label" style="color: #e65100;">Layer 3: RUN npm ci</span>
+                        <span class="vd-sub">依存パッケージのインストール</span>
+                    </div>
+                    <div class="vd-card green" style="margin-bottom: 4px; border-radius: 4px;">
+                        <span class="vd-label" style="color: #2e7d32;">Layer 2: COPY package*.json ./</span>
+                        <span class="vd-sub">パッケージ定義をコピー</span>
+                    </div>
+                    <div class="vd-card purple" style="margin-bottom: 4px; border-radius: 4px;">
+                        <span class="vd-label" style="color: #6a1b9a;">Layer 1: WORKDIR /app</span>
+                        <span class="vd-sub">作業ディレクトリの設定</span>
+                    </div>
+                    <div class="vd-card" style="background: #eceff1; border-color: #b0bec5; border-radius: 4px 4px 12px 12px;">
+                        <span class="vd-label" style="color: #37474f;">Base Layer: FROM node:18-alpine</span>
+                        <span class="vd-sub">ベースイメージ（読み取り専用）</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">レイヤーの特徴</h3>
+                <ul>
+                    <li><code>FROM</code>、<code>RUN</code>、<code>COPY</code>、<code>ADD</code> の各命令が新しいレイヤーを作成する</li>
+                    <li>各レイヤーは読み取り専用で、前のレイヤーからの差分のみを保持する</li>
+                    <li>複数のイメージが同じベースレイヤーを共有できる（ディスク節約）</li>
+                    <li>コンテナ実行時は、イメージレイヤーの上に書き込み可能なレイヤーが追加される</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">ビルドキャッシュの活用</h3>
+                <p>Docker は前回のビルド結果をキャッシュとして保存し、変更がないレイヤーは再ビルドをスキップします。この仕組みを活かすことで、ビルド時間を大幅に短縮できます。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">キャッシュ効率の悪い例</span>
+                        <span class="code-lang">Dockerfile</span>
+                    </div>
+                    <pre class="code-content"><code># NG: ソースコード変更のたびに npm install が再実行される
+FROM node:18-alpine
+WORKDIR /app
+COPY . .              # ← ソースコード変更でここからキャッシュ無効
+RUN npm install       # ← 毎回再実行される
+CMD ["node", "server.js"]</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">キャッシュ効率の良い例</span>
+                        <span class="code-lang">Dockerfile</span>
+                    </div>
+                    <pre class="code-content"><code># OK: package.json が変更されない限り npm install はキャッシュされる
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./  # ← パッケージ定義だけ先にコピー
+RUN npm ci             # ← package.json が変わらなければキャッシュ有効
+COPY . .               # ← ソースコード変更はここだけ
+CMD ["node", "server.js"]</code></pre>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p>キャッシュを効率的に使うコツは「変更頻度の低いものを先に、変更頻度の高いものを後に」書くことです。依存パッケージの定義（package.json）は変更頻度が低く、ソースコードは頻繁に変わるため、この順序が最適です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-5</span>
+                <h2 class="section-title">マルチステージビルドと.dockerignore</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>本番環境向けのイメージは、できるだけ小さく安全であるべきです。マルチステージビルドと <code>.dockerignore</code> を活用して、最適化されたイメージを作成する方法を学びましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">マルチステージビルドとは</h3>
+                <p>マルチステージビルドは、1つの Dockerfile 内で複数の <code>FROM</code> を使い、ビルド用のステージと実行用のステージを分離する手法です。ビルドに必要なツールや中間ファイルを最終イメージに含めないため、イメージサイズを大幅に削減できます。</p>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128640; マルチステージビルドのフロー</div>
+                <div class="vd-flow">
+                    <div class="vd-box" style="border-color: #ff9800;">
+                        <span class="vd-icon">&#128736;</span>
+                        <span class="vd-label">Stage 1: ビルド</span>
+                        <span class="vd-sub">コンパイラ・ツール<br>ソースコード<br>ビルド成果物</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box" style="border-color: #9e9e9e;">
+                        <span class="vd-icon">&#128230;</span>
+                        <span class="vd-label">成果物のみコピー</span>
+                        <span class="vd-sub">COPY --from=builder</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#9989;</span>
+                        <span class="vd-label">Stage 2: 実行</span>
+                        <span class="vd-sub">最小限のランタイム<br>ビルド成果物のみ<br>軽量イメージ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">マルチステージビルドの例</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">React アプリのマルチステージビルド</span>
+                        <span class="code-lang">Dockerfile</span>
+                    </div>
+                    <pre class="code-content"><code># Stage 1: ビルドステージ
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+# → /app/build にビルド成果物が生成される
+
+# Stage 2: 実行ステージ（Nginx で静的ファイルを配信）
+FROM nginx:alpine
+COPY --from=builder /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+
+# ビルドステージのツール（node, npm）は最終イメージに含まれない
+# イメージサイズ: 約1GB → 約30MB に削減</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">.dockerignore ファイル</h3>
+                <p><code>.dockerignore</code> は、Docker ビルド時にコンテキスト（送信するファイル群）から除外するファイルやディレクトリを指定するファイルです。<code>.gitignore</code> と同じ書式を使います。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">.dockerignore の例</span>
+                        <span class="code-lang">Text</span>
+                    </div>
+                    <pre class="code-content"><code># バージョン管理
+.git
+.gitignore
+
+# 依存パッケージ（イメージ内で再インストールする）
+node_modules
+
+# ビルド成果物
+dist
+build
+
+# 環境変数ファイル（機密情報を含む可能性）
+.env
+.env.local
+
+# IDE 設定
+.vscode
+.idea
+
+# Docker 関連
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# ドキュメント
+README.md
+docs/</code></pre>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-title">注意</div>
+                    <div class="warning-box-content">
+                        <p><code>.dockerignore</code> に <code>node_modules</code> を追加するのは非常に重要です。ローカルの <code>node_modules</code>（数百MB〜数GB）がビルドコンテキストに含まれると、ビルドが大幅に遅くなります。また、<code>.env</code> ファイルを除外してシークレット情報がイメージに含まれないようにすることも重要です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">4章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Dockerfile でベースイメージを指定する命令として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li><code>BASE node:18-alpine</code></li>
+                            <li><code>IMAGE node:18-alpine</code></li>
+                            <li><code>FROM node:18-alpine</code></li>
+                            <li><code>USE node:18-alpine</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>Dockerfile のビルドキャッシュを効率的に使うために最も重要なことはどれですか？</p>
+                        <ol type="A">
+                            <li>すべての命令を1つの RUN にまとめる</li>
+                            <li>変更頻度の低い命令を先に、高い命令を後に書く</li>
+                            <li>毎回 <code>--no-cache</code> オプションでビルドする</li>
+                            <li>COPY 命令をすべて最初に書く</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>マルチステージビルドの主な利点はどれですか？</p>
+                        <ol type="A">
+                            <li>ビルド速度が必ず速くなる</li>
+                            <li>Dockerfile の行数が減る</li>
+                            <li>ビルドツールを最終イメージに含めず、イメージサイズを削減できる</li>
+                            <li>コンテナの起動速度が必ず向上する</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">4章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: C</div>
+                    <div class="answer-content">
+                        <p><code>FROM</code> はベースイメージを指定する命令で、Dockerfile の最初に記述する必要があります。<code>FROM node:18-alpine</code> は Node.js 18 の Alpine Linux ベースの軽量イメージを使用することを意味します。すべての Dockerfile は <code>FROM</code> で始まります。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p>Docker のビルドキャッシュは、変更があったレイヤー以降のすべてのレイヤーが再ビルドされる仕組みです。そのため、「変更頻度の低い命令（OS設定、パッケージインストールなど）を先に、変更頻度の高い命令（ソースコードのコピー）を後に」書くことで、キャッシュの再利用率が高まり、ビルド時間を短縮できます。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: C</div>
+                    <div class="answer-content">
+                        <p>マルチステージビルドの最大の利点は、ビルドに必要なツール（コンパイラ、開発用パッケージなど）を最終的な実行用イメージに含めないことで、イメージサイズを大幅に削減できることです。例えば、React アプリの場合、node と npm を含むビルドステージ（約1GB）から、ビルド成果物だけを Nginx イメージ（約30MB）にコピーすることで、軽量で安全なイメージを作成できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="3docker-image-container.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第3章 イメージとコンテナの基礎</div>
+            </div>
+        </a>
+        <a href="5docker-compose.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第5章 Docker Composeの基礎</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../shared/demo.js"></script>
+</body>
+</html>

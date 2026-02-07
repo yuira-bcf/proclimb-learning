@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第5章 変更の取り消しテクニック - Git & GitHub完全ガイド</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #F05032;
+        --primary-dark: #D63F20;
+        --primary-light: #FBE9E7;
+        --primary-lighter: #FFCCBC;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef5f3 0%, #fbe9e7 100%);
+        border-radius: 16px; border: 1px solid #ffccbc;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F05032; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F05032; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(240,80,50,0.08);
+      }
+      .vd-box.accent { background: #F05032; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F05032; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fbe9e7; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F05032; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-git.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">5</div>
+            <h1 class="chapter-title">変更の取り消しテクニック</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">5-1</span><span>ステージングの取り消し（git restore --staged）</span></li>
+                <li class="toc-item"><span class="toc-number">5-2</span><span>ワーキングツリーの変更取り消し（git restore）</span></li>
+                <li class="toc-item"><span class="toc-number">5-3</span><span>直前のコミットの修正（git commit --amend）</span></li>
+                <li class="toc-item"><span class="toc-number">5-4</span><span>コミットの打ち消し（git revert）</span></li>
+                <li class="toc-item"><span class="toc-number">5-5</span><span>履歴のリセット（git reset）</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 5-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-1</span>
+                <h2 class="section-title">ステージングの取り消し（git restore --staged）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>間違えて <code>git add</code> してしまったファイルを、ステージングエリアから取り除きたい場合があります。<code>git restore --staged</code> を使えば、ファイルの内容は変えずにステージングだけを取り消せます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 ステージングの取り消し方法</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">git restore --staged の使い方</span>
+                            <span class="code-lang">Bash</span>
+                        </div>
+                        <pre class="code-content"><code># 特定のファイルのステージングを取り消す
+git restore --staged index.html
+
+# 複数ファイルのステージングを取り消す
+git restore --staged index.html style.css
+
+# 全てのステージングを取り消す
+git restore --staged .</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">実際の操作フロー</span>
+                            <span class="code-lang">Bash</span>
+                        </div>
+                        <pre class="code-content"><code># うっかり全ファイルをステージングしてしまった
+$ git add .
+
+# 状態を確認
+$ git status
+Changes to be committed:
+  modified: index.html
+  modified: style.css
+  modified: secret.env      ← これはコミットしたくない！
+
+# secret.env だけステージングから外す
+$ git restore --staged secret.env
+
+# 再確認
+$ git status
+Changes to be committed:
+  modified: index.html
+  modified: style.css
+Changes not staged for commit:
+  modified: secret.env      ← ステージングから外れた（変更は残っている）</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">ファイルの変更は消えない</span>
+                        </div>
+                        <p><code>git restore --staged</code> はステージングエリアからファイルを取り除くだけで、ワーキングツリーの変更内容には影響しません。ファイルの編集内容はそのまま残っているので安心してください。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-2</span>
+                <h2 class="section-title">ワーキングツリーの変更取り消し（git restore）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>ワーキングツリーでの編集を取り消して、最後にコミットした状態（またはステージングした状態）に戻したい場合は、<code>git restore</code> を使います。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 変更の破棄</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">ワーキングツリーの変更を取り消す</span>
+                            <span class="code-lang">Bash</span>
+                        </div>
+                        <pre class="code-content"><code># 特定のファイルの変更を取り消す（最後のコミット or ステージングの状態に戻す）
+git restore index.html
+
+# 複数ファイルの変更を取り消す
+git restore index.html style.css
+
+# 全ファイルの変更を取り消す
+git restore .
+
+# 特定のコミット時点の状態に戻す
+git restore --source=HEAD~2 index.html</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">git restore は取り消せない</span>
+                        </div>
+                        <p><code>git restore</code>（<code>--staged</code> なし）は、ワーキングツリーの変更を完全に破棄します。一度破棄した変更は元に戻せません。コミットもステージングもしていない変更は、Gitに記録が残っていないためです。実行前に本当に破棄してよいか慎重に確認してください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 restore の使い分け</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>コマンド</th>
+                                <th>何が取り消される</th>
+                                <th>変更内容の行方</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>git restore --staged &lt;file&gt;</code></td>
+                                <td>ステージングのみ取り消す</td>
+                                <td>ワーキングツリーに残る</td>
+                            </tr>
+                            <tr>
+                                <td><code>git restore &lt;file&gt;</code></td>
+                                <td>ワーキングツリーの変更を破棄</td>
+                                <td>完全に消える</td>
+                            </tr>
+                            <tr>
+                                <td><code>git restore --staged --worktree &lt;file&gt;</code></td>
+                                <td>ステージングとワーキングツリー両方</td>
+                                <td>完全に消える</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-3</span>
+                <h2 class="section-title">直前のコミットの修正（git commit --amend）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>コミットした直後に「メッセージを間違えた」「ファイルを追加し忘れた」ということはよくあります。<code>git commit --amend</code> を使えば、直前のコミットを修正できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 コミットメッセージの修正</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">コミットメッセージを修正する</span>
+                            <span class="code-lang">Bash</span>
+                        </div>
+                        <pre class="code-content"><code># 直前のコミットメッセージを修正
+git commit --amend -m "正しいコミットメッセージ"
+
+# エディタを開いてメッセージを編集
+git commit --amend</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 ファイルの追加し忘れ</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">直前のコミットにファイルを追加する</span>
+                            <span class="code-lang">Bash</span>
+                        </div>
+                        <pre class="code-content"><code># style.css を追加し忘れてコミットしてしまった
+$ git commit -m "ヘッダーのデザインを変更"
+
+# 忘れたファイルをステージング
+$ git add style.css
+
+# 直前のコミットに含める（メッセージは変更なし）
+$ git commit --amend --no-edit
+
+# 結果: 直前のコミットに style.css が追加された</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">プッシュ済みのコミットは amend しない</span>
+                        </div>
+                        <p><code>--amend</code> は直前のコミットを「書き換える」操作です。すでにリモートリポジトリにプッシュしたコミットを amend すると、他の開発者との間でコンフリクトが発生します。プッシュ前のコミットにのみ使用してください。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-4</span>
+                <h2 class="section-title">コミットの打ち消し（git revert）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><code>git revert</code> は、過去のコミットの変更内容を打ち消す新しいコミットを作成するコマンドです。履歴を変えずに安全に変更を取り消せるため、チーム開発で推奨される方法です。</p>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128260; restore / revert / reset の使い分け</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128259;</span>
+                        <span class="vd-label">git restore</span>
+                        <span class="vd-sub">ワーキングツリーや<br>ステージングの変更を取り消す<br><strong>コミット前の変更に使う</strong></span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#128260;</span>
+                        <span class="vd-label">git revert</span>
+                        <span class="vd-sub">打ち消しコミットを作成<br>履歴は保持される<br><strong>プッシュ済みに安全</strong></span>
+                    </div>
+                    <div class="vd-card red">
+                        <span class="vd-icon">&#9888;</span>
+                        <span class="vd-label">git reset</span>
+                        <span class="vd-sub">履歴ごと巻き戻す<br>コミット自体を削除<br><strong>プッシュ前のみ推奨</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 git revert の使い方</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">git revert の基本</span>
+                            <span class="code-lang">Bash</span>
+                        </div>
+                        <pre class="code-content"><code># 直前のコミットを打ち消す
+$ git revert HEAD
+
+# 特定のコミットを打ち消す
+$ git revert a1b2c3d
+
+# エディタを開かずにデフォルトメッセージでコミット
+$ git revert HEAD --no-edit</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">revert の仕組み</span>
+                            <span class="code-lang">Bash</span>
+                        </div>
+                        <pre class="code-content"><code># revert 前のログ
+$ git log --oneline
+a1b2c3d バグのある変更を追加    ← これを取り消したい
+b2c3d4e 正常な変更
+c3d4e5f Initial commit
+
+# revert を実行
+$ git revert a1b2c3d
+
+# revert 後のログ
+$ git log --oneline
+d4e5f6g Revert "バグのある変更を追加"    ← 打ち消しコミットが追加
+a1b2c3d バグのある変更を追加              ← 元のコミットは残っている
+b2c3d4e 正常な変更
+c3d4e5f Initial commit</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">revert は安全な取り消し方法</span>
+                        </div>
+                        <p><code>git revert</code> は元のコミットを削除するのではなく、その変更を「打ち消す」新しいコミットを作成します。そのため履歴が保持され、「いつ何を取り消したか」も記録されます。プッシュ済みのコミットを取り消す場合は、必ず <code>revert</code> を使いましょう。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-5</span>
+                <h2 class="section-title">履歴のリセット（git reset）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><code>git reset</code> は、HEADの位置を過去のコミットに移動させるコマンドです。コミット自体を「なかったこと」にできますが、履歴を書き換えるため使い方に注意が必要です。</p>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#9881; git reset の3つのモード</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128154;</span>
+                        <span class="vd-label">--soft</span>
+                        <span class="vd-sub">コミットだけ取り消す<br>ステージング: 残る<br>ワーキングツリー: 残る<br><strong>最も安全</strong></span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#128155;</span>
+                        <span class="vd-label">--mixed（デフォルト）</span>
+                        <span class="vd-sub">コミットとステージングを取り消す<br>ステージング: 取り消し<br>ワーキングツリー: 残る</span>
+                    </div>
+                    <div class="vd-card red">
+                        <span class="vd-icon">&#128308;</span>
+                        <span class="vd-label">--hard</span>
+                        <span class="vd-sub">全てを取り消す<br>ステージング: 取り消し<br>ワーキングツリー: 取り消し<br><strong>最も危険</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 git reset --soft</h3>
+                <div class="content-block">
+                    <p>コミットだけを取り消し、変更内容はステージングエリアに残します。「コミットをやり直したい」場合に使います。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">git reset --soft の使い方</span>
+                            <span class="code-lang">Bash</span>
+                        </div>
+                        <pre class="code-content"><code># 直前のコミットを取り消す（変更はステージングに残る）
+$ git reset --soft HEAD~1
+
+# 状態を確認
+$ git status
+Changes to be committed:
+  modified: index.html    ← 変更はステージングに残っている
+
+# メッセージを変えて再コミット可能
+$ git commit -m "新しいコミットメッセージ"</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 git reset --mixed（デフォルト）</h3>
+                <div class="content-block">
+                    <p>コミットとステージングを取り消しますが、ワーキングツリーの変更はそのまま残ります。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">git reset --mixed の使い方</span>
+                            <span class="code-lang">Bash</span>
+                        </div>
+                        <pre class="code-content"><code># 直前のコミットを取り消す（--mixedがデフォルト）
+$ git reset HEAD~1
+# または
+$ git reset --mixed HEAD~1
+
+# 状態を確認
+$ git status
+Changes not staged for commit:
+  modified: index.html    ← ステージングからも外れたが、変更は残っている
+
+# 必要なファイルだけ再度ステージングしてコミット可能
+$ git add index.html
+$ git commit -m "整理してコミット"</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.3 git reset --hard</h3>
+                <div class="content-block">
+                    <p>コミット、ステージング、ワーキングツリーの変更を全て取り消します。最も危険なオプションです。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">git reset --hard の使い方</span>
+                            <span class="code-lang">Bash</span>
+                        </div>
+                        <pre class="code-content"><code># 直前のコミットを完全に取り消す（変更も全て消える）
+$ git reset --hard HEAD~1
+
+# 特定のコミットまで巻き戻す
+$ git reset --hard a1b2c3d
+
+# 状態を確認
+$ git status
+nothing to commit, working tree clean
+# → 変更が完全に消えた</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">git reset --hard は最終手段</span>
+                        </div>
+                        <p><code>--hard</code> を使うとワーキングツリーの変更も完全に失われます。コミットしていない変更は復元できません。また、プッシュ済みのコミットに対して <code>reset</code> を使うと、リモートリポジトリとの整合性が崩れ、チームメンバーに影響が出ます。プッシュ済みの場合は <code>git revert</code> を使いましょう。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.4 各モードの比較まとめ</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>モード</th>
+                                <th>コミット</th>
+                                <th>ステージング</th>
+                                <th>ワーキングツリー</th>
+                                <th>用途</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>--soft</strong></td>
+                                <td>取り消し</td>
+                                <td>残る</td>
+                                <td>残る</td>
+                                <td>コミットメッセージの変更、コミットの統合</td>
+                            </tr>
+                            <tr>
+                                <td><strong>--mixed</strong></td>
+                                <td>取り消し</td>
+                                <td>取り消し</td>
+                                <td>残る</td>
+                                <td>コミットのやり直し（ファイル選択から）</td>
+                            </tr>
+                            <tr>
+                                <td><strong>--hard</strong></td>
+                                <td>取り消し</td>
+                                <td>取り消し</td>
+                                <td>取り消し</td>
+                                <td>変更を完全に破棄（最終手段）</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">間違って reset --hard した場合</span>
+                        </div>
+                        <p>もし間違って <code>git reset --hard</code> を実行してしまっても、コミット済みの変更であれば <code>git reflog</code> で復元できる可能性があります。<code>git reflog</code> はHEADの移動履歴を記録しており、<code>git reset --hard &lt;reflogのハッシュ&gt;</code> で元の状態に戻せます。ただし、コミットしていなかった変更は復元できません。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">5章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p><code>git add</code> でステージングしたファイルを、ステージングエリアから取り除く（変更内容は保持する）コマンドはどれですか？</p>
+                        <ol type="A">
+                            <li><code>git restore index.html</code></li>
+                            <li><code>git restore --staged index.html</code></li>
+                            <li><code>git reset --hard HEAD</code></li>
+                            <li><code>git revert HEAD</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>プッシュ済みのコミットを安全に取り消したい場合、最も適切なコマンドはどれですか？</p>
+                        <ol type="A">
+                            <li><code>git reset --hard HEAD~1</code></li>
+                            <li><code>git reset --soft HEAD~1</code></li>
+                            <li><code>git revert HEAD</code></li>
+                            <li><code>git restore HEAD</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p><code>git reset --soft HEAD~1</code> を実行した場合、直前のコミットの変更内容はどうなりますか？</p>
+                        <ol type="A">
+                            <li>ワーキングツリーとステージングの両方から消える</li>
+                            <li>ワーキングツリーに残り、ステージングからは消える</li>
+                            <li>ステージングエリアに残る（コミットだけ取り消し）</li>
+                            <li>リモートリポジトリに自動的にプッシュされる</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">5章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>git restore --staged index.html</code> は、ステージングエリアからファイルを取り除き、ワーキングツリーの変更はそのまま保持します。Aの <code>git restore index.html</code>（<code>--staged</code> なし）はワーキングツリーの変更を破棄してしまうので注意が必要です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: C</div>
+                    <div class="answer-content">
+                        <p><code>git revert HEAD</code> は、直前のコミットの変更を打ち消す新しいコミットを作成します。履歴を書き換えないため、プッシュ済みのコミットでも安全に使えます。<code>git reset</code> は履歴を書き換えるため、プッシュ済みのコミットに使うとチームメンバーに問題が発生します。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: C</div>
+                    <div class="answer-content">
+                        <p><code>git reset --soft HEAD~1</code> はコミットだけを取り消し、変更内容はステージングエリアに残します。つまり <code>git add</code> 済みの状態に戻ります。<code>--soft</code> は3つのモードの中で最も安全で、コミットメッセージの変更やコミットの統合に便利です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="4git-history.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第4章 履歴の確認と探索</div>
+            </div>
+        </a>
+        <a href="6git-branch.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第6章 ブランチの基本</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../shared/demo.js"></script>
+</body>
+</html>

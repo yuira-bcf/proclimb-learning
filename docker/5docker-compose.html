@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第5章 Docker Composeの基礎 - Docker構築入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #2496ED;
+        --primary-dark: #1976D2;
+        --primary-light: #E3F2FD;
+        --primary-lighter: #BBDEFB;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #f0f7fe 0%, #e3f2fd 100%);
+        border-radius: 16px; border: 1px solid #bbdefb;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #2496ED; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #2496ED; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(36,150,237,0.08);
+      }
+      .vd-box.accent { background: #2496ED; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #2496ED; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #e3f2fd; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #2496ED; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-docker.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">5</div>
+            <h1 class="chapter-title">Docker Composeの基礎</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">5-1</span><span>Docker Composeとは</span></li>
+                <li class="toc-item"><span class="toc-number">5-2</span><span>docker-compose.ymlの書き方</span></li>
+                <li class="toc-item"><span class="toc-number">5-3</span><span>複数コンテナの起動・管理</span></li>
+                <li class="toc-item"><span class="toc-number">5-4</span><span>実践：WebアプリとDB構成</span></li>
+                <li class="toc-item"><span class="toc-number">5-5</span><span>Composeのコマンド一覧</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 5-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-1</span>
+                <h2 class="section-title">Docker Composeとは</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Docker Compose は、複数のコンテナで構成されるアプリケーションを YAML ファイルで定義し、一括で管理するためのツールです。実際の Web アプリケーションでは、Web サーバー、データベース、キャッシュサーバーなど複数のサービスを組み合わせて動作するのが一般的です。Docker Compose を使えば、これらを1つのファイルで定義し、コマンド一つで起動・停止できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">Docker Compose が解決する課題</h3>
+                <p>Docker Compose なしで複数コンテナを管理する場合、以下のような問題があります。</p>
+                <ul>
+                    <li>コンテナごとに長い <code>docker run</code> コマンドを入力する必要がある</li>
+                    <li>コンテナ間のネットワーク接続を手動で設定しなければならない</li>
+                    <li>起動順序の管理が困難</li>
+                    <li>チームメンバーと環境設定を共有しにくい</li>
+                </ul>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Compose なしの場合（手動で3つのコンテナを管理）</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># ネットワークの作成
+docker network create myapp-net
+
+# データベースの起動
+docker run -d --name db --network myapp-net \
+  -e MYSQL_ROOT_PASSWORD=secret \
+  -e MYSQL_DATABASE=myapp \
+  -v db-data:/var/lib/mysql \
+  mysql:8.0
+
+# キャッシュサーバーの起動
+docker run -d --name cache --network myapp-net \
+  redis:alpine
+
+# Web アプリの起動
+docker run -d --name web --network myapp-net \
+  -p 3000:3000 \
+  -e DB_HOST=db \
+  -e REDIS_HOST=cache \
+  myapp:latest
+
+# → 3つのコマンドを毎回正確に入力する必要がある...</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Compose ありの場合（コマンド1つで完了）</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># これだけで全コンテナが起動する
+docker compose up -d</code></pre>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p>Docker Compose は Docker Desktop に同梱されています。以前は <code>docker-compose</code>（ハイフン付き）という別コマンドでしたが、現在は <code>docker compose</code>（スペース区切り）としてDocker CLIのサブコマンドに統合されています。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#127932; Docker Compose マルチコンテナ構成</div>
+                <div style="text-align: center; margin-bottom: 12px; font-weight: 600; color: #2496ED; font-size: 0.8rem;">docker-compose.yml</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#127760;</span>
+                        <span class="vd-label">Web サーバー</span>
+                        <span class="vd-sub">Node.js / Nginx<br>ポート: 3000<br>depends_on: db, cache</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128451;</span>
+                        <span class="vd-label">データベース</span>
+                        <span class="vd-sub">MySQL / PostgreSQL<br>ポート: 3306<br>Volume: db-data</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#9889;</span>
+                        <span class="vd-label">キャッシュ</span>
+                        <span class="vd-sub">Redis<br>ポート: 6379<br>高速データアクセス</span>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 12px;">
+                    <div class="vd-card purple" style="display: inline-block; min-width: 250px;">
+                        <span class="vd-icon">&#128279;</span>
+                        <span class="vd-label">Docker Network（myapp-net）</span>
+                        <span class="vd-sub">コンテナ間の通信を自動接続</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-2</span>
+                <h2 class="section-title">docker-compose.ymlの書き方</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><code>docker-compose.yml</code>（または <code>compose.yml</code>）は、YAML 形式でサービス構成を記述するファイルです。各サービスのイメージ、ポート、環境変数、ボリュームなどを定義します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">基本構造</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">docker-compose.yml の基本構造</span>
+                        <span class="code-lang">YAML</span>
+                    </div>
+                    <pre class="code-content"><code>services:
+  # サービス名（自由に命名）
+  web:
+    image: nginx:alpine          # 使用するイメージ
+    ports:
+      - "8080:80"                # ポートマッピング
+    volumes:
+      - ./html:/usr/share/nginx/html  # ボリュームマウント
+    depends_on:
+      - api                      # 依存関係
+
+  api:
+    build: ./api                 # Dockerfile からビルド
+    ports:
+      - "3000:3000"
+    environment:                 # 環境変数
+      - DB_HOST=db
+      - DB_PORT=5432
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:                       # 名前付きボリュームの定義</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">主要な設定項目</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>説明</th>
+                                <th>例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>image</code></td>
+                                <td>使用する Docker イメージ</td>
+                                <td><code>image: nginx:alpine</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>build</code></td>
+                                <td>Dockerfile からビルド</td>
+                                <td><code>build: ./app</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>ports</code></td>
+                                <td>ポートマッピング</td>
+                                <td><code>ports: ["3000:3000"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>volumes</code></td>
+                                <td>ボリュームマウント</td>
+                                <td><code>volumes: ["./data:/app/data"]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>environment</code></td>
+                                <td>環境変数の設定</td>
+                                <td><code>environment: [DB_HOST=db]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>depends_on</code></td>
+                                <td>サービスの起動順序</td>
+                                <td><code>depends_on: [db]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>restart</code></td>
+                                <td>再起動ポリシー</td>
+                                <td><code>restart: unless-stopped</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>networks</code></td>
+                                <td>接続するネットワーク</td>
+                                <td><code>networks: [frontend]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>env_file</code></td>
+                                <td>環境変数ファイルの読み込み</td>
+                                <td><code>env_file: .env</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>command</code></td>
+                                <td>起動コマンドの上書き</td>
+                                <td><code>command: npm run dev</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-title">注意：YAML のインデント</div>
+                    <div class="warning-box-content">
+                        <p>YAML ファイルではインデントが構造を決定します。インデントにはスペースを使用し、タブは使えません。インデントのずれはパースエラーの原因になるため、エディタの設定でスペース2文字のインデントを使うことを推奨します。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-3</span>
+                <h2 class="section-title">複数コンテナの起動・管理</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><code>docker compose</code> コマンドを使って、YAMLファイルに定義した複数のコンテナをまとめて操作する方法を学びましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">サービスの起動</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">docker compose up</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># 全サービスをバックグラウンドで起動
+$ docker compose up -d
+[+] Running 4/4
+ ✔ Network myapp_default  Created
+ ✔ Container myapp-db-1   Started
+ ✔ Container myapp-cache-1 Started
+ ✔ Container myapp-web-1  Started
+
+# フォアグラウンドで起動（ログが表示される）
+$ docker compose up
+
+# 特定のサービスのみ起動
+$ docker compose up -d web
+
+# イメージを再ビルドして起動
+$ docker compose up -d --build</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">サービスの状態確認</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">状態確認コマンド</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># 実行中のサービス一覧
+$ docker compose ps
+NAME              SERVICE   STATUS    PORTS
+myapp-web-1       web       running   0.0.0.0:3000->3000/tcp
+myapp-db-1        db        running   0.0.0.0:5432->5432/tcp
+myapp-cache-1     cache     running   6379/tcp
+
+# サービスのログを確認
+$ docker compose logs
+
+# 特定のサービスのログをリアルタイム表示
+$ docker compose logs -f web
+
+# リソース使用量の確認
+$ docker compose top</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">サービスの停止・削除</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">停止・削除コマンド</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># 全サービスを停止
+$ docker compose stop
+
+# 全サービスを停止してコンテナ・ネットワークを削除
+$ docker compose down
+
+# ボリュームも含めて完全に削除
+$ docker compose down -v
+
+# イメージも含めて削除
+$ docker compose down --rmi all</code></pre>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p><code>docker compose down</code> と <code>docker compose stop</code> の違いに注意しましょう。<code>stop</code> はコンテナを停止するだけで再起動可能ですが、<code>down</code> はコンテナとネットワークを削除します。<code>-v</code> オプションを付けるとボリュームも削除されるため、データベースのデータが消えてしまいます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-4</span>
+                <h2 class="section-title">実践：WebアプリとDB構成</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>実際の開発でよく使われる構成として、Node.js（Express）+ PostgreSQL + Redis の構成を Docker Compose で構築してみましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">プロジェクト構成</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">ディレクトリ構成</span>
+                        <span class="code-lang">Text</span>
+                    </div>
+                    <pre class="code-content"><code>my-webapp/
+  ├── docker-compose.yml
+  ├── .env
+  ├── app/
+  │   ├── Dockerfile
+  │   ├── package.json
+  │   └── server.js
+  └── db/
+      └── init.sql</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">docker-compose.yml</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">docker-compose.yml（実践的な構成例）</span>
+                        <span class="code-lang">YAML</span>
+                    </div>
+                    <pre class="code-content"><code>services:
+  # Web アプリケーション（Node.js + Express）
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - REDIS_HOST=cache
+    volumes:
+      - ./app:/app           # ホットリロード用
+      - /app/node_modules    # node_modules はコンテナ内のものを使う
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    restart: unless-stopped
+
+  # データベース（PostgreSQL）
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # キャッシュサーバー（Redis）
+  cache:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - cache-data:/data
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  cache-data:</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">環境変数ファイル（.env）</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">.env ファイル</span>
+                        <span class="code-lang">Text</span>
+                    </div>
+                    <pre class="code-content"><code>POSTGRES_DB=myapp
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=secretpassword123</code></pre>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-title">注意</div>
+                    <div class="warning-box-content">
+                        <p><code>.env</code> ファイルにはパスワードなどの機密情報が含まれます。必ず <code>.gitignore</code> に追加して、Git リポジトリにコミットしないようにしましょう。チームメンバーには <code>.env.example</code> を共有し、各自がローカルで <code>.env</code> を作成する運用が推奨されます。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">起動と動作確認</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">プロジェクトの起動</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># プロジェクトディレクトリに移動
+$ cd my-webapp
+
+# 全サービスをビルド＆起動
+$ docker compose up -d --build
+
+# 起動状態を確認
+$ docker compose ps
+
+# ログを確認
+$ docker compose logs -f app
+
+# ブラウザで http://localhost:3000 にアクセスして動作確認
+
+# データベースに接続してテスト
+$ docker compose exec db psql -U admin -d myapp
+
+# 全サービスを停止
+$ docker compose down</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-5</span>
+                <h2 class="section-title">Composeのコマンド一覧</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Docker Compose の主要コマンドをまとめて確認しましょう。日常的に使うコマンドを整理しておくと、開発効率が大幅に向上します。</p>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128260; Compose ライフサイクルコマンド</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128736;</span>
+                        <span class="vd-label">build</span>
+                        <span class="vd-sub">イメージビルド</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#9654;</span>
+                        <span class="vd-label">up</span>
+                        <span class="vd-sub">作成 &amp; 起動</span>
+                    </div>
+                    <span class="vd-arrow">&#8596;</span>
+                    <div class="vd-box" style="border-color: #ff9800;">
+                        <span class="vd-icon">&#9208;</span>
+                        <span class="vd-label">stop / start</span>
+                        <span class="vd-sub">停止 / 再起動</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box" style="border-color: #f44336;">
+                        <span class="vd-icon">&#128465;</span>
+                        <span class="vd-label">down</span>
+                        <span class="vd-sub">停止 &amp; 削除</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">コマンドリファレンス</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>コマンド</th>
+                                <th>説明</th>
+                                <th>よく使うオプション</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>docker compose up</code></td>
+                                <td>サービスの作成と起動</td>
+                                <td><code>-d</code>（バックグラウンド）、<code>--build</code>（再ビルド）</td>
+                            </tr>
+                            <tr>
+                                <td><code>docker compose down</code></td>
+                                <td>サービスの停止と削除</td>
+                                <td><code>-v</code>（ボリューム削除）、<code>--rmi all</code>（イメージ削除）</td>
+                            </tr>
+                            <tr>
+                                <td><code>docker compose ps</code></td>
+                                <td>サービスの状態表示</td>
+                                <td><code>-a</code>（停止中含む）</td>
+                            </tr>
+                            <tr>
+                                <td><code>docker compose logs</code></td>
+                                <td>ログの表示</td>
+                                <td><code>-f</code>（リアルタイム）、<code>--tail 100</code>（件数指定）</td>
+                            </tr>
+                            <tr>
+                                <td><code>docker compose build</code></td>
+                                <td>イメージのビルド</td>
+                                <td><code>--no-cache</code>（キャッシュ無効）</td>
+                            </tr>
+                            <tr>
+                                <td><code>docker compose exec</code></td>
+                                <td>実行中コンテナ内でコマンド実行</td>
+                                <td><code>docker compose exec db psql -U admin</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>docker compose run</code></td>
+                                <td>一時的にコンテナを起動してコマンド実行</td>
+                                <td><code>docker compose run --rm app npm test</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>docker compose stop</code></td>
+                                <td>サービスの停止（コンテナは残る）</td>
+                                <td>サービス名を指定可能</td>
+                            </tr>
+                            <tr>
+                                <td><code>docker compose start</code></td>
+                                <td>停止中のサービスを起動</td>
+                                <td>サービス名を指定可能</td>
+                            </tr>
+                            <tr>
+                                <td><code>docker compose restart</code></td>
+                                <td>サービスの再起動</td>
+                                <td>サービス名を指定可能</td>
+                            </tr>
+                            <tr>
+                                <td><code>docker compose pull</code></td>
+                                <td>イメージの更新取得</td>
+                                <td>サービス名を指定可能</td>
+                            </tr>
+                            <tr>
+                                <td><code>docker compose config</code></td>
+                                <td>YAML ファイルの構文チェック</td>
+                                <td>環境変数の展開結果も確認可能</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">開発でよく使うパターン</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">日常的な開発フロー</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># 朝：開発環境を起動
+$ docker compose up -d
+
+# コード変更後：特定のサービスだけ再ビルド
+$ docker compose up -d --build app
+
+# デバッグ：コンテナ内にアクセス
+$ docker compose exec app sh
+
+# テスト実行（使い捨てコンテナで）
+$ docker compose run --rm app npm test
+
+# DB の中身を確認
+$ docker compose exec db psql -U admin -d myapp
+
+# 夕方：開発環境を停止（データは保持）
+$ docker compose stop
+
+# 環境をリセットしたい場合（データも含めて削除）
+$ docker compose down -v</code></pre>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p><code>docker compose run --rm</code> はテスト実行やマイグレーションなど、一時的なタスクに最適です。<code>--rm</code> を付けることで、コマンド実行後にコンテナが自動削除され、不要なコンテナが溜まりません。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">5章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Docker Compose の設定ファイルとして正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li><code>Dockerfile</code></li>
+                            <li><code>docker-compose.yml</code></li>
+                            <li><code>Composefile</code></li>
+                            <li><code>docker-config.json</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p><code>docker compose down -v</code> を実行した場合、<code>-v</code> オプションの効果はどれですか？</p>
+                        <ol type="A">
+                            <li>バージョン情報を表示する</li>
+                            <li>詳細（verbose）なログを表示する</li>
+                            <li>ボリュームも一緒に削除する</li>
+                            <li>仮想ネットワークのみを削除する</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p><code>docker-compose.yml</code> の <code>depends_on</code> 設定の役割として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>依存サービスが完全に起動するまで待機する</li>
+                            <li>依存サービスより先にコンテナを起動する</li>
+                            <li>依存サービスの起動順序を定義する（完全な起動保証ではない）</li>
+                            <li>依存サービスのイメージを自動的にダウンロードする</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">5章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>docker-compose.yml</code>（または <code>compose.yml</code>）が Docker Compose の設定ファイルです。YAML 形式で記述し、サービス・ネットワーク・ボリュームの構成を定義します。<code>Dockerfile</code> はイメージのビルド手順を記述するファイルで、Compose の設定ファイルとは異なります。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: C</div>
+                    <div class="answer-content">
+                        <p><code>docker compose down -v</code> の <code>-v</code>（<code>--volumes</code>）オプションは、サービスで使用している名前付きボリュームも一緒に削除します。これにより、データベースに保存されたデータなども完全に消去されます。開発環境をまっさらな状態に戻したい場合に使いますが、重要なデータが消えてしまうため注意が必要です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: C</div>
+                    <div class="answer-content">
+                        <p><code>depends_on</code> はサービスの起動順序を定義しますが、依存サービスが「完全に使用可能な状態」になるまで待つわけではありません。例えば、データベースのコンテナが起動しても、データベースサーバーの初期化が完了するまでに時間がかかることがあります。確実に待機する場合は、<code>healthcheck</code> と <code>condition: service_healthy</code> を組み合わせる必要があります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="4dockerfile.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第4章 Dockerfileの書き方</div>
+            </div>
+        </a>
+        <a href="6docker-volume-network.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第6章 ボリュームとネットワーク</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../shared/demo.js"></script>
+</body>
+</html>

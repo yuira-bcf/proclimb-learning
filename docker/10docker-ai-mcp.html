@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第10章 Docker × AI・MCP活用 - Docker構築入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #2496ED;
+        --primary-dark: #1976D2;
+        --primary-light: #E3F2FD;
+        --primary-lighter: #BBDEFB;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #f0f7fe 0%, #e3f2fd 100%);
+        border-radius: 16px; border: 1px solid #bbdefb;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #2496ED; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #2496ED; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(36,150,237,0.08);
+      }
+      .vd-box.accent { background: #2496ED; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #2496ED; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #e3f2fd; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #2496ED; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-docker.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">10</div>
+            <h1 class="chapter-title">Docker × AI・MCP活用</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">10-1</span><span>MCPサーバーとDocker</span></li>
+                <li class="toc-item"><span class="toc-number">10-2</span><span>GitHub MCPサーバーのDocker実行</span></li>
+                <li class="toc-item"><span class="toc-number">10-3</span><span>Claude CodeでのDocker MCP活用</span></li>
+                <li class="toc-item"><span class="toc-number">10-4</span><span>VSCodeでのDocker MCP活用</span></li>
+                <li class="toc-item"><span class="toc-number">10-5</span><span>セキュリティとベストプラクティス</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 10-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 10-1</span>
+                <h2 class="section-title">MCPサーバーとDocker</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>MCP（Model Context Protocol）は、AIアシスタント（Claude、GitHub Copilotなど）が外部ツールやAPIと連携するための標準プロトコルです。MCPサーバーをDockerコンテナで実行することで、環境の分離・セキュリティの向上・デプロイの簡素化を実現できます。</p>
+            </div>
+
+            <!-- 図解: MCP Server Docker アーキテクチャ -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">MCP Server Docker アーキテクチャ</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#129302;</span>
+                        <span class="vd-label">AIクライアント</span>
+                        <span class="vd-sub">Claude / Copilot</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#128268;</span>
+                        <span class="vd-label">MCPプロトコル</span>
+                        <span class="vd-sub">stdio / SSE</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box" style="border-color:#43a047;">
+                        <span class="vd-icon">&#128230;</span>
+                        <span class="vd-label" style="color:#43a047;">Dockerコンテナ</span>
+                        <span class="vd-sub">MCPサーバー</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box" style="border-color:#e65100;">
+                        <span class="vd-icon">&#127760;</span>
+                        <span class="vd-label" style="color:#e65100;">外部API</span>
+                        <span class="vd-sub">GitHub / DB etc.</span>
+                    </div>
+                </div>
+                <p style="text-align:center;font-size:0.7rem;color:#666;margin-top:14px;">MCPサーバーをDockerで隔離することで、<strong>ホストシステムへのアクセスを制限</strong>しセキュリティを向上</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 MCPとは</h3>
+                <div class="content-block">
+                    <p>MCPはAnthropicが提唱するオープンプロトコルで、AIモデルがさまざまなツールやデータソースと安全にやり取りするための標準化された方法を提供します。</p>
+                    <ul>
+                        <li><strong>MCPクライアント</strong>: AIアシスタント側（Claude Code、VSCode等）</li>
+                        <li><strong>MCPサーバー</strong>: ツール提供側（GitHub、ファイルシステム、DB等）</li>
+                        <li><strong>トランスポート</strong>: 通信方式（stdio、SSE）</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.2 DockerでMCPサーバーを動かすメリット</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>メリット</th>
+                                <th>説明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>環境の分離</strong></td>
+                                <td>MCPサーバーがホストOSに直接アクセスできないため、セキュリティが向上</td>
+                            </tr>
+                            <tr>
+                                <td><strong>依存関係の管理</strong></td>
+                                <td>Node.js、Python等のランタイムをホストにインストール不要</td>
+                            </tr>
+                            <tr>
+                                <td><strong>再現性</strong></td>
+                                <td>同じDockerイメージで、どの環境でも同一の動作を保証</td>
+                            </tr>
+                            <tr>
+                                <td><strong>アクセス制御</strong></td>
+                                <td>ネットワーク・ファイルシステムへのアクセスをコンテナレベルで制限</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 10-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 10-2</span>
+                <h2 class="section-title">GitHub MCPサーバーのDocker実行</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>GitHub公式のMCPサーバーをDockerコンテナで実行する方法を学びます。これにより、AIアシスタントからGitHubのリポジトリ、Issue、Pull Requestなどを操作できるようになります。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 GitHub MCPサーバーの概要</h3>
+                <div class="content-block">
+                    <p>GitHub MCPサーバーは、GitHubのAPIをMCPプロトコルでラップしたサーバーです。AIアシスタントが以下のような操作を実行できます。</p>
+                    <ul>
+                        <li>リポジトリの検索、ファイルの読み取り</li>
+                        <li>Issue、Pull Requestの作成・管理</li>
+                        <li>コードの検索</li>
+                        <li>ブランチの作成・管理</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 Docker実行コマンド</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">GitHub MCPサーバーのDocker実行</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># GitHub MCPサーバーをDockerで実行
+docker run -i --rm \
+  -e GITHUB_PERSONAL_ACCESS_TOKEN=&lt;your-token&gt; \
+  ghcr.io/github/github-mcp-server</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">Personal Access Tokenの作成</span>
+                        </div>
+                        <p>GitHub MCPサーバーを使用するには、GitHub Personal Access Token（PAT）が必要です。GitHubの Settings &gt; Developer settings &gt; Personal access tokens から作成できます。必要最小限のスコープ（repo, read:org等）のみ付与してください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.3 ツールセットの指定</h3>
+                <div class="content-block">
+                    <p>GitHub MCPサーバーでは、<code>--toolsets</code>フラグで利用するツールの範囲を制限できます。</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">ツールセットを限定して実行</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># 読み取り系のみ許可（安全な設定）
+docker run -i --rm \
+  -e GITHUB_PERSONAL_ACCESS_TOKEN=&lt;your-token&gt; \
+  ghcr.io/github/github-mcp-server \
+  --toolsets repos,issues
+
+# 利用可能なツールセット:
+# repos    - リポジトリの操作
+# issues   - Issue / PR の操作
+# pulls    - Pull Request の操作
+# code_security - コードセキュリティ</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 10-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 10-3</span>
+                <h2 class="section-title">Claude CodeでのDocker MCP活用</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Claude Code（Anthropicの公式CLI）では、<code>claude mcp add</code>コマンドでDockerベースのMCPサーバーを登録できます。Docker隔離によるセキュリティの利点と設定方法を学びます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 Claude CodeへのMCPサーバー登録</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">claude mcp add でDockerベースのMCPサーバーを追加</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># GitHub MCPサーバーをClaude Codeに登録
+claude mcp add github-mcp \
+  -t docker \
+  -- docker run -i --rm \
+  -e GITHUB_PERSONAL_ACCESS_TOKEN \
+  ghcr.io/github/github-mcp-server</code></pre>
+                    </div>
+
+                    <p>上記コマンドを実行すると、Claude Codeの設定ファイルにMCPサーバーが登録されます。次回のClaude Code起動時から、GitHub関連のツールが利用可能になります。</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 Docker隔離のメリット</h3>
+                <div class="content-block">
+                    <p>MCPサーバーをDockerで実行することで、以下のセキュリティ上の利点があります。</p>
+                    <ul>
+                        <li><strong>ファイルシステムの隔離</strong>: MCPサーバーがホストのファイルに直接アクセスできない</li>
+                        <li><strong>ネットワークの制限</strong>: 必要なAPIエンドポイントのみにアクセスを限定可能</li>
+                        <li><strong>プロセスの隔離</strong>: コンテナ内のプロセスがホストOSに影響を与えない</li>
+                        <li><strong>クリーンな環境</strong>: <code>--rm</code>フラグでコンテナ終了後に自動削除</li>
+                    </ul>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">環境変数でトークンを渡す</span>
+                        </div>
+                        <p>上記の例では<code>-e GITHUB_PERSONAL_ACCESS_TOKEN</code>（値なし）を指定しています。この書き方では、ホスト側の同名環境変数がコンテナに渡されます。事前に<code>export GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxx</code>をシェルで設定しておく必要があります。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.3 設定ファイルの確認</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Claude Codeの設定ファイル（~/.claude/settings.json）</span>
+                            <span class="code-lang">JSON</span>
+                        </div>
+                        <pre class="code-content"><code>{
+  "mcpServers": {
+    "github-mcp": {
+      "type": "docker",
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ]
+    }
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 10-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 10-4</span>
+                <h2 class="section-title">VSCodeでのDocker MCP活用</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>VSCodeでもMCPサーバーをDockerで実行できます。<code>.vscode/mcp.json</code>にDockerコマンドを設定し、GitHub Copilotなどのエージェントモードから利用します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 VSCodeのMCP設定</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">.vscode/mcp.json</span>
+                            <span class="code-lang">JSON</span>
+                        </div>
+                        <pre class="code-content"><code>{
+  "servers": {
+    "github-mcp": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github-token}"
+      }
+    }
+  },
+  "inputs": [
+    {
+      "id": "github-token",
+      "type": "promptString",
+      "description": "GitHub Personal Access Token",
+      "password": true
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 プロジェクト固有の設定</h3>
+                <div class="content-block">
+                    <p><code>.vscode/mcp.json</code>をプロジェクトリポジトリに含めることで、チーム全体で同じMCPサーバー設定を共有できます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">複数のMCPサーバーを登録する例</span>
+                            <span class="code-lang">JSON</span>
+                        </div>
+                        <pre class="code-content"><code>{
+  "servers": {
+    "github-mcp": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server",
+        "--toolsets", "repos,issues,pulls"
+      ]
+    },
+    "postgres-mcp": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "--network", "my-app-network",
+        "-e", "DATABASE_URL=postgresql://user:pass@db:5432/myapp",
+        "my-postgres-mcp-server:latest"
+      ]
+    }
+  }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">ネットワーク接続</span>
+                        </div>
+                        <p>MCPサーバーからDocker Composeで起動したデータベースなどにアクセスする場合は、<code>--network</code>オプションで同じDockerネットワークに接続します。これにより、MCPサーバーがコンテナ名でDBに接続できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 10-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 10-5</span>
+                <h2 class="section-title">セキュリティとベストプラクティス</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>MCPサーバーをDockerで運用する際のセキュリティ上の注意点とベストプラクティスを解説します。AIツールに外部APIへのアクセスを許可する以上、適切なセキュリティ対策が不可欠です。</p>
+            </div>
+
+            <!-- 図解: セキュリティレイヤー -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">Docker MCPサーバーのセキュリティレイヤー</div>
+                <div class="vd-grid">
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128274;</span>
+                        <span class="vd-label" style="color:#2e7d32;">最小権限の原則</span>
+                        <span class="vd-sub">必要最低限のスコープのみ付与</span>
+                        <span class="vd-sub">--read-only でファイルシステムを保護</span>
+                    </div>
+                    <div class="vd-card red">
+                        <span class="vd-icon">&#128721;</span>
+                        <span class="vd-label" style="color:#c62828;">特権モード禁止</span>
+                        <span class="vd-sub">--privileged は絶対に使わない</span>
+                        <span class="vd-sub">不要なケイパビリティをdrop</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#128272;</span>
+                        <span class="vd-label">環境変数で秘密情報</span>
+                        <span class="vd-sub">トークンを環境変数で渡す</span>
+                        <span class="vd-sub">ハードコード厳禁</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#128269;</span>
+                        <span class="vd-label" style="color:#f57f17;">イメージスキャン</span>
+                        <span class="vd-sub">docker scout / trivy で脆弱性検査</span>
+                        <span class="vd-sub">公式イメージを使用</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 最小権限の原則</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">セキュリティ強化されたMCPサーバー起動</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># セキュリティを強化したDocker実行
+docker run -i --rm \
+  --read-only \
+  --cap-drop ALL \
+  --security-opt no-new-privileges \
+  --memory 256m \
+  --cpus 0.5 \
+  -e GITHUB_PERSONAL_ACCESS_TOKEN \
+  ghcr.io/github/github-mcp-server \
+  --toolsets repos</code></pre>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>オプション</th>
+                                <th>効果</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>--read-only</code></td>
+                                <td>コンテナのファイルシステムを読み取り専用にする</td>
+                            </tr>
+                            <tr>
+                                <td><code>--cap-drop ALL</code></td>
+                                <td>すべてのLinuxケイパビリティを削除</td>
+                            </tr>
+                            <tr>
+                                <td><code>--security-opt no-new-privileges</code></td>
+                                <td>コンテナ内でのプロセスの権限昇格を防止</td>
+                            </tr>
+                            <tr>
+                                <td><code>--memory 256m</code></td>
+                                <td>メモリ使用量を制限</td>
+                            </tr>
+                            <tr>
+                                <td><code>--cpus 0.5</code></td>
+                                <td>CPU使用量を制限</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 秘密情報の管理</h3>
+                <div class="content-block">
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">絶対にやってはいけないこと</span>
+                        </div>
+                        <p>APIトークンやパスワードをDockerfile、docker-compose.yml、設定ファイルにハードコードしないでください。Gitにコミットされると、全世界に秘密情報が漏洩する危険があります。</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">安全な秘密情報の渡し方</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># 方法1: ホストの環境変数を利用（推奨）
+export GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxxxxxxxxxx
+docker run -i --rm \
+  -e GITHUB_PERSONAL_ACCESS_TOKEN \
+  ghcr.io/github/github-mcp-server
+
+# 方法2: .envファイルを使用
+# .env ファイル（.gitignoreに追加すること）
+# GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxxxxxxxxxx
+docker run -i --rm \
+  --env-file .env \
+  ghcr.io/github/github-mcp-server
+
+# 方法3: Docker Secrets（Swarm mode）
+echo "ghp_xxxxxxxxxxxx" | docker secret create github_token -</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.3 イメージの脆弱性スキャン</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Docker Scoutで脆弱性をスキャン</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># Docker Scoutで脆弱性をスキャン
+docker scout cves ghcr.io/github/github-mcp-server
+
+# Trivyを使ったスキャン（代替ツール）
+docker run --rm \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  aquasec/trivy image ghcr.io/github/github-mcp-server</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.4 ベストプラクティスまとめ</h3>
+                <div class="content-block">
+                    <div class="step-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>公式イメージを使う</h4>
+                                <p>MCPサーバーは信頼できる公式リポジトリ（ghcr.io等）のイメージを使用し、不明なソースのイメージは避けましょう。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>トークンのスコープを最小化</h4>
+                                <p>Personal Access Tokenは必要最小限のスコープ（例: repoのread-only）で作成し、定期的にローテーションしましょう。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>--privilegedは使わない</h4>
+                                <p><code>--privileged</code>フラグはコンテナにホストのほぼ全権限を付与します。MCPサーバーでは絶対に使用しないでください。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h4>ネットワークアクセスを制限</h4>
+                                <p>必要なAPIエンドポイントのみにアクセスを許可し、不要なネットワーク接続をブロックしましょう。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h4>定期的にイメージを更新</h4>
+                                <p>セキュリティパッチが含まれる最新バージョンのイメージを定期的にpullし、古いイメージを使い続けないようにしましょう。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">10章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>MCPサーバーをDockerで実行する主なメリットとして最も適切なものはどれですか？</p>
+                        <ol type="A">
+                            <li>MCPサーバーの処理速度が向上する</li>
+                            <li>MCPサーバーのコードを自動生成できる</li>
+                            <li>ホストシステムとの環境分離によりセキュリティが向上する</li>
+                            <li>MCPプロトコルのバージョンが自動更新される</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>Docker実行時に<code>--privileged</code>フラグを使うべきでない理由はどれですか？</p>
+                        <ol type="A">
+                            <li>コンテナのパフォーマンスが低下するため</li>
+                            <li>コンテナにホストのほぼ全権限が付与され、セキュリティリスクが高いため</li>
+                            <li>Docker Hubの利用規約に違反するため</li>
+                            <li>コンテナが自動的に削除されるため</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>APIトークンをDockerコンテナに安全に渡す方法として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>Dockerfileに直接記載する</li>
+                            <li>docker-compose.ymlにハードコードする</li>
+                            <li>環境変数または.envファイル（.gitignore対象）で渡す</li>
+                            <li>コンテナ起動後にファイルとしてコピーする</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">10章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: C</div>
+                    <div class="answer-content">
+                        <p>MCPサーバーをDockerで実行する最大のメリットは、ホストシステムとの環境分離です。コンテナ内のMCPサーバーは、ホストのファイルシステムやネットワークに直接アクセスできないため、万が一MCPサーバーに脆弱性があっても、ホストへの影響を最小限に抑えることができます。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>--privileged</code>フラグはコンテナにホストOSのほぼすべての権限（デバイスアクセス、カーネルモジュールの操作など）を付与します。MCPサーバーがこれらの権限を持つ必要はなく、攻撃者に悪用された場合のリスクが極めて高いため、使用すべきではありません。代わりに<code>--cap-drop ALL</code>で不要な権限をすべて削除するのがベストプラクティスです。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: C</div>
+                    <div class="answer-content">
+                        <p>APIトークンは環境変数（<code>-e</code>オプション）や<code>.env</code>ファイル（<code>--env-file</code>オプション）で渡すのが安全です。<code>.env</code>ファイルは必ず<code>.gitignore</code>に追加し、Gitにコミットされないようにします。Dockerfileやdocker-compose.ymlにトークンをハードコードすると、リポジトリにpushした際に秘密情報が漏洩する危険があります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="9docker-dev-environment.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第9章 開発環境の構築</div>
+            </div>
+        </a>
+        <a href="index.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">コーストップに戻る</div>
+                <div class="page-nav-title">Docker構築入門 トップ</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3章 トリガーとイベント - GitHub Actions入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #2088FF;
+        --primary-dark: #1A6FD6;
+        --primary-light: #E8F1FF;
+        --primary-lighter: #B3D4FF;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #eef5ff 0%, #e8f1ff 100%);
+        border-radius: 16px; border: 1px solid #b3d4ff;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #2088FF; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #2088FF; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(32,136,255,0.08);
+      }
+      .vd-box.accent { background: #2088FF; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #2088FF; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #e8f1ff; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #2088FF; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-github-actions.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">3</div>
+            <h1 class="chapter-title">トリガーとイベント</h1>
+            <p class="chapter-lead">ワークフローを「いつ」実行するかを制御するトリガーとイベントの設定方法を詳しく学びます。push、pull_request、スケジュール、手動実行まで幅広くカバーします。</p>
+        </header>
+
+        <!-- セクション1: イベントの基礎 -->
+        <section class="section" id="event-basics">
+            <h2><span class="material-icons">notifications_active</span> イベントの基礎</h2>
+
+            <p>GitHub Actionsのワークフローは、<strong>イベント</strong>をトリガーにして実行されます。<code>on</code>キーワードでイベントを指定し、特定の条件が満たされたときにワークフローが自動的に起動します。</p>
+
+            <h3>onキーワードの基本構文</h3>
+
+            <pre><code># 単一イベント
+on: push
+
+# 複数イベント（配列形式）
+on: [push, pull_request]
+
+# 詳細設定付き（マッピング形式）
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]</code></pre>
+
+            <h3>イベントの分類</h3>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">GitHub Actions イベントの3つの分類</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">🔔</span>
+                        <span class="vd-label">Webhook イベント</span>
+                        <span class="vd-sub">GitHubの操作に反応<br>push, pull_request,<br>issues, release 等</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">⏰</span>
+                        <span class="vd-label">スケジュール</span>
+                        <span class="vd-sub">cron構文で<br>定期実行を設定<br>schedule</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">🖱️</span>
+                        <span class="vd-label">手動トリガー</span>
+                        <span class="vd-sub">UI/APIから手動実行<br>workflow_dispatch<br>repository_dispatch</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>主要イベント一覧</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>イベント</th>
+                        <th>発火タイミング</th>
+                        <th>主な用途</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>push</code></td>
+                        <td>ブランチへのプッシュ時</td>
+                        <td>CI（ビルド・テスト）</td>
+                    </tr>
+                    <tr>
+                        <td><code>pull_request</code></td>
+                        <td>PR作成・更新時</td>
+                        <td>PRチェック、レビュー自動化</td>
+                    </tr>
+                    <tr>
+                        <td><code>schedule</code></td>
+                        <td>cron式のスケジュール</td>
+                        <td>定期テスト、レポート生成</td>
+                    </tr>
+                    <tr>
+                        <td><code>workflow_dispatch</code></td>
+                        <td>手動実行</td>
+                        <td>デプロイ、メンテナンス作業</td>
+                    </tr>
+                    <tr>
+                        <td><code>release</code></td>
+                        <td>リリース作成時</td>
+                        <td>パッケージ公開、CD</td>
+                    </tr>
+                    <tr>
+                        <td><code>issues</code></td>
+                        <td>Issue操作時</td>
+                        <td>自動ラベリング、通知</td>
+                    </tr>
+                    <tr>
+                        <td><code>workflow_call</code></td>
+                        <td>他のワークフローから呼び出し</td>
+                        <td>再利用可能ワークフロー</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="point-box">
+                <div class="point-title"><span class="material-icons">lightbulb</span> 重要ポイント</div>
+                <p>最も頻繁に使用するイベントは <code>push</code> と <code>pull_request</code> です。まずはこの2つの使い方をしっかりマスターしましょう。</p>
+            </div>
+        </section>
+
+        <!-- セクション2: pushとpull_request -->
+        <section class="section" id="push-pr">
+            <h2><span class="material-icons">call_merge</span> pushとpull_request</h2>
+
+            <p><code>push</code>と<code>pull_request</code>は、最も基本的で使用頻度の高いイベントです。ブランチフィルタやパスフィルタを使って、実行条件を細かく制御できます。</p>
+
+            <h3>pushイベント</h3>
+
+            <pre><code># mainブランチへのpushのみ
+on:
+  push:
+    branches: [main]
+
+# mainとdevelopブランチへのpush
+on:
+  push:
+    branches: [main, develop]
+
+# パターンマッチング（ワイルドカード）
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'   # release/1.0, release/2.0/beta 等
+      - 'feature/*'    # feature/login, feature/signup 等</code></pre>
+
+            <h3>ブランチフィルタ</h3>
+
+            <pre><code># branches: 指定ブランチにマッチしたら実行
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+# branches-ignore: 指定ブランチ以外で実行
+on:
+  push:
+    branches-ignore:
+      - 'docs/**'
+      - 'experimental/**'</code></pre>
+
+            <div class="point-box">
+                <div class="point-title"><span class="material-icons">warning</span> 注意</div>
+                <p><code>branches</code> と <code>branches-ignore</code> は同時に使用できません。どちらか一方のみ指定してください。</p>
+            </div>
+
+            <h3>パスフィルタ</h3>
+            <p>特定のファイルパスが変更された場合にのみ実行するよう制限できます。モノレポやドキュメント変更の除外に便利です。</p>
+
+            <pre><code># 特定パスの変更時のみ実行
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+# 特定パスの変更を除外
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.gitignore'</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">push イベントのフィルタリング構造</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">📤</span>
+                        <span class="vd-label">git push</span>
+                        <span class="vd-sub">コード変更をプッシュ</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">🌿</span>
+                        <span class="vd-label">ブランチフィルタ</span>
+                        <span class="vd-sub">branches / branches-ignore</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">📁</span>
+                        <span class="vd-label">パスフィルタ</span>
+                        <span class="vd-sub">paths / paths-ignore</span>
+                    </div>
+                    <span class="vd-arrow">→</span>
+                    <div class="vd-box">
+                        <span class="vd-icon">🚀</span>
+                        <span class="vd-label">ワークフロー実行</span>
+                        <span class="vd-sub">条件一致で起動</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>pull_requestイベント</h3>
+
+            <pre><code># 基本的なPRトリガー
+on:
+  pull_request:
+    branches: [main]
+
+# アクティビティタイプの指定
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+# PRでもパスフィルタが使える
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'</code></pre>
+
+            <h3>pull_requestのアクティビティタイプ</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>タイプ</th>
+                        <th>発火タイミング</th>
+                        <th>デフォルト</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>opened</code></td>
+                        <td>PRが新規作成された時</td>
+                        <td>はい</td>
+                    </tr>
+                    <tr>
+                        <td><code>synchronize</code></td>
+                        <td>PRのブランチにコミットが追加された時</td>
+                        <td>はい</td>
+                    </tr>
+                    <tr>
+                        <td><code>reopened</code></td>
+                        <td>クローズされたPRが再オープンされた時</td>
+                        <td>はい</td>
+                    </tr>
+                    <tr>
+                        <td><code>closed</code></td>
+                        <td>PRがクローズ/マージされた時</td>
+                        <td>いいえ</td>
+                    </tr>
+                    <tr>
+                        <td><code>labeled</code></td>
+                        <td>PRにラベルが付与された時</td>
+                        <td>いいえ</td>
+                    </tr>
+                    <tr>
+                        <td><code>review_requested</code></td>
+                        <td>レビューがリクエストされた時</td>
+                        <td>いいえ</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>実践例: フロントエンド/バックエンド別CI</h3>
+
+            <pre><code># .github/workflows/frontend-ci.yml
+name: Frontend CI
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'frontend/**'
+      - 'package.json'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+
+jobs:
+  frontend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: cd frontend && npm ci
+      - run: cd frontend && npm test</code></pre>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 3-1</div>
+                <p><strong>問題:</strong> 以下の要件を満たすonセクションをYAMLで記述してください。</p>
+                <ul>
+                    <li>mainブランチとrelease/*ブランチへのpush時に実行</li>
+                    <li>mainブランチへのpull_request時に実行</li>
+                    <li>docs/ディレクトリと*.mdファイルの変更は除外</li>
+                </ul>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <pre><code>on:
+  push:
+    branches:
+      - main
+      - 'release/*'
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'</code></pre>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- セクション3: スケジュール実行 -->
+        <section class="section" id="schedule">
+            <h2><span class="material-icons">schedule</span> スケジュール実行</h2>
+
+            <p><code>schedule</code>イベントを使うと、cron構文で定期的にワークフローを実行できます。夜間テスト、定期レポート、依存関係の更新チェックなどに活用されます。</p>
+
+            <h3>cron構文の基本</h3>
+
+            <pre><code>on:
+  schedule:
+    # ┌───────────── 分 (0-59)
+    # │ ┌───────────── 時 (0-23)
+    # │ │ ┌───────────── 日 (1-31)
+    # │ │ │ ┌───────────── 月 (1-12)
+    # │ │ │ │ ┌───────────── 曜日 (0-6, 0=日曜)
+    # │ │ │ │ │
+    - cron: '30 5 * * *'  # 毎日UTC 5:30（JST 14:30）</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">cron構文の5つのフィールド</div>
+                <div class="vd-bar">
+                    <div class="vd-bar-seg" style="background: #1565C0;">分<br>0-59</div>
+                    <div class="vd-bar-seg" style="background: #1E88E5;">時<br>0-23</div>
+                    <div class="vd-bar-seg" style="background: #42A5F5;">日<br>1-31</div>
+                    <div class="vd-bar-seg" style="background: #29B6F6;">月<br>1-12</div>
+                    <div class="vd-bar-seg" style="background: #26C6DA;">曜日<br>0-6</div>
+                </div>
+                <div class="vd-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 16px;">
+                    <div class="vd-card blue">
+                        <span class="vd-label">* (アスタリスク)</span>
+                        <span class="vd-sub">すべての値にマッチ</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-label">, (カンマ)</span>
+                        <span class="vd-sub">複数値: 1,15</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-label">- (ハイフン)</span>
+                        <span class="vd-sub">範囲: 1-5</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-label">/ (スラッシュ)</span>
+                        <span class="vd-sub">間隔: */15</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>cron式の具体例</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>cron式</th>
+                        <th>意味（UTC）</th>
+                        <th>JST換算</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>'0 0 * * *'</code></td>
+                        <td>毎日 0:00 UTC</td>
+                        <td>毎日 9:00 JST</td>
+                    </tr>
+                    <tr>
+                        <td><code>'0 18 * * *'</code></td>
+                        <td>毎日 18:00 UTC</td>
+                        <td>毎日 3:00 JST（翌日）</td>
+                    </tr>
+                    <tr>
+                        <td><code>'30 5 * * 1-5'</code></td>
+                        <td>平日 5:30 UTC</td>
+                        <td>平日 14:30 JST</td>
+                    </tr>
+                    <tr>
+                        <td><code>'0 0 1 * *'</code></td>
+                        <td>毎月1日 0:00 UTC</td>
+                        <td>毎月1日 9:00 JST</td>
+                    </tr>
+                    <tr>
+                        <td><code>'*/15 * * * *'</code></td>
+                        <td>15分ごと</td>
+                        <td>15分ごと</td>
+                    </tr>
+                    <tr>
+                        <td><code>'0 0 * * 0'</code></td>
+                        <td>毎週日曜 0:00 UTC</td>
+                        <td>毎週日曜 9:00 JST</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="point-box">
+                <div class="point-title"><span class="material-icons">warning</span> 注意事項</div>
+                <ul>
+                    <li>cron式のタイムゾーンは<strong>UTC</strong>です。日本時間（JST）はUTC+9なので換算が必要です</li>
+                    <li>最短間隔は<strong>5分</strong>です。それより短い間隔は5分に丸められます</li>
+                    <li>スケジュール実行は<strong>デフォルトブランチ</strong>のワークフローファイルのみ対象</li>
+                    <li>GitHubの負荷状況により、実行が数分〜数十分遅延することがあります</li>
+                </ul>
+            </div>
+
+            <h3>実践例: 夜間テストとセキュリティチェック</h3>
+
+            <pre><code># .github/workflows/nightly.yml
+name: Nightly Tests
+
+on:
+  schedule:
+    # 毎日 UTC 18:00（JST 3:00）に実行
+    - cron: '0 18 * * *'
+
+jobs:
+  full-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Run full test suite
+        run: npm run test:full
+      - name: Run security audit
+        run: npm audit --audit-level=high</code></pre>
+
+            <pre><code># 複数のスケジュールを設定
+on:
+  schedule:
+    - cron: '0 18 * * 1-5'   # 平日の夜間テスト
+    - cron: '0 0 * * 0'      # 週次セキュリティスキャン</code></pre>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 3-2</div>
+                <p><strong>問題:</strong> 以下のスケジュールに対応するcron式を記述してください。</p>
+                <ol>
+                    <li>毎日日本時間の午前6時に実行</li>
+                    <li>毎週月曜日と金曜日の日本時間の午後3時に実行</li>
+                    <li>毎月15日の日本時間の午前0時に実行</li>
+                </ol>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <ol>
+                            <li><code>'0 21 * * *'</code> — JST 6:00 = UTC 21:00（前日）</li>
+                            <li><code>'0 6 * * 1,5'</code> — JST 15:00 = UTC 6:00。月曜=1、金曜=5</li>
+                            <li><code>'0 15 15 * *'</code> — JST 0:00 = UTC 15:00（前日）。毎月15日のUTC 15:00</li>
+                        </ol>
+                        <p>注意: JSTからUTCへの変換は「-9時間」です。日をまたぐ場合は前日のUTC時刻になります。</p>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- セクション4: 手動トリガー -->
+        <section class="section" id="manual-trigger">
+            <h2><span class="material-icons">touch_app</span> 手動トリガー</h2>
+
+            <p><code>workflow_dispatch</code>を使うと、GitHubのUI（Actionsタブ）やAPIからワークフローを手動で実行できます。デプロイやメンテナンス作業など、任意のタイミングで実行したい処理に最適です。</p>
+
+            <h3>基本的な手動トリガー</h3>
+
+            <pre><code># 最小構成
+name: Manual Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Manual deployment started!"</code></pre>
+
+            <h3>inputsによるパラメータ定義</h3>
+            <p><code>inputs</code>を使うと、手動実行時にパラメータを受け取ることができます。実行時にUIからパラメータを入力できます。</p>
+
+            <pre><code>name: Deploy to Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'デプロイ先の環境'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+      version:
+        description: 'デプロイするバージョン'
+        required: true
+        type: string
+        default: 'latest'
+      dry_run:
+        description: 'ドライラン（実際にはデプロイしない）'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show parameters
+        run: |
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Version: ${{ github.event.inputs.version }}"
+          echo "Dry Run: ${{ github.event.inputs.dry_run }}"
+
+      - name: Deploy
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        run: |
+          echo "Deploying version ${{ github.event.inputs.version }}"
+          echo "Target: ${{ github.event.inputs.environment }}"</code></pre>
+
+            <h3>inputsの型</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>型</th>
+                        <th>説明</th>
+                        <th>UI表示</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>string</code></td>
+                        <td>自由入力テキスト</td>
+                        <td>テキストフィールド</td>
+                    </tr>
+                    <tr>
+                        <td><code>boolean</code></td>
+                        <td>true/false</td>
+                        <td>チェックボックス</td>
+                    </tr>
+                    <tr>
+                        <td><code>choice</code></td>
+                        <td>選択肢から選ぶ</td>
+                        <td>ドロップダウン</td>
+                    </tr>
+                    <tr>
+                        <td><code>environment</code></td>
+                        <td>GitHub Environmentsから選ぶ</td>
+                        <td>環境セレクタ</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">workflow_dispatch の入力UIイメージ</div>
+                <div style="max-width: 400px; margin: 0 auto; background: white; border-radius: 12px; padding: 20px; border: 2px solid #e8f1ff;">
+                    <div style="font-weight: 700; font-size: 0.9rem; color: #333; margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;">Run workflow</div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 0.72rem; font-weight: 600; color: #555; margin-bottom: 4px;">Branch</div>
+                        <div style="background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem;">main</div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 0.72rem; font-weight: 600; color: #555; margin-bottom: 4px;">Environment</div>
+                        <div style="background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem;">staging ▼</div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 0.72rem; font-weight: 600; color: #555; margin-bottom: 4px;">Version</div>
+                        <div style="background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem;">latest</div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-size: 0.72rem; font-weight: 600; color: #555; display: flex; align-items: center; gap: 6px;">
+                            <span style="display: inline-block; width: 16px; height: 16px; border: 2px solid #d0d7de; border-radius: 3px;"></span>
+                            Dry Run
+                        </label>
+                    </div>
+                    <div style="background: #2088FF; color: white; text-align: center; padding: 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;">Run workflow</div>
+                </div>
+            </div>
+
+            <h3>GitHub CLIでの手動実行</h3>
+
+            <pre><code># GitHub CLI で手動実行
+gh workflow run deploy.yml \
+  -f environment=staging \
+  -f version=v1.2.3 \
+  -f dry_run=false
+
+# 実行状態の確認
+gh run list --workflow=deploy.yml</code></pre>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 3-3</div>
+                <p><strong>問題:</strong> データベースのバックアップを手動で実行するワークフローを作成してください。以下のinputsを定義してください。</p>
+                <ul>
+                    <li><code>database</code>: 対象DB名（choice型: production, staging, development）</li>
+                    <li><code>backup_type</code>: バックアップ種別（choice型: full, incremental）</li>
+                    <li><code>compress</code>: 圧縮するか（boolean型、デフォルトtrue）</li>
+                </ul>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <pre><code>name: Database Backup
+
+on:
+  workflow_dispatch:
+    inputs:
+      database:
+        description: '対象データベース'
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+          - development
+      backup_type:
+        description: 'バックアップ種別'
+        required: true
+        type: choice
+        options:
+          - full
+          - incremental
+        default: full
+      compress:
+        description: '圧縮を有効にする'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run backup
+        run: |
+          echo "Database: ${{ github.event.inputs.database }}"
+          echo "Type: ${{ github.event.inputs.backup_type }}"
+          echo "Compress: ${{ github.event.inputs.compress }}"</code></pre>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- セクション5: その他のイベント -->
+        <section class="section" id="other-events">
+            <h2><span class="material-icons">extension</span> その他のイベント</h2>
+
+            <p>push、pull_request、schedule以外にも、GitHub Actionsは多数のイベントをサポートしています。ここでは特に実務で活用頻度の高いイベントを紹介します。</p>
+
+            <h3>releaseイベント</h3>
+            <p>リリースの作成・公開をトリガーにパッケージ公開やデプロイを自動化できます。</p>
+
+            <pre><code>name: Publish Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}</code></pre>
+
+            <h3>issuesイベント</h3>
+            <p>Issue操作時に自動化処理を行えます。</p>
+
+            <pre><code>name: Issue Automation
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  auto-label:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    steps:
+      - name: Add triage label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['needs-triage']
+            })</code></pre>
+
+            <h3>workflow_callイベント（再利用可能ワークフロー）</h3>
+            <p>他のワークフローから呼び出される「再利用可能ワークフロー」を定義できます。</p>
+
+            <pre><code># .github/workflows/reusable-test.yml（呼び出される側）
+name: Reusable Test Workflow
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: true
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - run: npm ci
+      - run: npm test</code></pre>
+
+            <pre><code># .github/workflows/ci.yml（呼び出す側）
+name: CI
+
+on: push
+
+jobs:
+  call-test:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      node-version: '20'</code></pre>
+
+            <h3>repository_dispatchイベント</h3>
+            <p>外部システムからAPIを通じてワークフローをトリガーできます。</p>
+
+            <pre><code># ワークフロー定義
+name: External Trigger
+
+on:
+  repository_dispatch:
+    types: [deploy-request]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show payload
+        run: |
+          echo "Event type: ${{ github.event.action }}"
+          echo "Client payload: ${{ toJSON(github.event.client_payload) }}"</code></pre>
+
+            <pre><code># APIでトリガー（curlの例）
+curl -X POST \
+  -H "Accept: application/vnd.github.v3+json" \
+  -H "Authorization: token YOUR_TOKEN" \
+  https://api.github.com/repos/OWNER/REPO/dispatches \
+  -d '{"event_type":"deploy-request","client_payload":{"version":"1.0.0"}}'</code></pre>
+
+            <h3>イベントペイロード（github.event）</h3>
+            <p>各イベントには固有のペイロード（データ）が付属しています。<code>github.event</code>でアクセスできます。</p>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">主要イベントとペイロードの関係</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">📤</span>
+                        <span class="vd-label">push</span>
+                        <span class="vd-sub">github.event.commits<br>github.event.head_commit<br>github.event.pusher</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">🔀</span>
+                        <span class="vd-label">pull_request</span>
+                        <span class="vd-sub">github.event.pull_request<br>github.event.number<br>github.event.action</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">🏷️</span>
+                        <span class="vd-label">release</span>
+                        <span class="vd-sub">github.event.release<br>github.event.release.tag_name<br>github.event.action</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">📋</span>
+                        <span class="vd-label">issues</span>
+                        <span class="vd-sub">github.event.issue<br>github.event.issue.number<br>github.event.action</span>
+                    </div>
+                </div>
+            </div>
+
+            <pre><code># イベントペイロードの活用例
+name: Commit Info
+
+on: push
+
+jobs:
+  show-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show commit info
+        run: |
+          echo "Pushed by: ${{ github.event.pusher.name }}"
+          echo "Commit message: ${{ github.event.head_commit.message }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "SHA: ${{ github.sha }}"</code></pre>
+
+            <h3>複数イベントの組み合わせ</h3>
+            <p>実務では複数のイベントを組み合わせて使うことが一般的です。</p>
+
+            <pre><code># 実践的な複合トリガー設定
+name: CI/CD Pipeline
+
+on:
+  # コードの変更時（CI）
+  push:
+    branches: [main, develop]
+    paths-ignore: ['docs/**', '**.md']
+
+  # PRのレビュー時
+  pull_request:
+    branches: [main]
+
+  # 定期テスト
+  schedule:
+    - cron: '0 18 * * 1-5'
+
+  # 手動デプロイ
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        type: choice
+        options: [staging, production]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm test
+
+  deploy:
+    needs: test
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying to ${{ github.event.inputs.deploy_target }}"</code></pre>
+
+            <div class="exercise">
+                <div class="exercise-title"><span class="material-icons">edit</span> 演習問題 3-4</div>
+                <p><strong>問題:</strong> 以下の要件をすべて満たす<code>on</code>セクションを記述してください。</p>
+                <ol>
+                    <li>mainブランチへのpush（src/配下の変更のみ）</li>
+                    <li>mainブランチへのPR作成・更新時</li>
+                    <li>毎週月曜日のJST午前9時に定期テスト実行</li>
+                    <li>手動実行（入力パラメータ: debug_mode（boolean、デフォルトfalse））</li>
+                </ol>
+                <details>
+                    <summary>解答例を見る</summary>
+                    <div class="exercise-answer">
+                        <pre><code>on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+  schedule:
+    # JST 9:00 = UTC 0:00
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+    inputs:
+      debug_mode:
+        description: 'デバッグモードを有効にする'
+        required: false
+        type: boolean
+        default: false</code></pre>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- ページナビゲーション -->
+        <nav class="chapter-nav">
+            <a href="2actions-workflow-basics.html" class="prev"><span class="material-icons">arrow_back</span> 前の章</a>
+            <a href="index.html" class="home"><span class="material-icons">home</span> 目次</a>
+            <a href="4actions-jobs-runners.html" class="next">次の章 <span class="material-icons">arrow_forward</span></a>
+        </nav>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+</body>
+</html>

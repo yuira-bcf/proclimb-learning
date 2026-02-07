@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第12章 チーム開発フローと.gitignore - Git & GitHub完全ガイド</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #F05032;
+        --primary-dark: #D63F20;
+        --primary-light: #FBE9E7;
+        --primary-lighter: #FFCCBC;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef5f3 0%, #fbe9e7 100%);
+        border-radius: 16px; border: 1px solid #ffccbc;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F05032; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F05032; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(240,80,50,0.08);
+      }
+      .vd-box.accent { background: #F05032; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F05032; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fbe9e7; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F05032; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-git.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">12</div>
+            <h1 class="chapter-title">チーム開発フローと.gitignore</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">12-1</span><span>チーム開発ワークフロー</span></li>
+                <li class="toc-item"><span class="toc-number">12-2</span><span>Git Flow</span></li>
+                <li class="toc-item"><span class="toc-number">12-3</span><span>GitHub Flow</span></li>
+                <li class="toc-item"><span class="toc-number">12-4</span><span>.gitignoreの設定</span></li>
+                <li class="toc-item"><span class="toc-number">12-5</span><span>Git管理のベストプラクティス</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 12-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 12-1</span>
+                <h2 class="section-title">チーム開発ワークフロー</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>チーム開発では、複数の開発者が同時に作業を進めます。混乱なくコードを管理するためには、<strong>ブランチ戦略</strong>と呼ばれるワークフロー（作業の進め方のルール）を決めておくことが重要です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 ワークフローが必要な理由</h3>
+                <div class="content-block">
+                    <p>ワークフローを決めずにチーム開発を行うと、以下のような問題が起きやすくなります。</p>
+                    <ul class="bullet-list">
+                        <li>mainブランチに直接コミットしてしまい、不安定なコードが本番に反映される</li>
+                        <li>誰がどのブランチで何をしているか分からなくなる</li>
+                        <li>コンフリクトが頻発し、解決に時間がかかる</li>
+                        <li>リリースのタイミングが管理できない</li>
+                    </ul>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">代表的なワークフロー</span>
+                        </div>
+                        <p>現在、広く使われているGitのワークフローは主に<strong>Git Flow</strong>と<strong>GitHub Flow</strong>の2つです。プロジェクトの規模やリリースサイクルに応じて選択します。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 12-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 12-2</span>
+                <h2 class="section-title">Git Flow</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Git Flowは、2010年にVincent Driessenが提唱したブランチモデルです。<strong>リリースサイクルが明確なプロジェクト</strong>（モバイルアプリ、パッケージソフトウェアなど）に適しています。</p>
+            </div>
+
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#127795; Git Flow のブランチ構成</div>
+    <div class="vd-grid">
+        <div class="vd-card red">
+            <span class="vd-icon">&#9733;</span>
+            <span class="vd-label">main</span>
+            <span class="vd-sub">本番リリース用<br>常に安定した状態</span>
+        </div>
+        <div class="vd-card blue">
+            <span class="vd-icon">&#128736;</span>
+            <span class="vd-label">develop</span>
+            <span class="vd-sub">開発の統合ブランチ<br>次のリリースの準備</span>
+        </div>
+        <div class="vd-card green">
+            <span class="vd-icon">&#127793;</span>
+            <span class="vd-label">feature/*</span>
+            <span class="vd-sub">新機能の開発用<br>developから分岐</span>
+        </div>
+        <div class="vd-card amber">
+            <span class="vd-icon">&#128230;</span>
+            <span class="vd-label">release/*</span>
+            <span class="vd-sub">リリース準備用<br>developから分岐</span>
+        </div>
+        <div class="vd-card purple">
+            <span class="vd-icon">&#128293;</span>
+            <span class="vd-label">hotfix/*</span>
+            <span class="vd-sub">緊急バグ修正用<br>mainから分岐</span>
+        </div>
+    </div>
+</div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 各ブランチの役割</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ブランチ</th>
+                                <th>分岐元</th>
+                                <th>マージ先</th>
+                                <th>役割</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>main</strong></td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>本番環境のコード。常にリリース可能な状態を保つ</td>
+                            </tr>
+                            <tr>
+                                <td><strong>develop</strong></td>
+                                <td>main</td>
+                                <td>release</td>
+                                <td>開発の中心。全てのfeatureブランチがここに統合される</td>
+                            </tr>
+                            <tr>
+                                <td><strong>feature/*</strong></td>
+                                <td>develop</td>
+                                <td>develop</td>
+                                <td>個別の機能開発。機能が完成したらdevelopにマージ</td>
+                            </tr>
+                            <tr>
+                                <td><strong>release/*</strong></td>
+                                <td>develop</td>
+                                <td>main, develop</td>
+                                <td>リリース前の最終調整。バグ修正やバージョン番号の更新</td>
+                            </tr>
+                            <tr>
+                                <td><strong>hotfix/*</strong></td>
+                                <td>main</td>
+                                <td>main, develop</td>
+                                <td>本番の緊急バグ修正。修正後はmainとdevelopの両方に反映</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 Git Flowの実践コマンド</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">feature ブランチの作業フロー</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># developブランチから新しいfeatureブランチを作成
+$ git checkout develop
+$ git checkout -b feature/login-form
+
+# 機能を開発してコミット
+$ git add .
+$ git commit -m "Add login form UI"
+
+# developにマージ
+$ git checkout develop
+$ git merge feature/login-form
+
+# featureブランチを削除
+$ git branch -d feature/login-form</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">release ブランチの作業フロー</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># developからreleaseブランチを作成
+$ git checkout develop
+$ git checkout -b release/1.0.0
+
+# バグ修正やバージョン番号の更新
+$ git commit -m "Bump version to 1.0.0"
+
+# mainにマージしてタグを付ける
+$ git checkout main
+$ git merge release/1.0.0
+$ git tag -a v1.0.0 -m "Version 1.0.0"
+
+# developにもマージ
+$ git checkout develop
+$ git merge release/1.0.0
+
+# releaseブランチを削除
+$ git branch -d release/1.0.0</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">Git Flowの向き・不向き</span>
+                        </div>
+                        <p>Git Flowは構造がしっかりしている反面、ブランチの数が多く管理が複雑になります。<strong>定期的なリリースサイクル</strong>があるプロジェクトには最適ですが、頻繁にデプロイするWebアプリケーションには向かない場合もあります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 12-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 12-3</span>
+                <h2 class="section-title">GitHub Flow</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>GitHub Flowは、GitHub社が提唱するシンプルなワークフローです。<strong>継続的デプロイ</strong>を行うWebアプリケーション開発に最適で、Git Flowよりもルールが少なく運用しやすいのが特徴です。</p>
+            </div>
+
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#128640; GitHub Flow のシンプルなフロー</div>
+    <div class="vd-flow">
+        <div class="vd-box">
+            <span class="vd-icon">&#9733;</span>
+            <span class="vd-label">main</span>
+            <span class="vd-sub">常にデプロイ可能</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box green" style="border-color:#a5d6a7;background:#f1f8e9;">
+            <span class="vd-icon">&#127793;</span>
+            <span class="vd-label" style="color:#2E7D32;">ブランチ作成</span>
+            <span class="vd-sub">feature/xxx</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box blue" style="border-color:#90caf9;background:#e3f2fd;">
+            <span class="vd-icon">&#128221;</span>
+            <span class="vd-label" style="color:#1565C0;">開発 & コミット</span>
+            <span class="vd-sub">こまめにpush</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box purple" style="border-color:#ce93d8;background:#f3e5f5;">
+            <span class="vd-icon">&#128172;</span>
+            <span class="vd-label" style="color:#7B1FA2;">プルリクエスト</span>
+            <span class="vd-sub">レビュー依頼</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box accent">
+            <span class="vd-icon">&#128640;</span>
+            <span class="vd-label">マージ & デプロイ</span>
+            <span class="vd-sub">mainに統合</span>
+        </div>
+    </div>
+</div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 GitHub Flowの6つのルール</h3>
+                <div class="content-block">
+                    <ol class="bullet-list">
+                        <li><strong>mainブランチは常にデプロイ可能な状態</strong>を維持する</li>
+                        <li>新しい作業は<strong>mainからブランチを切って</strong>開始する</li>
+                        <li>ブランチには<strong>分かりやすい名前</strong>をつける（例: <code>feature/add-search</code>）</li>
+                        <li>定期的に<strong>リモートにpush</strong>してバックアップを取る</li>
+                        <li>マージ前に必ず<strong>プルリクエストを作成</strong>し、コードレビューを受ける</li>
+                        <li>レビュー承認後に<strong>mainにマージしてデプロイ</strong>する</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 GitHub Flowの実践コマンド</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">GitHub Flow の典型的な作業フロー</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># 1. mainブランチを最新にする
+$ git checkout main
+$ git pull origin main
+
+# 2. 作業用ブランチを作成
+$ git checkout -b feature/add-search
+
+# 3. 開発してこまめにコミット
+$ git add .
+$ git commit -m "Add search bar component"
+$ git commit -m "Add search functionality"
+
+# 4. リモートにpush
+$ git push -u origin feature/add-search
+
+# 5. GitHubでプルリクエストを作成
+#    → ブラウザでGitHubを開き、PRを作成
+
+# 6. レビュー後、GitHubでマージ
+#    → PRページの「Merge pull request」ボタン
+
+# 7. ローカルのmainを更新してブランチを削除
+$ git checkout main
+$ git pull origin main
+$ git branch -d feature/add-search</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">Git Flow vs GitHub Flow</span>
+                        </div>
+                        <p><strong>Git Flow</strong>はリリースバージョン管理が必要な大規模プロジェクト向け、<strong>GitHub Flow</strong>は継続的デプロイを行うWebアプリ向けです。初心者やスタートアップは、シンプルなGitHub Flowから始めるのがおすすめです。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 12-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 12-4</span>
+                <h2 class="section-title">.gitignoreの設定</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><code>.gitignore</code>ファイルは、<strong>Gitの管理対象から除外するファイルやディレクトリ</strong>を指定するための設定ファイルです。不要なファイルをリポジトリに含めないことで、リポジトリをクリーンに保てます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 .gitignoreが必要な理由</h3>
+                <div class="content-block">
+                    <p>以下のようなファイルは、Gitで管理すべきではありません。</p>
+
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128274;</div>
+                            <div class="feature-content">
+                                <h4>秘密情報・環境変数</h4>
+                                <p><code>.env</code>ファイルやAPIキー、パスワードなどをリポジトリに含めると、セキュリティリスクになります。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128230;</div>
+                            <div class="feature-content">
+                                <h4>依存パッケージ</h4>
+                                <p><code>node_modules/</code>などの依存パッケージは、<code>package.json</code>から復元できるため、リポジトリに含める必要はありません。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128187;</div>
+                            <div class="feature-content">
+                                <h4>ビルド生成物</h4>
+                                <p><code>dist/</code>、<code>build/</code>などのビルド成果物は、ソースコードから再生成できるため不要です。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128736;</div>
+                            <div class="feature-content">
+                                <h4>エディタ・OS固有のファイル</h4>
+                                <p><code>.DS_Store</code>（macOS）、<code>Thumbs.db</code>（Windows）、<code>.vscode/</code>（VSCode設定）などは個人環境に依存するファイルです。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">一度コミットしたファイルは.gitignoreで無視できない</span>
+                        </div>
+                        <p><code>.gitignore</code>は<strong>まだ追跡されていないファイル</strong>にのみ有効です。既にコミットしたファイルを無視したい場合は、<code>git rm --cached ファイル名</code>で追跡を解除してから<code>.gitignore</code>に追加する必要があります。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 .gitignoreのパターン記法</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>パターン</th>
+                                <th>意味</th>
+                                <th>具体例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>ファイル名</code></td>
+                                <td>指定したファイルを無視</td>
+                                <td><code>.env</code> → .envファイルを無視</td>
+                            </tr>
+                            <tr>
+                                <td><code>ディレクトリ/</code></td>
+                                <td>指定したディレクトリ全体を無視</td>
+                                <td><code>node_modules/</code> → フォルダごと無視</td>
+                            </tr>
+                            <tr>
+                                <td><code>*.拡張子</code></td>
+                                <td>指定した拡張子のファイルを全て無視</td>
+                                <td><code>*.log</code> → 全ての.logファイル</td>
+                            </tr>
+                            <tr>
+                                <td><code>!ファイル名</code></td>
+                                <td>除外ルールの例外（無視しない）</td>
+                                <td><code>!important.log</code> → このファイルだけは追跡</td>
+                            </tr>
+                            <tr>
+                                <td><code>**/ディレクトリ</code></td>
+                                <td>任意の階層にあるディレクトリを無視</td>
+                                <td><code>**/__pycache__</code> → どの階層でも無視</td>
+                            </tr>
+                            <tr>
+                                <td><code># コメント</code></td>
+                                <td>コメント行（無視される）</td>
+                                <td><code># 環境変数ファイル</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.3 実践的な.gitignoreの例</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Webプロジェクト向け .gitignore</span>
+                            <span class="code-lang">.gitignore</span>
+                        </div>
+                        <pre class="code-content"><code># ========================================
+# 依存パッケージ
+# ========================================
+node_modules/
+vendor/
+
+# ========================================
+# 環境変数・秘密情報
+# ========================================
+.env
+.env.local
+.env.production
+*.key
+*.pem
+
+# ========================================
+# ビルド生成物
+# ========================================
+dist/
+build/
+.next/
+out/
+
+# ========================================
+# ログファイル
+# ========================================
+*.log
+npm-debug.log*
+
+# ========================================
+# OS固有のファイル
+# ========================================
+.DS_Store
+Thumbs.db
+
+# ========================================
+# エディタ固有のファイル
+# ========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">gitignore.io を活用しよう</span>
+                        </div>
+                        <p><a href="https://www.toptal.com/developers/gitignore" target="_blank">gitignore.io</a>は、使用する言語やフレームワークを選ぶだけで、最適な<code>.gitignore</code>を自動生成してくれるWebサービスです。また、GitHubでリポジトリを作成する際にもテンプレートを選択できます。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.4 追跡済みファイルの除外方法</h3>
+                <div class="content-block">
+                    <p>既にGitで追跡しているファイルを後から<code>.gitignore</code>に追加したい場合は、以下の手順が必要です。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">追跡済みファイルを.gitignoreに追加する手順</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># 1. Gitの追跡を解除（ファイルは残る）
+$ git rm --cached .env
+
+# 2. .gitignoreに追加
+$ echo ".env" >> .gitignore
+
+# 3. 変更をコミット
+$ git add .gitignore
+$ git commit -m "Add .env to .gitignore"</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">Gitの履歴には残る</span>
+                        </div>
+                        <p><code>git rm --cached</code>で追跡を解除しても、<strong>過去のコミット履歴にはそのファイルが残っています</strong>。もし秘密情報を誤ってコミットしてしまった場合は、<code>git filter-branch</code>やBFG Repo-Cleanerなどのツールで履歴からも削除する必要があります。最初から<code>.gitignore</code>を正しく設定しておくことが最善です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 12-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 12-5</span>
+                <h2 class="section-title">Git管理のベストプラクティス</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>チーム開発をスムーズに進めるために、日頃から心がけたいGit管理のベストプラクティスをまとめます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 コミットのベストプラクティス</h3>
+                <div class="content-block">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128221;</div>
+                            <div class="feature-content">
+                                <h4>意味のあるコミットメッセージを書く</h4>
+                                <p>「fix」「update」だけではなく、<strong>何を・なぜ変更したのか</strong>が分かるメッセージにしましょう。例: <code>Fix login form validation error on empty email</code></p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#127919;</div>
+                            <div class="feature-content">
+                                <h4>1コミット1変更の原則</h4>
+                                <p>1つのコミットには関連する1つの変更のみを含めます。バグ修正と新機能追加を同じコミットに入れないようにしましょう。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128736;</div>
+                            <div class="feature-content">
+                                <h4>動く状態でコミットする</h4>
+                                <p>コンパイルエラーやテスト失敗の状態でコミットしないようにしましょう。各コミットは常に動作する状態を保つことが理想です。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 コミットメッセージの規約</h3>
+                <div class="content-block">
+                    <p>チームで統一的なコミットメッセージを書くために、<strong>Conventional Commits</strong>という規約がよく使われます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Conventional Commits の形式</span>
+                            <span class="code-lang">テキスト</span>
+                        </div>
+                        <pre class="code-content"><code># 基本形式
+type(scope): description
+
+# 具体例
+feat(auth): add Google OAuth login
+fix(cart): resolve quantity update bug
+docs(readme): update installation guide
+style(header): adjust responsive layout
+refactor(api): simplify error handling logic
+test(user): add unit tests for signup flow
+chore(deps): update dependencies</code></pre>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>type</th>
+                                <th>用途</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>feat</code></td><td>新機能の追加</td></tr>
+                            <tr><td><code>fix</code></td><td>バグの修正</td></tr>
+                            <tr><td><code>docs</code></td><td>ドキュメントの変更</td></tr>
+                            <tr><td><code>style</code></td><td>コードの書式変更（機能変更なし）</td></tr>
+                            <tr><td><code>refactor</code></td><td>リファクタリング</td></tr>
+                            <tr><td><code>test</code></td><td>テストの追加・修正</td></tr>
+                            <tr><td><code>chore</code></td><td>ビルド設定や依存関係の更新</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">12章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Git Flowにおいて、緊急のバグ修正に使用するブランチはどれですか？</p>
+                        <ol type="A">
+                            <li>feature ブランチ</li>
+                            <li>release ブランチ</li>
+                            <li>hotfix ブランチ</li>
+                            <li>develop ブランチ</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p><code>.gitignore</code>の記述で、全ての<code>.log</code>ファイルを無視するパターンはどれですか？</p>
+                        <ol type="A">
+                            <li><code>.log</code></li>
+                            <li><code>*.log</code></li>
+                            <li><code>log.*</code></li>
+                            <li><code>log/</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>GitHub Flowの特徴として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>developブランチを必ず使用する</li>
+                            <li>mainブランチに直接コミットすることを推奨する</li>
+                            <li>プルリクエストを使ったコードレビューが必須</li>
+                            <li>releaseブランチでバージョン管理を行う</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">12章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: C</div>
+                    <div class="answer-content">
+                        <p>Git Flowでは、本番環境で発見された緊急バグの修正には<strong>hotfixブランチ</strong>を使用します。hotfixブランチはmainブランチから直接分岐し、修正後はmainとdevelopの両方にマージされます。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>*.log</code> のアスタリスク（*）はワイルドカードで、「任意のファイル名」を意味します。つまり <code>*.log</code> は <code>error.log</code>、<code>access.log</code> など、拡張子が<code>.log</code>の全てのファイルにマッチします。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: C</div>
+                    <div class="answer-content">
+                        <p>GitHub Flowでは、mainブランチにマージする前に必ず<strong>プルリクエストを作成してコードレビュー</strong>を受けることが基本ルールです。developブランチやreleaseブランチは使わず、シンプルにmainとfeatureブランチだけで運用します。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="11git-conflict.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第11章 コンフリクト解決テクニック</div>
+            </div>
+        </a>
+        <a href="13github-features.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第13章 GitHubの活用機能</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../shared/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第8章 Codex × AI開発実践 - VSCode＋AI開発</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/common.css">
+    <style>
+      :root {
+        --primary: #007ACC;
+        --primary-dark: #005A9E;
+        --primary-light: #E1F0FF;
+        --primary-lighter: #B3D7FF;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #e8f4fd 0%, #e1f0ff 100%);
+        border-radius: 16px; border: 1px solid #b3d7ff;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #007ACC; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #007ACC; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(0,122,204,0.08);
+      }
+      .vd-box.accent { background: #007ACC; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #007ACC; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #e1f0ff; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #007ACC; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../shared/js/nav-vscode.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">8</div>
+            <h1 class="chapter-title">Codex × AI開発実践</h1>
+            <p class="chapter-subtitle">AIエージェントを活用した次世代の開発ワークフロー</p>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title">この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">8-1</span>AI開発ツールの全体像</li>
+                <li class="toc-item"><span class="toc-number">8-2</span>OpenAI Codex CLIの導入</li>
+                <li class="toc-item"><span class="toc-number">8-3</span>Claude Codeの導入と活用</li>
+                <li class="toc-item"><span class="toc-number">8-4</span>AI開発の実践ワークフロー</li>
+                <li class="toc-item"><span class="toc-number">8-5</span>AIツール活用のベストプラクティス</li>
+                <li class="toc-item"><span class="toc-number">Ex</span>練習問題</li>
+            </ul>
+        </nav>
+
+        <!-- ===== Section 8-1 ===== -->
+        <section class="section" id="section8-1">
+            <div class="section-header">
+                <span class="section-number">Section 8-1</span>
+                <h2 class="section-title">AI開発ツールの全体像</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>2024〜2025年にかけて、AIを活用した開発ツール（AIコーディングアシスタント）は急速に進化しました。前章で学んだGitHub Copilotに加え、ターミナルベースの<strong>AIエージェント</strong>が登場し、開発者のワークフローを大きく変えつつあります。ここでは主要なツールを比較しながら全体像を把握しましょう。</p>
+            </div>
+
+            <!-- 図解1: AI開発ツール比較 -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">主要AI開発ツールの比較</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#129302;</span>
+                        <span class="vd-label">GitHub Copilot</span>
+                        <span class="vd-sub">VSCode内蔵型<br>コード補完 + チャット<br>エージェントモード対応<br>Microsoft / GitHub</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128187;</span>
+                        <span class="vd-label">OpenAI Codex CLI</span>
+                        <span class="vd-sub">ターミナルベース<br>codexコマンドで実行<br>自律的なコード生成・編集<br>OpenAI</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">&#9889;</span>
+                        <span class="vd-label">Claude Code</span>
+                        <span class="vd-sub">ターミナルベース<br>claudeコマンドで実行<br>MCP連携・高精度な推論<br>Anthropic</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#128313;</span>
+                        <span class="vd-label">Cursor</span>
+                        <span class="vd-sub">VSCode派生エディタ<br>AI機能がネイティブ統合<br>Composer・エージェント機能<br>Cursor, Inc.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>ツールの分類</h3>
+                <p>AI開発ツールは、動作環境によって大きく2つに分類できます。</p>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>分類</th>
+                                <th>ツール例</th>
+                                <th>特徴</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>エディタ統合型</strong></td>
+                                <td>GitHub Copilot, Cursor</td>
+                                <td>エディタ内でAI機能を使用。GUI操作が中心</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CLI（ターミナル）型</strong></td>
+                                <td>Codex CLI, Claude Code</td>
+                                <td>ターミナルからAIに指示。ファイル操作やコマンド実行も自律的に行う</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>この章では、CLI型のAIエージェントである<strong>OpenAI Codex CLI</strong>と<strong>Claude Code</strong>を中心に学びます。これらはVSCodeの統合ターミナルからも利用でき、第5章で学んだターミナル操作の知識が活きてきます。</p>
+            </div>
+        </section>
+
+        <!-- ===== Section 8-2 ===== -->
+        <section class="section" id="section8-2">
+            <div class="section-header">
+                <span class="section-number">Section 8-2</span>
+                <h2 class="section-title">OpenAI Codex CLIの導入</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>OpenAI Codex CLI</strong>（コマンド名：<code>codex</code>）は、OpenAIが提供するターミナルベースのAIコーディングエージェントです。自然言語で指示を出すと、コードの生成・編集・ファイル操作・シェルコマンドの実行まで自律的に行ってくれます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>概要</h3>
+                <p>Codex CLIはオープンソースで開発されており、OpenAIのAPIを利用して動作します。主な特徴は以下の通りです。</p>
+                <ul>
+                    <li>ターミナルから <code>codex</code> コマンドで起動</li>
+                    <li>自然言語で開発タスクを依頼可能</li>
+                    <li>サンドボックス環境でコードを安全に実行</li>
+                    <li>ファイルの読み書き、コマンド実行を自律的に行う</li>
+                    <li>Git連携で変更の差分確認・コミットも可能</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3>インストール</h3>
+                <p>Node.js（v22以上）がインストールされた環境で、npmを使ってインストールします。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Shell</span>
+                        <span class="code-title">Codex CLIのインストール</span>
+                    </div>
+                    <div class="code-content"><pre><code># グローバルインストール
+npm install -g @openai/codex
+
+# バージョン確認
+codex --version
+
+# OpenAI APIキーの設定
+export OPENAI_API_KEY="sk-xxxxxxxxxxxx"</code></pre>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-title"><span class="material-icons">warning</span> 注意</div>
+                    <p>Codex CLIの利用にはOpenAIのAPIキーが必要です。APIキーは<a href="https://platform.openai.com/" target="_blank">OpenAI Platform</a>で取得できます。APIキーは秘密情報なので、コードに直接書き込まず、環境変数で管理してください。</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>基本コマンドと使い方</h3>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Shell</span>
+                        <span class="code-title">Codex CLIの基本的な使い方</span>
+                    </div>
+                    <div class="code-content"><pre><code># 対話モードで起動
+codex
+
+# プロンプトを直接指定して実行
+codex "Expressでシンプルなサーバーを作成して"
+
+# 自動承認モード（確認なしで実行）
+codex --approval-mode full-auto "package.jsonを作成して"
+
+# 静かモード（確認のみ表示）
+codex -q "READMEを日本語で作成して"</code></pre>
+                    </div>
+                </div>
+
+                <p>Codex CLIは3つの承認モードを提供しています。</p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>モード</th>
+                                <th>説明</th>
+                                <th>用途</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>suggest</strong>（デフォルト）</td>
+                                <td>ファイル変更・コマンド実行の前に確認</td>
+                                <td>安全に操作したいとき</td>
+                            </tr>
+                            <tr>
+                                <td><strong>auto-edit</strong></td>
+                                <td>ファイル編集は自動、コマンドは確認</td>
+                                <td>ファイル編集を信頼する場合</td>
+                            </tr>
+                            <tr>
+                                <td><strong>full-auto</strong></td>
+                                <td>すべて自動実行（サンドボックス内）</td>
+                                <td>実験的な作業向け</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title"><span class="material-icons">info</span> POINT</div>
+                <div class="info-box-content">
+                    <p>Codex CLIはサンドボックス（隔離環境）内でコマンドを実行するため、システムを破壊するリスクが低い設計になっています。ただし、<code>full-auto</code> モードではファイルの変更が即座に反映されるため、重要なファイルがあるディレクトリでは注意して使いましょう。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Section 8-3 ===== -->
+        <section class="section" id="section8-3">
+            <div class="section-header">
+                <span class="section-number">Section 8-3</span>
+                <h2 class="section-title">Claude Codeの導入と活用</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>Claude Code</strong>（コマンド名：<code>claude</code>）は、Anthropicが提供するターミナルベースのAIコーディングエージェントです。Claudeモデルの高い推論能力を活かし、複雑なコーディングタスクやプロジェクト全体の理解を伴う作業に強みを持ちます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>インストール</h3>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Shell</span>
+                        <span class="code-title">Claude Codeのインストール</span>
+                    </div>
+                    <div class="code-content"><pre><code># npmでグローバルインストール
+npm install -g @anthropic-ai/claude-code
+
+# バージョン確認
+claude --version
+
+# 初回起動（認証を含む）
+claude</code></pre>
+                    </div>
+                </div>
+
+                <p>初回起動時にAnthropicアカウントとの認証が行われます。ブラウザが開くので、ログインして認証を完了してください。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>基本コマンド</h3>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Shell</span>
+                        <span class="code-title">Claude Codeの基本操作</span>
+                    </div>
+                    <div class="code-content"><pre><code># 対話モードで起動
+claude
+
+# プロンプトを指定して実行
+claude "このプロジェクトの構成を説明して"
+
+# ファイルを指定して質問
+claude "app.jsのバグを修正して"
+
+# パイプで入力を渡す
+cat error.log | claude "このエラーの原因を教えて"
+
+# 直接プロンプトを実行して終了
+claude -p "package.jsonの依存関係を一覧にして"</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>Claude Codeの特徴的な機能</h3>
+                <ul>
+                    <li><strong>プロジェクト全体の理解：</strong>ワークスペース内の全ファイルを自動的に把握し、コードベース全体の文脈を理解</li>
+                    <li><strong>マルチファイル編集：</strong>複数のファイルにまたがる変更を一括で提案・実行</li>
+                    <li><strong>Git連携：</strong>変更内容の差分確認、コミットメッセージの自動生成</li>
+                    <li><strong>コマンド実行：</strong>テスト実行やビルドなど、必要なシェルコマンドを自動で実行</li>
+                    <li><strong>MCP連携：</strong>外部ツールやサービスとの連携が可能</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3>MCP（Model Context Protocol）とは</h3>
+                <p><strong>MCP（Model Context Protocol）</strong>は、Anthropicが策定したAIモデルと外部ツール・データソースを接続するためのオープンプロトコルです。Claude Codeに外部サービスの機能を追加できます。</p>
+
+                <!-- 図解2: MCP連携の仕組み -->
+                <div class="visual-diagram">
+                    <div class="visual-diagram-title">MCP（Model Context Protocol）の仕組み</div>
+                    <div class="vd-flow">
+                        <div class="vd-box accent">
+                            <span class="vd-icon">&#9889;</span>
+                            <span class="vd-label">Claude Code</span>
+                            <span class="vd-sub">AIエージェント</span>
+                        </div>
+                        <span class="vd-arrow">&#8596;</span>
+                        <div class="vd-box">
+                            <span class="vd-icon">&#128268;</span>
+                            <span class="vd-label">MCPサーバー</span>
+                            <span class="vd-sub">ツール・データ提供</span>
+                        </div>
+                        <span class="vd-arrow">&#8596;</span>
+                        <div class="vd-box">
+                            <span class="vd-icon">&#127760;</span>
+                            <span class="vd-label">外部サービス</span>
+                            <span class="vd-sub">GitHub / DB / API</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p>MCPを使うと、Claude Codeから以下のような外部サービスにアクセスできるようになります。</p>
+                <ul>
+                    <li><strong>GitHub MCP：</strong>Issue作成・PR作成・コードレビューなど</li>
+                    <li><strong>ファイルシステムMCP：</strong>安全なファイル読み書きアクセス</li>
+                    <li><strong>データベースMCP：</strong>SQLクエリの実行やスキーマ確認</li>
+                    <li><strong>Web検索MCP：</strong>最新情報の検索・取得</li>
+                </ul>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JSON</span>
+                        <span class="code-filename">.claude/settings.json（MCP設定例）</span>
+                    </div>
+                    <div class="code-content"><pre><code>{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxxxxxxxxxxx"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/project"]
+    }
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title"><span class="material-icons">info</span> POINT</div>
+                <div class="info-box-content">
+                    <p>MCPはAIと外部ツールの「共通語」のようなものです。MCPに対応したサーバーを追加するだけで、Claude Codeの能力を拡張できます。コミュニティ製のMCPサーバーも多数公開されており、自分でMCPサーバーを作成することも可能です。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Section 8-4 ===== -->
+        <section class="section" id="section8-4">
+            <div class="section-header">
+                <span class="section-number">Section 8-4</span>
+                <h2 class="section-title">AI開発の実践ワークフロー</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>AIツールは開発のあらゆるフェーズで活用できます。ここでは、要件定義からリリースまでの開発フロー全体で、AIエージェントをどのように活用するかを見ていきましょう。</p>
+            </div>
+
+            <!-- 図解3: AI活用開発フロー -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">AI活用 開発ワークフロー</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128196;</span>
+                        <span class="vd-label">1. 要件定義</span>
+                        <span class="vd-sub">AIに壁打ち・整理</span>
+                    </div>
+                    <span class="vd-arrow">&#10132;</span>
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128736;</span>
+                        <span class="vd-label">2. 設計</span>
+                        <span class="vd-sub">AIにDB設計・API設計を相談</span>
+                    </div>
+                    <span class="vd-arrow">&#10132;</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#128187;</span>
+                        <span class="vd-label">3. 実装</span>
+                        <span class="vd-sub">AIにコード生成を依頼</span>
+                    </div>
+                    <span class="vd-arrow">&#10132;</span>
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128269;</span>
+                        <span class="vd-label">4. レビュー</span>
+                        <span class="vd-sub">AIにコードレビューを依頼</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>1. 要件定義フェーズ</h3>
+                <p>AIエージェントは要件の整理やアイデアの壁打ちに活用できます。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Shell</span>
+                        <span class="code-title">要件定義の壁打ち例</span>
+                    </div>
+                    <div class="code-content"><pre><code># Claude Codeで要件整理
+claude "Todoアプリを作りたい。必要な機能を洗い出して、
+画面一覧とデータ構造を提案して"
+
+# Codex CLIで技術選定
+codex "React + TypeScript + Firebase でTodoアプリを作る場合の
+プロジェクト構成を提案して"</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>2. 設計フェーズ</h3>
+                <p>データベース設計やAPI設計をAIに相談できます。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Shell</span>
+                        <span class="code-title">設計の相談例</span>
+                    </div>
+                    <div class="code-content"><pre><code># API設計の提案
+claude "REST APIのエンドポイント設計をして。
+リソース: users, todos, categories
+認証: JWTトークン方式"</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>3. 実装フェーズ</h3>
+                <p>最もAIの恩恵を受けるフェーズです。コードの自動生成、テスト作成、ドキュメント生成などを行えます。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Shell</span>
+                        <span class="code-title">実装の依頼例</span>
+                    </div>
+                    <div class="code-content"><pre><code># プロジェクトの初期セットアップ
+codex "Express + TypeScript のプロジェクトを初期化して、
+基本的なフォルダ構成を作成して"
+
+# 機能の実装
+claude "src/routes/todo.ts にTodoのCRUD APIを実装して。
+バリデーションとエラーハンドリングも含めて"
+
+# テストの作成
+claude "src/routes/todo.ts のユニットテストを
+Jest で作成して"</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>4. レビュー・改善フェーズ</h3>
+                <p>AIによるコードレビューで、バグやセキュリティの問題を事前に検出できます。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Shell</span>
+                        <span class="code-title">レビューの依頼例</span>
+                    </div>
+                    <div class="code-content"><pre><code># コードレビュー
+claude "このプロジェクトのコードをレビューして。
+セキュリティ・パフォーマンス・可読性の観点で問題点を指摘して"
+
+# リファクタリング
+claude "src/utils/ のヘルパー関数を
+TypeScript のベストプラクティスに沿ってリファクタリングして"</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Section 8-5 ===== -->
+        <section class="section" id="section8-5">
+            <div class="section-header">
+                <span class="section-number">Section 8-5</span>
+                <h2 class="section-title">AIツール活用のベストプラクティス</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>AIツールは強力ですが、万能ではありません。効果的に活用するためには、いくつかの重要な原則と注意点を理解しておく必要があります。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>セキュリティ上の注意点</h3>
+                <ul>
+                    <li><strong>APIキーや秘密情報の取り扱い：</strong>AIツールにAPIキー、パスワード、トークンなどの秘密情報を入力しないでください。環境変数や<code>.env</code>ファイルで管理し、<code>.gitignore</code>に必ず含めましょう</li>
+                    <li><strong>機密コードの入力：</strong>社内の機密性の高いコードをAIツールに送信する際は、会社のセキュリティポリシーを確認してください。多くのAIツールはコードをモデル学習に使わない設定がありますが、確認が必要です</li>
+                    <li><strong>生成コードの脆弱性チェック：</strong>AIが生成したコードにはセキュリティ上の脆弱性が含まれる可能性があります。特に認証、暗号化、入力バリデーションに関するコードは入念にチェックしましょう</li>
+                </ul>
+
+                <div class="warning-box">
+                    <div class="warning-box-title"><span class="material-icons">warning</span> 重要</div>
+                    <p>AIが生成したコードをそのまま本番環境にデプロイしないでください。必ず人間がレビューし、テストを行い、セキュリティチェックを通してから使用しましょう。</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>コードレビューの重要性</h3>
+                <p>AIが生成したコードは、以下の観点で必ずレビューしましょう。</p>
+                <ul>
+                    <li><strong>正確性：</strong>コードが要件を正しく満たしているか</li>
+                    <li><strong>セキュリティ：</strong>SQLインジェクションやXSSなどの脆弱性がないか</li>
+                    <li><strong>パフォーマンス：</strong>不必要なループや非効率な処理がないか</li>
+                    <li><strong>可読性：</strong>他の開発者が理解しやすいコードか</li>
+                    <li><strong>テスト可能性：</strong>テストが書きやすい構造になっているか</li>
+                    <li><strong>ライセンス：</strong>AIが学習元のコードをそのまま出力していないか</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3>AIの限界を理解する</h3>
+                <p>AIツールには以下のような限界があることを常に意識しましょう。</p>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>限界</th>
+                                <th>説明</th>
+                                <th>対策</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>ハルシネーション</strong></td>
+                                <td>存在しないAPIやライブラリを使ったコードを生成する場合がある</td>
+                                <td>公式ドキュメントで確認する</td>
+                            </tr>
+                            <tr>
+                                <td><strong>古い情報</strong></td>
+                                <td>学習データが最新でない場合、非推奨の書き方を提案する</td>
+                                <td>最新のドキュメントを参照する</td>
+                            </tr>
+                            <tr>
+                                <td><strong>文脈の限界</strong></td>
+                                <td>大規模プロジェクトの全体像を完全に把握できない場合がある</td>
+                                <td>必要な文脈を明示的に伝える</td>
+                            </tr>
+                            <tr>
+                                <td><strong>テスト不足</strong></td>
+                                <td>AIが生成したコードにバグやエッジケースの見落としがある</td>
+                                <td>必ず自分でテストを実行する</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>効果的な活用の心得</h3>
+                <ul>
+                    <li><strong>AIは「ツール」であり「代替」ではない：</strong>AIが書いたコードを理解できるだけの知識は必要です。基礎学習を怠らないようにしましょう</li>
+                    <li><strong>小さく試して確認する：</strong>大きなタスクを一度にAIに任せるのではなく、小さな単位に分けて結果を確認しながら進めましょう</li>
+                    <li><strong>バージョン管理を活用する：</strong>AIによる変更はGitで管理し、いつでも元に戻せるようにしておきましょう</li>
+                    <li><strong>複数のツールを使い分ける：</strong>補完にはCopilot、大規模な変更にはClaude Code、というように場面に応じて使い分けましょう</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title"><span class="material-icons">school</span> まとめ</div>
+                <div class="info-box-content">
+                    <p>AI開発ツールは、開発者の生産性を飛躍的に向上させる強力な味方です。しかし、最終的な責任はコードを書く（採用する）人間にあります。AIの提案を鵜呑みにせず、理解し、検証し、改善するというプロセスを大切にしましょう。AIと人間が協力することで、より良いソフトウェアを、より速く作ることができます。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Exercise ===== -->
+        <section class="section" id="exercise">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>AI開発ツールの「エディタ統合型」と「CLI（ターミナル）型」の違いを、それぞれの代表的なツール名を挙げながら説明してください。</p>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>MCP（Model Context Protocol）とは何ですか？Claude Codeとの関連で、具体的にどのようなことができるようになるか説明してください。</p>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>AIが生成したコードを使用する際に注意すべきセキュリティ上のポイントを3つ挙げ、それぞれの対策を説明してください。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Answer ===== -->
+        <section class="section" id="answer">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1 の解答</div>
+                    <div class="answer-content">
+                        <p><strong>エディタ統合型</strong>（例：GitHub Copilot, Cursor）は、コードエディタの中でAI機能が動作します。コード補完やチャット機能がエディタのUIに統合されており、GUI操作で利用できます。<br>
+                        <strong>CLI（ターミナル）型</strong>（例：OpenAI Codex CLI, Claude Code）は、ターミナルからコマンドでAIに指示を出します。ファイルの読み書きやシェルコマンドの実行まで自律的に行うエージェント機能を持ち、より大きなタスクを一括で依頼できるのが特徴です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2 の解答</div>
+                    <div class="answer-content">
+                        <p><strong>MCP（Model Context Protocol）</strong>は、Anthropicが策定したAIモデルと外部ツール・データソースを接続するためのオープンプロトコルです。Claude Codeと組み合わせることで、AIエージェントが外部サービスにアクセスできるようになります。<br><br>
+                        <strong>具体例：</strong>GitHub MCPサーバーを設定すると、Claude CodeからIssueの作成やPull Requestの作成・レビューが行えます。データベースMCPサーバーを設定すると、SQLクエリの実行やスキーマの確認ができます。これにより、Claude Codeがコーディングだけでなく、開発に関連するさまざまなサービスと連携できるようになります。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3 の解答</div>
+                    <div class="answer-content">
+                        <p><strong>1. APIキー・秘密情報の漏洩リスク：</strong>AIツールにAPIキーやパスワードを直接入力しないようにします。秘密情報は環境変数や<code>.env</code>ファイルで管理し、<code>.gitignore</code>に含めます。<br><br>
+                        <strong>2. 生成コードのセキュリティ脆弱性：</strong>AIが生成したコードにSQLインジェクションやXSS（クロスサイトスクリプティング）などの脆弱性が含まれる可能性があります。特に認証・認可、データ入力のバリデーションに関するコードは、公式ドキュメントやセキュリティベストプラクティスに照らして入念にレビューします。<br><br>
+                        <strong>3. ハルシネーション（誤情報）のリスク：</strong>AIが存在しないAPIや非推奨のメソッドを使ったコードを生成する場合があります。生成されたコードで使われているライブラリやAPIが実在するか、最新のドキュメントで確認します。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div class="page-nav">
+        <a href="7vscode-copilot.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第7章 GitHub Copilot入門</div>
+            </div>
+        </a>
+        <a href="index.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">コース一覧に戻る</div>
+                <div class="page-nav-title">VSCode＋AI開発 トップ</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../shared/footer.js"></script>
+</body>
+</html>
