@@ -1,0 +1,2513 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>プロンプトUIレイアウト - 職業訓練校教材</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <link rel="stylesheet" href="../../shared/apple-header-footer.css">
+  <meta name="description" content="プロンプトUIレイアウト - CSSレイヤーを段階的に積み重ねてレイアウトを構築する手法">
+  <style>
+    :root {
+      --course-accent: #007ACC;
+      --course-accent-light: rgba(0, 122, 204, 0.08);
+    }
+    body.apple-layout {
+      background: var(--apple-bg-white);
+    }
+    .index-hero {
+      background: var(--apple-bg-white);
+      padding: 48px 24px 32px;
+      text-align: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .hero-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--course-accent);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 2.5rem;
+    }
+    .hero-icon .material-icons {
+      color: #fff;
+    }
+    .index-hero h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--apple-text-primary);
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+    .index-hero p {
+      font-size: 1rem;
+      color: var(--apple-text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* Sections */
+    .chapters-section {
+      background: var(--apple-bg-light);
+      padding: 48px 24px;
+    }
+    .chapters-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--course-accent);
+      margin-bottom: 6px;
+    }
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--apple-text-primary);
+      margin-bottom: 8px;
+    }
+    .section-desc {
+      font-size: 0.9rem;
+      color: var(--apple-text-secondary);
+      line-height: 1.7;
+      margin-bottom: 24px;
+      max-width: 700px;
+    }
+
+    /* Progression Flow */
+    .progression-flow {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 24px 0;
+      overflow-x: auto;
+      margin: 0 auto 32px;
+      max-width: 800px;
+      justify-content: center;
+    }
+    .prog-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 64px;
+      text-align: center;
+    }
+    .prog-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--course-accent-light);
+      color: var(--course-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .prog-circle.active {
+      background: var(--course-accent);
+      color: #fff;
+    }
+    .prog-label {
+      font-size: 9px;
+      color: var(--apple-text-secondary);
+      line-height: 1.3;
+    }
+    .prog-arrow {
+      color: #D0D0D0;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* Info Box */
+    .info-box {
+      background: #F0F7FF;
+      border: 1px solid #D0E3F7;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .info-box h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--apple-text-primary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .info-box h4 .material-icons {
+      font-size: 18px;
+      color: var(--course-accent);
+    }
+    .info-box p {
+      font-size: 0.85rem;
+      color: var(--apple-text-secondary);
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    /* Preview Frame */
+    .preview-frame {
+      border: 1px solid #E5E5EA;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      margin: 24px 0;
+    }
+    .preview-frame-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #F5F5F7;
+      border-bottom: 1px solid #E5E5EA;
+    }
+    .preview-frame-bar span {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--apple-text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .preview-frame-bar span .material-icons {
+      font-size: 16px;
+      color: var(--course-accent);
+    }
+    .preview-frame-bar a {
+      font-size: 12px;
+      color: var(--course-accent);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .preview-frame-bar a .material-icons {
+      font-size: 14px;
+    }
+    .preview-frame iframe {
+      width: 100%;
+      height: 1200px;
+      border: none;
+      display: block;
+    }
+
+    /* Divider */
+    .section-divider {
+      border: none;
+      border-top: 1px solid #E5E5EA;
+      margin: 40px 0 32px;
+    }
+
+    /* ========== Step Block (Prompt Flow) ========== */
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .step-block {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      overflow: hidden;
+      border: 1px solid #E5E5EA;
+    }
+    .step-block-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .step-block-header:hover {
+      background: #FAFAFA;
+    }
+    .step-block-num {
+      background: var(--course-accent-light);
+      color: var(--course-accent);
+      min-width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    .step-block-num.done {
+      background: rgba(22, 163, 74, 0.08);
+      color: #16A34A;
+    }
+    .step-block-info {
+      flex: 1;
+    }
+    .step-block-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--apple-text-primary);
+      margin-bottom: 2px;
+    }
+    .step-block-desc {
+      font-size: 0.82rem;
+      color: var(--apple-text-secondary);
+      line-height: 1.5;
+    }
+    .step-block-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .step-tag {
+      background: var(--apple-bg-light);
+      color: var(--apple-text-secondary);
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 0.68rem;
+      font-weight: 500;
+    }
+    .step-tag.new {
+      background: #E8F4FD;
+      color: var(--course-accent);
+    }
+    .step-block-toggle {
+      color: #C0C0C0;
+      font-size: 24px;
+      transition: transform 0.3s;
+      flex-shrink: 0;
+    }
+    .step-block.open .step-block-toggle {
+      transform: rotate(180deg);
+    }
+
+    /* Step Body */
+    .step-block-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .step-block.open .step-block-body {
+      max-height: 2000px;
+    }
+    .step-block-body-inner {
+      padding: 0 24px 24px;
+      border-top: 1px solid #F0F0F0;
+    }
+
+    /* Flow Steps */
+    .flow-steps {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 16px;
+      padding: 14px 20px;
+      background: #F8FAFC;
+      border-radius: 10px;
+    }
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--course-accent);
+    }
+    .flow-step .material-icons {
+      font-size: 18px;
+    }
+    .flow-step-arrow {
+      color: #D0D0D0;
+      font-size: 18px;
+    }
+    .flow-step:last-child {
+      color: #16A34A;
+    }
+
+    /* Prompt Area */
+    .prompt-area {
+      margin: 16px 0;
+      position: relative;
+    }
+    .prompt-area-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .prompt-area-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--apple-text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .prompt-area-label .material-icons {
+      font-size: 16px;
+      color: var(--course-accent);
+    }
+    .prompt-copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 14px;
+      background: var(--course-accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+    .prompt-copy-btn:hover {
+      background: #005A9E;
+    }
+    .prompt-copy-btn .material-icons {
+      font-size: 14px;
+    }
+    .prompt-content {
+      background: #1E1E1E;
+      color: #D4D4D4;
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    /* Result Link */
+    .result-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      background: #F0F7FF;
+      color: var(--course-accent);
+      border: 1px solid #D0E3F7;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: background 0.2s, box-shadow 0.2s;
+      margin-top: 12px;
+    }
+    .result-link:hover {
+      background: #E0EFFF;
+      box-shadow: 0 2px 8px rgba(0,122,204,0.12);
+    }
+    .result-link .material-icons {
+      font-size: 18px;
+    }
+
+    /* Copy Success Toast */
+    .copy-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1D1D1F;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    .copy-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .copy-toast .material-icons {
+      font-size: 18px;
+      color: #34C759;
+    }
+
+    /* ========== CSS Explain Box ========== */
+    .css-explain {
+      background: #FAFBFF;
+      border: 1px solid #E0E5F0;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 16px 0 12px;
+    }
+    .css-explain-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--course-accent);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .css-explain-title .material-icons {
+      font-size: 16px;
+    }
+    .css-explain dl {
+      margin: 0;
+      font-size: 0.8rem;
+      line-height: 1.7;
+    }
+    .css-explain dt {
+      font-weight: 600;
+      color: var(--apple-text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      margin-top: 8px;
+    }
+    .css-explain dt:first-child {
+      margin-top: 0;
+    }
+    .css-explain dd {
+      margin-left: 0;
+      color: var(--apple-text-secondary);
+      padding-left: 12px;
+      border-left: 2px solid #E0E5F0;
+    }
+
+    /* ========== CSS Diagram ========== */
+    .css-diagram {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      padding: 16px;
+      margin: 12px 0;
+    }
+    .css-diagram-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+    .css-diagram-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .css-diagram-box {
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+    }
+    .css-diagram-box-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--apple-text-secondary);
+      margin-top: 6px;
+    }
+    .css-diagram-vs {
+      display: flex;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #CBD5E1;
+      padding-top: 16px;
+    }
+    @media (max-width: 500px) {
+      .css-diagram-row { flex-direction: column; align-items: stretch; }
+      .css-diagram-vs { justify-content: center; padding-top: 0; }
+    }
+
+    /* ========== Tutorial Sections ========== */
+    .tutorial-section {
+      margin-bottom: 32px;
+    }
+    .tutorial-section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .tutorial-section-header .material-icons {
+      font-size: 24px;
+      color: var(--course-accent);
+    }
+    .tutorial-section-header h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--apple-text-primary);
+    }
+    .tutorial-section p {
+      font-size: 0.9rem;
+      color: var(--apple-text-secondary);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .tutorial-section .highlight-box {
+      background: #F0F7FF;
+      border: 1px solid #D0E3F7;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 16px 0;
+    }
+    .tutorial-section .highlight-box h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--apple-text-primary);
+      margin-bottom: 8px;
+    }
+    .tutorial-section .highlight-box ul {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 0.85rem;
+      color: var(--apple-text-secondary);
+      line-height: 1.8;
+    }
+
+    /* CSS Category Boxes */
+    .css-category-box {
+      padding: 12px 16px;
+      margin: 8px 0;
+      background: #FAFAFA;
+      border-radius: 0 8px 8px 0;
+    }
+    .css-category-box h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--apple-text-primary);
+      margin-bottom: 4px;
+    }
+    .css-category-box p {
+      font-size: 0.8rem;
+      color: var(--apple-text-secondary);
+      margin: 0;
+      line-height: 1.6;
+    }
+    .css-category-box code {
+      background: #E8F4FD;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--course-accent);
+    }
+    .css-cat-outline { border-left: 3px solid #E74C3C; }
+    .css-cat-reset { border-left: 3px solid #3498DB; }
+    .css-cat-size { border-left: 3px solid #E67E22; }
+    .css-cat-layout { border-left: 3px solid #9B59B6; }
+    .css-cat-style { border-left: 3px solid #2ECC71; }
+    .css-cat-text { border-left: 3px solid #F39C12; }
+    .css-cat-js { border-left: 3px solid #1ABC9C; }
+
+    /* Comparison Table */
+    .table-container {
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .comparison-table th,
+    .comparison-table td {
+      padding: 10px 12px;
+      border: 1px solid #E5E5EA;
+      text-align: left;
+    }
+    .comparison-table th {
+      background: #F5F5F7;
+      font-weight: 600;
+      color: var(--apple-text-primary);
+      white-space: nowrap;
+    }
+    .comparison-table td {
+      color: #444;
+    }
+    .comparison-table .check {
+      text-align: center;
+      color: #16A34A;
+    }
+    .comparison-table .dash {
+      text-align: center;
+      color: #D0D0D0;
+    }
+
+    /* Prompt Example */
+    .prompt-example {
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+      color: #d4d4d4;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .prompt-example .comment { color: #6A9955; }
+    .prompt-example .keyword { color: #569CD6; }
+    .prompt-example .value { color: #CE9178; }
+
+    /* Accordion for tutorial sections */
+    .tutorial-accordion {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      border: 1px solid #E5E5EA;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+    .tutorial-accordion-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .tutorial-accordion-header:hover {
+      background: #FAFAFA;
+    }
+    .tutorial-accordion-header h4 {
+      flex: 1;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--apple-text-primary);
+    }
+    .tutorial-accordion-header .material-icons.toggle-icon {
+      color: #C0C0C0;
+      font-size: 24px;
+      transition: transform 0.3s;
+    }
+    .tutorial-accordion.open .tutorial-accordion-header .toggle-icon {
+      transform: rotate(180deg);
+    }
+    .tutorial-accordion-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .tutorial-accordion.open .tutorial-accordion-body {
+      max-height: 5000px;
+    }
+    .tutorial-accordion-body-inner {
+      padding: 0 20px 20px;
+      border-top: 1px solid #F0F0F0;
+    }
+
+    @media (min-width: 768px) {
+      .index-hero {
+        padding: 64px 40px 48px;
+      }
+      .index-hero h1 {
+        font-size: 2.6rem;
+      }
+      .hero-icon {
+        width: 100px;
+        height: 100px;
+        font-size: 3rem;
+      }
+    }
+    @media (max-width: 600px) {
+      .step-block-header {
+        padding: 16px;
+      }
+      .step-block-body-inner {
+        padding: 0 16px 16px;
+      }
+      .step-block-tags {
+        display: none;
+      }
+      .flow-steps {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body class="apple-layout">
+  <!-- Apple Global Navigation -->
+  <nav class="apple-gnav" data-active="frontend"></nav>
+  <script src="../../shared/js/apple-nav.js"></script>
+
+  <!-- Apple Sub Navigation -->
+  <nav class="apple-subnav">
+    <div class="apple-subnav-inner">
+      <div class="apple-subnav-title">
+        <span class="material-icons subnav-icon">layers</span>
+        プロンプトUIレイアウト
+      </div>
+      <a href="../../index.html" class="apple-subnav-back">
+        &larr; <span>ダッシュボードに戻る</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="index-hero">
+    <div class="hero-icon"><span class="material-icons">layers</span></div>
+    <h1>プロンプトUIレイアウト</h1>
+    <p>CSSレイヤーを段階的に積み重ねてレイアウトを構築する学習手法。各ステップのプロンプトをAIに実行し、結果を確認しながら8ステップでワイヤーフレームを完成させます。</p>
+
+    <!-- Progression Flow -->
+    <div class="progression-flow">
+      <div class="prog-item">
+        <div class="prog-circle">01</div>
+        <span class="prog-label">ブロック<br>枠線</span>
+      </div>
+      <span class="material-icons prog-arrow">arrow_forward</span>
+      <div class="prog-item">
+        <div class="prog-circle">02</div>
+        <span class="prog-label">全要素<br>枠線</span>
+      </div>
+      <span class="material-icons prog-arrow">arrow_forward</span>
+      <div class="prog-item">
+        <div class="prog-circle">03</div>
+        <span class="prog-label">リセット<br>+ガード</span>
+      </div>
+      <span class="material-icons prog-arrow">arrow_forward</span>
+      <div class="prog-item">
+        <div class="prog-circle">04</div>
+        <span class="prog-label">幅/高さ</span>
+      </div>
+      <span class="material-icons prog-arrow">arrow_forward</span>
+      <div class="prog-item">
+        <div class="prog-circle">05</div>
+        <span class="prog-label">余白</span>
+      </div>
+      <span class="material-icons prog-arrow">arrow_forward</span>
+      <div class="prog-item">
+        <div class="prog-circle">06</div>
+        <span class="prog-label">レイアウト<br>+装飾</span>
+      </div>
+      <span class="material-icons prog-arrow">arrow_forward</span>
+      <div class="prog-item">
+        <div class="prog-circle">07</div>
+        <span class="prog-label">JavaScript</span>
+      </div>
+      <span class="material-icons prog-arrow">arrow_forward</span>
+      <div class="prog-item">
+        <div class="prog-circle active">08</div>
+        <span class="prog-label">テキスト<br>完成</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="chapters-section">
+    <div class="chapters-inner">
+
+      <!-- Tutorial Link -->
+      <div class="info-box" style="margin-top: 0;">
+        <h4><span class="material-icons">menu_book</span> 学習の進め方</h4>
+        <p>各ステップを開き、プロンプトをコピーしてAI（ChatGPT/Claude等）に貼り付けて実行してください。生成されたHTMLをファイルとして保存し、ブラウザで開いて動作を確認します。「お手本を確認」で完成イメージと比較できます。</p>
+      </div>
+
+      <!-- ==================== Tutorial: Introduction ==================== -->
+      <div class="tutorial-section">
+        <div class="tutorial-section-header">
+          <span class="material-icons">school</span>
+          <h3>プロンプトUIレイアウトとは</h3>
+        </div>
+        <p><strong>プロンプトUIレイアウト</strong>は、完成したWebページのCSSを「レイヤー」に分解し、段階的に積み重ねてレイアウトを構築する学習手法です。最もシンプルな「ブロックの枠線だけ」の状態から始め、サイズ、余白、配置、装飾を1つずつ追加していくことで、CSSの各プロパティがレイアウトにどう影響するかを視覚的に理解できます。</p>
+
+        <div class="highlight-box">
+          <h4>この手法のメリット</h4>
+          <ul>
+            <li>CSSの各プロパティの役割を視覚的に理解できる</li>
+            <li>レイアウト構築の「順序」を体系的に学べる</li>
+            <li>AIへのプロンプト指示を正確に出せるようになる</li>
+            <li>デバッグ時にどのレイヤーに問題があるか特定しやすい</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ==================== Tutorial: CSS Layer Classification ==================== -->
+      <div class="tutorial-accordion" onclick="this.classList.toggle('open')">
+        <div class="tutorial-accordion-header">
+          <span class="material-icons" style="color: var(--course-accent);">category</span>
+          <h4>7つのCSSレイヤー分類</h4>
+          <span class="material-icons toggle-icon">expand_more</span>
+        </div>
+        <div class="tutorial-accordion-body">
+          <div class="tutorial-accordion-body-inner">
+            <p style="font-size: 0.85rem; color: var(--apple-text-secondary); line-height: 1.7; margin-bottom: 12px;">Webページを構成するCSSプロパティは、以下の7つのレイヤーに分類できます。</p>
+
+            <div class="css-category-box css-cat-outline">
+              <h4>1. アウトライン（デバッグ用）</h4>
+              <p><code>outline</code> - ブロック要素の境界を可視化。実線=主要ブロック、破線=内部コンテナ、点線=テキスト要素</p>
+            </div>
+            <div class="css-category-box css-cat-reset">
+              <h4>2. リセット / ベース</h4>
+              <p><code>margin: 0</code> <code>padding: 0</code> <code>box-sizing</code> <code>font-family</code> <code>font-size</code> <code>line-height</code> <code>color</code> <code>background</code></p>
+            </div>
+            <div class="css-category-box css-cat-size">
+              <h4>3. ブロックサイズ</h4>
+              <p><code>width</code> <code>height</code> <code>max-width</code> <code>min-height</code> <code>aspect-ratio</code> <code>padding</code> <code>margin</code> <code>gap</code></p>
+            </div>
+            <div class="css-category-box css-cat-layout">
+              <h4>4. レイアウト</h4>
+              <p><code>display</code> <code>flex</code> <code>grid</code> <code>position</code> <code>align-items</code> <code>justify-content</code> <code>grid-template-columns</code> <code>overflow</code></p>
+            </div>
+            <div class="css-category-box css-cat-style">
+              <h4>5. ビジュアル装飾</h4>
+              <p><code>background</code> <code>border</code> <code>border-radius</code> <code>box-shadow</code> <code>opacity</code> <code>transition</code> <code>transform</code></p>
+            </div>
+            <div class="css-category-box css-cat-text">
+              <h4>6. テキスト / タイポグラフィ</h4>
+              <p><code>font-size</code> <code>font-weight</code> <code>color</code> <code>text-decoration</code> <code>text-align</code> <code>letter-spacing</code> <code>white-space</code></p>
+            </div>
+            <div class="css-category-box css-cat-js">
+              <h4>7. インタラクション（JavaScript）</h4>
+              <p>ドロワーメニューの開閉、バナースライダー、タブ切り替え、カウンター操作など</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== Tutorial: Comparison Table ==================== -->
+      <div class="tutorial-accordion" onclick="this.classList.toggle('open')">
+        <div class="tutorial-accordion-header">
+          <span class="material-icons" style="color: var(--course-accent);">table_chart</span>
+          <h4>ステップ比較表</h4>
+          <span class="material-icons toggle-icon">expand_more</span>
+        </div>
+        <div class="tutorial-accordion-body">
+          <div class="tutorial-accordion-body-inner">
+            <div class="table-container">
+              <table class="comparison-table">
+                <thead>
+                  <tr>
+                    <th>CSS レイヤー</th>
+                    <th>01</th>
+                    <th>02</th>
+                    <th>03</th>
+                    <th>04</th>
+                    <th>05</th>
+                    <th>06</th>
+                    <th>07</th>
+                    <th>08</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>ブロック枠線 (solid)</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="dash">-</td>
+                  </tr>
+                  <tr>
+                    <td>内部枠線 (dashed/dotted)</td>
+                    <td class="dash">-</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="dash">-</td>
+                  </tr>
+                  <tr>
+                    <td>リセット / Body</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                  </tr>
+                  <tr>
+                    <td>サイズガード</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                  </tr>
+                  <tr>
+                    <td>width / height</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                  </tr>
+                  <tr>
+                    <td>padding / margin</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                  </tr>
+                  <tr>
+                    <td>display / flex / grid</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                  </tr>
+                  <tr>
+                    <td>background / border / color</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                  </tr>
+                  <tr>
+                    <td>レスポンシブ</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                  </tr>
+                  <tr>
+                    <td>JavaScript</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="check">&#10003;</td>
+                    <td class="check">&#10003;</td>
+                  </tr>
+                  <tr>
+                    <td>テキストコンテンツ</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="dash">-</td>
+                    <td class="check">&#10003;</td>
+                  </tr>
+                  <tr>
+                    <td>HTML構造</td>
+                    <td>外枠のみ</td>
+                    <td>全ネスト</td>
+                    <td>全ネスト</td>
+                    <td>全ネスト</td>
+                    <td>全ネスト</td>
+                    <td>全ネスト</td>
+                    <td>全ネスト</td>
+                    <td>テキスト付き</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== Tutorial: Prompt Instructions ==================== -->
+      <div class="tutorial-accordion" onclick="this.classList.toggle('open')">
+        <div class="tutorial-accordion-header">
+          <span class="material-icons" style="color: var(--course-accent);">auto_awesome</span>
+          <h4>プロンプトでの指示方法</h4>
+          <span class="material-icons toggle-icon">expand_more</span>
+        </div>
+        <div class="tutorial-accordion-body">
+          <div class="tutorial-accordion-body-inner">
+            <p style="font-size: 0.85rem; color: var(--apple-text-secondary); line-height: 1.7; margin-bottom: 12px;">AIにCSSレイアウトを段階的に構築させる場合、以下のようにレイヤーを明示してプロンプトを書きます。</p>
+
+            <h4 style="font-size: 0.85rem; font-weight: 600; color: var(--apple-text-primary); margin: 16px 0 8px;">Step 1: 構造の指示（HTML）</h4>
+            <div class="prompt-example"><span class="comment">## HTML構造</span>
+以下のセクション構成でHTMLを作成してください：
+
+<span class="keyword">- header:</span> <span class="value">ロゴ + 検索ボタン + ハンバーガーメニュー</span>
+<span class="keyword">- quick-access:</span> <span class="value">4つのクイックリンク（grid 4列）</span>
+<span class="keyword">- main-banner:</span> <span class="value">横スクロールバナー × 3枚 + ドットインジケーター</span>
+<span class="keyword">- important-info:</span> <span class="value">左ボーダー付き警告ボックス</span>
+<span class="keyword">- section × 4:</span> <span class="value">カテゴリ / キャンペーン / ニュース / サービスリンク</span>
+<span class="keyword">- footer:</span> <span class="value">SNSアイコン + リンクグループ × 3 + コピーライト</span>
+<span class="keyword">- bottom-nav:</span> <span class="value">5つのタブ（モバイル用固定ナビ）</span>
+<span class="keyword">- drawer-menu:</span> <span class="value">右からスライドするメニュー</span>
+
+テキストは空で、class名のみ付与してください。</div>
+
+            <h4 style="font-size: 0.85rem; font-weight: 600; color: var(--apple-text-primary); margin: 16px 0 8px;">Step 2: レイアウトの指示（CSS）</h4>
+            <div class="prompt-example"><span class="comment">## CSSレイアウト指示</span>
+以下のレイアウトプロパティを適用してください：
+
+<span class="keyword">header-top:</span> <span class="value">display: flex, justify-content: space-between, align-items: center</span>
+<span class="keyword">quick-access:</span> <span class="value">display: grid, grid-template-columns: repeat(4, 1fr)</span>
+<span class="keyword">banner-slider:</span> <span class="value">display: flex, overflow-x: auto, scroll-snap-type: x mandatory</span>
+<span class="keyword">category-grid:</span> <span class="value">display: grid, grid-template-columns: repeat(4, 1fr)</span>
+<span class="keyword">campaign-scroll:</span> <span class="value">display: flex, overflow-x: auto, gap: 12px</span>
+<span class="keyword">footer-links:</span> <span class="value">display: grid, grid-template-columns: repeat(3, 1fr)</span>
+<span class="keyword">bottom-nav:</span> <span class="value">position: fixed, bottom: 0, display: grid, grid-template-columns: repeat(5, 1fr)</span>
+
+<span class="comment">## ワイヤーフレーム配色</span>
+全てグレースケールで、border-radius: 0 を使用</div>
+
+            <h4 style="font-size: 0.85rem; font-weight: 600; color: var(--apple-text-primary); margin: 16px 0 8px;">Step 3: グレースケール → カラー変換</h4>
+            <div class="prompt-example"><span class="comment">## カラー変換指示</span>
+ワイヤーフレームのグレースケールを以下のブランドカラーに変換してください：
+
+<span class="keyword">プライマリカラー:</span> <span class="value">#e60039（ブランドレッド）</span>
+<span class="keyword">グラデーション:</span> <span class="value">linear-gradient(135deg, #e60039, #ff4d6d)</span>
+<span class="keyword">背景色:</span> <span class="value">#f5f5f5（ライトグレー）</span>
+<span class="keyword">テキスト:</span> <span class="value">#333（ダークグレー）</span>
+<span class="keyword">border-radius:</span> <span class="value">10px（角丸に変更）</span>
+<span class="keyword">box-shadow:</span> <span class="value">0 2px 8px rgba(0,0,0,0.08) を追加</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== Sample 1: Mobile Carrier ==================== -->
+      <hr class="section-divider">
+      <div class="section-label">SAMPLE 1</div>
+      <div class="section-title">モバイルキャリアサイト（MobilePlus）</div>
+      <p class="section-desc">モバイル通信キャリアのポータルサイト。クイックアクセス、バナーカルーセル、カテゴリグリッド、キャンペーン、ニュース、ボトムナビなどモバイルファーストの構成です。</p>
+
+      <!-- Step List -->
+      <div class="step-list">
+
+        <!-- Step 01 -->
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">01</div>
+            <div class="step-block-info">
+              <div class="step-block-title">ブロック枠線のみ</div>
+              <div class="step-block-desc">主要ブロックの外枠だけを色付き実線で表示。ページ全体の構造を把握します。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">outline (solid)</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">モバイルキャリアサイト「MobilePlus」のHTML構造を作成してください。
+CSSは各ブロックの枠線（outline）のみ記述し、中身は空にしてください。
+
+【HTML要素（すべて空要素）】
+- header.header
+- div.quick-access
+- div.main-banner
+- div.important-info
+- section.section × 4（カテゴリ / キャンペーン / ニュース / サービスリンク）
+- footer.footer
+- div.drawer-overlay#drawerOverlay + div.drawer-menu#drawerMenu
+- div.bottom-spacer
+- nav.bottom-nav
+
+【CSS（outlineのみ）】
+.header { outline: 2px solid #E74C3C; }
+.quick-access { outline: 2px solid #E67E22; }
+.main-banner { outline: 2px solid #F1C40F; }
+.important-info { outline: 2px solid #2ECC71; }
+.section { outline: 2px solid #3498DB; }
+.footer { outline: 2px solid #1ABC9C; }
+.bottom-nav { outline: 2px solid #9B59B6; }
+
+テキストやpadding等は一切不要。outline枠線だけでページの大構造を可視化します。</div>
+              </div>
+              <div class="css-explain">
+                <div class="css-explain-title"><span class="material-icons">info</span> このステップで学ぶCSS</div>
+                <div class="css-diagram">
+                  <div class="css-diagram-label">outline vs border</div>
+                  <div class="css-diagram-row">
+                    <div class="css-diagram-box">
+                      <div style="width:100%;height:48px;outline:3px solid #E74C3C;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;">コンテンツ</div>
+                      <div class="css-diagram-box-label">outline: レイアウトに影響しない</div>
+                    </div>
+                    <div class="css-diagram-vs">VS</div>
+                    <div class="css-diagram-box">
+                      <div style="width:100%;height:48px;border:3px solid #3498DB;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#666;box-sizing:content-box;">コンテンツ</div>
+                      <div class="css-diagram-box-label">border: 幅を取りレイアウトに影響</div>
+                    </div>
+                  </div>
+                </div>
+                <dl>
+                  <dt>outline</dt>
+                  <dd>要素の外側に枠線を描画するプロパティ。<code>border</code>と異なりレイアウトに影響せず（幅を取らない）、デバッグ用の可視化に最適です。</dd>
+                  <dt>outline: 2px solid #E74C3C</dt>
+                  <dd><code>太さ</code> <code>線種</code> <code>色</code>の順で指定。<code>solid</code>=実線、色を変えることでどのブロックか判別できます。</dd>
+                </dl>
+              </div>
+              <a href="../prompt-ui-coding/sample1/sample-1-carrier-wireframe-01.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 02 -->
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">02</div>
+            <div class="step-block-info">
+              <div class="step-block-title">全要素の枠線</div>
+              <div class="step-block-desc">内部コンテナ（破線）とテキスト要素（点線）のアウトラインを追加。全ネスト構造を可視化。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag">solid</span>
+              <span class="step-tag new">dashed</span>
+              <span class="step-tag new">dotted</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 01の結果に、内部の子要素とアウトラインを追加してください。
+
+【各ブロック内に追加する子要素（すべて空）】
+header内: .header-top, .header-actions
+quick-access内: .quick-btn × 4
+main-banner内: .banner-slider > .banner-slide × 3（各.banner-image含む）, .banner-dots
+important-info内: p要素
+section(カテゴリ)内: .section-header, .category-grid > .category-item × 8
+section(キャンペーン)内: .section-header, .campaign-scroll > .campaign-card × 3（各.campaign-image含む）
+section(ニュース)内: .section-header, .news-list > .news-item × 3
+section(サービスリンク)内: .service-links > .service-link-group × 3 > .service-link-grid > .service-link-item × 4
+footer内: .footer-sns, .footer-links > .footer-link-group × 3, .footer-bottom
+bottom-nav内: .bottom-nav-item × 5
+drawer内: .drawer-header, .drawer-user, .drawer-nav
+
+【追加するCSS（既存のsolidは残す）】
+- 内部コンテナ: outline: 1px dashed（各親の薄い色）
+- テキスト要素: h2,h4 { outline: 1px dotted #E74C3C; }
+  p,span { outline: 1px dotted #3498DB; }
+  a { outline: 1px dotted #2ECC71; }
+
+全要素のネスト構造がアウトラインで可視化される状態にしてください。</div>
+              </div>
+              <div class="css-explain">
+                <div class="css-explain-title"><span class="material-icons">info</span> このステップで学ぶCSS</div>
+                <div class="css-diagram">
+                  <div class="css-diagram-label">3種類の線種による役割区別</div>
+                  <div class="css-diagram-row">
+                    <div class="css-diagram-box">
+                      <div style="outline:2px solid #E74C3C;padding:12px 8px;background:#fff;">
+                        <div style="outline:1px dashed #F1948A;padding:6px;margin-bottom:4px;">
+                          <div style="outline:1px dotted #3498DB;padding:4px;font-size:10px;color:#999;">テキスト</div>
+                        </div>
+                      </div>
+                      <div class="css-diagram-box-label">ネスト構造の可視化</div>
+                    </div>
+                    <div class="css-diagram-box" style="display:flex;flex-direction:column;gap:6px;justify-content:center;">
+                      <div style="display:flex;align-items:center;gap:8px;font-size:11px;">
+                        <span style="width:40px;border-top:2px solid #E74C3C;"></span>
+                        <span style="color:#666;">solid = 主要ブロック</span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:8px;font-size:11px;">
+                        <span style="width:40px;border-top:2px dashed #E67E22;"></span>
+                        <span style="color:#666;">dashed = 内部コンテナ</span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:8px;font-size:11px;">
+                        <span style="width:40px;border-top:2px dotted #3498DB;"></span>
+                        <span style="color:#666;">dotted = テキスト要素</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <dl>
+                  <dt>outline: 1px dashed</dt>
+                  <dd><code>dashed</code>=破線。内部コンテナ（グリッドやリストの親要素）に使い、主要ブロックの実線と区別します。</dd>
+                  <dt>outline: 1px dotted</dt>
+                  <dd><code>dotted</code>=点線。テキスト要素（h2, p, a, span等）に使用。3種類の線種で要素の役割を視覚的に区別できます。</dd>
+                </dl>
+              </div>
+              <a href="../prompt-ui-coding/sample1/sample-1-carrier-wireframe-02.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 03 -->
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">03</div>
+            <div class="step-block-info">
+              <div class="step-block-title">リセット + サイズガード</div>
+              <div class="step-block-desc">CSSリセット、bodyの基本設定、空要素が潰れないためのmin-height/min-widthガードを追加。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">* reset</span>
+              <span class="step-tag new">size guard</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 02の結果に、CSSリセットとサイズガードを追加してください。
+
+【追加するCSS】
+1. ユニバーサルリセット:
+   * { margin: 0; padding: 0; box-sizing: border-box; }
+
+2. body基本設定:
+   body { font-family: 'Noto Sans JP', sans-serif; background: #fff; min-height: 100vh; }
+
+3. サイズガード（空要素が潰れないように）:
+   - header, section, footer, nav, div: min-height: 20px
+   - span, a, p, h2, h4, button, input, select: min-height: 16px; min-width: 16px
+   - img: min-width: 20px; min-height: 20px
+
+既存のoutlineはすべて残してください。
+リセットにより背景が白に統一され、要素の配置が変わります。</div>
+              </div>
+              <div class="css-explain">
+                <div class="css-explain-title"><span class="material-icons">info</span> このステップで学ぶCSS</div>
+                <div class="css-diagram">
+                  <div class="css-diagram-label">box-sizing の違い</div>
+                  <div class="css-diagram-row">
+                    <div class="css-diagram-box">
+                      <div style="position:relative;width:120px;margin:0 auto;">
+                        <div style="width:120px;height:48px;background:#DBEAFE;border:3px solid #3B82F6;display:flex;align-items:center;justify-content:center;font-size:10px;color:#1E40AF;box-sizing:content-box;padding:10px;">
+                          width:120px
+                        </div>
+                        <div style="font-size:9px;color:#94A3B8;text-align:center;margin-top:2px;">実際の幅 = 120 + padding + border</div>
+                      </div>
+                      <div class="css-diagram-box-label">content-box（デフォルト）</div>
+                    </div>
+                    <div class="css-diagram-vs">VS</div>
+                    <div class="css-diagram-box">
+                      <div style="position:relative;width:120px;margin:0 auto;">
+                        <div style="width:120px;height:48px;background:#DCFCE7;border:3px solid #16A34A;display:flex;align-items:center;justify-content:center;font-size:10px;color:#166534;box-sizing:border-box;padding:10px;">
+                          width:120px
+                        </div>
+                        <div style="font-size:9px;color:#94A3B8;text-align:center;margin-top:2px;">実際の幅 = ぴったり120px</div>
+                      </div>
+                      <div class="css-diagram-box-label">border-box（推奨）</div>
+                    </div>
+                  </div>
+                </div>
+                <dl>
+                  <dt>* { margin: 0; padding: 0; }</dt>
+                  <dd>ユニバーサルセレクタ<code>*</code>で全要素のデフォルト余白をリセット。ブラウザごとの差異をなくし、統一した土台を作ります。</dd>
+                  <dt>box-sizing: border-box</dt>
+                  <dd><code>width</code>/<code>height</code>にpadding・borderを含める計算方式。これがないと<code>width: 100%</code>+<code>padding</code>で親をはみ出します。</dd>
+                  <dt>font-family: 'Noto Sans JP', sans-serif</dt>
+                  <dd>フォントの指定。日本語対応のWebフォントを優先し、未読込時は<code>sans-serif</code>（ゴシック体）にフォールバック。</dd>
+                  <dt>min-height / min-width</dt>
+                  <dd>最小の高さ・幅を保証。中身が空の要素がつぶれて見えなくなることを防ぐ「サイズガード」として使用します。</dd>
+                </dl>
+              </div>
+              <a href="../prompt-ui-coding/sample1/sample-1-carrier-wireframe-03.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 04 -->
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">04</div>
+            <div class="step-block-info">
+              <div class="step-block-title">幅と高さ</div>
+              <div class="step-block-desc">各要素のwidth/height/max-widthを追加。ブロックのサイズが決まり始めます。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">width</span>
+              <span class="step-tag new">height</span>
+              <span class="step-tag new">max-width</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 03の結果に、各要素のwidth/heightのみを追加してください。
+padding/margin/flexbox等のレイアウトはまだ追加しないでください。
+
+【追加するCSS（サイズのみ）】
+- .header: height: 56px
+- .quick-btn: width: 60px; height: 60px
+- .banner-slide: width: 100%; height: 180px
+- .banner-dots: height: 20px
+- .banner-image: width: 100%; height: 100%
+- .category-item: width: 72px; height: 72px
+- .campaign-card: width: 260px; height: 140px
+- .campaign-image: width: 100%; height: 80px
+- .news-item: height: 60px
+- .service-link-item: height: 40px
+- .footer: min-height: 200px
+- .bottom-nav: height: 56px
+- .bottom-nav-item: height: 56px
+- .drawer-menu: width: 280px; height: 100vh
+- .drawer-header: height: 120px
+- img系: width: 100%; height: auto
+
+既存のoutline・リセット・サイズガードはすべて残してください。</div>
+              </div>
+              <div class="css-explain">
+                <div class="css-explain-title"><span class="material-icons">info</span> このステップで学ぶCSS</div>
+                <div class="css-diagram">
+                  <div class="css-diagram-label">サイズ指定の単位</div>
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <div style="width:60px;height:28px;background:#DBEAFE;border:1px solid #93C5FD;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#1E40AF;">60px</div>
+                      <span style="font-size:11px;color:#666;">px = 固定値（画面サイズに関係なく一定）</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <div style="width:100%;max-width:200px;height:28px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#92400E;">width: 100%</div>
+                      <span style="font-size:11px;color:#666;">% = 親要素に対する割合</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <div style="width:80px;height:28px;background:#DCFCE7;border:1px solid #86EFAC;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#166534;">100vh</div>
+                      <span style="font-size:11px;color:#666;">vh = ビューポート（画面表示領域）の高さ</span>
+                    </div>
+                  </div>
+                </div>
+                <dl>
+                  <dt>width / height</dt>
+                  <dd>要素の幅と高さを明示的に指定。<code>px</code>は固定値、<code>%</code>は親要素に対する割合、<code>100vh</code>はビューポートの高さです。</dd>
+                  <dt>width: 100%</dt>
+                  <dd>親要素の幅いっぱいに広がる。バナー画像やスライドなど、親コンテナに合わせたい要素に使います。</dd>
+                  <dt>height: 56px</dt>
+                  <dd>固定の高さ指定。ヘッダーやボトムナビなど、常に同じ高さを維持したい要素に使用します。</dd>
+                </dl>
+              </div>
+              <a href="../prompt-ui-coding/sample1/sample-1-carrier-wireframe-04.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 05 -->
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">05</div>
+            <div class="step-block-info">
+              <div class="step-block-title">余白（padding / margin）</div>
+              <div class="step-block-desc">padding/margin/gapを追加。要素間に間隔が生まれ、レイアウトに「空間」ができます。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">padding</span>
+              <span class="step-tag new">margin</span>
+              <span class="step-tag new">gap</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 04の結果に、padding/margin/gapのみを追加してください。
+Flexbox/Grid等のレイアウト配置はまだ追加しないでください。
+
+【追加するCSS（余白のみ）】
+- .header: padding: 0 16px
+- .quick-access: padding: 16px
+- .main-banner: padding: 0 16px
+- .banner-dots: margin-top: 8px
+- .important-info: padding: 12px 16px; margin: 0 16px
+- .section: padding: 20px 16px
+- .section-header: margin-bottom: 12px
+- .category-grid: gap: 12px
+- .campaign-scroll: gap: 12px; padding-right: 16px
+- .campaign-card: padding-bottom: 8px
+- .news-item: padding: 12px 0; border配置のため
+- .service-link-group: margin-bottom: 16px
+- .service-link-grid: gap: 8px
+- .service-link-item: padding: 8px 12px
+- .footer: padding: 24px 16px
+- .footer-sns: margin-bottom: 20px; gap: 12px
+- .footer-links: gap: 16px; margin-bottom: 20px
+- .footer-link-group: gap: 8px
+- .bottom-nav-item: padding: 6px 0
+- .drawer-menu: padding: 0
+- .drawer-header: padding: 20px
+- .drawer-user: padding: 16px 20px
+- .drawer-nav: padding: 8px 0
+- body全体: padding-bottom: 56px（ボトムナビの高さ分）
+
+既存のCSS（outline・リセット・サイズ）はすべて残してください。</div>
+              </div>
+              <div class="css-explain">
+                <div class="css-explain-title"><span class="material-icons">info</span> このステップで学ぶCSS</div>
+                <div class="css-diagram">
+                  <div class="css-diagram-label">padding / margin / gap の違い</div>
+                  <div class="css-diagram-row">
+                    <div class="css-diagram-box">
+                      <div style="background:#FEE2E2;padding:10px;border-radius:6px;">
+                        <div style="font-size:8px;color:#B91C1C;margin-bottom:2px;">margin（外側）</div>
+                        <div style="background:#DBEAFE;padding:10px;border-radius:4px;">
+                          <div style="font-size:8px;color:#1E40AF;margin-bottom:2px;">padding（内側）</div>
+                          <div style="background:#fff;padding:6px;border-radius:2px;font-size:10px;color:#666;text-align:center;">コンテンツ</div>
+                        </div>
+                      </div>
+                      <div class="css-diagram-box-label">padding = 内側 / margin = 外側</div>
+                    </div>
+                    <div class="css-diagram-box">
+                      <div style="display:flex;gap:8px;background:#F0FDF4;padding:8px;border-radius:6px;">
+                        <div style="flex:1;height:32px;background:#86EFAC;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#166534;">A</div>
+                        <div style="flex:1;height:32px;background:#86EFAC;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#166534;">B</div>
+                        <div style="flex:1;height:32px;background:#86EFAC;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#166534;">C</div>
+                      </div>
+                      <div style="display:flex;justify-content:center;gap:2px;margin-top:4px;">
+                        <span style="font-size:8px;color:#16A34A;">&#8592; gap &#8594;</span>
+                        <span style="font-size:8px;color:#16A34A;">&#8592; gap &#8594;</span>
+                      </div>
+                      <div class="css-diagram-box-label">gap = 子要素間の均等な間隔</div>
+                    </div>
+                  </div>
+                </div>
+                <dl>
+                  <dt>padding</dt>
+                  <dd>要素の<strong>内側</strong>に余白を作る。<code>padding: 12px 16px</code>は上下12px・左右16pxの省略記法。背景色の内側に空間ができます。</dd>
+                  <dt>margin</dt>
+                  <dd>要素の<strong>外側</strong>に余白を作る。隣接する要素との間隔を確保します。<code>margin: 0 16px</code>は上下0・左右16px。</dd>
+                  <dt>gap</dt>
+                  <dd>Flex/Gridコンテナの子要素間に<strong>均等な間隔</strong>を作る。<code>margin</code>と違い最初・最後の要素には余白がつきません。</dd>
+                  <dt>padding-bottom: 56px</dt>
+                  <dd>ボトムナビが固定表示されるため、body下部にナビの高さ分の余白を確保して、コンテンツが隠れないようにします。</dd>
+                </dl>
+              </div>
+              <a href="../prompt-ui-coding/sample1/sample-1-carrier-wireframe-05.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 06 -->
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">06</div>
+            <div class="step-block-info">
+              <div class="step-block-title">レイアウト + 装飾</div>
+              <div class="step-block-desc">Flexbox/Grid/position + background/border/color。ワイヤーフレームの見た目が完成。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">flex/grid</span>
+              <span class="step-tag new">position</span>
+              <span class="step-tag new">background</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 05の結果に、Flexbox/Grid配置 + ビジュアル装飾を追加してください。
+配色はグレースケール（ワイヤーフレーム）でお願いします。
+
+【レイアウト（Flexbox/Grid）】
+- .header-top: display: flex; justify-content: space-between; align-items: center
+- .quick-access: display: grid; grid-template-columns: repeat(4, 1fr)
+- .banner-slider: display: flex; overflow-x: auto; scroll-snap-type: x mandatory
+- .banner-slide: scroll-snap-align: start; flex-shrink: 0
+- .banner-dots: display: flex; justify-content: center; gap: 6px
+- .category-grid: display: grid; grid-template-columns: repeat(4, 1fr)
+- .campaign-scroll: display: flex; overflow-x: auto
+- .footer-sns: display: flex; justify-content: center
+- .footer-links: display: grid; grid-template-columns: repeat(3, 1fr)
+- .bottom-nav: position: fixed; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: repeat(5, 1fr)
+- .drawer-menu: position: fixed; top: 0; right: 0; transform: translateX(100%)
+- .drawer-overlay: position: fixed; inset: 0; display: none
+
+【装飾（グレースケール配色）】
+- body: background: #f5f5f5
+- .header: background: #333
+- .important-info: background: #fff3cd; border-left: 4px solid #ffc107
+- .section: background: #fff
+- .campaign-card: background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1)
+- .news-item: border-bottom: 1px solid #eee
+- .footer: background: #333
+- .bottom-nav: background: #fff; box-shadow: 0 -1px 4px rgba(0,0,0,0.1)
+- .drawer-menu: background: #fff; box-shadow: -4px 0 12px rgba(0,0,0,0.15)
+
+【レスポンシブ @media(min-width: 768px)】
+- .category-grid: grid-template-columns: repeat(8, 1fr)
+- .bottom-nav: display: none
+
+outlineは削除してワイヤーフレームの見た目を完成させてください。</div>
+              </div>
+              <div class="css-explain">
+                <div class="css-explain-title"><span class="material-icons">info</span> このステップで学ぶCSS</div>
+                <div class="css-diagram">
+                  <div class="css-diagram-label">Flexbox vs Grid</div>
+                  <div class="css-diagram-row">
+                    <div class="css-diagram-box">
+                      <div style="display:flex;justify-content:space-between;align-items:center;background:#EDE9FE;padding:8px;border-radius:6px;gap:4px;">
+                        <div style="background:#8B5CF6;color:#fff;padding:6px 10px;border-radius:4px;font-size:10px;">Logo</div>
+                        <div style="background:#8B5CF6;color:#fff;padding:6px 8px;border-radius:4px;font-size:10px;">Menu</div>
+                      </div>
+                      <div class="css-diagram-box-label">flex + space-between（両端揃え）</div>
+                    </div>
+                    <div class="css-diagram-box">
+                      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:#DBEAFE;padding:8px;border-radius:6px;">
+                        <div style="background:#3B82F6;height:28px;border-radius:4px;"></div>
+                        <div style="background:#3B82F6;height:28px;border-radius:4px;"></div>
+                        <div style="background:#3B82F6;height:28px;border-radius:4px;"></div>
+                        <div style="background:#3B82F6;height:28px;border-radius:4px;"></div>
+                      </div>
+                      <div class="css-diagram-box-label">grid repeat(4, 1fr)（均等4列）</div>
+                    </div>
+                  </div>
+                  <div style="margin-top:10px;">
+                    <div style="font-size:10px;font-weight:600;color:#64748B;margin-bottom:6px;">position: fixed（画面固定）</div>
+                    <div style="position:relative;background:#F1F5F9;border-radius:6px;height:80px;overflow:hidden;border:1px solid #E2E8F0;">
+                      <div style="padding:6px;font-size:9px;color:#94A3B8;">ページコンテンツ...</div>
+                      <div style="position:absolute;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:#fff;border-top:1px solid #E2E8F0;padding:4px 0;">
+                        <div style="text-align:center;font-size:8px;color:#666;">Home</div>
+                        <div style="text-align:center;font-size:8px;color:#666;">Pay</div>
+                        <div style="text-align:center;font-size:8px;color:#666;">Shop</div>
+                        <div style="text-align:center;font-size:8px;color:#666;">Help</div>
+                        <div style="text-align:center;font-size:8px;color:#666;">My</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <dl>
+                  <dt>display: flex</dt>
+                  <dd>子要素を横一列に並べるFlexboxレイアウト。<code>justify-content: space-between</code>で両端揃え、<code>align-items: center</code>で上下中央揃えにします。</dd>
+                  <dt>display: grid</dt>
+                  <dd>行と列の二次元レイアウト。<code>grid-template-columns: repeat(4, 1fr)</code>で均等4列のグリッドを作ります。</dd>
+                  <dt>position: fixed</dt>
+                  <dd>ビューポート（画面）に対して固定配置。<code>bottom: 0</code>と組み合わせてボトムナビを画面下部に固定します。</dd>
+                  <dt>overflow-x: auto</dt>
+                  <dd>横方向にはみ出した部分をスクロール可能にする。横スクロール型のバナーやキャンペーンカードに使用します。</dd>
+                  <dt>scroll-snap-type: x mandatory</dt>
+                  <dd>横スクロール時にスライド位置にスナップ（吸着）する設定。各スライドに<code>scroll-snap-align: start</code>を付けて使います。</dd>
+                  <dt>background / border-radius / box-shadow</dt>
+                  <dd>背景色・角丸・影の装飾。<code>box-shadow: 0 2px 4px rgba(0,0,0,0.1)</code>で要素に浮き上がるような影をつけます。</dd>
+                  <dt>transform: translateX(100%)</dt>
+                  <dd>要素を右方向に100%（自身の幅分）移動。ドロワーメニューの初期状態として画面外に隠しておくために使用します。</dd>
+                  <dt>@media (min-width: 768px)</dt>
+                  <dd>画面幅768px以上の場合だけ適用されるCSS。タブレット以上でカテゴリを8列に増やしたり、ボトムナビを非表示にします。</dd>
+                </dl>
+              </div>
+              <a href="../prompt-ui-coding/sample1/sample-1-carrier-wireframe-06.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 07 -->
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">07</div>
+            <div class="step-block-info">
+              <div class="step-block-title">JavaScript追加</div>
+              <div class="step-block-desc">ドロワーメニューの開閉、バナーの自動スクロール等のインタラクションを追加。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">Drawer JS</span>
+              <span class="step-tag new">Banner JS</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 06の結果に、JavaScriptのインタラクションを追加してください。
+
+【ドロワーメニュー】
+- ハンバーガーボタン（.header内に追加）をクリックで.drawer-menuをスライド表示
+- .drawer-overlay表示 + body overflow:hidden
+- 閉じるボタン / オーバーレイクリック / Escキーで閉じる
+- CSS: .drawer-menu.active { transform: translateX(0); }
+  transition: transform 0.3s ease
+
+【バナースライダー】
+- 3秒ごとに自動スクロール（次のスライドへ）
+- .banner-dotsのドットをクリックで対応スライドへ移動
+- アクティブドットのスタイル変更
+- IntersectionObserverでスナップ位置検出
+
+【ボトムナビ】
+- .bottom-nav-itemクリックでactiveクラス切替
+- 現在のアクティブ項目のスタイル変更（色変更）
+
+CSSの見た目はStep 06のまま維持してください。</div>
+              </div>
+              <div class="css-explain">
+                <div class="css-explain-title"><span class="material-icons">info</span> このステップで学ぶCSS/JS</div>
+                <div class="css-diagram">
+                  <div class="css-diagram-label">ドロワーメニューの開閉の仕組み</div>
+                  <div class="css-diagram-row">
+                    <div class="css-diagram-box">
+                      <div style="position:relative;background:#F1F5F9;border-radius:6px;height:80px;overflow:hidden;border:1px solid #E2E8F0;">
+                        <div style="padding:6px;font-size:9px;color:#94A3B8;">ページ</div>
+                        <div style="position:absolute;top:0;right:-60px;width:60px;height:100%;background:#fff;border-left:1px solid #E2E8F0;padding:4px;font-size:8px;color:#999;">Menu</div>
+                      </div>
+                      <div class="css-diagram-box-label">translateX(100%) = 画面外</div>
+                    </div>
+                    <div style="display:flex;align-items:center;font-size:18px;color:#16A34A;padding-top:10px;">&#8594;</div>
+                    <div class="css-diagram-box">
+                      <div style="position:relative;background:#F1F5F9;border-radius:6px;height:80px;overflow:hidden;border:1px solid #E2E8F0;">
+                        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.3);border-radius:6px;"></div>
+                        <div style="padding:6px;font-size:9px;color:#94A3B8;">ページ</div>
+                        <div style="position:absolute;top:0;right:0;width:60px;height:100%;background:#fff;border-left:1px solid #ccc;padding:4px;font-size:8px;color:#333;box-shadow:-2px 0 8px rgba(0,0,0,0.15);">Menu</div>
+                      </div>
+                      <div class="css-diagram-box-label">translateX(0) = 表示</div>
+                    </div>
+                  </div>
+                  <div style="text-align:center;margin-top:6px;font-size:10px;color:#64748B;">transition: transform 0.3s ease でスムーズにアニメーション</div>
+                </div>
+                <dl>
+                  <dt>classList.add() / classList.remove()</dt>
+                  <dd>JavaScriptで要素のclassを追加・削除する。<code>.active</code>クラスの切り替えでCSSの表示状態を制御します。</dd>
+                  <dt>transform: translateX(0)</dt>
+                  <dd>Step 06で<code>translateX(100%)</code>にしていたドロワーを元の位置に戻す。<code>transition</code>と組み合わせてスライドアニメーションになります。</dd>
+                  <dt>transition: transform 0.3s ease</dt>
+                  <dd><code>transform</code>の変化を0.3秒かけてアニメーションさせる。ドロワーの開閉がスムーズに動きます。</dd>
+                  <dt>overflow: hidden（body）</dt>
+                  <dd>ドロワー表示中にbodyのスクロールを無効化。背景がスクロールしてしまうのを防ぎます。</dd>
+                  <dt>IntersectionObserver</dt>
+                  <dd>要素がビューポートに入ったことを検知するAPI。バナースライダーのスナップ位置を検出し、ドットインジケーターを連動させます。</dd>
+                </dl>
+              </div>
+              <a href="../prompt-ui-coding/sample1/sample-1-carrier-wireframe-07.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 08 -->
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num done">08</div>
+            <div class="step-block-info">
+              <div class="step-block-title">テキスト追加 = 完成</div>
+              <div class="step-block-desc">全テキスト、Material Icons、placeholderを追加。グレースケールワイヤーフレームが完成。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">テキスト</span>
+              <span class="step-tag new">Icons</span>
+              <span class="step-tag new">完成版</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 07の結果に、全テキストコンテンツとアイコンを追加して完成させてください。
+Google Material Iconsを使用: &lt;link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"&gt;
+
+【ヘッダー】
+- ロゴ: Material Icons「signal_cellular_alt」+ テキスト「MobilePlus」
+- 検索ボタン: 「search」アイコン
+- ハンバーガー: 「menu」アイコン
+
+【クイックアクセス 4ボタン】
+- 「payment」料金確認 / 「data_usage」データ残量 / 「support_agent」サポート / 「card_giftcard」クーポン
+
+【バナー 3枚】
+- 各スライドにプレースホルダー画像（背景グラデーション + テキスト）
+
+【重要なお知らせ】
+- 「info」アイコン + 「ネットワークメンテナンスのお知らせ（2/15 2:00-5:00）」
+
+【カテゴリ 8項目】
+- 「phone_iphone」機種変更 / 「sim_card」SIM / 「wifi」Wi-Fi / 「family_restroom」家族割 ...等
+
+【キャンペーン 3枚】
+- カード形式: 画像 + タイトル + 期間
+
+【ニュース 3件】
+- 日付 + カテゴリバッジ + タイトル
+
+【サービスリンク 3グループ】
+- 各グループ: タイトル + リンク4件
+
+【フッター】
+- SNSアイコン + リンクグループ3列 + コピーライト
+
+【ボトムナビ 5タブ】
+- 「home」ホーム / 「payment」料金 / 「shopping_bag」ショップ / 「help」サポート / 「person」マイページ
+
+【ドロワーメニュー】
+- ユーザー情報 + ナビリンク一覧 + ログアウト
+
+配色はグレースケールのまま維持してください。</div>
+              </div>
+              <div class="css-explain">
+                <div class="css-explain-title"><span class="material-icons">info</span> このステップで学ぶこと</div>
+                <div class="css-diagram">
+                  <div class="css-diagram-label">ワイヤーフレーム → カラー版の変換</div>
+                  <div class="css-diagram-row">
+                    <div class="css-diagram-box">
+                      <div style="background:#E5E5E5;border-radius:6px;overflow:hidden;">
+                        <div style="background:#555;padding:6px 8px;display:flex;justify-content:space-between;align-items:center;">
+                          <span style="font-size:10px;color:#ccc;font-weight:600;">MobilePlus</span>
+                          <span style="font-size:10px;color:#ccc;">&#9776;</span>
+                        </div>
+                        <div style="padding:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
+                          <div style="background:#bbb;height:20px;border-radius:3px;"></div>
+                          <div style="background:#bbb;height:20px;border-radius:3px;"></div>
+                          <div style="background:#bbb;height:20px;border-radius:3px;"></div>
+                          <div style="background:#bbb;height:20px;border-radius:3px;"></div>
+                        </div>
+                      </div>
+                      <div class="css-diagram-box-label">Step 08: グレースケール</div>
+                    </div>
+                    <div style="display:flex;align-items:center;font-size:18px;color:#16A34A;padding-top:10px;">&#8594;</div>
+                    <div class="css-diagram-box">
+                      <div style="background:#FFF5F5;border-radius:6px;overflow:hidden;">
+                        <div style="background:linear-gradient(135deg,#e60039,#ff4d6d);padding:6px 8px;display:flex;justify-content:space-between;align-items:center;">
+                          <span style="font-size:10px;color:#fff;font-weight:600;">MobilePlus</span>
+                          <span style="font-size:10px;color:#fff;">&#9776;</span>
+                        </div>
+                        <div style="padding:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
+                          <div style="background:#FFEBEF;height:20px;border-radius:3px;"></div>
+                          <div style="background:#E6F2FF;height:20px;border-radius:3px;"></div>
+                          <div style="background:#E6F9EF;height:20px;border-radius:3px;"></div>
+                          <div style="background:#FFF8E1;height:20px;border-radius:3px;"></div>
+                        </div>
+                      </div>
+                      <div class="css-diagram-box-label">カラー版: ブランドカラー適用</div>
+                    </div>
+                  </div>
+                </div>
+                <dl>
+                  <dt>Material Icons</dt>
+                  <dd>Googleが提供するアイコンフォント。<code>&lt;span class="material-icons"&gt;home&lt;/span&gt;</code>のようにアイコン名をテキストとして記述するだけで表示されます。</dd>
+                  <dt>グレースケール配色</dt>
+                  <dd>白・グレー・黒のみで構成されたカラーパレット。装飾色に惑わされずにレイアウト構造に集中でき、後からブランドカラーへの変換も容易です。</dd>
+                  <dt>placeholder画像</dt>
+                  <dd>実際の画像の代わりに背景グラデーションとテキストで代替表示。デザイン確認段階で画像素材が不要になります。</dd>
+                </dl>
+              </div>
+              <a href="../prompt-ui-coding/sample1/sample-1-carrier-wireframe-08.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sample 1 Preview -->
+      <div class="preview-frame">
+        <div class="preview-frame-bar">
+          <span><span class="material-icons">school</span> Step 08 完成版（お手本）</span>
+          <a href="../prompt-ui-coding/sample1/sample-1-carrier-wireframe-08.html" target="_blank">
+            <span class="material-icons">open_in_new</span> 別タブで開く
+          </a>
+        </div>
+        <iframe src="../prompt-ui-coding/sample1/sample-1-carrier-wireframe-08.html" loading="lazy"></iframe>
+      </div>
+
+      <!-- Color Version -->
+      <div class="info-box">
+        <h4><span class="material-icons">palette</span> カラー版</h4>
+        <p>ワイヤーフレーム（グレースケール）にブランドカラーを適用した完成版と比較できます。</p>
+        <a href="../prompt-ui-coding/sample1/sample-1-carrier.html" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 0.85rem; color: var(--course-accent); text-decoration: none; font-weight: 500;">
+          <span class="material-icons" style="font-size: 16px;">open_in_new</span> カラー版を確認
+        </a>
+      </div>
+
+      <!-- ==================== Sample 2: Airline ==================== -->
+      <hr class="section-divider">
+      <div class="section-label">SAMPLE 2</div>
+      <div class="section-title">航空会社サイト（SkyLine Airlines）</div>
+      <p class="section-desc">航空会社の予約サイト。フライト検索フォームを中心に、ヒーローセクション、人気路線カード、キャンペーン、サービスグリッドなどコンバージョン重視の構成です。</p>
+
+      <!-- Step List -->
+      <div class="step-list">
+
+        <!-- Step 01 -->
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">01</div>
+            <div class="step-block-info">
+              <div class="step-block-title">ブロック枠線のみ</div>
+              <div class="step-block-desc">主要ブロック（header, hero, search, footer）の外枠だけを色付き実線で表示。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">outline (solid)</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">航空会社サイト「SkyLine Airlines」のHTML構造を作成してください。
+CSSは各ブロックの枠線（outline）のみ記述し、中身は空にしてください。
+
+【HTML要素（すべて空要素）】
+- header.header
+- section.hero
+- div.search-section
+- section.section（人気路線）
+- section.section（キャンペーン）
+- section.section（サービス）
+- section.section（お知らせ）
+- footer.footer
+- div.drawer-overlay#drawerOverlay + div.drawer-menu#drawerMenu
+
+【CSS（outlineのみ）】
+.header { outline: 2px solid #E74C3C; }
+.hero { outline: 2px solid #E67E22; }
+.search-section { outline: 2px solid #F1C40F; }
+.section { outline: 2px solid #3498DB; }
+.footer { outline: 2px solid #1ABC9C; }
+
+テキストやpadding等は一切不要。枠線だけでページの大構造を可視化します。</div>
+              </div>
+              <a href="../prompt-ui-coding/sample2/sample-2-airline-wireframe-01.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 02 -->
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">02</div>
+            <div class="step-block-info">
+              <div class="step-block-title">全要素の枠線</div>
+              <div class="step-block-desc">内部コンテナ（破線）とテキスト・フォーム要素（点線）のアウトラインを追加。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag">solid</span>
+              <span class="step-tag new">dashed</span>
+              <span class="step-tag new">dotted</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 01の結果に、内部の子要素とアウトラインを追加してください。
+
+【各ブロック内に追加する子要素（すべて空）】
+header内: .header-inner > (.header-logo, nav.header-nav > a × 5, .header-actions)
+hero内: .hero-content > (h1, p, .hero-cta)
+search-section内: .search-form > (.search-tabs > button × 2, .search-fields > .search-field × 4, .search-btn)
+section(人気路線)内: .section-header > (h2, a), .route-grid > .route-card × 3 > (.route-image, .route-info)
+section(キャンペーン)内: .section-header, .campaign-grid > .campaign-card × 2 > (.campaign-image, .campaign-content)
+section(サービス)内: .section-header, .service-grid > .service-item × 4 > (.service-icon, h3, p)
+section(お知らせ)内: .section-header, .news-list > .news-item × 3
+footer内: .footer-inner > .footer-col × 4, .footer-bottom
+
+【追加するCSS】
+- 内部コンテナ: outline: 1px dashed（各親の薄い色）
+- テキスト・フォーム: h1,h2,h3 { outline: 1px dotted #E74C3C; }
+  p,span { outline: 1px dotted #3498DB; }
+  a,button,input,select { outline: 1px dotted #2ECC71; }</div>
+              </div>
+              <a href="../prompt-ui-coding/sample2/sample-2-airline-wireframe-02.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 03-08 (airline) -->
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">03</div>
+            <div class="step-block-info">
+              <div class="step-block-title">リセット + サイズガード</div>
+              <div class="step-block-desc">CSSリセット、bodyの基本設定、空要素のサイズガードを追加。背景が白に統一されます。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">* reset</span>
+              <span class="step-tag new">size guard</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 02の結果に、CSSリセットとサイズガードを追加してください。
+Sample 1と同じルールを適用します。
+
+【追加するCSS】
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans JP', sans-serif; background: #fff; min-height: 100vh; }
+
+サイズガード:
+- header, section, footer, nav, div: min-height: 20px
+- span, a, p, h1, h2, h3, button, input, select: min-height: 16px; min-width: 16px
+
+既存のoutlineはすべて残してください。</div>
+              </div>
+              <a href="../prompt-ui-coding/sample2/sample-2-airline-wireframe-03.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">04</div>
+            <div class="step-block-info">
+              <div class="step-block-title">幅と高さ</div>
+              <div class="step-block-desc">フォーム入力欄、カード、画像エリアなどにwidth/heightを設定。検索フォームの形が見え始めます。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">width</span>
+              <span class="step-tag new">height</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 03の結果に、各要素のwidth/heightのみを追加してください。
+
+【追加するCSS（サイズのみ）】
+- .header: height: 64px
+- .hero: height: 400px
+- .search-form: max-width: 900px
+- .search-field input/select: height: 48px; width: 100%
+- .search-btn: height: 48px; width: 100%
+- .route-card: min-height: 280px
+- .route-image: height: 180px; width: 100%
+- .campaign-card: min-height: 200px
+- .campaign-image: height: 200px; width: 100%
+- .service-icon: width: 64px; height: 64px
+- .news-item: min-height: 60px
+- .footer: min-height: 240px
+- .drawer-menu: width: 300px; height: 100vh
+
+既存のoutline・リセット・サイズガードはすべて残してください。</div>
+              </div>
+              <a href="../prompt-ui-coding/sample2/sample-2-airline-wireframe-04.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">05</div>
+            <div class="step-block-info">
+              <div class="step-block-title">余白（padding / margin）</div>
+              <div class="step-block-desc">padding/margin/gapを追加。セクション間に余白が生まれ、カードに内部スペースができます。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">padding</span>
+              <span class="step-tag new">margin</span>
+              <span class="step-tag new">gap</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 04の結果に、padding/margin/gapのみを追加してください。
+
+【追加するCSS（余白のみ）】
+- .header-inner: padding: 0 24px
+- .hero: padding: 60px 24px
+- .hero-content: margin-bottom: 24px
+- .search-section: padding: 32px 24px
+- .search-form: padding: 24px; margin: 0 auto
+- .search-tabs: gap: 0; margin-bottom: 16px
+- .search-fields: gap: 16px; margin-bottom: 16px
+- .search-field: gap: 4px
+- .section: padding: 48px 24px
+- .section-header: margin-bottom: 24px
+- .route-grid: gap: 24px
+- .route-info: padding: 16px
+- .campaign-grid: gap: 24px
+- .campaign-content: padding: 20px
+- .service-grid: gap: 24px
+- .service-item: padding: 24px
+- .news-item: padding: 16px 0
+- .footer-inner: padding: 48px 24px; gap: 32px
+- .footer-col: gap: 12px
+- .footer-bottom: padding: 24px
+
+既存のCSS（outline・リセット・サイズ）はすべて残してください。</div>
+              </div>
+              <a href="../prompt-ui-coding/sample2/sample-2-airline-wireframe-05.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">06</div>
+            <div class="step-block-info">
+              <div class="step-block-title">レイアウト + 装飾</div>
+              <div class="step-block-desc">Flexbox/Gridで検索フォーム・カードを配置。ダークヘッダー、カード装飾、レスポンシブ対応を追加。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">flex/grid</span>
+              <span class="step-tag new">position</span>
+              <span class="step-tag new">responsive</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 05の結果に、レイアウト配置 + ビジュアル装飾を追加してください。
+配色はグレースケール（ワイヤーフレーム）でお願いします。
+
+【レイアウト】
+- .header-inner: display: flex; justify-content: space-between; align-items: center
+- .header-nav: display: flex; gap: 24px
+- .hero: display: flex; align-items: center; justify-content: center; text-align: center
+- .search-tabs: display: flex
+- .search-fields: display: grid; grid-template-columns: repeat(2, 1fr)（PC: repeat(4, 1fr)）
+- .route-grid: display: grid; grid-template-columns: repeat(3, 1fr)（モバイル: 1fr）
+- .campaign-grid: display: grid; grid-template-columns: repeat(2, 1fr)（モバイル: 1fr）
+- .service-grid: display: grid; grid-template-columns: repeat(4, 1fr)（モバイル: repeat(2, 1fr)）
+- .footer-inner: display: grid; grid-template-columns: repeat(4, 1fr)（モバイル: repeat(2, 1fr)）
+- .drawer-menu: position: fixed; top: 0; right: 0; transform: translateX(100%)
+
+【装飾（グレースケール）】
+- .header: background: #1a1a2e
+- .hero: background: linear-gradient(135deg, #2d2d2d, #4a4a4a)
+- .search-section: background: #f5f5f5
+- .search-form: background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1)
+- .route-card: border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08)
+- .route-image: background: #ddd
+- .service-item: text-align: center; border-radius: 12px; background: #f8f8f8
+- .service-icon: border-radius: 50%; background: #e0e0e0; margin: 0 auto
+- .news-item: border-bottom: 1px solid #eee
+- .footer: background: #1a1a2e; color: #ccc
+
+outlineは削除してください。</div>
+              </div>
+              <a href="../prompt-ui-coding/sample2/sample-2-airline-wireframe-06.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num">07</div>
+            <div class="step-block-info">
+              <div class="step-block-title">JavaScript追加</div>
+              <div class="step-block-desc">ドロワーメニュー、タブ切替、乗客数の増減ボタンなどのインタラクションを追加。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">Drawer JS</span>
+              <span class="step-tag new">Tab JS</span>
+              <span class="step-tag new">Counter JS</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 06の結果に、JavaScriptのインタラクションを追加してください。
+
+【ドロワーメニュー】
+- ハンバーガーボタン（モバイル時表示）クリックで.drawer-menuスライド表示
+- オーバーレイ + 閉じるボタン + Escキーで閉じる
+
+【検索フォームのタブ切替】
+- 「往復」「片道」タブ切替（activeクラストグル）
+- タブに応じて復路の日付フィールドの表示/非表示
+
+【乗客数カウンター】
+- 大人・子供の人数を+/-ボタンで増減（min: 0, 大人min: 1）
+- 数値表示を更新
+
+【モバイルメニュー】
+- 768px以下でハンバーガーメニューを表示
+- ヘッダーナビを非表示にしてドロワーに移動</div>
+              </div>
+              <a href="../prompt-ui-coding/sample2/sample-2-airline-wireframe-07.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-block">
+          <div class="step-block-header" onclick="toggleStep(this)">
+            <div class="step-block-num done">08</div>
+            <div class="step-block-info">
+              <div class="step-block-title">テキスト追加 = 完成</div>
+              <div class="step-block-desc">全テキスト、路線名、価格、フォームラベルを追加してグレースケールワイヤーフレームが完成。</div>
+            </div>
+            <div class="step-block-tags">
+              <span class="step-tag new">テキスト</span>
+              <span class="step-tag new">Icons</span>
+              <span class="step-tag new">完成版</span>
+            </div>
+            <span class="material-icons step-block-toggle">expand_more</span>
+          </div>
+          <div class="step-block-body">
+            <div class="step-block-body-inner">
+              <div class="flow-steps">
+                <div class="flow-step"><span class="material-icons">content_copy</span> プロンプトをコピー</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">smart_toy</span> AIで実行</div>
+                <span class="material-icons flow-step-arrow">arrow_forward</span>
+                <div class="flow-step"><span class="material-icons">save</span> 結果を保存</div>
+              </div>
+              <div class="prompt-area">
+                <div class="prompt-area-header">
+                  <span class="prompt-area-label"><span class="material-icons">auto_awesome</span> プロンプト</span>
+                  <button class="prompt-copy-btn" onclick="copyPrompt(this)"><span class="material-icons">content_copy</span> コピー</button>
+                </div>
+                <div class="prompt-content">Step 07の結果に、全テキストコンテンツとアイコンを追加して完成させてください。
+Google Material Icons使用。
+
+【ヘッダー】
+- ロゴ: 「flight」アイコン + 「SkyLine Airlines」
+- ナビ: 国内線 / 国際線 / マイレージ / 予約確認 / サポート
+- 予約ボタン + ハンバーガー（モバイル）
+
+【ヒーロー】
+- h1: 「空の旅を、もっと自由に。」
+- p: 説明テキスト
+- CTA: 「フライトを検索」ボタン
+
+【検索フォーム】
+- タブ: 往復 / 片道
+- フィールド: 出発地(東京/羽田) / 目的地(大阪/関西) / 出発日 / 帰着日
+- 乗客: 大人1 / 子供0 の+/-カウンター
+- 「検索する」ボタン
+
+【人気路線 3枚】
+- 東京→札幌 ¥12,800〜 / 東京→福岡 ¥15,400〜 / 東京→沖縄 ¥18,900〜
+- 各カード: 背景画像プレースホルダー + 路線名 + 価格 + 所要時間
+
+【キャンペーン 2枚】
+- 早期割引セール / マイレージ2倍キャンペーン
+
+【サービス 4項目】
+- 「luggage」手荷物 / 「airline_seat_recline_extra」座席指定 / 「restaurant」機内食 / 「wifi」Wi-Fi
+
+【お知らせ 3件】
+- 日付 + カテゴリ + タイトル
+
+【フッター 4列】
+- 会社情報 / フライト / サービス / サポート + コピーライト
+
+配色はグレースケールのまま維持してください。</div>
+              </div>
+              <a href="../prompt-ui-coding/sample2/sample-2-airline-wireframe-08.html" class="result-link" target="_blank">
+                <span class="material-icons">school</span> お手本を確認
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sample 2 Preview -->
+      <div class="preview-frame">
+        <div class="preview-frame-bar">
+          <span><span class="material-icons">school</span> Step 08 完成版（お手本）</span>
+          <a href="../prompt-ui-coding/sample2/sample-2-airline-wireframe-08.html" target="_blank">
+            <span class="material-icons">open_in_new</span> 別タブで開く
+          </a>
+        </div>
+        <iframe src="../prompt-ui-coding/sample2/sample-2-airline-wireframe-08.html" loading="lazy"></iframe>
+      </div>
+
+      <!-- Color Version -->
+      <div class="info-box">
+        <h4><span class="material-icons">palette</span> カラー版</h4>
+        <p>ダークテーマのヘッダーとフライト予約に特化したカラーデザインを確認できます。</p>
+        <a href="../prompt-ui-coding/sample2/sample-2-airline.html" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 0.85rem; color: var(--course-accent); text-decoration: none; font-weight: 500;">
+          <span class="material-icons" style="font-size: 16px;">open_in_new</span> カラー版を確認
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Apple Footer -->
+  <div class="apple-footer-top">
+    <div class="apple-footer-top-inner">
+      本チュートリアルは訓練校の教材として作成されています。各コースは実践的なスキル習得を目的とし、現場で活用できる知識を体系的に学べるよう設計されています。
+    </div>
+  </div>
+
+  <footer class="apple-footer-main">
+    <div class="apple-footer-main-inner">
+      <div class="apple-footer-col">
+        <h4>フロントエンド</h4>
+        <a href="../../frontend/html/index.html">HTML超入門</a>
+        <a href="../../frontend/css/index.html">CSS超入門</a>
+        <a href="../../frontend/javascript/index.html">JavaScript超入門</a>
+        <a href="../../frontend/prompt-ui-coding/index.html">プロンプトUIコーディング</a>
+        <a href="../../frontend/ui-layout/index.html">プロンプトUIレイアウト</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>バックエンド</h4>
+        <a href="../../backend/java/index.html">Java基礎</a>
+        <a href="../../backend/spring/index.html">Spring基礎</a>
+        <a href="../../backend/system-dev/index.html">システム開発概論</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>AI・自動化</h4>
+        <a href="../../ai/promptpg-step/index.html">プロンプトプログラミング</a>
+        <a href="../../ai/chatgpt/index.html">ChatGPT活用</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>デザイン</h4>
+        <a href="../../design/uiux/index.html">UI/UX概論</a>
+        <a href="../../design/figma/index.html">Figma入門</a>
+      </div>
+      <div class="apple-footer-col">
+        <h4>ビジネス</h4>
+        <a href="../../business/security/index.html">情報セキュリティ</a>
+        <a href="../../business/ga4/index.html">GA4入門</a>
+        <a href="../../business/marketing/index.html">マーケティング入門</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="apple-footer-bottom">
+    <div class="apple-footer-bottom-inner">
+      <span class="apple-footer-copy">Copyright &copy; 2025 Tutorial Dashboard. All rights reserved.</span>
+      <div class="apple-footer-legal">
+        <a href="#">プライバシーポリシー</a>
+        <a href="#">利用規約</a>
+        <a href="#">サイトマップ</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Copy Toast -->
+  <div class="copy-toast" id="copyToast">
+    <span class="material-icons">check_circle</span>
+    プロンプトをコピーしました
+  </div>
+
+  <script>
+    // Toggle step block open/close
+    function toggleStep(header) {
+      const block = header.closest('.step-block');
+      block.classList.toggle('open');
+    }
+
+    // Copy prompt content to clipboard
+    function copyPrompt(btn) {
+      const promptArea = btn.closest('.prompt-area');
+      const content = promptArea.querySelector('.prompt-content').textContent;
+      navigator.clipboard.writeText(content).then(() => {
+        const toast = document.getElementById('copyToast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      });
+    }
+  </script>
+</body>
+</html>

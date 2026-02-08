@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第15章 プロンプトUIレイアウト - プロンプトUIコーディング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <link rel="stylesheet" href="../../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-dark: #005A9E;
+      --primary-light: #E8F4FD;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+
+    /* Step Cards */
+    .step-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .step-card {
+      background: #fff;
+      border: 1px solid #E5E5EA;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .step-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    .step-card-header {
+      padding: 16px 20px;
+      background: #F5F5F7;
+      border-bottom: 1px solid #E5E5EA;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .step-num {
+      background: var(--primary);
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .step-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1D1D1F;
+    }
+    .step-card-body {
+      padding: 16px 20px;
+    }
+    .step-card-desc {
+      font-size: 13px;
+      color: #6E6E73;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .step-css-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .step-css-tag {
+      background: #E8F4FD;
+      color: #007ACC;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .step-css-tag.new {
+      background: #DCFCE7;
+      color: #16A34A;
+    }
+    .step-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .step-link:hover {
+      text-decoration: underline;
+    }
+    .step-link .material-icons {
+      font-size: 16px;
+    }
+
+    /* Preview Frame */
+    .preview-frame-container {
+      margin: 24px 0;
+      border: 1px solid #E5E5EA;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .preview-frame-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #F5F5F7;
+      border-bottom: 1px solid #E5E5EA;
+    }
+    .preview-frame-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1D1D1F;
+    }
+    .preview-frame-title .material-icons {
+      font-size: 18px;
+      color: var(--primary);
+    }
+    .preview-frame-link {
+      font-size: 12px;
+      color: var(--primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .preview-frame-link .material-icons {
+      font-size: 14px;
+    }
+    .preview-frame-body {
+      height: 400px;
+      position: relative;
+    }
+    .preview-frame-body iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Comparison Table */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+    .comparison-table th,
+    .comparison-table td {
+      padding: 10px 12px;
+      border: 1px solid #E5E5EA;
+      text-align: left;
+    }
+    .comparison-table th {
+      background: #F5F5F7;
+      font-weight: 600;
+      color: #1D1D1F;
+      white-space: nowrap;
+    }
+    .comparison-table td {
+      color: #444;
+    }
+    .comparison-table .added {
+      background: #F0FDF4;
+      color: #16A34A;
+      font-weight: 500;
+    }
+    .comparison-table .check {
+      text-align: center;
+      color: #16A34A;
+    }
+    .comparison-table .dash {
+      text-align: center;
+      color: #D0D0D0;
+    }
+
+    /* Progression Arrow */
+    .progression-flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 0;
+      overflow-x: auto;
+      margin: 24px 0;
+    }
+    .progression-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 80px;
+      text-align: center;
+    }
+    .progression-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #E8F4FD;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .progression-circle.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .progression-label {
+      font-size: 10px;
+      color: #6E6E73;
+      line-height: 1.3;
+    }
+    .progression-arrow {
+      color: #D0D0D0;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    /* CSS Category Colors */
+    .css-cat-outline { border-left: 3px solid #E74C3C; }
+    .css-cat-reset { border-left: 3px solid #3498DB; }
+    .css-cat-size { border-left: 3px solid #E67E22; }
+    .css-cat-layout { border-left: 3px solid #9B59B6; }
+    .css-cat-style { border-left: 3px solid #2ECC71; }
+    .css-cat-text { border-left: 3px solid #F39C12; }
+    .css-cat-js { border-left: 3px solid #1ABC9C; }
+
+    .css-category-box {
+      padding: 12px 16px;
+      margin: 8px 0;
+      background: #FAFAFA;
+      border-radius: 0 8px 8px 0;
+    }
+    .css-category-box h4 {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .css-category-box p {
+      font-size: 12px;
+      color: #6E6E73;
+      margin: 0;
+    }
+
+    /* Prompt Example */
+    .prompt-example {
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+      color: #d4d4d4;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .prompt-example .comment { color: #6A9955; }
+    .prompt-example .keyword { color: #569CD6; }
+    .prompt-example .value { color: #CE9178; }
+
+    /* Step Detail Section */
+    .step-detail {
+      margin: 32px 0;
+      padding: 24px;
+      background: #fff;
+      border: 1px solid #E5E5EA;
+      border-radius: 12px;
+    }
+    .step-detail-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .step-detail-num {
+      background: var(--primary);
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .step-detail-num.complete {
+      background: #16A34A;
+    }
+    .step-detail-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1D1D1F;
+    }
+    .step-detail-subtitle {
+      font-size: 13px;
+      color: #6E6E73;
+      margin-top: 2px;
+    }
+    .step-what-changed {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 16px 0;
+    }
+    .step-what-changed h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #16A34A;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .step-what-changed h4 .material-icons {
+      font-size: 16px;
+    }
+    .step-what-changed ul {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 13px;
+      color: #444;
+      line-height: 1.8;
+    }
+    .step-what-changed code {
+      background: #DCFCE7;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #166534;
+    }
+    .step-css-snippet {
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 12px 0;
+      color: #d4d4d4;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .step-css-snippet .cm { color: #6A9955; }
+    .step-css-snippet .sel { color: #D7BA7D; }
+    .step-css-snippet .prop { color: #9CDCFE; }
+    .step-css-snippet .val { color: #CE9178; }
+    .step-css-snippet .kw { color: #C586C0; }
+
+    /* Diff indicator */
+    .diff-added {
+      background: rgba(22, 163, 74, 0.1);
+      border-left: 3px solid #16A34A;
+      padding-left: 8px;
+      margin-left: -11px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-prompt-ui-coding.js"></script>
+
+  <div class="container">
+    <!-- Chapter Header -->
+    <header class="chapter-header">
+      <div class="chapter-badge">プロンプトUIコーディング</div>
+      <div class="chapter-number">15</div>
+      <h1 class="chapter-title">プロンプトUIレイアウト</h1>
+      <p class="chapter-subtitle">CSSレイヤーを段階的に積み重ねてレイアウトを構築する手法</p>
+    </header>
+
+    <!-- TOC -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">15-1</span>プロンプトUIレイアウトとは</li>
+        <li class="toc-item"><span class="toc-number">15-2</span>CSSレイヤーの分類</li>
+        <li class="toc-item"><span class="toc-number">15-3</span>8ステップの段階的構築</li>
+        <li class="toc-item"><span class="toc-number">15-4</span>Step 01〜08 各ステップの詳細</li>
+        <li class="toc-item"><span class="toc-number">15-5</span>プロンプトでの指示方法</li>
+      </ul>
+    </nav>
+
+    <!-- Section 15-1: Introduction -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 15-1</span>
+        <h2 class="section-title">プロンプトUIレイアウトとは</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>プロンプトUIレイアウト</strong>は、完成したWebページのCSSを「レイヤー」に分解し、段階的に積み重ねてレイアウトを構築する学習手法です。最もシンプルな「ブロックの枠線だけ」の状態から始め、サイズ、余白、配置、装飾を1つずつ追加していくことで、CSSの各プロパティがレイアウトにどう影響するかを視覚的に理解できます。</p>
+      </div>
+
+      <div class="highlight-box">
+        <h4>この手法のメリット</h4>
+        <ul>
+          <li>CSSの各プロパティの役割を視覚的に理解できる</li>
+          <li>レイアウト構築の「順序」を体系的に学べる</li>
+          <li>AIへのプロンプト指示を正確に出せるようになる</li>
+          <li>デバッグ時にどのレイヤーに問題があるか特定しやすい</li>
+        </ul>
+      </div>
+
+      <!-- Progression Flow -->
+      <div class="progression-flow">
+        <div class="progression-item">
+          <div class="progression-circle">01</div>
+          <span class="progression-label">ブロック<br>枠線</span>
+        </div>
+        <span class="material-icons progression-arrow">arrow_forward</span>
+        <div class="progression-item">
+          <div class="progression-circle">02</div>
+          <span class="progression-label">全要素<br>枠線</span>
+        </div>
+        <span class="material-icons progression-arrow">arrow_forward</span>
+        <div class="progression-item">
+          <div class="progression-circle">03</div>
+          <span class="progression-label">リセット<br>+ガード</span>
+        </div>
+        <span class="material-icons progression-arrow">arrow_forward</span>
+        <div class="progression-item">
+          <div class="progression-circle">04</div>
+          <span class="progression-label">幅/高さ</span>
+        </div>
+        <span class="material-icons progression-arrow">arrow_forward</span>
+        <div class="progression-item">
+          <div class="progression-circle">05</div>
+          <span class="progression-label">余白</span>
+        </div>
+        <span class="material-icons progression-arrow">arrow_forward</span>
+        <div class="progression-item">
+          <div class="progression-circle">06</div>
+          <span class="progression-label">レイアウト<br>+装飾</span>
+        </div>
+        <span class="material-icons progression-arrow">arrow_forward</span>
+        <div class="progression-item">
+          <div class="progression-circle">07</div>
+          <span class="progression-label">JavaScript</span>
+        </div>
+        <span class="material-icons progression-arrow">arrow_forward</span>
+        <div class="progression-item">
+          <div class="progression-circle active">08</div>
+          <span class="progression-label">テキスト<br>完成</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 15-2: CSS Layer Classification -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 15-2</span>
+        <h2 class="section-title">CSSレイヤーの分類</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>7つのCSSレイヤー</h3>
+        <p>Webページを構成するCSSプロパティは、以下の7つのレイヤーに分類できます。</p>
+
+        <div class="css-category-box css-cat-outline">
+          <h4>1. アウトライン（デバッグ用）</h4>
+          <p><code>outline</code> - ブロック要素の境界を可視化。実線=主要ブロック、破線=内部コンテナ、点線=テキスト要素</p>
+        </div>
+        <div class="css-category-box css-cat-reset">
+          <h4>2. リセット / ベース</h4>
+          <p><code>margin: 0</code> <code>padding: 0</code> <code>box-sizing</code> <code>font-family</code> <code>font-size</code> <code>line-height</code> <code>color</code> <code>background</code></p>
+        </div>
+        <div class="css-category-box css-cat-size">
+          <h4>3. ブロックサイズ</h4>
+          <p><code>width</code> <code>height</code> <code>max-width</code> <code>min-height</code> <code>aspect-ratio</code> <code>padding</code> <code>margin</code> <code>gap</code></p>
+        </div>
+        <div class="css-category-box css-cat-layout">
+          <h4>4. レイアウト</h4>
+          <p><code>display</code> <code>flex</code> <code>grid</code> <code>position</code> <code>align-items</code> <code>justify-content</code> <code>grid-template-columns</code> <code>overflow</code></p>
+        </div>
+        <div class="css-category-box css-cat-style">
+          <h4>5. ビジュアル装飾</h4>
+          <p><code>background</code> <code>border</code> <code>border-radius</code> <code>box-shadow</code> <code>opacity</code> <code>transition</code> <code>transform</code></p>
+        </div>
+        <div class="css-category-box css-cat-text">
+          <h4>6. テキスト / タイポグラフィ</h4>
+          <p><code>font-size</code> <code>font-weight</code> <code>color</code> <code>text-decoration</code> <code>text-align</code> <code>letter-spacing</code> <code>white-space</code></p>
+        </div>
+        <div class="css-category-box css-cat-js">
+          <h4>7. インタラクション（JavaScript）</h4>
+          <p>ドロワーメニューの開閉、バナースライダー、タブ切り替え、カウンター操作など</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 15-3: 8 Step Overview -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 15-3</span>
+        <h2 class="section-title">8ステップの段階的構築</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>サンプル: モバイルキャリアサイト</h3>
+        <p>以下の8ファイルは、同じHTMLに対してCSSレイヤーを段階的に追加していきます。各ステップをブラウザで開いて、追加されたCSSがレイアウトにどう影響するか確認してください。</p>
+      </div>
+
+      <!-- Step Cards -->
+      <div class="step-grid">
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-num">01</div>
+            <div class="step-card-title">ブロック枠線のみ</div>
+          </div>
+          <div class="step-card-body">
+            <div class="step-css-tags">
+              <span class="step-css-tag new">outline (solid)</span>
+            </div>
+            <p class="step-card-desc">主要ブロック（header, section, footer等）の外枠だけを色付きの実線で表示。ページ全体の構造を一目で把握できます。</p>
+            <a href="sample1/sample-1-carrier-wireframe-01.html" class="step-link" target="_blank">
+              <span class="material-icons">open_in_new</span> ブラウザで確認
+            </a>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-num">02</div>
+            <div class="step-card-title">全要素の枠線</div>
+          </div>
+          <div class="step-card-body">
+            <div class="step-css-tags">
+              <span class="step-css-tag">outline (solid)</span>
+              <span class="step-css-tag new">outline (dashed)</span>
+              <span class="step-css-tag new">outline (dotted)</span>
+            </div>
+            <p class="step-card-desc">内部コンテナ（破線）とテキスト要素（点線）のアウトラインを追加。全ネスト構造が可視化されます。</p>
+            <a href="sample1/sample-1-carrier-wireframe-02.html" class="step-link" target="_blank">
+              <span class="material-icons">open_in_new</span> ブラウザで確認
+            </a>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-num">03</div>
+            <div class="step-card-title">リセット + サイズガード</div>
+          </div>
+          <div class="step-card-body">
+            <div class="step-css-tags">
+              <span class="step-css-tag">outlines</span>
+              <span class="step-css-tag new">* reset</span>
+              <span class="step-css-tag new">body base</span>
+              <span class="step-css-tag new">size guard</span>
+            </div>
+            <p class="step-card-desc">CSSリセット（margin/padding/box-sizing）、bodyの基本設定、空要素のmin-height/min-widthガードを追加。</p>
+            <a href="sample1/sample-1-carrier-wireframe-03.html" class="step-link" target="_blank">
+              <span class="material-icons">open_in_new</span> ブラウザで確認
+            </a>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-num">04</div>
+            <div class="step-card-title">幅と高さ</div>
+          </div>
+          <div class="step-card-body">
+            <div class="step-css-tags">
+              <span class="step-css-tag">outlines + reset</span>
+              <span class="step-css-tag new">width</span>
+              <span class="step-css-tag new">height</span>
+              <span class="step-css-tag new">max-width</span>
+            </div>
+            <p class="step-card-desc">各要素のwidth/height/max-widthだけを追加。ブロックのサイズが決まり始めます。</p>
+            <a href="sample1/sample-1-carrier-wireframe-04.html" class="step-link" target="_blank">
+              <span class="material-icons">open_in_new</span> ブラウザで確認
+            </a>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-num">05</div>
+            <div class="step-card-title">余白（padding / margin）</div>
+          </div>
+          <div class="step-card-body">
+            <div class="step-css-tags">
+              <span class="step-css-tag">outlines + reset + size</span>
+              <span class="step-css-tag new">padding</span>
+              <span class="step-css-tag new">margin</span>
+              <span class="step-css-tag new">gap</span>
+            </div>
+            <p class="step-card-desc">padding/margin/gapを追加。要素間の間隔が生まれ、レイアウトに「空間」ができます。</p>
+            <a href="sample1/sample-1-carrier-wireframe-05.html" class="step-link" target="_blank">
+              <span class="material-icons">open_in_new</span> ブラウザで確認
+            </a>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-num">06</div>
+            <div class="step-card-title">レイアウト + 装飾</div>
+          </div>
+          <div class="step-card-body">
+            <div class="step-css-tags">
+              <span class="step-css-tag new">display flex/grid</span>
+              <span class="step-css-tag new">position</span>
+              <span class="step-css-tag new">background</span>
+              <span class="step-css-tag new">border</span>
+              <span class="step-css-tag new">color</span>
+            </div>
+            <p class="step-card-desc">Flexbox/Grid/position + 全ビジュアルCSS + テキストスタイルを追加。ワイヤーフレームの見た目が完成。</p>
+            <a href="sample1/sample-1-carrier-wireframe-06.html" class="step-link" target="_blank">
+              <span class="material-icons">open_in_new</span> ブラウザで確認
+            </a>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-num">07</div>
+            <div class="step-card-title">JavaScript追加</div>
+          </div>
+          <div class="step-card-body">
+            <div class="step-css-tags">
+              <span class="step-css-tag">full CSS</span>
+              <span class="step-css-tag new">Drawer JS</span>
+              <span class="step-css-tag new">Banner JS</span>
+            </div>
+            <p class="step-card-desc">ドロワーメニューの開閉、バナーの自動スクロール等のJavaScriptを追加。インタラクションが動作します。</p>
+            <a href="sample1/sample-1-carrier-wireframe-07.html" class="step-link" target="_blank">
+              <span class="material-icons">open_in_new</span> ブラウザで確認
+            </a>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-num" style="background: #16A34A;">08</div>
+            <div class="step-card-title">テキスト追加 = 完成</div>
+          </div>
+          <div class="step-card-body">
+            <div class="step-css-tags">
+              <span class="step-css-tag">full CSS + JS</span>
+              <span class="step-css-tag new">テキストコンテンツ</span>
+              <span class="step-css-tag new">Material Icons</span>
+            </div>
+            <p class="step-card-desc">全テキスト、アイコン、placeholder等を追加してワイヤーフレームが完成。グレースケール配色でレイアウトに集中。</p>
+            <a href="sample1/sample-1-carrier-wireframe-08.html" class="step-link" target="_blank">
+              <span class="material-icons">open_in_new</span> ブラウザで確認
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparison Table -->
+      <div class="subsection">
+        <h3>ステップ比較表</h3>
+        <div class="table-container">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>CSS レイヤー</th>
+                <th>01</th>
+                <th>02</th>
+                <th>03</th>
+                <th>04</th>
+                <th>05</th>
+                <th>06</th>
+                <th>07</th>
+                <th>08</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ブロック枠線 (solid)</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="dash">-</td>
+              </tr>
+              <tr>
+                <td>内部枠線 (dashed/dotted)</td>
+                <td class="dash">-</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="dash">-</td>
+              </tr>
+              <tr>
+                <td>リセット / Body</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+              </tr>
+              <tr>
+                <td>サイズガード</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+              </tr>
+              <tr>
+                <td>width / height</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+              </tr>
+              <tr>
+                <td>padding / margin</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+              </tr>
+              <tr>
+                <td>display / flex / grid</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+              </tr>
+              <tr>
+                <td>background / border / color</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+              </tr>
+              <tr>
+                <td>レスポンシブ</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+              </tr>
+              <tr>
+                <td>JavaScript</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="check">&#10003;</td>
+                <td class="check">&#10003;</td>
+              </tr>
+              <tr>
+                <td>テキストコンテンツ</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="dash">-</td>
+                <td class="check">&#10003;</td>
+              </tr>
+              <tr>
+                <td>HTML構造</td>
+                <td>外枠のみ</td>
+                <td>全ネスト</td>
+                <td>全ネスト</td>
+                <td>全ネスト</td>
+                <td>全ネスト</td>
+                <td>全ネスト</td>
+                <td>全ネスト</td>
+                <td>テキスト付き</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 15-4: Step-by-Step Details -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 15-4</span>
+        <h2 class="section-title">Step 01〜08 各ステップの詳細</h2>
+      </div>
+
+      <p>各ステップのプレビューを確認しながら、CSSレイヤーが追加されるたびにレイアウトがどう変化するかを学びましょう。</p>
+
+      <!-- ========== Step 01 ========== -->
+      <div class="step-detail">
+        <div class="step-detail-header">
+          <div class="step-detail-num">01</div>
+          <div>
+            <div class="step-detail-title">ブロック枠線のみ</div>
+            <div class="step-detail-subtitle">HTMLの主要ブロックだけを可視化する</div>
+          </div>
+        </div>
+
+        <p>最初のステップでは、ページの<strong>主要ブロック</strong>だけを色付きのoutlineで表示します。HTMLもCSSも最小限で、ページ全体の「骨組み」を把握します。</p>
+
+        <div class="step-what-changed">
+          <h4><span class="material-icons">add_circle</span> このステップで追加されるもの</h4>
+          <ul>
+            <li>HTMLは各ブロック要素のタグのみ（テキストなし、子要素なし）</li>
+            <li><code>outline: 2px solid [色]</code> で主要ブロックごとに異なる色の枠線</li>
+            <li>ブロック要素は中身がないため1行分の高さだけ表示される</li>
+          </ul>
+        </div>
+
+        <div class="step-css-snippet"><span class="cm">/* ========== Block Outline ========== */</span>
+<span class="sel">.header</span>         { <span class="prop">outline</span>: <span class="val">2px solid #E74C3C</span>; }
+<span class="sel">.quick-access</span>    { <span class="prop">outline</span>: <span class="val">2px solid #E67E22</span>; }
+<span class="sel">.main-banner</span>     { <span class="prop">outline</span>: <span class="val">2px solid #F1C40F</span>; }
+<span class="sel">.important-info</span>  { <span class="prop">outline</span>: <span class="val">2px solid #2ECC71</span>; }
+<span class="sel">.section</span>         { <span class="prop">outline</span>: <span class="val">2px solid #3498DB</span>; }
+<span class="sel">.footer</span>          { <span class="prop">outline</span>: <span class="val">2px solid #1ABC9C</span>; }
+<span class="sel">.bottom-nav</span>      { <span class="prop">outline</span>: <span class="val">2px solid #9B59B6</span>; }</div>
+
+        <div class="preview-frame-container">
+          <div class="preview-frame-header">
+            <div class="preview-frame-title">
+              <span class="material-icons">visibility</span>
+              Step 01 プレビュー
+            </div>
+            <a href="sample1/sample-1-carrier-wireframe-01.html" class="preview-frame-link" target="_blank">
+              <span class="material-icons">open_in_new</span> 別タブで開く
+            </a>
+          </div>
+          <div class="preview-frame-body">
+            <iframe src="sample1/sample-1-carrier-wireframe-01.html" loading="lazy"></iframe>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h4><span class="material-icons" style="font-size: 18px; vertical-align: middle;">lightbulb</span> アウトライン凡例</h4>
+          <ul>
+            <li><span style="color: #E74C3C; font-weight: 700;">&#9632; 赤</span> = Header</li>
+            <li><span style="color: #E67E22; font-weight: 700;">&#9632; オレンジ</span> = Quick Access</li>
+            <li><span style="color: #F1C40F; font-weight: 700;">&#9632; 黄</span> = Main Banner</li>
+            <li><span style="color: #2ECC71; font-weight: 700;">&#9632; 緑</span> = Important Info</li>
+            <li><span style="color: #3498DB; font-weight: 700;">&#9632; 青</span> = Section (x4)</li>
+            <li><span style="color: #1ABC9C; font-weight: 700;">&#9632; ティール</span> = Footer</li>
+            <li><span style="color: #9B59B6; font-weight: 700;">&#9632; 紫</span> = Bottom Nav</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ========== Step 02 ========== -->
+      <div class="step-detail">
+        <div class="step-detail-header">
+          <div class="step-detail-num">02</div>
+          <div>
+            <div class="step-detail-title">全要素の枠線</div>
+            <div class="step-detail-subtitle">HTMLの全ネスト構造を可視化する</div>
+          </div>
+        </div>
+
+        <p>Step 01の主要ブロック枠線に加え、<strong>内部コンテナ</strong>（破線）と<strong>テキスト要素</strong>（点線）のアウトラインを追加します。HTMLも全ての子要素を含む完全な構造になります（ただしテキストは空）。</p>
+
+        <div class="step-what-changed">
+          <h4><span class="material-icons">add_circle</span> このステップで追加されるもの</h4>
+          <ul>
+            <li>HTMLに全ての子要素（div, a, span, button等）を追加（テキストは空）</li>
+            <li><code>outline: 1px dashed [色]</code> で内部コンテナを破線表示</li>
+            <li><code>outline: 1px dotted [色]</code> でテキスト要素を点線表示</li>
+            <li>3種類の線種で要素の役割を区別できる</li>
+          </ul>
+        </div>
+
+        <div class="step-css-snippet"><span class="cm">/* Inner Container Outline (dashed) */</span>
+<span class="sel">.header-top</span>      { <span class="prop">outline</span>: <span class="val">1px dashed #F1948A</span>; }
+<span class="sel">.banner-slider</span>   { <span class="prop">outline</span>: <span class="val">1px dashed #F9E79F</span>; }
+<span class="sel">.category-grid</span>   { <span class="prop">outline</span>: <span class="val">1px dashed #85C1E9</span>; }
+<span class="sel">.footer-links</span>    { <span class="prop">outline</span>: <span class="val">1px dashed #76D7C4</span>; }
+...
+
+<span class="cm">/* Text Element Outline (dotted) */</span>
+<span class="sel">h2, h4</span>           { <span class="prop">outline</span>: <span class="val">1px dotted #E74C3C</span>; }
+<span class="sel">p</span>                { <span class="prop">outline</span>: <span class="val">1px dotted #E67E22</span>; }
+<span class="sel">a</span>                { <span class="prop">outline</span>: <span class="val">1px dotted #27AE60</span>; }
+<span class="sel">span</span>             { <span class="prop">outline</span>: <span class="val">1px dotted #8E44AD</span>; }</div>
+
+        <div class="preview-frame-container">
+          <div class="preview-frame-header">
+            <div class="preview-frame-title">
+              <span class="material-icons">visibility</span>
+              Step 02 プレビュー
+            </div>
+            <a href="sample1/sample-1-carrier-wireframe-02.html" class="preview-frame-link" target="_blank">
+              <span class="material-icons">open_in_new</span> 別タブで開く
+            </a>
+          </div>
+          <div class="preview-frame-body">
+            <iframe src="sample1/sample-1-carrier-wireframe-02.html" loading="lazy"></iframe>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h4><span class="material-icons" style="font-size: 18px; vertical-align: middle;">info</span> 線種の使い分け</h4>
+          <ul>
+            <li><strong>実線（solid）</strong> = 主要ブロック（header, section, footer）</li>
+            <li><strong>破線（dashed）</strong> = 内部コンテナ（grid, list, nav等）</li>
+            <li><strong>点線（dotted）</strong> = テキスト要素（h2, p, a, span等）</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ========== Step 03 ========== -->
+      <div class="step-detail">
+        <div class="step-detail-header">
+          <div class="step-detail-num">03</div>
+          <div>
+            <div class="step-detail-title">リセット + サイズガード</div>
+            <div class="step-detail-subtitle">CSSの基盤を整える</div>
+          </div>
+        </div>
+
+        <p>ブラウザのデフォルトスタイルをリセットし、<strong>空要素が潰れない</strong>ようサイズガードを追加します。この2つの土台があることで、後のステップでサイズや配置が正確に効くようになります。</p>
+
+        <div class="step-what-changed">
+          <h4><span class="material-icons">add_circle</span> このステップで追加されるもの</h4>
+          <ul>
+            <li><code>* { margin: 0; padding: 0; box-sizing: border-box; }</code> - 全要素リセット</li>
+            <li><code>body { font-family, background, color, font-size, line-height }</code> - 基本設定</li>
+            <li><code>div, section等 { min-height: 1px; min-width: 1px; }</code> - 空要素のサイズガード</li>
+            <li><code>span, a { display: inline-block; min-width: 1px; }</code> - インライン要素のガード</li>
+          </ul>
+        </div>
+
+        <div class="step-css-snippet"><span class="cm">/* ========== CSS Reset ========== */</span>
+<span class="sel">*</span> {
+  <span class="prop">margin</span>: <span class="val">0</span>;
+  <span class="prop">padding</span>: <span class="val">0</span>;
+  <span class="prop">box-sizing</span>: <span class="val">border-box</span>;
+}
+
+<span class="sel">body</span> {
+  <span class="prop">font-family</span>: <span class="val">'Noto Sans JP', sans-serif</span>;
+  <span class="prop">background</span>: <span class="val">#F5F5F5</span>;
+  <span class="prop">color</span>: <span class="val">#444</span>;
+  <span class="prop">font-size</span>: <span class="val">14px</span>;
+  <span class="prop">line-height</span>: <span class="val">1.6</span>;
+}
+
+<span class="cm">/* ========== Empty Element Size Guard ========== */</span>
+<span class="sel">div, section, header, footer, nav</span> {
+  <span class="prop">min-height</span>: <span class="val">1px</span>;
+  <span class="prop">min-width</span>: <span class="val">1px</span>;
+}
+<span class="sel">span, a, label</span> {
+  <span class="prop">display</span>: <span class="val">inline-block</span>;
+  <span class="prop">min-width</span>: <span class="val">1px</span>;
+  <span class="prop">min-height</span>: <span class="val">1px</span>;
+}</div>
+
+        <div class="preview-frame-container">
+          <div class="preview-frame-header">
+            <div class="preview-frame-title">
+              <span class="material-icons">visibility</span>
+              Step 03 プレビュー
+            </div>
+            <a href="sample1/sample-1-carrier-wireframe-03.html" class="preview-frame-link" target="_blank">
+              <span class="material-icons">open_in_new</span> 別タブで開く
+            </a>
+          </div>
+          <div class="preview-frame-body">
+            <iframe src="sample1/sample-1-carrier-wireframe-03.html" loading="lazy"></iframe>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h4><span class="material-icons" style="font-size: 18px; vertical-align: middle;">lightbulb</span> Step 02 との違い</h4>
+          <p>ブラウザデフォルトのmarginが消え、背景がグレー（#F5F5F5）になります。各要素が左上に詰まり、より「制御された」状態になります。</p>
+        </div>
+      </div>
+
+      <!-- ========== Step 04 ========== -->
+      <div class="step-detail">
+        <div class="step-detail-header">
+          <div class="step-detail-num">04</div>
+          <div>
+            <div class="step-detail-title">幅と高さ</div>
+            <div class="step-detail-subtitle">ブロックのサイズを決める</div>
+          </div>
+        </div>
+
+        <p>リセットとサイズガードの上に、各要素の<code>width</code>/<code>height</code>/<code>max-width</code>だけを追加します。まだ配置（display:flex等）がないため、要素は縦に並んだままですが、<strong>サイズが決まり始めます</strong>。</p>
+
+        <div class="step-what-changed">
+          <h4><span class="material-icons">add_circle</span> このステップで追加されるもの</h4>
+          <ul>
+            <li><code>.container { max-width: 1200px; }</code> - ページ全体の最大幅</li>
+            <li><code>.logo-icon { width: 32px; height: 32px; }</code> - ロゴアイコンのサイズ</li>
+            <li><code>.drawer-menu { width: 300px; height: 100%; }</code> - ドロワーメニューのサイズ</li>
+            <li><code>.banner-image { width: 100%; }</code> / <code>.campaign-card { width: 280px; }</code></li>
+            <li><code>.category-icon { width: 48px; height: 48px; }</code> - 各アイコンのサイズ</li>
+            <li><code>.bottom-spacer { height: 60px; }</code> - 固定ナビ分のスペーサー</li>
+          </ul>
+        </div>
+
+        <div class="step-css-snippet"><span class="cm">/* ========== Block Sizes (width/height only) ========== */</span>
+<span class="sel">.container</span>       { <span class="prop">max-width</span>: <span class="val">1200px</span>; }
+<span class="sel">.logo-icon</span>       { <span class="prop">width</span>: <span class="val">32px</span>; <span class="prop">height</span>: <span class="val">32px</span>; }
+<span class="sel">.hamburger</span>       { <span class="prop">width</span>: <span class="val">24px</span>; <span class="prop">height</span>: <span class="val">24px</span>; }
+<span class="sel">.drawer-menu</span>     { <span class="prop">width</span>: <span class="val">300px</span>; <span class="prop">height</span>: <span class="val">100%</span>; }
+<span class="sel">.banner-image</span>    { <span class="prop">width</span>: <span class="val">100%</span>; }
+<span class="sel">.banner-dot</span>      { <span class="prop">width</span>: <span class="val">8px</span>; <span class="prop">height</span>: <span class="val">8px</span>; }
+<span class="sel">.category-icon</span>   { <span class="prop">width</span>: <span class="val">48px</span>; <span class="prop">height</span>: <span class="val">48px</span>; }
+<span class="sel">.campaign-card</span>   { <span class="prop">width</span>: <span class="val">280px</span>; }
+<span class="sel">.campaign-image</span>  { <span class="prop">width</span>: <span class="val">100%</span>; <span class="prop">height</span>: <span class="val">140px</span>; }
+<span class="sel">.footer-sns a</span>    { <span class="prop">width</span>: <span class="val">40px</span>; <span class="prop">height</span>: <span class="val">40px</span>; }
+<span class="sel">.bottom-spacer</span>   { <span class="prop">height</span>: <span class="val">60px</span>; }</div>
+
+        <div class="preview-frame-container">
+          <div class="preview-frame-header">
+            <div class="preview-frame-title">
+              <span class="material-icons">visibility</span>
+              Step 04 プレビュー
+            </div>
+            <a href="sample1/sample-1-carrier-wireframe-04.html" class="preview-frame-link" target="_blank">
+              <span class="material-icons">open_in_new</span> 別タブで開く
+            </a>
+          </div>
+          <div class="preview-frame-body">
+            <iframe src="sample1/sample-1-carrier-wireframe-04.html" loading="lazy"></iframe>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h4><span class="material-icons" style="font-size: 18px; vertical-align: middle;">lightbulb</span> ポイント</h4>
+          <p>まだ <code>display: flex</code> や <code>display: grid</code> がないため、全要素が縦に積み重なっています。サイズだけでは「配置」は変わらないことを確認しましょう。</p>
+        </div>
+      </div>
+
+      <!-- ========== Step 05 ========== -->
+      <div class="step-detail">
+        <div class="step-detail-header">
+          <div class="step-detail-num">05</div>
+          <div>
+            <div class="step-detail-title">余白（padding / margin / gap）</div>
+            <div class="step-detail-subtitle">要素間に「空間」を作る</div>
+          </div>
+        </div>
+
+        <p>各要素に<code>padding</code>（内側の余白）、<code>margin</code>（外側の余白）、<code>gap</code>（Flex/Grid間の隙間）を追加します。要素間に適切な間隔が生まれ、<strong>レイアウトに「呼吸」</strong>ができます。</p>
+
+        <div class="step-what-changed">
+          <h4><span class="material-icons">add_circle</span> このステップで追加されるもの</h4>
+          <ul>
+            <li><code>.header-top { padding: 10px 16px; }</code> - ヘッダー内部の余白</li>
+            <li><code>.drawer-header { padding: 16px; }</code> - ドロワーヘッダーの余白</li>
+            <li><code>.drawer-user { padding: 20px 16px; }</code> - ユーザー情報の余白</li>
+            <li><code>.drawer-nav-item { padding: 14px 16px; }</code> - ナビアイテムの余白</li>
+            <li><code>.drawer-user-icon { margin-bottom: 12px; }</code> - 要素間のマージン</li>
+            <li><code>.drawer-user-login { margin-top: 8px; padding: 8px 16px; }</code></li>
+          </ul>
+        </div>
+
+        <div class="step-css-snippet"><span class="cm">/* ========== Spacing (padding / margin / gap) ========== */</span>
+<span class="sel">.header-top</span>        { <span class="prop">padding</span>: <span class="val">10px 16px</span>; }
+<span class="sel">.drawer-header</span>     { <span class="prop">padding</span>: <span class="val">16px</span>; }
+<span class="sel">.drawer-user</span>       { <span class="prop">padding</span>: <span class="val">20px 16px</span>; }
+<span class="sel">.drawer-user-icon</span>  { <span class="prop">margin-bottom</span>: <span class="val">12px</span>; }
+<span class="sel">.drawer-user-login</span> { <span class="prop">margin-top</span>: <span class="val">8px</span>; <span class="prop">padding</span>: <span class="val">8px 16px</span>; }
+<span class="sel">.drawer-nav</span>        { <span class="prop">padding</span>: <span class="val">8px 0</span>; }
+<span class="sel">.drawer-nav-item</span>   { <span class="prop">padding</span>: <span class="val">14px 16px</span>; }
+<span class="sel">.drawer-section-title</span> { <span class="prop">padding</span>: <span class="val">8px 16px 4px</span>; }</div>
+
+        <div class="preview-frame-container">
+          <div class="preview-frame-header">
+            <div class="preview-frame-title">
+              <span class="material-icons">visibility</span>
+              Step 05 プレビュー
+            </div>
+            <a href="sample1/sample-1-carrier-wireframe-05.html" class="preview-frame-link" target="_blank">
+              <span class="material-icons">open_in_new</span> 別タブで開く
+            </a>
+          </div>
+          <div class="preview-frame-body">
+            <iframe src="sample1/sample-1-carrier-wireframe-05.html" loading="lazy"></iframe>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h4><span class="material-icons" style="font-size: 18px; vertical-align: middle;">lightbulb</span> padding vs margin</h4>
+          <ul>
+            <li><strong>padding</strong> = ボックスの「内側」に空間を作る（背景色の内側に入る）</li>
+            <li><strong>margin</strong> = ボックスの「外側」に空間を作る（隣の要素との間隔）</li>
+            <li><strong>gap</strong> = Flex/Gridコンテナの子要素間に均等な間隔を作る</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ========== Step 06 ========== -->
+      <div class="step-detail">
+        <div class="step-detail-header">
+          <div class="step-detail-num">06</div>
+          <div>
+            <div class="step-detail-title">レイアウト + 装飾（CSS完成）</div>
+            <div class="step-detail-subtitle">Flexbox/Gridによる配置とビジュアルスタイルの適用</div>
+          </div>
+        </div>
+
+        <p>Flexbox/Gridによる配置、background/border/colorの装飾、レスポンシブ対応など、<strong>全てのCSS</strong>が適用されます。テキストやJavaScriptがない状態ですが、見た目のレイアウトは完成しています。</p>
+
+        <div class="step-what-changed">
+          <h4><span class="material-icons">add_circle</span> このステップで追加されるもの</h4>
+          <ul>
+            <li><code>display: flex</code> / <code>display: grid</code> - 横並びレイアウト</li>
+            <li><code>position: sticky</code> / <code>position: fixed</code> - ヘッダー固定、ナビ固定</li>
+            <li><code>background</code> / <code>border</code> / <code>border-radius</code> - ビジュアル装飾</li>
+            <li><code>color</code> / <code>font-size</code> / <code>font-weight</code> - テキストスタイル</li>
+            <li><code>@media</code> クエリ - レスポンシブ対応</li>
+            <li>アウトライン（outline）は残したまま、レイアウト構造を確認可能</li>
+          </ul>
+        </div>
+
+        <div class="step-css-snippet"><span class="cm">/* ========== Layout (display/flex/grid) ========== */</span>
+<span class="sel">.header-top</span> {
+  <span class="prop">display</span>: <span class="val">flex</span>;
+  <span class="prop">align-items</span>: <span class="val">center</span>;
+  <span class="prop">justify-content</span>: <span class="val">space-between</span>;
+}
+<span class="sel">.quick-access</span> {
+  <span class="prop">display</span>: <span class="val">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="val">repeat(4, 1fr)</span>;
+}
+<span class="sel">.category-grid</span> {
+  <span class="prop">display</span>: <span class="val">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="val">repeat(4, 1fr)</span>;
+}
+<span class="sel">.campaign-scroll</span> {
+  <span class="prop">display</span>: <span class="val">flex</span>;
+  <span class="prop">overflow-x</span>: <span class="val">auto</span>;
+}
+
+<span class="cm">/* ========== Visual Decoration ========== */</span>
+<span class="sel">.header</span> {
+  <span class="prop">background</span>: <span class="val">#fff</span>;
+  <span class="prop">position</span>: <span class="val">sticky</span>;
+  <span class="prop">top</span>: <span class="val">0</span>;
+  <span class="prop">border-bottom</span>: <span class="val">1px solid #D0D0D0</span>;
+}
+<span class="sel">.bottom-nav</span> {
+  <span class="prop">position</span>: <span class="val">fixed</span>;
+  <span class="prop">bottom</span>: <span class="val">0</span>;
+  <span class="prop">display</span>: <span class="val">grid</span>;
+  <span class="prop">grid-template-columns</span>: <span class="val">repeat(5, 1fr)</span>;
+}</div>
+
+        <div class="preview-frame-container">
+          <div class="preview-frame-header">
+            <div class="preview-frame-title">
+              <span class="material-icons">visibility</span>
+              Step 06 プレビュー
+            </div>
+            <a href="sample1/sample-1-carrier-wireframe-06.html" class="preview-frame-link" target="_blank">
+              <span class="material-icons">open_in_new</span> 別タブで開く
+            </a>
+          </div>
+          <div class="preview-frame-body">
+            <iframe src="sample1/sample-1-carrier-wireframe-06.html" loading="lazy"></iframe>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h4><span class="material-icons" style="font-size: 18px; vertical-align: middle;">lightbulb</span> 大きな変化のポイント</h4>
+          <p>このステップで劇的にレイアウトが変わります。<code>display: flex</code> と <code>display: grid</code> が適用されることで、縦一列に並んでいた要素が横並びグリッドになります。これがCSSの「配置」レイヤーの威力です。</p>
+        </div>
+      </div>
+
+      <!-- ========== Step 07 ========== -->
+      <div class="step-detail">
+        <div class="step-detail-header">
+          <div class="step-detail-num">07</div>
+          <div>
+            <div class="step-detail-title">JavaScript追加</div>
+            <div class="step-detail-subtitle">インタラクティブな動きを追加する</div>
+          </div>
+        </div>
+
+        <p>CSSだけでは実現できないインタラクションをJavaScriptで追加します。ドロワーメニューの開閉、バナーの自動スクロールなど、<strong>ユーザー操作に反応する動き</strong>が加わります。</p>
+
+        <div class="step-what-changed">
+          <h4><span class="material-icons">add_circle</span> このステップで追加されるもの</h4>
+          <ul>
+            <li>ドロワーメニューの開閉（ハンバーガーメニュークリック → スライドイン）</li>
+            <li>バナーの自動スライド（3秒間隔で切り替え + ドットインジケーター連動）</li>
+            <li>オーバーレイの表示/非表示</li>
+            <li>ボトムナビの「その他」タップでもドロワー表示</li>
+          </ul>
+        </div>
+
+        <div class="step-css-snippet"><span class="cm">/* ========== JavaScript で追加される機能 ========== */</span>
+
+<span class="cm">// ドロワーメニューの開閉</span>
+<span class="sel">menuBtn</span>.<span class="prop">addEventListener</span>(<span class="val">'click'</span>, () => {
+  drawerMenu.classList.<span class="prop">add</span>(<span class="val">'open'</span>);
+  drawerOverlay.classList.<span class="prop">add</span>(<span class="val">'active'</span>);
+});
+
+<span class="cm">// バナー自動スクロール</span>
+<span class="kw">setInterval</span>(() => {
+  currentSlide = (currentSlide + 1) % totalSlides;
+  slider.<span class="prop">scrollTo</span>({
+    <span class="prop">left</span>: currentSlide * slider.<span class="prop">offsetWidth</span>,
+    <span class="prop">behavior</span>: <span class="val">'smooth'</span>
+  });
+}, <span class="val">3000</span>);</div>
+
+        <div class="preview-frame-container">
+          <div class="preview-frame-header">
+            <div class="preview-frame-title">
+              <span class="material-icons">visibility</span>
+              Step 07 プレビュー
+            </div>
+            <a href="sample1/sample-1-carrier-wireframe-07.html" class="preview-frame-link" target="_blank">
+              <span class="material-icons">open_in_new</span> 別タブで開く
+            </a>
+          </div>
+          <div class="preview-frame-body">
+            <iframe src="sample1/sample-1-carrier-wireframe-07.html" loading="lazy"></iframe>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h4><span class="material-icons" style="font-size: 18px; vertical-align: middle;">touch_app</span> 操作してみよう</h4>
+          <ul>
+            <li>右上のハンバーガーメニューをクリック → ドロワーメニューがスライドイン</li>
+            <li>バナーが3秒ごとに自動でスクロール（ドットインジケーターも連動）</li>
+            <li>オーバーレイ部分をクリック → ドロワーが閉じる</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ========== Step 08 ========== -->
+      <div class="step-detail">
+        <div class="step-detail-header">
+          <div class="step-detail-num complete">08</div>
+          <div>
+            <div class="step-detail-title">テキスト追加 = 完成</div>
+            <div class="step-detail-subtitle">コンテンツを入れてワイヤーフレーム完成</div>
+          </div>
+        </div>
+
+        <p>テキストコンテンツ、Material Icons、placeholder等を追加してワイヤーフレームが完成します。グレースケール配色により<strong>レイアウト構造に集中</strong>できます。デバッグ用のアウトラインは削除されています。</p>
+
+        <div class="step-what-changed">
+          <h4><span class="material-icons">add_circle</span> このステップで追加されるもの</h4>
+          <ul>
+            <li>全てのテキストコンテンツ（見出し、説明文、ラベル、リンクテキスト）</li>
+            <li>Material Icons（<code>signal_cellular_alt</code>, <code>smartphone</code>, <code>payments</code> 等）</li>
+            <li>ニュースの日付、タグ、キャンペーンバッジ</li>
+            <li>フッターのコピーライト、SNSリンクのaria-label</li>
+            <li>デバッグ用アウトライン（outline）を全て削除</li>
+          </ul>
+        </div>
+
+        <div class="step-css-snippet"><span class="cm">/* Step 08 ではアウトラインが削除され、</span>
+<span class="cm">   テキストコンテンツが追加される */</span>
+
+<span class="cm">&lt;!-- Before (Step 07) --&gt;</span>
+&lt;h2 class="section-title"&gt;&lt;/h2&gt;
+&lt;span class="material-icons"&gt;&lt;/span&gt;
+&lt;span class="category-name"&gt;&lt;/span&gt;
+
+<span class="cm">&lt;!-- After (Step 08) --&gt;</span>
+&lt;h2 class="section-title"&gt;<span class="val">サービス</span>&lt;/h2&gt;
+&lt;span class="material-icons"&gt;<span class="val">signal_cellular_alt</span>&lt;/span&gt;
+&lt;span class="category-name"&gt;<span class="val">料金プラン</span>&lt;/span&gt;</div>
+
+        <div class="preview-frame-container">
+          <div class="preview-frame-header">
+            <div class="preview-frame-title">
+              <span class="material-icons">visibility</span>
+              Step 08 プレビュー（完成版）
+            </div>
+            <a href="sample1/sample-1-carrier-wireframe-08.html" class="preview-frame-link" target="_blank">
+              <span class="material-icons">open_in_new</span> 別タブで開く
+            </a>
+          </div>
+          <div class="preview-frame-body">
+            <iframe src="sample1/sample-1-carrier-wireframe-08.html" loading="lazy"></iframe>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h4><span class="material-icons" style="font-size: 18px; vertical-align: middle;">palette</span> カラー版との比較</h4>
+          <p>ワイヤーフレーム(08)はグレースケール配色です。ブランドカラーを適用したカラー版と比較してみましょう。</p>
+          <a href="sample1/sample-1-carrier.html" class="step-link" target="_blank" style="margin-top: 8px;">
+            <span class="material-icons">open_in_new</span> カラー版を確認
+          </a>
+        </div>
+      </div>
+
+      <!-- Sample 2 Reference -->
+      <div class="subsection">
+        <h3>サンプル2: 航空会社サイト（別テーマで同じ手法）</h3>
+        <p>sample2ディレクトリには、<strong>航空会社サイト（SkyLine Airlines）</strong>で同じ8ステップ手法を適用したファイルがあります。異なるサイト構成でも同じレイヤー分解が適用できることを確認しましょう。</p>
+
+        <div class="step-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-num">01</div>
+              <div class="step-card-title">ブロック枠線</div>
+            </div>
+            <div class="step-card-body">
+              <a href="sample2/sample-2-airline-wireframe-01.html" class="step-link" target="_blank">
+                <span class="material-icons">open_in_new</span> ブラウザで確認
+              </a>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-num">02</div>
+              <div class="step-card-title">全要素枠線</div>
+            </div>
+            <div class="step-card-body">
+              <a href="sample2/sample-2-airline-wireframe-02.html" class="step-link" target="_blank">
+                <span class="material-icons">open_in_new</span> ブラウザで確認
+              </a>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-num">03</div>
+              <div class="step-card-title">リセット+ガード</div>
+            </div>
+            <div class="step-card-body">
+              <a href="sample2/sample-2-airline-wireframe-03.html" class="step-link" target="_blank">
+                <span class="material-icons">open_in_new</span> ブラウザで確認
+              </a>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-num">04</div>
+              <div class="step-card-title">幅/高さ</div>
+            </div>
+            <div class="step-card-body">
+              <a href="sample2/sample-2-airline-wireframe-04.html" class="step-link" target="_blank">
+                <span class="material-icons">open_in_new</span> ブラウザで確認
+              </a>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-num">05</div>
+              <div class="step-card-title">余白</div>
+            </div>
+            <div class="step-card-body">
+              <a href="sample2/sample-2-airline-wireframe-05.html" class="step-link" target="_blank">
+                <span class="material-icons">open_in_new</span> ブラウザで確認
+              </a>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-num">06</div>
+              <div class="step-card-title">レイアウト+装飾</div>
+            </div>
+            <div class="step-card-body">
+              <a href="sample2/sample-2-airline-wireframe-06.html" class="step-link" target="_blank">
+                <span class="material-icons">open_in_new</span> ブラウザで確認
+              </a>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-num">07</div>
+              <div class="step-card-title">JavaScript</div>
+            </div>
+            <div class="step-card-body">
+              <a href="sample2/sample-2-airline-wireframe-07.html" class="step-link" target="_blank">
+                <span class="material-icons">open_in_new</span> ブラウザで確認
+              </a>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-card-header">
+              <div class="step-num" style="background: #16A34A;">08</div>
+              <div class="step-card-title">完成</div>
+            </div>
+            <div class="step-card-body">
+              <a href="sample2/sample-2-airline-wireframe-08.html" class="step-link" target="_blank">
+                <span class="material-icons">open_in_new</span> ブラウザで確認
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h4><span class="material-icons" style="font-size: 18px; vertical-align: middle;">palette</span> 航空会社サイトのカラー版</h4>
+          <p>sample2もグレースケール → カラー変換が可能です。ダークテーマのヘッダーとフライト予約に特化したデザインを確認できます。</p>
+          <a href="sample2/sample-2-airline.html" class="step-link" target="_blank" style="margin-top: 8px;">
+            <span class="material-icons">open_in_new</span> カラー版を確認
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 15-5: Prompt Instructions -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 15-5</span>
+        <h2 class="section-title">プロンプトでの指示方法</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>レイヤー別プロンプト例</h3>
+        <p>AIにCSSレイアウトを段階的に構築させる場合、以下のようにレイヤーを明示してプロンプトを書きます。</p>
+
+        <h4>Step 1: 構造の指示（HTML）</h4>
+        <div class="prompt-example"><span class="comment">## HTML構造</span>
+以下のセクション構成でHTMLを作成してください：
+
+<span class="keyword">- header:</span> <span class="value">ロゴ + 検索ボタン + ハンバーガーメニュー</span>
+<span class="keyword">- quick-access:</span> <span class="value">4つのクイックリンク（grid 4列）</span>
+<span class="keyword">- main-banner:</span> <span class="value">横スクロールバナー × 3枚 + ドットインジケーター</span>
+<span class="keyword">- important-info:</span> <span class="value">左ボーダー付き警告ボックス</span>
+<span class="keyword">- section × 4:</span> <span class="value">カテゴリ / キャンペーン / ニュース / サービスリンク</span>
+<span class="keyword">- footer:</span> <span class="value">SNSアイコン + リンクグループ × 3 + コピーライト</span>
+<span class="keyword">- bottom-nav:</span> <span class="value">5つのタブ（モバイル用固定ナビ）</span>
+<span class="keyword">- drawer-menu:</span> <span class="value">右からスライドするメニュー</span>
+
+テキストは空で、class名のみ付与してください。</div>
+
+        <h4>Step 2: レイアウトの指示（CSS）</h4>
+        <div class="prompt-example"><span class="comment">## CSSレイアウト指示</span>
+以下のレイアウトプロパティを適用してください：
+
+<span class="keyword">header-top:</span> <span class="value">display: flex, justify-content: space-between, align-items: center</span>
+<span class="keyword">quick-access:</span> <span class="value">display: grid, grid-template-columns: repeat(4, 1fr)</span>
+<span class="keyword">banner-slider:</span> <span class="value">display: flex, overflow-x: auto, scroll-snap-type: x mandatory</span>
+<span class="keyword">category-grid:</span> <span class="value">display: grid, grid-template-columns: repeat(4, 1fr)</span>
+<span class="keyword">campaign-scroll:</span> <span class="value">display: flex, overflow-x: auto, gap: 12px</span>
+<span class="keyword">footer-links:</span> <span class="value">display: grid, grid-template-columns: repeat(3, 1fr)</span>
+<span class="keyword">bottom-nav:</span> <span class="value">position: fixed, bottom: 0, display: grid, grid-template-columns: repeat(5, 1fr)</span>
+
+<span class="comment">## ワイヤーフレーム配色</span>
+全てグレースケールで、border-radius: 0 を使用</div>
+
+        <h4>Step 3: レスポンシブの指示</h4>
+        <div class="prompt-example"><span class="comment">## レスポンシブブレイクポイント</span>
+
+<span class="keyword">768px+（タブレット）:</span>
+<span class="value">- category-grid: 8列
+- service-link-grid: 4列
+- footer-links: 3列 grid</span>
+
+<span class="keyword">1024px+（デスクトップ）:</span>
+<span class="value">- header: position relative（sticky解除）
+- quick-btn: 横並び（flex-direction: row）
+- category-icon: 64x64px
+- bottom-nav: display: none（非表示）
+- max-width: 1200px で中央寄せ</span></div>
+      </div>
+
+      <div class="subsection">
+        <h3>グレースケール → カラー変換のプロンプト</h3>
+        <p>ワイヤーフレームが完成したら、ブランドカラーを適用する指示を追加します。</p>
+
+        <div class="prompt-example"><span class="comment">## カラー変換指示</span>
+ワイヤーフレームのグレースケールを以下のブランドカラーに変換してください：
+
+<span class="keyword">プライマリカラー:</span> <span class="value">#e60039（ブランドレッド）</span>
+<span class="keyword">グラデーション:</span> <span class="value">linear-gradient(135deg, #e60039, #ff4d6d)</span>
+<span class="keyword">背景色:</span> <span class="value">#f5f5f5（ライトグレー）</span>
+<span class="keyword">テキスト:</span> <span class="value">#333（ダークグレー）</span>
+<span class="keyword">border-radius:</span> <span class="value">10px（角丸に変更）</span>
+<span class="keyword">box-shadow:</span> <span class="value">0 2px 8px rgba(0,0,0,0.08) を追加</span>
+
+カテゴリアイコンは色分け：
+<span class="value">red=#ffebef/#e60039, blue=#e6f2ff/#0066cc, green=#e6f9ef/#00a050 ...</span></div>
+      </div>
+    </section>
+
+    <!-- Chapter Navigation -->
+    <div class="chapter-nav">
+      <a href="14puic-chat.html" class="chapter-nav-prev">
+        <span class="chapter-nav-label">前の章</span>
+        <span class="chapter-nav-title">14. チャットUIの実装</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <script src="../../shared/footer.js"></script>
+
+  <script>
+    // Preview/Code Tab Toggle
+    document.querySelectorAll('.result-preview').forEach(preview => {
+      const tabs = preview.querySelectorAll('.result-preview-tab');
+      const content = preview.querySelector('.result-preview-content');
+      const code = preview.querySelector('.result-preview-code');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          if (tab.dataset.tab === 'code') {
+            if (content) content.style.display = 'none';
+            if (code) code.classList.add('active');
+          } else {
+            if (content) content.style.display = '';
+            if (code) code.classList.remove('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

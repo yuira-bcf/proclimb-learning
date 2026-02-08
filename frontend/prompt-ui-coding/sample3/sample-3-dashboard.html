@@ -868,24 +868,77 @@
         <div class="page-header">
           <h1 class="page-title">
             <span class="page-num-badge">1-1</span>ダッシュボード
-            <button class="prompt-btn" data-prompt-id="1-1" data-prompt="管理画面のダッシュボードページを作成してください。
+            <button class="prompt-btn" data-prompt-id="1-1" data-prompt="管理画面のダッシュボードページを1つのHTMLファイルで作成してください。
 
-【要件】
-- 左側に固定サイドバー（250px幅）、右側にメインコンテンツ
-- ヘッダーにパンくずナビ、通知アイコン、ユーザー情報
-- 4つの統計カード（訪問者数、売上高、注文数、新規ユーザー）
-- 売上推移の棒グラフ
-- コンバージョン率の統計
-- 人気商品テーブル（商品名、価格、販売数、状態）
-- 最近のアクティビティリスト
+【全体構造】
+- .wrapper: display: flex, min-height: 100vh
+- 左: .sidebar（position: fixed, width: 250px, height: 100vh, overflow-y: auto, z-index: 100）
+- 右: .main（flex: 1, margin-left: 250px）
 
-【デザイン】
-- モダンな管理画面デザイン
-- メインカラー: #17a2b8
-- カードには影をつけてホバー時に浮き上がるエフェクト
-- レスポンシブ対応（768px, 992px, 1200pxでブレークポイント）
-- Noto Sans JPフォント使用
-- Material Iconsを使用" onclick="openPromptModal('1-1')">
+【サイドバー】
+- 背景: linear-gradient(180deg, #343a40 0%, #212529 100%)、テキスト色: #c2c7d0
+- .sidebar-brand: ロゴ領域、rgba(0,0,0,0.2)背景、白文字18px太字700、アイコン色#17a2b8
+- .sidebar-user: アバター（40x40px円形、グラデーション#17a2b8→#20c997）+ 名前(14px白) + 役割(11px #6c757d)
+- .sidebar-nav: アコーディオンメニュー（.sidebar-menu-item &gt; .sidebar-menu-toggle + .sidebar-submenu）
+  - .sidebar-submenu: max-height: 0、overflow: hidden、transition: max-height 0.3s ease
+  - .open時: max-height: 500px
+  - 矢印アイコン: open時 rotate(90deg)、transition: transform 0.3s
+- .sidebar-item: padding: 12px 20px、hover時 rgba(255,255,255,0.05)背景
+- .sidebar-item.active: rgba(23,162,184,0.2)背景、#17a2b8色、左border 3px solid #17a2b8
+- バッジ: .sidebar-item-badge（赤#dc3545、.info=#17a2b8、.warning=#ffc107）
+
+【ヘッダー .header】
+- 白背景、height: 56px、position: sticky, top: 0, z-index: 50
+- box-shadow: 0 2px 4px rgba(0,0,0,0.08)
+- 左: .menu-toggle（モバイルのみ display:flex）+ .breadcrumb（13px、リンク色#17a2b8）
+- 右: 検索ボタン + メールボタン（赤バッジ「3」）+ 通知ボタン（黄バッジ「15」）+ ユーザーアバター
+- .header-btn: 40x40px円形、hover時#f4f6f9
+- .header-btn-badge: 18x18px、position: absolute, top: 4px, right: 4px
+
+【統計カード .stats-grid】
+- display: grid, grid-template-columns: repeat(4, 1fr), gap: 16px
+- .stat-card: 白背景、角丸10px、padding: 20px、box-shadow: 0 2px 8px rgba(0,0,0,0.06)
+- hover: translateY(-2px), box-shadow: 0 4px 16px rgba(0,0,0,0.1)
+- 左: .stat-label(12px大文字#6c757d) + .stat-value(28px太字700) + .stat-change(.up=#28a745 / .down=#dc3545、12px)
+- 右: .stat-icon（56x56px角丸10px）
+- 4カード:
+  1. 訪問者数: 8,420 (+12.5%) アイコンvisibility 青(#e3f2fd/#1976d2)
+  2. 売上高: ¥1,823,000 (+8.3%) アイコンpayments 緑(#e8f5e9/#388e3c)
+  3. 注文数: 284 (-3.2%) アイコンshopping_cart 橙(#fff3e0/#f57c00)
+  4. 新規ユーザー: 156 (+24.1%) アイコンperson_add 紫(#f3e5f5/#7b1fa2)
+
+【売上推移 + コンバージョン .grid-3】
+- grid-template-columns: 2fr 1fr, gap: 20px
+- 売上推移カード: .chart-bars（flex, align-items: flex-end, gap: 8px, height: 200px, padding: 20px）
+  - 12本の.chart-bar（flex:1, グラデーション#17a2b8→#20c997, 上部角丸4px, min-width: 30px）
+  - 高さ: 60%,80%,45%,90%,70%,85%,100%,75%,65%,95%,55%,88%
+  - 週間/月間ボタン（.card-btn / .card-btn.primary=#17a2b8白文字）
+- コンバージョンカード: .quick-stats（3列grid, gap: 16px）
+  - 各: .quick-stat-value(24px太字#17a2b8) + .quick-stat-label(12px #6c757d)
+  - CVR 12%、販売率 0.8%、登録率 1.2%
+
+【人気商品 + アクティビティ .grid-2】
+- grid-template-columns: repeat(2, 1fr), gap: 20px
+- 商品テーブル: .table（border-collapse, hover行#f8f9fa）
+  - th: 12px大文字#6c757d、背景#f8f9fa
+  - 商品セル: アイコン画像(40x40px角丸8px、各色グラデーション背景) + 名前(太字) + カテゴリ(12px #6c757d)
+  - プログレスバー: 100px×6px、グラデーション#17a2b8→#20c997
+  - バッジ: 角丸20px（.success緑 / .warning黄 / .danger赤）
+  - 4行: ノートPC¥128,000(85%/在庫あり), イヤホン¥24,800(72%/在庫あり), ウォッチ¥45,000(45%/残りわずか), スマホ¥98,000(15%/在庫切れ)
+- アクティビティ: .activity-list
+  - .activity-item: flex, gap: 12px, padding: 12px 0, 下線区切り
+  - .activity-icon: 36x36px円形（.blue/#e3f2fd, .green/#e8f5e9, .orange/#fff3e0, .red/#ffebee）
+  - 5件: 新規注文(青,2分前), 新規登録(緑,15分前), 発送(橙,1時間前), 在庫アラート(赤,2時間前), レビュー(青,3時間前)
+
+【レスポンシブ】
+- 1200px以下: stats-grid→2列、grid-3→1列
+- 992px以下: サイドバーtranslateX(-100%)非表示、main margin-left:0、ハンバーガー表示、grid-2→1列
+- 768px以下: stats-grid→1列、breadcrumb非表示、quick-stats→1列、padding→16px
+
+【フォント・アイコン】
+- Google Fonts: Noto Sans JP (400,500,700)
+- Material Icons
+- body: font-size:14px, line-height:1.6, color:#333, background:#f4f6f9" onclick="openPromptModal('1-1')">
               <span class="material-icons">auto_awesome</span>
               プロンプト
             </button>
@@ -964,30 +1017,33 @@
                 <span class="section-num-badge">1-1-1</span>
                 <span class="material-icons">bar_chart</span>
                 売上推移
-                <button class="prompt-btn" data-prompt-id="1-1-1" data-prompt="売上推移の棒グラフUIを作成してください。
+                <button class="prompt-btn" data-prompt-id="1-1-1" data-prompt="売上推移の棒グラフUIをカードコンポーネントで作成してください。
 
-【要件】
-- シンプルな棒グラフ表示
-- 12本の棒（月別など）
-- 週間/月間の切り替えボタン
-- ホバーエフェクト
+【カード構造】
+- .card: 白背景(#fff)、角丸10px、box-shadow: 0 2px 8px rgba(0,0,0,0.06)
+- .card-header: flex、align-items: center、justify-content: space-between、padding: 16px 20px、border-bottom: 1px solid #eee
+- .card-title: 16px太字700、Material Icons bar_chart（20px、色#17a2b8）+ 「売上推移」テキスト
+- .card-actions: 右側に2つのボタン
+- .card-body: padding: 20px
 
-【構造】
-- .card: 白背景カード
-- .card-header: タイトル + アクションボタン
-- .chart-bars: flexコンテナ（align-items: flex-end、gap: 8px、height: 200px）
-- .chart-bar: 各棒（flex: 1、min-width: 30px）
+【棒グラフ .chart-bars】
+- display: flex、align-items: flex-end、gap: 8px、height: 200px、padding: 20px
 
-【スタイル】
-- 棒のグラデーション: #17a2b8→#20c997
-- 角丸: 上部のみ（4px 4px 0 0）
-- ホバー時: opacity: 0.8
-- 高さは%で指定（style=height: 60%等）
+【各棒 .chart-bar】
+- flex: 1、min-width: 30px
+- background: linear-gradient(180deg, #17a2b8 0%, #20c997 100%)
+- border-radius: 4px 4px 0 0（上部のみ角丸）
+- transition: all 0.3s
+- hover時: opacity: 0.8
+- 12本の高さ（style属性でinline指定）:
+  60%, 80%, 45%, 90%, 70%, 85%, 100%, 75%, 65%, 95%, 55%, 88%
 
 【アクションボタン】
-- 週間/月間の切り替え
-- .card-btn: パディング6px 12px、角丸6px
-- .primary: #17a2b8背景、白文字" onclick="openPromptModal('1-1-1')">
+- .card-btn: padding: 6px 12px、border: 1px solid #ddd、background: #fff、border-radius: 6px、font-size: 12px、cursor: pointer
+- .card-btn:hover: background: #f4f6f9
+- .card-btn.primary: background: #17a2b8、border-color: #17a2b8、color: #fff
+- .card-btn.primary:hover: background: #138496
+- 「週間」ボタン（通常）+「月間」ボタン（primary）" onclick="openPromptModal('1-1-1')">
                   <span class="material-icons">auto_awesome</span>
                   プロンプト
                 </button>
@@ -1025,22 +1081,29 @@
                 <span class="section-num-badge">1-1-2</span>
                 <span class="material-icons">speed</span>
                 コンバージョン
-                <button class="prompt-btn" data-prompt-id="1-1-2" data-prompt="コンバージョン統計UIを作成してください。
+                <button class="prompt-btn" data-prompt-id="1-1-2" data-prompt="コンバージョン統計UIをカードコンポーネントで作成してください。
 
-【要件】
-- 3つの統計値をグリッド表示
-- CVR、販売率、登録率
-- シンプルな数値表示
+【カード構造】
+- .card: 白背景(#fff)、角丸10px、box-shadow: 0 2px 8px rgba(0,0,0,0.06)
+- .card-header: flex、align-items: center、justify-content: space-between、padding: 16px 20px、border-bottom: 1px solid #eee
+- .card-title: 16px太字700、Material Icons speed（20px、色#17a2b8）+「コンバージョン」テキスト
+- .card-body: padding: 20px
 
-【構造】
-- .card: 白背景カード
-- .quick-stats: 3列グリッド（gap: 16px）
-- .quick-stat: 各統計項目（text-align: center、パディング16px、#f8f9fa背景）
+【統計グリッド .quick-stats】
+- display: grid、grid-template-columns: repeat(3, 1fr)、gap: 16px
 
-【スタイル】
-- .quick-stat-value: 24px、太字、#17a2b8色
-- .quick-stat-label: 12px、#6c757d色
-- 角丸: 8px" onclick="openPromptModal('1-1-2')">
+【各項目 .quick-stat】
+- text-align: center、padding: 16px、background: #f8f9fa、border-radius: 8px
+- .quick-stat-value: font-size: 24px、font-weight: 700、color: #17a2b8
+- .quick-stat-label: font-size: 12px、color: #6c757d、margin-top: 4px
+
+【データ】
+1. CVR: 12%
+2. 販売率: 0.8%
+3. 登録率: 1.2%
+
+【レスポンシブ】
+- 768px以下: grid-template-columns: 1fr（縦1列に変更）" onclick="openPromptModal('1-1-2')">
                   <span class="material-icons">auto_awesome</span>
                   プロンプト
                 </button>
@@ -1077,33 +1140,49 @@
                 <span class="section-num-badge">1-1-3</span>
                 <span class="material-icons">inventory_2</span>
                 人気商品
-                <button class="prompt-btn" data-prompt-id="1-1-3" data-prompt="人気商品テーブルUIを作成してください。
+                <button class="prompt-btn" data-prompt-id="1-1-3" data-prompt="人気商品テーブルUIをカードコンポーネントで作成してください。
 
-【要件】
-- 商品一覧テーブル
-- 列: 商品名（画像付き）、価格、販売数（プログレスバー）、状態（バッジ）
-- エクスポートボタン
+【カード構造】
+- .card: 白背景(#fff)、角丸10px、box-shadow: 0 2px 8px rgba(0,0,0,0.06)
+- .card-header: flex、justify-content: space-between、padding: 16px 20px、border-bottom: 1px solid #eee
+- .card-title: 16px太字700、Material Icons inventory_2（20px、色#17a2b8）+「人気商品」テキスト
+- .card-actions: エクスポートボタン（Material Icons download 14px + テキスト）
+- .card-body: padding: 20px
 
-【構造】
-- .table-wrapper: overflow-x: auto
+【テーブル .table】
+- .table-wrapper: overflow-x: auto（横スクロール対応）
 - .table: width: 100%、border-collapse: collapse
-- .table-product: 商品セル（アイコン + 名前 + カテゴリ）
-- .progress-bar: 販売数の視覚化
-- .badge: 状態バッジ（success/warning/danger）
+- th: font-size: 12px、font-weight: 600、color: #6c757d、text-transform: uppercase、letter-spacing: 0.5px、background: #f8f9fa
+- th,td: padding: 12px 16px、text-align: left、border-bottom: 1px solid #eee
+- tr:hover: background: #f8f9fa
+- 列: 商品名、価格、販売数、状態
 
-【商品セル】
-- .table-product-img: 40x40px、角丸8px、グラデーション背景
-- .table-product-name: 太字
-- .table-product-category: 12px、#6c757d色
+【商品セル .table-product】
+- display: flex、align-items: center、gap: 12px
+- .table-product-img: width/height: 40px、border-radius: 8px、flex中央寄せ、白アイコン16px
+  - 各商品ごとに異なるグラデーション背景:
+    1. linear-gradient(135deg, #667eea, #764ba2) - laptop
+    2. linear-gradient(135deg, #f093fb, #f5576c) - headphones
+    3. linear-gradient(135deg, #4facfe, #00f2fe) - watch
+    4. linear-gradient(135deg, #fa709a, #fee140) - smartphone
+- .table-product-name: font-weight: 500
+- .table-product-category: font-size: 12px、color: #6c757d
 
-【プログレスバー】
-- 100px幅、6px高さ
-- グラデーション: #17a2b8→#20c997
+【プログレスバー .progress-bar】
+- width: 100px、height: 6px、background: #e9ecef、border-radius: 3px、overflow: hidden
+- .progress-bar-fill: height: 100%、background: linear-gradient(90deg, #17a2b8, #20c997)、border-radius: 3px
 
-【バッジ】
-- .success: 緑背景（在庫あり）
-- .warning: 黄背景（残りわずか）
-- .danger: 赤背景（在庫切れ）" onclick="openPromptModal('1-1-3')">
+【バッジ .badge】
+- display: inline-block、padding: 4px 10px、border-radius: 20px、font-size: 11px、font-weight: 500
+- .badge.success: background: #d4edda、color: #155724（在庫あり）
+- .badge.warning: background: #fff3cd、color: #856404（残りわずか）
+- .badge.danger: background: #f8d7da、color: #721c24（在庫切れ）
+
+【テーブルデータ 4行】
+1. ノートPC Pro / 電子機器 / ¥128,000 / 85% / 在庫あり(success)
+2. ワイヤレスイヤホン / オーディオ / ¥24,800 / 72% / 在庫あり(success)
+3. スマートウォッチ / ウェアラブル / ¥45,000 / 45% / 残りわずか(warning)
+4. スマートフォン X / 電子機器 / ¥98,000 / 15% / 在庫切れ(danger)" onclick="openPromptModal('1-1-3')">
                   <span class="material-icons">auto_awesome</span>
                   プロンプト
                 </button>
@@ -1223,29 +1302,40 @@
                 <span class="section-num-badge">1-1-4</span>
                 <span class="material-icons">history</span>
                 最近のアクティビティ
-                <button class="prompt-btn" data-prompt-id="1-1-4" data-prompt="最近のアクティビティリストUIを作成してください。
+                <button class="prompt-btn" data-prompt-id="1-1-4" data-prompt="最近のアクティビティリストUIをカードコンポーネントで作成してください。
 
-【要件】
-- アクティビティの時系列リスト
-- 各項目にアイコン、内容、時刻を表示
-- カラー分けされたアイコン
+【カード構造】
+- .card: 白背景(#fff)、角丸10px、box-shadow: 0 2px 8px rgba(0,0,0,0.06)
+- .card-header: flex、justify-content: space-between、padding: 16px 20px、border-bottom: 1px solid #eee
+- .card-title: 16px太字700、Material Icons history（20px、色#17a2b8）+「最近のアクティビティ」テキスト
+- .card-body: padding: 20px
 
-【構造】
-- .activity-list: list-style: none
-- .activity-item: flex表示（gap: 12px、パディング12px 0、下線区切り）
-- .activity-icon: 36x36px、円形、カラー背景
-- .activity-content: テキスト内容
-- .activity-time: 時刻表示
+【リスト .activity-list】
+- ul要素、list-style: none
 
-【アイコンカラー】
-- .blue: #e3f2fd背景、#1976d2色（注文、レビュー）
-- .green: #e8f5e9背景、#388e3c色（新規登録）
-- .orange: #fff3e0背景、#f57c00色（発送）
-- .red: #ffebee背景、#c62828色（アラート）
+【各項目 .activity-item】
+- display: flex、gap: 12px、padding: 12px 0、border-bottom: 1px solid #eee
+- 最後の項目: border-bottom: none
 
-【テキスト】
-- .activity-text: 13px、strong要素で強調
-- .activity-time: 11px、#6c757d色" onclick="openPromptModal('1-1-4')">
+【アイコン .activity-icon】
+- width/height: 36px、border-radius: 50%、flex中央寄せ、font-size: 16px
+- カラーバリエーション:
+  - .blue: background: #e3f2fd、color: #1976d2（注文・レビュー系）
+  - .green: background: #e8f5e9、color: #388e3c（新規登録系）
+  - .orange: background: #fff3e0、color: #f57c00（発送系）
+  - .red: background: #ffebee、color: #c62828（アラート系）
+
+【テキスト .activity-content】
+- flex: 1
+- .activity-text: font-size: 13px、&lt;strong&gt;タグで要素名を強調（color: #333）
+- .activity-time: font-size: 11px、color: #6c757d、margin-top: 2px
+
+【データ 5件】
+1. shopping_bag(青) &lt;strong&gt;新規注文&lt;/strong&gt; が入りました #ORD-2024-0284 / 2分前
+2. person_add(緑) &lt;strong&gt;田中様&lt;/strong&gt; が新規登録しました / 15分前
+3. local_shipping(橙) &lt;strong&gt;注文 #ORD-2024-0281&lt;/strong&gt; が発送されました / 1時間前
+4. report_problem(赤) &lt;strong&gt;在庫アラート&lt;/strong&gt;: スマートフォン Xが在庫切れ / 2時間前
+5. rate_review(青) &lt;strong&gt;新しいレビュー&lt;/strong&gt; が投稿されました / 3時間前" onclick="openPromptModal('1-1-4')">
                   <span class="material-icons">auto_awesome</span>
                   プロンプト
                 </button>

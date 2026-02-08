@@ -25,7 +25,8 @@ const navData = {
         { href: "11puic-uiux-forms.html", num: "11", text: "フォームUX改善の20ポイント" },
         { href: "12puic-table-ui.html", num: "12", text: "テーブルUIの実装" },
         { href: "13puic-kanban.html", num: "13", text: "看板ボードの実装" },
-        { href: "14puic-chat.html", num: "14", text: "チャットUIの実装" }
+        { href: "14puic-chat.html", num: "14", text: "チャットUIの実装" },
+        { href: "15puic-ui-layout.html", num: "15", text: "プロンプトUIレイアウト" }
     ],
     utilities: [
         { href: "search.html", icon: "search", text: "検索" }

@@ -36,7 +36,8 @@ const navData = {
         { href: "22_unit_test.html", num: "22", text: "単体テスト" },
         { href: "23_async.html", num: "23", text: "非同期処理" },
         { href: "24_mail.html", num: "24", text: "メール送信" },
-        { href: "25_audit_log.html", num: "25", text: "監査ログ" }
+        { href: "25_audit_log.html", num: "25", text: "監査ログ" },
+        { href: "26_javadoc.html", num: "26", text: "Javadoc" }
     ],
     promptpg: [
         { href: "../promptpg-step/promptpg-overview.html", text: "HOME", icon: "home", iconType: "material" },
