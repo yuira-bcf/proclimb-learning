@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3章 エディタ機能とショートカット - VSCode＋AI開発</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #F5A623;
+        --primary-dark: #D4891D;
+        --primary-light: #FEF7E8;
+        --primary-lighter: #FDE4A8;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef7e8 0%, #fef7e8 100%);
+        border-radius: 16px; border: 1px solid #fde4a8;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F5A623; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F5A623; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(245,166,35,0.08);
+      }
+      .vd-box.accent { background: #F5A623; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F5A623; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fef7e8; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F5A623; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-vscode.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">3</div>
+            <h1 class="chapter-title">エディタ機能とショートカット</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">3-1</span><span>IntelliSense（コード補完）</span></li>
+                <li class="toc-item"><span class="toc-number">3-2</span><span>マルチカーソル編集</span></li>
+                <li class="toc-item"><span class="toc-number">3-3</span><span>検索と置換</span></li>
+                <li class="toc-item"><span class="toc-number">3-4</span><span>スニペット</span></li>
+                <li class="toc-item"><span class="toc-number">3-5</span><span>必須ショートカットキー一覧</span></li>
+            </ul>
+        </nav>
+
+        <!-- Section 3-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-1</span>
+                <h2 class="section-title">IntelliSense（コード補完）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>IntelliSense（インテリセンス）は、VSCodeに組み込まれた強力なコード補完機能です。変数名や関数名の自動補完、パラメータヒント、定義へのジャンプなど、コーディングを大幅に効率化する機能を提供します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">コード補完の基本</h3>
+                <p>コードを入力している途中で、IntelliSenseが自動的に補完候補を表示します。候補が表示されたら、矢印キーで選択して <strong>Tab</strong> または <strong>Enter</strong> で確定できます。</p>
+                <ul>
+                    <li><strong>自動表示</strong>：文字を入力すると候補が自動的に表示される</li>
+                    <li><strong>手動呼び出し</strong>：<code>Ctrl + Space</code>（macOS: <code>Cmd + Space</code>）で候補を手動表示</li>
+                    <li><strong>候補の詳細</strong>：候補にカーソルを合わせると、型情報やドキュメントが表示される</li>
+                </ul>
+
+                <div class="code-block">
+                    <div class="code-header">JavaScript - IntelliSenseの例</div>
+                    <pre class="code-content"><code>// 変数の型をIntelliSenseが推論する
+const message = "Hello, World!";
+message.  // ← ここで "." を入力するとStringのメソッド候補が表示される
+// .toUpperCase(), .toLowerCase(), .includes(), .split() など
+
+// 関数のパラメータヒント
+document.getElementById("app");
+// ↑ 関数名の後に "(" を入力すると、引数の型が表示される</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">定義へのジャンプと参照の検索</h3>
+                <p>IntelliSenseを使えば、関数や変数の定義場所にすばやくジャンプしたり、どこで使われているかを確認したりできます。</p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>機能</th>
+                                <th>ショートカット</th>
+                                <th>説明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>定義へ移動</strong></td>
+                                <td><code>F12</code></td>
+                                <td>関数・変数の定義場所にジャンプ</td>
+                            </tr>
+                            <tr>
+                                <td><strong>定義をプレビュー</strong></td>
+                                <td><code>Alt + F12</code></td>
+                                <td>定義をインラインでプレビュー表示</td>
+                            </tr>
+                            <tr>
+                                <td><strong>参照を検索</strong></td>
+                                <td><code>Shift + F12</code></td>
+                                <td>そのシンボルが使われている場所を一覧表示</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ホバー情報</strong></td>
+                                <td>マウスオーバー</td>
+                                <td>型情報やドキュメントをポップアップ表示</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 図解1: IntelliSense機能フロー -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128161; IntelliSenseの機能全体像</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#9997;</span>
+                        <span class="vd-label">コードを入力</span>
+                        <span class="vd-sub">文字を打ち始める</span>
+                    </div>
+                    <div class="vd-arrow">&#8594;</div>
+                    <div class="vd-box accent">
+                        <span class="vd-icon" style="color: white;">&#128300;</span>
+                        <span class="vd-label" style="color: white;">IntelliSense</span>
+                        <span class="vd-sub">候補を分析・表示</span>
+                    </div>
+                    <div class="vd-arrow">&#8594;</div>
+                    <div class="vd-box">
+                        <span class="vd-icon">&#9989;</span>
+                        <span class="vd-label">Tab/Enterで確定</span>
+                        <span class="vd-sub">補完を適用</span>
+                    </div>
+                </div>
+                <div class="vd-grid" style="margin-top: 16px; grid-template-columns: repeat(4, 1fr);">
+                    <div class="vd-card blue">
+                        <span class="vd-label">コード補完</span>
+                        <span class="vd-sub">変数・関数名の補完</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-label">パラメータヒント</span>
+                        <span class="vd-sub">引数の型情報</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-label">定義ジャンプ</span>
+                        <span class="vd-sub">F12で定義に移動</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-label">ホバー情報</span>
+                        <span class="vd-sub">型・ドキュメント表示</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title">POINT</div>
+                <div class="info-box-content">
+                    <p>IntelliSenseの精度は言語によって異なります。TypeScript、JavaScript、Python、Java などは標準で高精度な補完が利用できます。その他の言語では、対応する拡張機能をインストールすることで精度が向上します。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-2</span>
+                <h2 class="section-title">マルチカーソル編集</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>マルチカーソルは、複数の場所に同時にカーソルを配置し、一括編集できるVSCodeの強力な機能です。同じ変更を複数箇所に適用するとき、手作業で1つずつ修正する必要がなくなります。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">マルチカーソルの作り方</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>操作</th>
+                                <th>Windows</th>
+                                <th>macOS</th>
+                                <th>説明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>任意位置にカーソル追加</strong></td>
+                                <td><code>Alt + Click</code></td>
+                                <td><code>Option + Click</code></td>
+                                <td>クリックした位置に新しいカーソルを配置</td>
+                            </tr>
+                            <tr>
+                                <td><strong>同じ単語を追加選択</strong></td>
+                                <td><code>Ctrl + D</code></td>
+                                <td><code>Cmd + D</code></td>
+                                <td>現在の選択と同じ単語を次々選択</td>
+                            </tr>
+                            <tr>
+                                <td><strong>同じ単語を全選択</strong></td>
+                                <td><code>Ctrl + Shift + L</code></td>
+                                <td><code>Cmd + Shift + L</code></td>
+                                <td>同じ単語すべてにカーソルを配置</td>
+                            </tr>
+                            <tr>
+                                <td><strong>上下にカーソル追加</strong></td>
+                                <td><code>Ctrl + Alt + &#8593;/&#8595;</code></td>
+                                <td><code>Cmd + Option + &#8593;/&#8595;</code></td>
+                                <td>現在行の上下にカーソルを追加</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">マルチカーソルの活用例</h3>
+                <p>以下のHTMLコードで、すべての <code>div</code> を <code>section</code> に変更する例を見てみましょう。</p>
+
+                <div class="code-block">
+                    <div class="code-header">変更前 - HTML</div>
+                    <pre class="code-content"><code>&lt;div class="header"&gt;Header&lt;/div&gt;
+&lt;div class="main"&gt;Main Content&lt;/div&gt;
+&lt;div class="sidebar"&gt;Sidebar&lt;/div&gt;
+&lt;div class="footer"&gt;Footer&lt;/div&gt;</code></pre>
+                </div>
+
+                <p><strong>手順</strong>：最初の <code>div</code> を選択 → <code>Ctrl + D</code> を繰り返し押して全ての <code>div</code> を選択 → <code>section</code> と入力</p>
+
+                <div class="code-block">
+                    <div class="code-header">変更後 - HTML</div>
+                    <pre class="code-content"><code>&lt;section class="header"&gt;Header&lt;/section&gt;
+&lt;section class="main"&gt;Main Content&lt;/section&gt;
+&lt;section class="sidebar"&gt;Sidebar&lt;/section&gt;
+&lt;section class="footer"&gt;Footer&lt;/section&gt;</code></pre>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-title">注意</div>
+                    <div class="warning-box-content">
+                        <p><code>Ctrl + D</code> は選択を1つずつ追加します。意図しない箇所が選択された場合は <code>Ctrl + U</code> で最後の選択を取り消せます。また <code>Esc</code> ですべてのマルチカーソルを解除できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-3</span>
+                <h2 class="section-title">検索と置換</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>VSCodeの検索・置換機能は非常に強力で、単一ファイル内の検索からプロジェクト全体にわたるファイル横断検索まで対応しています。正規表現検索も利用でき、複雑なパターンマッチングも可能です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">ファイル内の検索と置換</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>機能</th>
+                                <th>Windows</th>
+                                <th>macOS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>検索</strong></td>
+                                <td><code>Ctrl + F</code></td>
+                                <td><code>Cmd + F</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>置換</strong></td>
+                                <td><code>Ctrl + H</code></td>
+                                <td><code>Cmd + H</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>次の一致に移動</strong></td>
+                                <td><code>Enter</code> / <code>F3</code></td>
+                                <td><code>Enter</code> / <code>F3</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>前の一致に移動</strong></td>
+                                <td><code>Shift + Enter</code> / <code>Shift + F3</code></td>
+                                <td><code>Shift + Enter</code> / <code>Shift + F3</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>検索バーには以下のオプションがあります（アイコンで切り替え）。</p>
+                <ul>
+                    <li><strong>Aa</strong>：大文字/小文字を区別する（Match Case）</li>
+                    <li><strong>ab</strong>：単語全体を一致させる（Match Whole Word）</li>
+                    <li><strong>.*</strong>：正規表現を使用する（Use Regular Expression）</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">ファイル横断検索</h3>
+                <p>プロジェクト全体からテキストを検索するには、ファイル横断検索を使います。</p>
+                <ul>
+                    <li><strong>Windows</strong>：<code>Ctrl + Shift + F</code></li>
+                    <li><strong>macOS</strong>：<code>Cmd + Shift + F</code></li>
+                </ul>
+                <p>サイドバーの検索ビューが開き、プロジェクト内のすべてのファイルから一致するテキストが一覧表示されます。「含めるファイル」「除外するファイル」のフィルターも設定できます。</p>
+
+                <div class="code-block">
+                    <div class="code-header">検索フィルターの例</div>
+                    <pre class="code-content"><code>含めるファイル: *.js, *.ts
+除外するファイル: node_modules, dist, .git</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">正規表現検索の活用例</h3>
+                <p>正規表現を使えば、パターンに基づいた高度な検索が可能です。</p>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>パターン</th>
+                                <th>マッチする例</th>
+                                <th>用途</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>\d+</code></td>
+                                <td>123, 42, 7</td>
+                                <td>数字を検索</td>
+                            </tr>
+                            <tr>
+                                <td><code>console\.log\(.*\)</code></td>
+                                <td>console.log("test")</td>
+                                <td>console.logを検索</td>
+                            </tr>
+                            <tr>
+                                <td><code>&lt;h[1-6]&gt;</code></td>
+                                <td>&lt;h1&gt;, &lt;h2&gt;, &lt;h3&gt;</td>
+                                <td>見出しタグを検索</td>
+                            </tr>
+                            <tr>
+                                <td><code>TODO|FIXME|HACK</code></td>
+                                <td>TODO, FIXME, HACK</td>
+                                <td>コメントアノテーション検索</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 図解2: 検索の種類 -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128269; VSCodeの検索機能マップ</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#128196;</span>
+                        <span class="vd-label">ファイル内検索</span>
+                        <span class="vd-sub">Ctrl + F<br>現在のファイル内を検索</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128194;</span>
+                        <span class="vd-label">ファイル横断検索</span>
+                        <span class="vd-sub">Ctrl + Shift + F<br>プロジェクト全体を検索</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#128260;</span>
+                        <span class="vd-label">置換</span>
+                        <span class="vd-sub">Ctrl + H<br>一括置換・正規表現置換</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-4</span>
+                <h2 class="section-title">スニペット</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>スニペットとは、よく使うコードパターンをテンプレートとして登録し、短いキーワードで呼び出せる機能です。定型的なコードを毎回手入力する手間を省き、開発速度を大幅に向上させます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">組み込みスニペットの利用</h3>
+                <p>VSCodeには言語ごとに多数の組み込みスニペットが用意されています。例えば、HTMLファイルで <code>!</code> と入力して <code>Tab</code> を押すと、HTMLの基本テンプレートが展開されます。</p>
+
+                <div class="code-block">
+                    <div class="code-header">HTML - 「!」スニペットの展開結果</div>
+                    <pre class="code-content"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </div>
+
+                <p>その他のよく使うHTMLスニペットの例：</p>
+                <ul>
+                    <li><code>div</code> → <code>&lt;div&gt;&lt;/div&gt;</code></li>
+                    <li><code>a</code> → <code>&lt;a href=""&gt;&lt;/a&gt;</code></li>
+                    <li><code>link:css</code> → <code>&lt;link rel="stylesheet" href="style.css"&gt;</code></li>
+                    <li><code>script:src</code> → <code>&lt;script src=""&gt;&lt;/script&gt;</code></li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">ユーザースニペットの作成</h3>
+                <p>独自のスニペットを作成して登録することもできます。コマンドパレットで「Preferences: Configure User Snippets」と入力し、対象の言語を選択します。</p>
+
+                <div class="code-block">
+                    <div class="code-header">javascript.json - ユーザースニペットの例</div>
+                    <pre class="code-content"><code>{
+    "Console Log": {
+        "prefix": "clog",
+        "body": [
+            "console.log('${1:message}', ${2:value});",
+            "$0"
+        ],
+        "description": "console.logを挿入"
+    },
+    "Arrow Function": {
+        "prefix": "af",
+        "body": [
+            "const ${1:name} = (${2:params}) => {",
+            "    ${3:// TODO}",
+            "    $0",
+            "};"
+        ],
+        "description": "アロー関数を挿入"
+    }
+}</code></pre>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>プロパティ</th>
+                                <th>説明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>prefix</code></td>
+                                <td>スニペットを呼び出すためのキーワード</td>
+                            </tr>
+                            <tr>
+                                <td><code>body</code></td>
+                                <td>展開されるコードの本体（配列の各要素が1行）</td>
+                            </tr>
+                            <tr>
+                                <td><code>description</code></td>
+                                <td>IntelliSenseで表示される説明文</td>
+                            </tr>
+                            <tr>
+                                <td><code>${1:placeholder}</code></td>
+                                <td>タブストップ（Tab で移動する入力箇所）</td>
+                            </tr>
+                            <tr>
+                                <td><code>$0</code></td>
+                                <td>最終カーソル位置</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p>スニペットの <code>${1}</code>、<code>${2}</code> はタブストップと呼ばれ、Tab キーを押すと順番にカーソルが移動します。<code>${1:placeholder}</code> のように初期値を設定でき、そのまま上書き入力するだけで効率的に編集できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-5</span>
+                <h2 class="section-title">必須ショートカットキー一覧</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>VSCodeを効率的に使うためには、ショートカットキーの習得が不可欠です。ここでは、カテゴリ別に最も重要なショートカットをWindows/macOS両対応でまとめています。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">ナビゲーション</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>機能</th>
+                                <th>Windows / Linux</th>
+                                <th>macOS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>コマンドパレット</td>
+                                <td><code>Ctrl + Shift + P</code></td>
+                                <td><code>Cmd + Shift + P</code></td>
+                            </tr>
+                            <tr>
+                                <td>クイックオープン</td>
+                                <td><code>Ctrl + P</code></td>
+                                <td><code>Cmd + P</code></td>
+                            </tr>
+                            <tr>
+                                <td>指定行にジャンプ</td>
+                                <td><code>Ctrl + G</code></td>
+                                <td><code>Ctrl + G</code></td>
+                            </tr>
+                            <tr>
+                                <td>シンボルに移動</td>
+                                <td><code>Ctrl + Shift + O</code></td>
+                                <td><code>Cmd + Shift + O</code></td>
+                            </tr>
+                            <tr>
+                                <td>定義に移動</td>
+                                <td><code>F12</code></td>
+                                <td><code>F12</code></td>
+                            </tr>
+                            <tr>
+                                <td>戻る / 進む</td>
+                                <td><code>Alt + &#8592; / &#8594;</code></td>
+                                <td><code>Ctrl + - / Ctrl + Shift + -</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">編集</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>機能</th>
+                                <th>Windows / Linux</th>
+                                <th>macOS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>行を上/下に移動</td>
+                                <td><code>Alt + &#8593; / &#8595;</code></td>
+                                <td><code>Option + &#8593; / &#8595;</code></td>
+                            </tr>
+                            <tr>
+                                <td>行を上/下にコピー</td>
+                                <td><code>Shift + Alt + &#8593; / &#8595;</code></td>
+                                <td><code>Shift + Option + &#8593; / &#8595;</code></td>
+                            </tr>
+                            <tr>
+                                <td>行の削除</td>
+                                <td><code>Ctrl + Shift + K</code></td>
+                                <td><code>Cmd + Shift + K</code></td>
+                            </tr>
+                            <tr>
+                                <td>行コメントの切替</td>
+                                <td><code>Ctrl + /</code></td>
+                                <td><code>Cmd + /</code></td>
+                            </tr>
+                            <tr>
+                                <td>ブロックコメント</td>
+                                <td><code>Shift + Alt + A</code></td>
+                                <td><code>Shift + Option + A</code></td>
+                            </tr>
+                            <tr>
+                                <td>コード折りたたみ</td>
+                                <td><code>Ctrl + Shift + [</code></td>
+                                <td><code>Cmd + Option + [</code></td>
+                            </tr>
+                            <tr>
+                                <td>コード展開</td>
+                                <td><code>Ctrl + Shift + ]</code></td>
+                                <td><code>Cmd + Option + ]</code></td>
+                            </tr>
+                            <tr>
+                                <td>フォーマット</td>
+                                <td><code>Shift + Alt + F</code></td>
+                                <td><code>Shift + Option + F</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">表示</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>機能</th>
+                                <th>Windows / Linux</th>
+                                <th>macOS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>サイドバー切替</td>
+                                <td><code>Ctrl + B</code></td>
+                                <td><code>Cmd + B</code></td>
+                            </tr>
+                            <tr>
+                                <td>ターミナル切替</td>
+                                <td><code>Ctrl + `</code></td>
+                                <td><code>Ctrl + `</code></td>
+                            </tr>
+                            <tr>
+                                <td>エディタ分割</td>
+                                <td><code>Ctrl + \</code></td>
+                                <td><code>Cmd + \</code></td>
+                            </tr>
+                            <tr>
+                                <td>Zen Mode（集中モード）</td>
+                                <td><code>Ctrl + K → Z</code></td>
+                                <td><code>Cmd + K → Z</code></td>
+                            </tr>
+                            <tr>
+                                <td>フォントサイズ拡大</td>
+                                <td><code>Ctrl + +</code></td>
+                                <td><code>Cmd + +</code></td>
+                            </tr>
+                            <tr>
+                                <td>フォントサイズ縮小</td>
+                                <td><code>Ctrl + -</code></td>
+                                <td><code>Cmd + -</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 図解3: ショートカットカテゴリ -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#9000; ショートカットキーのカテゴリ分類</div>
+                <div class="vd-bar">
+                    <div class="vd-bar-seg" style="background: #1565C0;">ナビゲーション<br><small>移動・検索・ジャンプ</small></div>
+                    <div class="vd-bar-seg" style="background: #2E7D32;">編集<br><small>行操作・コメント・フォーマット</small></div>
+                    <div class="vd-bar-seg" style="background: #E65100;">表示<br><small>パネル切替・分割・ズーム</small></div>
+                </div>
+                <div style="text-align: center; margin-top: 12px; font-size: 0.72rem; color: #555;">
+                    まずは各カテゴリから2〜3個ずつ覚えていくのがおすすめです
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title">POINT</div>
+                <div class="info-box-content">
+                    <p>すべてのショートカットを一度に覚える必要はありません。まずは <code>Ctrl + Shift + P</code>（コマンドパレット）、<code>Ctrl + P</code>（クイックオープン）、<code>Ctrl + /</code>（コメント切替）の3つから始めて、徐々に増やしていきましょう。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">3章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>IntelliSenseで関数や変数の定義場所にジャンプするショートカットはどれですか？</p>
+                        <ol type="A">
+                            <li>Ctrl + P</li>
+                            <li>Ctrl + G</li>
+                            <li>F12</li>
+                            <li>Ctrl + Shift + F</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>マルチカーソルで、現在選択している単語と同じ単語を「次のマッチ」として追加選択するショートカットはどれですか？（Windows）</p>
+                        <ol type="A">
+                            <li>Ctrl + L</li>
+                            <li>Ctrl + D</li>
+                            <li>Ctrl + Shift + L</li>
+                            <li>Alt + Click</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>ユーザースニペットのJSON設定で、<code>${1:placeholder}</code> の意味として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>スニペット展開後の最終カーソル位置</li>
+                            <li>1番目のタブストップで、初期値が「placeholder」</li>
+                            <li>スニペットの説明文（description）</li>
+                            <li>スニペットを呼び出すためのキーワード（prefix）</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">3章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: C</div>
+                    <div class="answer-content">
+                        <p><strong>F12</strong> は「定義へ移動（Go to Definition）」のショートカットです。関数名や変数名にカーソルを合わせて F12 を押すと、その定義場所にジャンプします。<code>Alt + F12</code> で定義のインラインプレビュー、<code>Shift + F12</code> で参照箇所の一覧表示も可能です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p><strong>Ctrl + D</strong> は、現在選択中の単語と同じテキストを「次のマッチ」として追加選択します。繰り返し押すと、次々にマッチが選択されます。一方、<code>Ctrl + Shift + L</code> は同じ単語のすべてのマッチを一度に選択し、<code>Alt + Click</code> は任意の位置にカーソルを手動で追加する操作です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>${1:placeholder}</code> は<strong>1番目のタブストップ</strong>で、初期値として「placeholder」が入力された状態になります。Tab キーを押すと <code>${2}</code>、<code>${3}</code>... の順にカーソルが移動します。<code>$0</code> が最終カーソル位置で、最後にカーソルが止まる場所を示します。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="2vscode-basic-operations.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第2章 VSCodeの基本操作</div>
+            </div>
+        </a>
+        <a href="4vscode-extensions.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第4章 拡張機能の活用</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+</body>
+</html>

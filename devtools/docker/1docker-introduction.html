@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第1章 コンテナ技術入門 - Docker構築入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #F5A623;
+        --primary-dark: #D4891D;
+        --primary-light: #FEF7E8;
+        --primary-lighter: #FDE4A8;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef7e8 0%, #fef7e8 100%);
+        border-radius: 16px; border: 1px solid #fde4a8;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F5A623; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F5A623; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(245,166,35,0.08);
+      }
+      .vd-box.accent { background: #F5A623; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F5A623; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fef7e8; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F5A623; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-docker.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">1</div>
+            <h1 class="chapter-title">コンテナ技術入門</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">1-1</span><span>コンテナ技術とは</span></li>
+                <li class="toc-item"><span class="toc-number">1-2</span><span>仮想マシンとコンテナの違い</span></li>
+                <li class="toc-item"><span class="toc-number">1-3</span><span>Dockerの歴史と特徴</span></li>
+                <li class="toc-item"><span class="toc-number">1-4</span><span>コンテナのユースケース</span></li>
+                <li class="toc-item"><span class="toc-number">1-5</span><span>Docker用語集</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 1-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-1</span>
+                <h2 class="section-title">コンテナ技術とは</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>コンテナ技術とは、アプリケーションとその実行に必要なライブラリや設定ファイルをひとまとめにパッケージ化し、どの環境でも同じように動作させるための仮想化技術です。従来のサーバー管理の課題を解決する革新的なアプローチとして、現代のソフトウェア開発に欠かせない存在となっています。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">なぜコンテナが必要なのか</h3>
+                <p>ソフトウェア開発において、最もよく起こる問題の一つが「自分のパソコンでは動くのに、サーバーでは動かない」という環境差異の問題です。これは、OSのバージョン、ライブラリのバージョン、設定ファイルの違いなどが原因で発生します。</p>
+                <p>コンテナ技術はこの問題を根本的に解決します。アプリケーションに必要なすべての依存関係を1つのパッケージ（コンテナ）にまとめることで、開発環境・テスト環境・本番環境のどこでも同一の動作を保証します。</p>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p>コンテナの核心は「環境ごと持ち運べる」こと。アプリケーション本体だけでなく、OS層の一部・ライブラリ・設定ファイルをすべて含めてパッケージ化します。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">コンテナの仕組み</h3>
+                <p>コンテナは、ホストOS（実際に動いているOS）のカーネルを共有しながら、プロセスやネットワーク、ファイルシステムを隔離する技術です。Linux の <strong>namespace</strong>（名前空間）と <strong>cgroup</strong>（リソース制御）という2つのカーネル機能を基盤としています。</p>
+                <ul>
+                    <li><strong>namespace</strong>：プロセスID、ネットワーク、ファイルシステムなどをコンテナごとに隔離する</li>
+                    <li><strong>cgroup</strong>：CPU、メモリ、ディスクI/Oなどのリソース使用量を制限・管理する</li>
+                </ul>
+                <p>これにより、1台のサーバー上で複数のコンテナを安全かつ効率的に実行できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">コンテナ技術の歴史的背景</h3>
+                <p>コンテナの概念は新しいものではありません。2000年代初頭から Linux には類似の仕組みが存在していました。</p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>年代</th>
+                                <th>技術</th>
+                                <th>概要</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1979年</td><td>chroot</td><td>ファイルシステムのルートディレクトリを変更する Unix 機能</td></tr>
+                            <tr><td>2000年</td><td>FreeBSD Jail</td><td>プロセスとファイルシステムの隔離を実現</td></tr>
+                            <tr><td>2006年</td><td>cgroups</td><td>Google が開発したリソース制御の仕組み</td></tr>
+                            <tr><td>2008年</td><td>LXC</td><td>Linux カーネルのコンテナ機能を利用した仮想化</td></tr>
+                            <tr><td>2013年</td><td>Docker</td><td>コンテナを誰でも簡単に使えるツールとして普及</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Docker の登場以前にもコンテナ技術は存在していましたが、使いこなすには高度な Linux の知識が必要でした。Docker は直感的なコマンドとイメージの共有基盤（Docker Hub）を提供することで、コンテナ技術を爆発的に普及させました。</p>
+            </div>
+        </section>
+
+        <!-- セクション 1-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-2</span>
+                <h2 class="section-title">仮想マシンとコンテナの違い</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>サーバー仮想化の手法として、従来は仮想マシン（VM）が主流でした。コンテナと仮想マシンは似ているようで、アーキテクチャが大きく異なります。両者の違いを正しく理解しましょう。</p>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128187; 仮想マシン vs コンテナ アーキテクチャ比較</div>
+                <div class="vd-grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="text-align: center;">
+                        <div style="font-weight: 700; color: #e53935; margin-bottom: 12px; font-size: 0.85rem;">仮想マシン（VM）</div>
+                        <div class="vd-card red" style="margin-bottom: 6px;">
+                            <span class="vd-label" style="color: #c62828;">App A</span>
+                            <span class="vd-sub">アプリケーション</span>
+                        </div>
+                        <div class="vd-card red" style="margin-bottom: 6px;">
+                            <span class="vd-label" style="color: #c62828;">ゲストOS</span>
+                            <span class="vd-sub">Ubuntu / CentOS など</span>
+                        </div>
+                        <div class="vd-card amber" style="margin-bottom: 6px;">
+                            <span class="vd-label" style="color: #e65100;">ハイパーバイザー</span>
+                            <span class="vd-sub">VMware / VirtualBox</span>
+                        </div>
+                        <div class="vd-card" style="background: #eceff1; border-color: #b0bec5;">
+                            <span class="vd-label" style="color: #37474f;">ホストOS / ハードウェア</span>
+                        </div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-weight: 700; color: #F5A623; margin-bottom: 12px; font-size: 0.85rem;">コンテナ</div>
+                        <div class="vd-card blue" style="margin-bottom: 6px;">
+                            <span class="vd-label" style="color: #1565c0;">App A</span>
+                            <span class="vd-sub">アプリ + ライブラリ</span>
+                        </div>
+                        <div class="vd-card blue" style="margin-bottom: 6px;">
+                            <span class="vd-label" style="color: #1565c0;">コンテナランタイム</span>
+                            <span class="vd-sub">Docker Engine</span>
+                        </div>
+                        <div class="vd-card" style="background: #eceff1; border-color: #b0bec5;">
+                            <span class="vd-label" style="color: #37474f;">ホストOS / ハードウェア</span>
+                            <span class="vd-sub">カーネルを共有</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">比較表</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>仮想マシン（VM）</th>
+                                <th>コンテナ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>起動速度</td>
+                                <td>数分</td>
+                                <td>数秒</td>
+                            </tr>
+                            <tr>
+                                <td>サイズ</td>
+                                <td>数GB〜数十GB</td>
+                                <td>数MB〜数百MB</td>
+                            </tr>
+                            <tr>
+                                <td>OS</td>
+                                <td>ゲストOS が必要</td>
+                                <td>ホストOS のカーネルを共有</td>
+                            </tr>
+                            <tr>
+                                <td>隔離レベル</td>
+                                <td>高い（完全なOS分離）</td>
+                                <td>中程度（プロセスレベル分離）</td>
+                            </tr>
+                            <tr>
+                                <td>リソース効率</td>
+                                <td>低い（オーバーヘッド大）</td>
+                                <td>高い（軽量）</td>
+                            </tr>
+                            <tr>
+                                <td>可搬性</td>
+                                <td>やや低い</td>
+                                <td>非常に高い</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p>コンテナは「軽量・高速・ポータブル」、VMは「高い隔離性・独立したOS」が特徴です。用途に応じて使い分けることが重要で、両方を組み合わせるケースも増えています。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 1-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-3</span>
+                <h2 class="section-title">Dockerの歴史と特徴</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Docker（ドッカー）は、2013年にDotCloud社（現Docker社）のソロモン・ハイクスによって開発されたコンテナプラットフォームです。コンテナ技術自体はLinuxに以前から存在していましたが、Dockerはそれを誰でも簡単に使えるツールとして世界中に普及させました。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">Dockerの年表</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>年</th>
+                                <th>出来事</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>2013年</td><td>Docker 初版リリース（PyCon で発表）</td></tr>
+                            <tr><td>2014年</td><td>Docker Hub 公開、Docker 1.0 リリース</td></tr>
+                            <tr><td>2015年</td><td>Docker Compose、Docker Swarm 登場</td></tr>
+                            <tr><td>2016年</td><td>Docker for Mac / Windows リリース</td></tr>
+                            <tr><td>2017年</td><td>Moby プロジェクト発足、Kubernetes との連携強化</td></tr>
+                            <tr><td>2019年</td><td>Docker Desktop の本格展開</td></tr>
+                            <tr><td>2021年</td><td>Docker Desktop の有料化（大企業向け）</td></tr>
+                            <tr><td>2023年〜</td><td>AI 連携機能、Docker Init、MCP対応など進化</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">Dockerの主な特徴</h3>
+                <ul>
+                    <li><strong>簡単なコマンド操作</strong>：<code>docker run</code> 一発でコンテナを起動できるシンプルさ</li>
+                    <li><strong>Dockerfile によるコード化</strong>：環境構築手順をテキストファイルとして管理・共有できる</li>
+                    <li><strong>Docker Hub</strong>：公式イメージや世界中の開発者が作成したイメージを無料で利用可能</li>
+                    <li><strong>レイヤーシステム</strong>：イメージを差分で管理し、効率的にビルド・配布できる</li>
+                    <li><strong>豊富なエコシステム</strong>：Docker Compose、Kubernetes、CI/CD ツールとの連携</li>
+                </ul>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128171; Docker エコシステム概要</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#128231;</span>
+                        <span class="vd-label">Docker Engine</span>
+                        <span class="vd-sub">コンテナの実行エンジン<br>（コア技術）</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128220;</span>
+                        <span class="vd-label">Dockerfile</span>
+                        <span class="vd-sub">イメージの設計図<br>（環境のコード化）</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#127760;</span>
+                        <span class="vd-label">Docker Hub</span>
+                        <span class="vd-sub">イメージの共有・配布<br>（レジストリ）</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">&#127932;</span>
+                        <span class="vd-label">Docker Compose</span>
+                        <span class="vd-sub">複数コンテナの一括管理<br>（オーケストレーション）</span>
+                    </div>
+                    <div class="vd-card">
+                        <span class="vd-icon">&#9781;</span>
+                        <span class="vd-label">Kubernetes</span>
+                        <span class="vd-sub">大規模コンテナ管理<br>（本番運用）</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128736;</span>
+                        <span class="vd-label">Docker Desktop</span>
+                        <span class="vd-sub">GUI管理ツール<br>（開発者向け）</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 1-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-4</span>
+                <h2 class="section-title">コンテナのユースケース</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>コンテナ技術は、開発・テスト・運用のあらゆる場面で活用されています。代表的なユースケースを見ていきましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1. 開発環境の統一</h3>
+                <p>チーム開発において、メンバー全員が同じ環境で開発できることは非常に重要です。Dockerを使えば、<code>docker compose up</code> 一発で、データベース・バックエンド・フロントエンドの開発環境を立ち上げられます。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">開発環境の起動例</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># プロジェクトをクローンして環境構築
+git clone https://github.com/example/project.git
+cd project
+docker compose up -d
+
+# これだけで全員同じ環境が手に入る！</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2. CI/CD パイプライン</h3>
+                <p>継続的インテグレーション/デリバリー（CI/CD）では、テスト環境を毎回クリーンに構築する必要があります。コンテナなら数秒で環境を用意し、テスト後に即座に破棄できます。GitHub Actions や Jenkins でもDockerが標準的に利用されています。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3. マイクロサービスアーキテクチャ</h3>
+                <p>1つの大きなアプリケーションを複数の小さなサービスに分割するマイクロサービスでは、各サービスを独立したコンテナとして運用します。サービスごとに異なる言語やフレームワークを使うことも可能です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4. 本番環境のデプロイ</h3>
+                <p>AWS ECS、Google Cloud Run、Azure Container Instances など、主要なクラウドサービスはすべてコンテナベースのデプロイをサポートしています。開発環境と同じコンテナを本番にそのまま展開できるため、デプロイの信頼性が大幅に向上します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5. レガシーアプリケーションの移行</h3>
+                <p>古い技術で構築されたアプリケーションをコンテナ化することで、モダンなインフラ上で運用を継続できます。アプリケーションの動作環境をそのままコンテナに封じ込めるため、ホストOSのアップデートに影響されにくくなります。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">6. 教育・学習環境</h3>
+                <p>プログラミング学習や研修では、受講者全員が同じ環境を使えることが重要です。Docker を使えば <code>docker run</code> コマンドひとつで、講師と同じ開発環境を瞬時に構築できます。環境構築でつまずくことなく、本来の学習内容に集中できます。</p>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p>コンテナ技術は「インフラエンジニアだけのもの」ではありません。フロントエンド開発者、バックエンド開発者、データサイエンティストなど、ソフトウェアに関わるすべての人にとって有用なスキルです。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128640; コンテナ活用の主要シーン</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128187;</span>
+                        <span class="vd-label">開発</span>
+                        <span class="vd-sub">環境統一</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box">
+                        <span class="vd-icon">&#9989;</span>
+                        <span class="vd-label">テスト</span>
+                        <span class="vd-sub">CI/CD</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128230;</span>
+                        <span class="vd-label">ビルド</span>
+                        <span class="vd-sub">イメージ作成</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#127760;</span>
+                        <span class="vd-label">デプロイ</span>
+                        <span class="vd-sub">本番環境</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 1-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-5</span>
+                <h2 class="section-title">Docker用語集</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Dockerの学習を進める上で、頻出する重要な用語を整理しておきましょう。各用語は後の章で詳しく解説しますが、ここで概要を把握しておくと理解がスムーズになります。</p>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>用語</th>
+                            <th>説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>イメージ（Image）</strong></td>
+                            <td>コンテナの設計図。アプリケーションの実行に必要なファイルやライブラリをまとめた読み取り専用のテンプレート</td>
+                        </tr>
+                        <tr>
+                            <td><strong>コンテナ（Container）</strong></td>
+                            <td>イメージから作成された実行中のインスタンス。隔離された環境でアプリケーションが動作する</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dockerfile</strong></td>
+                            <td>イメージを作成するための命令を記述したテキストファイル。環境構築手順をコード化する</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Docker Hub</strong></td>
+                            <td>Dockerイメージの共有・配布を行うクラウドレジストリ。公式イメージが多数公開されている</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Docker Engine</strong></td>
+                            <td>コンテナの作成・実行を行うランタイム。Docker のコア部分</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Docker Compose</strong></td>
+                            <td>複数のコンテナを定義・管理するためのツール。YAML ファイルで構成を記述する</td>
+                        </tr>
+                        <tr>
+                            <td><strong>レジストリ（Registry）</strong></td>
+                            <td>Docker イメージを保管・配布するためのサービス。Docker Hub は公式レジストリ</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ボリューム（Volume）</strong></td>
+                            <td>コンテナのデータを永続化するための仕組み。コンテナを削除してもデータが残る</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ネットワーク（Network）</strong></td>
+                            <td>コンテナ間の通信を管理する仕組み。コンテナ同士をつなげたり隔離したりできる</td>
+                        </tr>
+                        <tr>
+                            <td><strong>タグ（Tag）</strong></td>
+                            <td>イメージのバージョンを識別するためのラベル。例：<code>nginx:latest</code>、<code>node:18-alpine</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="warning-box">
+                <div class="warning-box-title">注意</div>
+                <div class="warning-box-content">
+                    <p>「イメージ」と「コンテナ」を混同しないようにしましょう。イメージは「設計図（クラス）」、コンテナは「実体（インスタンス）」と考えるとわかりやすいです。1つのイメージから複数のコンテナを作成できます。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">1章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>仮想マシン（VM）とコンテナの最も大きな違いとして正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>コンテナはインターネット接続が不要だが、VMは必要</li>
+                            <li>コンテナはホストOSのカーネルを共有するが、VMはゲストOSを持つ</li>
+                            <li>VMは起動が速く、コンテナは起動が遅い</li>
+                            <li>コンテナはWindows上では動作しない</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>Docker Hub の説明として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>Dockerのソースコードを管理するGitリポジトリ</li>
+                            <li>Dockerイメージを共有・配布するクラウドレジストリ</li>
+                            <li>Docker Composeの設定ファイルを保存するサービス</li>
+                            <li>コンテナの実行ログを保存するストレージサービス</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>コンテナ技術の利点として<strong>正しくない</strong>ものはどれですか？</p>
+                        <ol type="A">
+                            <li>環境差異をなくし、どこでも同じ動作が保証される</li>
+                            <li>起動が高速で、数秒でアプリケーションを立ち上げられる</li>
+                            <li>仮想マシンより常にセキュリティが高い</li>
+                            <li>リソース効率が高く、1台のサーバーで多くのコンテナを動かせる</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">1章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p>コンテナはホストOSのカーネルを共有し、プロセスレベルで隔離を行います。一方、仮想マシンはハイパーバイザー上にゲストOSを丸ごとインストールして動作します。この違いにより、コンテナはVMに比べて起動が速く、リソース消費も少なくなります。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p>Docker Hub は、Dockerイメージの共有・配布を行うクラウド型のレジストリサービスです。公式イメージ（nginx、node、python など）のほか、コミュニティが作成したイメージも多数公開されています。無料プランと有料プランがあります。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: C</div>
+                    <div class="answer-content">
+                        <p>コンテナは仮想マシンに比べて隔離レベルがやや低いため、「常にセキュリティが高い」とは言えません。VMはOS全体を隔離するため、セキュリティの隔離レベルはVMの方が一般的に高いとされています。コンテナのセキュリティは適切な設定と管理が重要です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="index.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">目次</div>
+            </div>
+        </a>
+        <a href="2docker-setup.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第2章 Docker Desktopの導入</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>実行結果サンプル - 第5章 UIコンポーネント生成</title>
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-hover: #005A9E;
+      --secondary: #5856D6;
+      --danger: #FF3B30;
+      --danger-hover: #D32F2F;
+      --text: #1D1D1F;
+      --text-sub: #6E6E73;
+      --border: #D2D2D7;
+      --bg: #F5F5F7;
+      --white: #FFFFFF;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 24px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    .page-header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white; border-radius: 16px; padding: 40px 32px;
+      margin-bottom: 32px; text-align: center;
+      box-shadow: 0 4px 16px rgba(0,122,204,0.3);
+    }
+    .page-header h1 { font-size: 24px; margin-bottom: 8px; }
+    .page-header p { opacity: 0.9; font-size: 14px; }
+    .card {
+      background: var(--white); border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 32px; margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 18px; font-weight: 700; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 2px solid var(--primary);
+    }
+    .card-description { font-size: 14px; color: var(--text-sub); margin-bottom: 20px; }
+    .demo-area {
+      background: var(--bg); border-radius: 8px; padding: 24px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .demo-row {
+      display: flex; align-items: center; gap: 12px;
+      flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .demo-label {
+      font-size: 12px; font-weight: 600; color: var(--text-sub);
+      min-width: 80px;
+    }
+
+    /* ボタンコンポーネント - BEM */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; border-radius: 8px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s ease; font-family: inherit;
+      text-decoration: none;
+    }
+    .btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn:disabled, .btn--disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+    /* バリエーション */
+    .btn--primary { background: var(--primary); color: white; }
+    .btn--primary:hover { background: var(--primary-hover); }
+    .btn--secondary { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+    .btn--secondary:hover { background: rgba(0,122,204,0.08); }
+    .btn--ghost { background: transparent; color: var(--primary); }
+    .btn--ghost:hover { background: rgba(0,122,204,0.08); }
+    .btn--danger { background: var(--danger); color: white; }
+    .btn--danger:hover { background: var(--danger-hover); }
+
+    /* サイズ */
+    .btn--sm { height: 32px; font-size: 14px; padding: 0 12px; }
+    .btn--md { height: 40px; font-size: 14px; padding: 0 16px; }
+    .btn--lg { height: 48px; font-size: 16px; padding: 0 24px; }
+
+    /* カードコンポーネント */
+    .ui-card {
+      background: white; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: box-shadow 0.2s, transform 0.2s;
+      max-width: 320px; text-decoration: none; color: inherit; display: block;
+    }
+    .ui-card:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      transform: translateY(-4px);
+    }
+    .ui-card__image {
+      width: 100%; height: 180px; object-fit: cover;
+      background: linear-gradient(135deg, #e8f4fd, #ddd);
+      display: flex; align-items: center; justify-content: center;
+      color: #999; font-size: 13px; position: relative;
+      overflow: hidden;
+    }
+    .ui-card__badge {
+      position: absolute; top: 12px; left: 12px;
+      background: var(--primary); color: white;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .ui-card__body { padding: 16px; }
+    .ui-card__title {
+      font-size: 16px; font-weight: 700; margin-bottom: 8px;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .ui-card__text {
+      font-size: 13px; color: var(--text-sub); margin-bottom: 12px;
+      display: -webkit-box; -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .ui-card__meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; color: #a1a1a6;
+    }
+    .ui-card__action { color: var(--primary); font-weight: 600; text-decoration: none; }
+
+    /* フォーム要素 */
+    .form-group { margin-bottom: 20px; }
+    .form-label {
+      display: block; font-size: 14px; font-weight: 600;
+      color: var(--text-sub); margin-bottom: 6px;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; height: 44px; padding: 0 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 16px; font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: white;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0,122,204,0.15);
+    }
+    .form-input--error { border-color: var(--danger); }
+    .form-input--error:focus { box-shadow: 0 0 0 3px rgba(255,59,48,0.15); }
+    .form-textarea { height: auto; min-height: 100px; padding: 12px; resize: vertical; }
+    .form-error { font-size: 12px; color: var(--danger); margin-top: 4px; }
+    .form-input::placeholder { color: #c7c7cc; }
+    .form-input:disabled { background: #f5f5f5; cursor: not-allowed; }
+
+    /* カスタムチェックボックス */
+    .custom-check { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; }
+    .custom-check input[type="checkbox"] { display: none; }
+    .custom-check__box {
+      width: 20px; height: 20px; border: 2px solid var(--border);
+      border-radius: 4px; position: relative;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .custom-check input:checked + .custom-check__box {
+      background: var(--primary); border-color: var(--primary);
+    }
+    .custom-check input:checked + .custom-check__box::after {
+      content: "";
+      position: absolute; top: 2px; left: 6px;
+      width: 5px; height: 10px;
+      border: solid white; border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+    .custom-check input:focus-visible + .custom-check__box {
+      outline: 3px solid var(--primary); outline-offset: 2px;
+    }
+
+    /* カスタムラジオ */
+    .custom-radio { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; }
+    .custom-radio input[type="radio"] { display: none; }
+    .custom-radio__circle {
+      width: 20px; height: 20px; border: 2px solid var(--border);
+      border-radius: 50%; position: relative;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .custom-radio input:checked + .custom-radio__circle {
+      border-color: var(--primary);
+    }
+    .custom-radio input:checked + .custom-radio__circle::after {
+      content: "";
+      position: absolute; top: 3px; left: 3px;
+      width: 10px; height: 10px;
+      background: var(--primary); border-radius: 50%;
+    }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+
+    /* ヘッダーナビゲーション */
+    .header-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 64px;
+      padding: 0 24px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .header-nav__logo {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .header-nav__links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+      align-items: center;
+    }
+    .header-nav__link {
+      font-size: 14px;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .header-nav__link:hover { color: var(--primary); }
+    .header-nav__link--active { color: var(--primary); font-weight: 700; }
+    .header-nav__cta {
+      display: inline-flex;
+      align-items: center;
+      height: 36px;
+      padding: 0 16px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .header-nav__cta:hover { background: var(--primary-hover); }
+    .header-nav__hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .header-nav__hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+    }
+
+    @media (max-width: 767px) {
+      .cards-grid { grid-template-columns: 1fr; }
+      .header-nav__links { display: none; }
+      .header-nav__hamburger { display: flex; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1>第5章 UIコンポーネント生成</h1>
+      <p>プロンプトUIコーディング - 実行結果サンプル</p>
+    </div>
+
+    <!-- ボタンバリエーション -->
+    <div class="card">
+      <div class="card-title">ボタンコンポーネント</div>
+      <p class="card-description">4つのバリエーション x 3つのサイズ + 状態管理</p>
+
+      <div class="demo-row">
+        <span class="demo-label">Primary</span>
+        <button class="btn btn--primary btn--sm">Small</button>
+        <button class="btn btn--primary btn--md">Medium</button>
+        <button class="btn btn--primary btn--lg">Large</button>
+      </div>
+      <div class="demo-row">
+        <span class="demo-label">Secondary</span>
+        <button class="btn btn--secondary btn--sm">Small</button>
+        <button class="btn btn--secondary btn--md">Medium</button>
+        <button class="btn btn--secondary btn--lg">Large</button>
+      </div>
+      <div class="demo-row">
+        <span class="demo-label">Ghost</span>
+        <button class="btn btn--ghost btn--sm">Small</button>
+        <button class="btn btn--ghost btn--md">Medium</button>
+        <button class="btn btn--ghost btn--lg">Large</button>
+      </div>
+      <div class="demo-row">
+        <span class="demo-label">Danger</span>
+        <button class="btn btn--danger btn--sm">Small</button>
+        <button class="btn btn--danger btn--md">Medium</button>
+        <button class="btn btn--danger btn--lg">Large</button>
+      </div>
+      <div class="demo-row">
+        <span class="demo-label">Disabled</span>
+        <button class="btn btn--primary btn--md" disabled>Primary</button>
+        <button class="btn btn--secondary btn--md" disabled>Secondary</button>
+        <button class="btn btn--danger btn--md" disabled>Danger</button>
+      </div>
+    </div>
+
+    <!-- ヘッダーナビゲーション -->
+    <div class="card">
+      <div class="card-title">ヘッダーナビゲーション</div>
+      <p class="card-description">PC: 5ナビ項目 + CTAボタン / モバイル: ハンバーガーメニュー（767px以下で切替）</p>
+      <nav class="header-nav">
+        <div class="header-nav__logo">SampleApp</div>
+        <ul class="header-nav__links">
+          <li><a href="#" class="header-nav__link header-nav__link--active">ホーム</a></li>
+          <li><a href="#" class="header-nav__link">機能</a></li>
+          <li><a href="#" class="header-nav__link">料金</a></li>
+          <li><a href="#" class="header-nav__link">事例</a></li>
+          <li><a href="#" class="header-nav__link">お問い合わせ</a></li>
+          <li><a href="#" class="header-nav__cta">無料で始める</a></li>
+        </ul>
+        <button class="header-nav__hamburger" aria-label="メニューを開く">
+          <span></span><span></span><span></span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- カードコンポーネント -->
+    <div class="card">
+      <div class="card-title">カードコンポーネント</div>
+      <p class="card-description">サムネイル + カテゴリバッジ + タイトル(2行) + 説明(3行) + メタ情報</p>
+      <div class="cards-grid">
+        <a href="#" class="ui-card">
+          <div class="ui-card__image">
+            <span class="ui-card__badge">テクノロジー</span>
+            480 x 280
+          </div>
+          <div class="ui-card__body">
+            <h3 class="ui-card__title">AIが変えるWeb開発の未来について詳しく解説</h3>
+            <p class="ui-card__text">人工知能がWebデザインやコーディングにどのような影響を与えるのか、最新トレンドを解説します。</p>
+            <div class="ui-card__meta">
+              <span>2026年1月15日</span>
+              <span class="ui-card__action">続きを読む →</span>
+            </div>
+          </div>
+        </a>
+        <a href="#" class="ui-card">
+          <div class="ui-card__image">
+            <span class="ui-card__badge">デザイン</span>
+            480 x 280
+          </div>
+          <div class="ui-card__body">
+            <h3 class="ui-card__title">2026年のUIデザイントレンド</h3>
+            <p class="ui-card__text">ニューモーフィズムからグラスモーフィズムまで、最新のデザイントレンドをまとめました。</p>
+            <div class="ui-card__meta">
+              <span>2026年1月10日</span>
+              <span class="ui-card__action">続きを読む →</span>
+            </div>
+          </div>
+        </a>
+        <a href="#" class="ui-card">
+          <div class="ui-card__image">
+            <span class="ui-card__badge">開発</span>
+            480 x 280
+          </div>
+          <div class="ui-card__body">
+            <h3 class="ui-card__title">CSS Gridで実現する完璧なレイアウト設計の基本</h3>
+            <p class="ui-card__text">CSS Gridを使って複雑なレイアウトをシンプルに構築するテクニックを紹介します。</p>
+            <div class="ui-card__meta">
+              <span>2026年1月5日</span>
+              <span class="ui-card__action">続きを読む →</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- フォーム要素セット -->
+    <div class="card">
+      <div class="card-title">フォーム入力要素セット</div>
+      <p class="card-description">テキスト・メール・セレクト・チェックボックス・ラジオボタン・日付入力</p>
+      <div style="max-width: 500px; margin: 0 auto;">
+        <div class="form-group">
+          <label class="form-label" for="f-name">お名前</label>
+          <input class="form-input" type="text" id="f-name" placeholder="例: 山田太郎">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-email">メールアドレス</label>
+          <input class="form-input" type="email" id="f-email" placeholder="例: taro@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-email-err">エラー状態の例</label>
+          <input class="form-input form-input--error" type="email" id="f-email-err" value="invalid-email">
+          <div class="form-error">正しいメールアドレスを入力してください</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-select">お問い合わせ種別</label>
+          <select class="form-select" id="f-select">
+            <option value="">選択してください</option>
+            <option>製品について</option>
+            <option>サービスについて</option>
+            <option>採用について</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-date">日付</label>
+          <input class="form-input" type="date" id="f-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">チェックボックス</label>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <label class="custom-check">
+              <input type="checkbox" checked>
+              <span class="custom-check__box"></span>
+              利用規約に同意する
+            </label>
+            <label class="custom-check">
+              <input type="checkbox">
+              <span class="custom-check__box"></span>
+              メールマガジンを受信する
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ラジオボタン</label>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <label class="custom-radio">
+              <input type="radio" name="plan" checked>
+              <span class="custom-radio__circle"></span>
+              無料プラン
+            </label>
+            <label class="custom-radio">
+              <input type="radio" name="plan">
+              <span class="custom-radio__circle"></span>
+              スタンダードプラン
+            </label>
+            <label class="custom-radio">
+              <input type="radio" name="plan">
+              <span class="custom-radio__circle"></span>
+              プレミアムプラン
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-msg">お問い合わせ内容</label>
+          <textarea class="form-textarea" id="f-msg" placeholder="お気軽にご記入ください"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-disabled">無効状態</label>
+          <input class="form-input" type="text" id="f-disabled" value="編集できません" disabled>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

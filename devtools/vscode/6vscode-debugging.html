@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第6章 デバッグ機能 - VSCode＋AI開発</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #F5A623;
+        --primary-dark: #D4891D;
+        --primary-light: #FEF7E8;
+        --primary-lighter: #FDE4A8;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef7e8 0%, #fef7e8 100%);
+        border-radius: 16px; border: 1px solid #fde4a8;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F5A623; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F5A623; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(245,166,35,0.08);
+      }
+      .vd-box.accent { background: #F5A623; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F5A623; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fef7e8; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F5A623; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-vscode.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">6</div>
+            <h1 class="chapter-title">デバッグ機能</h1>
+            <p class="chapter-subtitle">ブレークポイントとデバッグパネルで効率的にバグを発見する</p>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title">この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">6-1</span>デバッグとは</li>
+                <li class="toc-item"><span class="toc-number">6-2</span>ブレークポイントの使い方</li>
+                <li class="toc-item"><span class="toc-number">6-3</span>launch.jsonの設定</li>
+                <li class="toc-item"><span class="toc-number">6-4</span>デバッグパネルの操作</li>
+                <li class="toc-item"><span class="toc-number">6-5</span>JavaScript/Node.jsのデバッグ実践</li>
+                <li class="toc-item"><span class="toc-number">Ex</span>練習問題</li>
+            </ul>
+        </nav>
+
+        <!-- ===== Section 6-1 ===== -->
+        <section class="section" id="section6-1">
+            <div class="section-header">
+                <span class="section-number">Section 6-1</span>
+                <h2 class="section-title">デバッグとは</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>デバッグ（Debug）</strong>とは、プログラム中の不具合（バグ）を見つけて修正する作業のことです。プログラミングにおいて最も時間がかかる作業の一つであり、効率的なデバッグ手法を身につけることは、開発者にとって非常に重要なスキルです。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>デバッグの意義</h3>
+                <p>プログラムは書いた通りに動きますが、それが必ずしも意図した通りとは限りません。バグの原因としては、ロジックの間違い、変数の初期化忘れ、型の不一致、非同期処理のタイミングなどさまざまです。デバッグは、「コードが実際にどう動いているか」を調べ、期待と現実のギャップを特定する作業です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>print文デバッグ vs ブレークポイントデバッグ</h3>
+                <p>デバッグ手法には大きく2つのアプローチがあります。</p>
+            </div>
+
+            <!-- 図解1: デバッグ手法の比較 -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">デバッグ手法の比較</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#128196;</span>
+                        <span class="vd-label">print文デバッグ</span>
+                        <span class="vd-sub">console.log() で値を出力<br>手軽だが情報が限定的<br>コードを都度追加・削除が必要<br>大規模コードでは非効率</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128308;</span>
+                        <span class="vd-label">ブレークポイントデバッグ</span>
+                        <span class="vd-sub">実行を一時停止して調査<br>変数の値をリアルタイム確認<br>ステップ実行で処理を追跡<br>コードを変更せずにデバッグ可能</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title"><span class="material-icons">info</span> POINT</div>
+                <div class="info-box-content">
+                    <p><code>console.log()</code> でのデバッグは手軽ですが、VSCodeのブレークポイントデバッグを使えば、プログラムの実行を任意の箇所で止めて、その時点での変数の値やコールスタック（関数の呼び出し履歴）をすべて確認できます。本格的な開発では、ブレークポイントデバッグを使いこなせるようになりましょう。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Section 6-2 ===== -->
+        <section class="section" id="section6-2">
+            <div class="section-header">
+                <span class="section-number">Section 6-2</span>
+                <h2 class="section-title">ブレークポイントの使い方</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>ブレークポイント（Breakpoint）</strong>とは、プログラムの実行を一時停止させる「目印」のことです。デバッガーがブレークポイントの設定された行に到達すると、自動的に実行が中断され、変数の状態や処理の流れを確認できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>ブレークポイントの設定方法</h3>
+                <p>VSCodeでは、コードエディタの<strong>行番号の左側</strong>（ガター）をクリックするだけでブレークポイントを設定できます。設定すると赤い丸が表示されます。</p>
+                <ul>
+                    <li><strong>設定：</strong>行番号の左側をクリック（赤い丸が表示される）</li>
+                    <li><strong>解除：</strong>赤い丸をもう一度クリック</li>
+                    <li><strong>一時無効化：</strong>右クリック → 「ブレークポイントを無効にする」</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3>条件付きブレークポイント</h3>
+                <p>ブレークポイントに条件を設定すると、特定の条件を満たした場合のみ実行が停止します。ループ処理で特定の回数だけ止めたい場合などに便利です。</p>
+                <ul>
+                    <li>行番号の左側を<strong>右クリック</strong> → 「条件付きブレークポイントの追加」</li>
+                    <li>例：<code>i === 5</code> や <code>user.name === "田中"</code> のように条件式を入力</li>
+                </ul>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript</span>
+                        <span class="code-title">条件付きブレークポイントの活用例</span>
+                    </div>
+                    <div class="code-content"><pre><code>// ループの中で i === 50 のときだけ停止させたい場合
+for (let i = 0; i &lt; 100; i++) {
+  // ← ここに条件付きブレークポイント: i === 50
+  const result = processItem(items[i]);
+  console.log(result);
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>ログポイント</h3>
+                <p><strong>ログポイント（Logpoint）</strong>は、ブレークポイントの一種で、実行を停止せずにデバッグコンソールにメッセージを出力します。コードに <code>console.log()</code> を書かなくても同様の効果が得られます。</p>
+                <ul>
+                    <li>行番号の左側を<strong>右クリック</strong> → 「ログポイントの追加」</li>
+                    <li>メッセージ例：<code>変数iの値: {i}, resultの値: {result}</code></li>
+                    <li><code>{}</code> で囲んだ式は実行時の値に置換されます</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title"><span class="material-icons">lightbulb</span> ヒント</div>
+                <div class="info-box-content">
+                    <p>ログポイントはダイヤモンド型（ひし形）のアイコンで表示されます。通常のブレークポイント（赤い丸）と区別できるので覚えておきましょう。本番環境に近い状態でのデバッグでは、実行を止めたくない場面が多いため、ログポイントが非常に役立ちます。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Section 6-3 ===== -->
+        <section class="section" id="section6-3">
+            <div class="section-header">
+                <span class="section-number">Section 6-3</span>
+                <h2 class="section-title">launch.jsonの設定</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>デバッグの設定は <code>.vscode/launch.json</code> ファイルに記述します。このファイルでは、デバッグ対象のプログラム、使用するデバッガー、起動方法などを定義します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>launch.jsonの作成方法</h3>
+                <p>初回のデバッグ設定は、以下の手順で行います。</p>
+                <ol>
+                    <li>サイドバーの「実行とデバッグ」アイコン（再生マークに虫のアイコン）をクリック</li>
+                    <li>「launch.jsonファイルを作成します」リンクをクリック</li>
+                    <li>使用する環境（Node.js、Chrome、Pythonなど）を選択</li>
+                    <li>自動生成された <code>launch.json</code> を確認・編集</li>
+                </ol>
+            </div>
+
+            <div class="subsection">
+                <h3>主要プロパティ</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JSON</span>
+                        <span class="code-filename">.vscode/launch.json</span>
+                    </div>
+                    <div class="code-content"><pre><code>{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",          // デバッガーの種類
+      "request": "launch",     // "launch"（起動）or "attach"（接続）
+      "name": "Node.js起動",   // 構成名（表示名）
+      "program": "${workspaceFolder}/app.js",  // 実行ファイル
+      "cwd": "${workspaceFolder}",             // 作業ディレクトリ
+      "console": "integratedTerminal",         // 出力先
+      "env": {                 // 環境変数
+        "NODE_ENV": "development"
+      },
+      "args": ["--port", "3000"]  // コマンドライン引数
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>プロパティ</th>
+                                <th>説明</th>
+                                <th>例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>type</code></td><td>デバッガーの種類</td><td><code>"node"</code>, <code>"chrome"</code>, <code>"python"</code></td></tr>
+                            <tr><td><code>request</code></td><td>起動方法</td><td><code>"launch"</code>（新規起動）, <code>"attach"</code>（既存プロセスに接続）</td></tr>
+                            <tr><td><code>name</code></td><td>構成の表示名</td><td><code>"サーバー起動"</code></td></tr>
+                            <tr><td><code>program</code></td><td>実行するファイルのパス</td><td><code>"${workspaceFolder}/index.js"</code></td></tr>
+                            <tr><td><code>env</code></td><td>環境変数の設定</td><td><code>{"PORT": "8080"}</code></td></tr>
+                            <tr><td><code>args</code></td><td>プログラムへの引数</td><td><code>["--verbose"]</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>言語別のテンプレート例</h3>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JSON</span>
+                        <span class="code-title">Chrome（フロントエンド）デバッグ</span>
+                    </div>
+                    <div class="code-content"><pre><code>{
+  "type": "chrome",
+  "request": "launch",
+  "name": "Chrome起動",
+  "url": "http://localhost:3000",
+  "webRoot": "${workspaceFolder}/src"
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JSON</span>
+                        <span class="code-title">Pythonデバッグ</span>
+                    </div>
+                    <div class="code-content"><pre><code>{
+  "type": "debugpy",
+  "request": "launch",
+  "name": "Python起動",
+  "program": "${workspaceFolder}/main.py",
+  "console": "integratedTerminal"
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Section 6-4 ===== -->
+        <section class="section" id="section6-4">
+            <div class="section-header">
+                <span class="section-number">Section 6-4</span>
+                <h2 class="section-title">デバッグパネルの操作</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>デバッグを開始すると、VSCodeの画面上部に<strong>デバッグツールバー</strong>が表示されます。ここからプログラムの実行を制御し、変数の値やコールスタックを確認できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>デバッグツールバーのボタン</h3>
+                <p>デバッグ中に使う6つの主要ボタンを理解しましょう。</p>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>操作</th>
+                                <th>ショートカット</th>
+                                <th>説明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>続行（Continue）</td><td><code>F5</code></td><td>次のブレークポイントまで実行を再開</td></tr>
+                            <tr><td>ステップオーバー</td><td><code>F10</code></td><td>現在の行を実行し、次の行へ（関数の中には入らない）</td></tr>
+                            <tr><td>ステップイン</td><td><code>F11</code></td><td>現在の行を実行し、関数の中に入る</td></tr>
+                            <tr><td>ステップアウト</td><td><code>Shift+F11</code></td><td>現在の関数を抜けて呼び出し元に戻る</td></tr>
+                            <tr><td>再起動</td><td><code>Ctrl+Shift+F5</code></td><td>デバッグセッションを再起動</td></tr>
+                            <tr><td>停止</td><td><code>Shift+F5</code></td><td>デバッグセッションを終了</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 図解2: ステップ実行の流れ -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">ステップ実行の動作イメージ</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#9654;</span>
+                        <span class="vd-label">F5 続行</span>
+                        <span class="vd-sub">次のBPまで実行</span>
+                    </div>
+                    <span class="vd-arrow">&#10132;</span>
+                    <div class="vd-box">
+                        <span class="vd-icon">&#10145;</span>
+                        <span class="vd-label">F10 ステップオーバー</span>
+                        <span class="vd-sub">次の行へ</span>
+                    </div>
+                    <span class="vd-arrow">&#10132;</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#11015;</span>
+                        <span class="vd-label">F11 ステップイン</span>
+                        <span class="vd-sub">関数の中へ</span>
+                    </div>
+                    <span class="vd-arrow">&#10132;</span>
+                    <div class="vd-box">
+                        <span class="vd-icon">&#11014;</span>
+                        <span class="vd-label">Shift+F11 ステップアウト</span>
+                        <span class="vd-sub">関数から脱出</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>変数パネルとウォッチ</h3>
+                <p>デバッグ中、左サイドバーの「実行とデバッグ」ビューには以下の情報が表示されます。</p>
+                <ul>
+                    <li><strong>変数（VARIABLES）</strong>：現在のスコープで定義されている変数と値の一覧</li>
+                    <li><strong>ウォッチ（WATCH）</strong>：監視したい変数や式を追加でき、値の変化をリアルタイムに追跡</li>
+                    <li><strong>コールスタック（CALL STACK）</strong>：現在の実行位置に至るまでの関数呼び出しの履歴</li>
+                    <li><strong>ブレークポイント（BREAKPOINTS）</strong>：設定されているすべてのブレークポイントの一覧と有効/無効の切り替え</li>
+                </ul>
+            </div>
+
+            <!-- 図解3: デバッグパネルの構成 -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">デバッグビューの構成要素</div>
+                <div class="vd-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#128202;</span>
+                        <span class="vd-label">VARIABLES</span>
+                        <span class="vd-sub">ローカル変数・グローバル変数の値を表示</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128065;</span>
+                        <span class="vd-label">WATCH</span>
+                        <span class="vd-sub">指定した式の値をリアルタイム監視</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#128218;</span>
+                        <span class="vd-label">CALL STACK</span>
+                        <span class="vd-sub">関数呼び出しの履歴（どこから呼ばれたか）</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">&#128308;</span>
+                        <span class="vd-label">BREAKPOINTS</span>
+                        <span class="vd-sub">ブレークポイントの一覧管理</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title"><span class="material-icons">lightbulb</span> ヒント</div>
+                <div class="info-box-content">
+                    <p>デバッグ中にコード上の変数にマウスカーソルを合わせると、<strong>ホバー表示</strong>で現在の値を確認できます。また、デバッグコンソール（Debug Console）では任意の式を入力して評価結果を確認することもできます。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Section 6-5 ===== -->
+        <section class="section" id="section6-5">
+            <div class="section-header">
+                <span class="section-number">Section 6-5</span>
+                <h2 class="section-title">JavaScript/Node.jsのデバッグ実践</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>ここでは、実際のJavaScriptコードを使ってVSCodeのデバッグ機能を体験してみましょう。VSCodeにはNode.jsのデバッガーが標準で組み込まれているため、追加のインストールは不要です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>デバッグ対象のコード</h3>
+                <p>以下のような簡単なNode.jsスクリプトを用意します。このコードには意図的にバグが含まれています。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript</span>
+                        <span class="code-filename">app.js</span>
+                    </div>
+                    <div class="code-content"><pre><code>// 商品の合計金額を計算する関数
+function calculateTotal(items) {
+  let total = 0;
+  for (let i = 0; i &lt;= items.length; i++) {  // バグ: &lt;= ではなく &lt; が正しい
+    total += items[i].price * items[i].quantity;
+  }
+  return total;
+}
+
+// 税込み価格を計算する関数
+function addTax(amount, taxRate) {
+  return amount * (1 + taxRate);
+}
+
+// テストデータ
+const cart = [
+  { name: "ノートPC", price: 80000, quantity: 1 },
+  { name: "マウス", price: 3000, quantity: 2 },
+  { name: "キーボード", price: 8000, quantity: 1 }
+];
+
+// 実行
+const subtotal = calculateTotal(cart);
+const total = addTax(subtotal, 0.1);
+console.log(`税込合計: ${total}円`);</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>デバッグの手順</h3>
+                <ol>
+                    <li><strong>ブレークポイント設定：</strong><code>calculateTotal</code> 関数の <code>total += ...</code> の行（5行目）にブレークポイントを設定</li>
+                    <li><strong>デバッグ開始：</strong><code>F5</code> を押す。初回はデバッガーの選択画面が出るので「Node.js」を選択</li>
+                    <li><strong>変数確認：</strong>ブレークポイントで停止したら、VARIABLESパネルで <code>i</code>, <code>total</code>, <code>items[i]</code> の値を確認</li>
+                    <li><strong>ステップ実行：</strong><code>F10</code>（ステップオーバー）で1行ずつ進めながら <code>i</code> と <code>total</code> の変化を追跡</li>
+                    <li><strong>バグ発見：</strong><code>i === 3</code> のとき <code>items[3]</code> が <code>undefined</code> になり、エラーが発生することを確認</li>
+                    <li><strong>修正：</strong>ループ条件を <code>i &lt;= items.length</code> から <code>i &lt; items.length</code> に修正</li>
+                </ol>
+            </div>
+
+            <div class="subsection">
+                <h3>デバッグコンソールの活用</h3>
+                <p>デバッグ中に<strong>デバッグコンソール</strong>（Debug Console）を使うと、任意の式を評価できます。停止中に以下のような式を入力して試してみましょう。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Debug Console</span>
+                        <span class="code-title">デバッグコンソールでの式評価</span>
+                    </div>
+                    <div class="code-content"><pre><code>&gt; items.length        // → 3
+&gt; items[i]            // → 現在のアイテム
+&gt; total               // → 現在の合計値
+&gt; items.map(x =&gt; x.name)  // → ["ノートPC", "マウス", "キーボード"]</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <div class="warning-box-title"><span class="material-icons">warning</span> 注意</div>
+                <p>Node.jsのデバッグを行うには、PCにNode.jsがインストールされている必要があります。インストールされていない場合は、<a href="https://nodejs.org/" target="_blank">Node.js公式サイト</a>からLTS版をダウンロードしてインストールしてください。</p>
+            </div>
+        </section>
+
+        <!-- ===== Exercise ===== -->
+        <section class="section" id="exercise">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>VSCodeのデバッグ操作で、「ステップオーバー（F10）」と「ステップイン（F11）」の違いを説明してください。</p>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p><code>launch.json</code> の <code>"request"</code> プロパティに設定できる2つの値と、それぞれの違いを説明してください。</p>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>通常のブレークポイントとログポイントの違いを説明してください。また、ログポイントが特に有用な場面を1つ挙げてください。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Answer ===== -->
+        <section class="section" id="answer">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1 の解答</div>
+                    <div class="answer-content">
+                        <p><strong>ステップオーバー（F10）</strong>は、現在の行を実行して次の行に進みます。もし現在の行に関数呼び出しがあっても、その関数の中には入らず、関数全体を実行してから次の行に進みます。<br>
+                        <strong>ステップイン（F11）</strong>は、現在の行を実行して次の行に進みますが、もし関数呼び出しがある場合は、その関数の内部に入って1行目から実行を追跡します。関数内部の処理を詳しく調べたいときに使います。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2 の解答</div>
+                    <div class="answer-content">
+                        <p><strong><code>"launch"</code></strong>：VSCodeがプログラムを新しく起動してデバッガーを接続します。通常のデバッグ開始時に使用します。<br>
+                        <strong><code>"attach"</code></strong>：すでに実行中のプロセスにデバッガーを後から接続します。たとえば、別のターミナルで起動したNode.jsサーバーにデバッガーを接続して調査する場合に使います。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3 の解答</div>
+                    <div class="answer-content">
+                        <p><strong>通常のブレークポイント</strong>は、その行に到達するとプログラムの実行が一時停止します。停止した状態で変数やコールスタックを調査できます。<br>
+                        <strong>ログポイント</strong>は、プログラムを停止させずに、デバッグコンソールにメッセージを出力します。コードに <code>console.log()</code> を追加するのと同じ効果を、コードを変更せずに実現できます。<br>
+                        <strong>有用な場面の例：</strong>APIサーバーのデバッグで、リクエスト処理中に実行を止めるとタイムアウトが発生してしまう場合、ログポイントを使えば実行を止めずに変数の値を確認できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div class="page-nav">
+        <a href="5vscode-terminal-git.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第5章 ターミナルとGit連携</div>
+            </div>
+        </a>
+        <a href="7vscode-copilot.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第7章 GitHub Copilot入門</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+</body>
+</html>

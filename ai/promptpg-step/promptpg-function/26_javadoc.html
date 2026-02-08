@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>機能26: Javadoc作成 - WEB総合制作演習 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
+    }
+    .nav-category-links { display: none; }
+    .level-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-left: 12px; }
+    .level-beginner { background: #dcfce7; color: #166534; }
+    .level-intermediate { background: #fef9c3; color: #854d0e; }
+    .level-advanced { background: #ffedd5; color: #9a3412; }
+    .level-expert { background: #fee2e2; color: #991b1b; }
+    .prompt-card { background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; color: white; }
+    .prompt-box { background: rgba(0,0,0,0.3); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #4285F4; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+    .diagram-container { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .diagram-container h4 { margin: 0 0 16px 0; color: white; display: flex; align-items: center; gap: 8px; }
+    .diagram-box { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; }
+    .code-explanation { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 20px; margin: 16px 0; }
+    .code-explanation h4 { margin: 0 0 12px 0; color: #92400e; display: flex; align-items: center; gap: 8px; }
+    .code-explanation ul { margin: 0; padding-left: 20px; color: #78350f; }
+    .code-explanation li { margin-bottom: 8px; line-height: 1.6; }
+    /* コードブロック（spring/style.css準拠） */
+    .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .code-dot.red { background: #ff5f56; }
+    .code-dot.yellow { background: #ffbd2e; }
+    .code-dot.green { background: #27ca40; }
+    .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .code-content { padding: 16px; overflow-x: auto; }
+    .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+    .code-keyword { color: #c084fc; }
+    .code-class { color: #67e8f9; }
+    .code-string { color: #86efac; }
+    .code-comment { color: #94a3b8; }
+    .code-annotation { color: #fbbf24; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../../shared/js/nav-exercises-3.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">機能</div>
+      <div class="chapter-number">26</div>
+      <h1 class="chapter-title">Javadoc作成<span class="level-badge level-expert">エキスパート</span></h1>
+      <p class="chapter-subtitle">APIドキュメントの自動生成</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この機能の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">26-1</span>工程概要</li>
+        <li class="toc-item"><span class="toc-number">26-2</span>成果物</li>
+        <li class="toc-item"><span class="toc-number">26-3</span>生成プロンプト</li>
+      </ul>
+    </nav>
+
+    <!-- Section 26-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 26-1</span>
+        <h2 class="section-title">工程概要</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>Javadocコメントを記述</strong>し、HTMLドキュメントを自動生成します。</p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: var(--primary); color: white;">学習テーマ</div>
+          <p>ドキュメンテーション</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #007AFF; color: white;">主な技術</div>
+          <p>Javadoc / Maven Plugin</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #34C759; color: white;">関連レイヤー</div>
+          <p>Build / Documentation</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>この機能で行うこと</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: var(--primary);">
+              <span class="material-icons" style="color: white;">build</span>
+            </div>
+            <div class="feature-content">
+              <h4>Mavenプラグイン設定</h4>
+              <p>maven-javadoc-pluginでビルド時にドキュメントを生成</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">class</span>
+            </div>
+            <div class="feature-content">
+              <h4>クラスレベルのコメント</h4>
+              <p>概要、@author、@version、@since、@seeを記述</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">functions</span>
+            </div>
+            <div class="feature-content">
+              <h4>メソッドレベルのコメント</h4>
+              <p>概要、@param、@return、@throwsを記述</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">folder</span>
+            </div>
+            <div class="feature-content">
+              <h4>パッケージドキュメント</h4>
+              <p>package-info.javaでパッケージの概要を記述</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 26-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 26-2</span>
+        <h2 class="section-title">成果物</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この機能で作成・更新するファイルの一覧です。</p>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ファイル</th>
+              <th>変更内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>pom.xml</code></td>
+              <td>maven-javadoc-pluginの設定</td>
+            </tr>
+            <tr>
+              <td><code>package-info.java</code></td>
+              <td>パッケージレベルのドキュメント</td>
+            </tr>
+            <tr>
+              <td><code>各Javaファイル</code></td>
+              <td>Javadocコメントの追加</td>
+            </tr>
+            <tr>
+              <td><code>target/site/apidocs/</code></td>
+              <td>生成されるHTMLドキュメント</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <h4>主要なJavadocタグ</h4>
+        <ul>
+          <li><strong>@param</strong> - メソッドのパラメータを説明</li>
+          <li><strong>@return</strong> - 戻り値を説明</li>
+          <li><strong>@throws</strong> - 発生する例外を説明</li>
+          <li><strong>@see</strong> - 関連するクラスやメソッドへのリンク</li>
+          <li><strong>{@code}</strong> - コードスニペットを表示</li>
+          <li><strong>{@link}</strong> - インラインリンクを作成</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>サンプルソースコード</h3>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">pom.xml（Javadocプラグイン設定）</span>
+          </div>
+          <div class="code-content">
+            <pre><span class="code-keyword">&lt;build&gt;</span>
+    <span class="code-keyword">&lt;plugins&gt;</span>
+        <span class="code-keyword">&lt;plugin&gt;</span>
+            <span class="code-keyword">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="code-keyword">&lt;/groupId&gt;</span>
+            <span class="code-keyword">&lt;artifactId&gt;</span>maven-javadoc-plugin<span class="code-keyword">&lt;/artifactId&gt;</span>
+            <span class="code-keyword">&lt;version&gt;</span>3.6.0<span class="code-keyword">&lt;/version&gt;</span>
+            <span class="code-keyword">&lt;configuration&gt;</span>
+                <span class="code-keyword">&lt;encoding&gt;</span>UTF-8<span class="code-keyword">&lt;/encoding&gt;</span>
+                <span class="code-keyword">&lt;docencoding&gt;</span>UTF-8<span class="code-keyword">&lt;/docencoding&gt;</span>
+                <span class="code-keyword">&lt;charset&gt;</span>UTF-8<span class="code-keyword">&lt;/charset&gt;</span>
+                <span class="code-keyword">&lt;locale&gt;</span>ja_JP<span class="code-keyword">&lt;/locale&gt;</span>
+                <span class="code-keyword">&lt;author&gt;</span>true<span class="code-keyword">&lt;/author&gt;</span>
+                <span class="code-keyword">&lt;version&gt;</span>true<span class="code-keyword">&lt;/version&gt;</span>
+            <span class="code-keyword">&lt;/configuration&gt;</span>
+        <span class="code-keyword">&lt;/plugin&gt;</span>
+    <span class="code-keyword">&lt;/plugins&gt;</span>
+<span class="code-keyword">&lt;/build&gt;</span>
+
+<span class="code-comment">&lt;!-- Javadoc生成コマンド --&gt;</span>
+<span class="code-comment">&lt;!-- mvn javadoc:javadoc --&gt;</span>
+<span class="code-comment">&lt;!-- 出力先: target/site/apidocs/index.html --&gt;</span></pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">TodoService.java（Javadoc付き）</span>
+          </div>
+          <div class="code-content">
+            <pre><span class="code-comment">/**
+ * ToDoのビジネスロジックを提供するサービスクラス。
+ *
+ * &lt;p&gt;ToDoのCRUD操作とビジネスルールの適用を行います。&lt;/p&gt;
+ *
+ * &lt;h2&gt;使用例&lt;/h2&gt;
+ * &lt;pre&gt;{@code
+ * Todo todo = new Todo();
+ * todo.setTitle("買い物");
+ * todoService.create(todo);
+ * }&lt;/pre&gt;
+ *
+ * @author yamada
+ * @version 1.0
+ * @since 2024-01-01
+ * @see TodoController
+ * @see TodoMapper
+ */</span>
+<span class="code-annotation">@Service</span>
+<span class="code-keyword">public class</span> <span class="code-class">TodoService</span> {
+
+    <span class="code-comment">/**
+     * 指定されたIDのToDoを取得します。
+     *
+     * @param id 取得するToDoのID（{@code null}不可）
+     * @return 指定されたIDのToDo
+     * @throws ResourceNotFoundException 指定されたIDのToDoが存在しない場合
+     * @throws IllegalArgumentException idが{@code null}の場合
+     * @see #findAll()
+     */</span>
+    <span class="code-keyword">public</span> <span class="code-class">Todo</span> <span class="code-class">findById</span>(<span class="code-class">Integer</span> id) {
+        <span class="code-keyword">if</span> (id == <span class="code-keyword">null</span>) {
+            <span class="code-keyword">throw new</span> <span class="code-class">IllegalArgumentException</span>(<span class="code-string">"id must not be null"</span>);
+        }
+        <span class="code-keyword">return</span> todoMapper.findById(id)
+            .orElseThrow(() -&gt; <span class="code-keyword">new</span> <span class="code-class">ResourceNotFoundException</span>(<span class="code-string">"ToDo not found: "</span> + id));
+    }
+
+    <span class="code-comment">/**
+     * 新しいToDoを作成します。
+     *
+     * &lt;p&gt;作成日時は自動的に現在時刻が設定されます。&lt;/p&gt;
+     *
+     * @param todo 作成するToDo情報（{@code null}不可）
+     * @return 作成されたToDo（IDが設定済み）
+     * @throws IllegalArgumentException todoが{@code null}の場合
+     */</span>
+    <span class="code-annotation">@Transactional</span>
+    <span class="code-keyword">public</span> <span class="code-class">Todo</span> <span class="code-class">create</span>(<span class="code-class">Todo</span> todo) {
+        todo.setCreatedAt(<span class="code-class">LocalDateTime</span>.now());
+        todoMapper.insert(todo);
+        <span class="code-keyword">return</span> todo;
+    }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-explanation">
+          <h4><span class="material-icons">lightbulb</span> コード解説</h4>
+          <ul>
+            <li><strong>クラスレベルJavadoc</strong> - 概要、使用例、作者、バージョン、関連クラスを記述</li>
+            <li><strong>@param</strong> - パラメータ名と説明、nullの許容可否を明記</li>
+            <li><strong>@return</strong> - 戻り値の説明</li>
+            <li><strong>@throws</strong> - 発生する可能性のある例外と条件</li>
+            <li><strong>{@code}</strong> - コード片をそのまま表示（HTMLエスケープ不要）</li>
+            <li><strong>@see</strong> - 関連するクラスやメソッドへのリンク</li>
+          </ul>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">package-info.java</span>
+          </div>
+          <div class="code-content">
+            <pre><span class="code-comment">/**
+ * ToDoアプリケーションのサービス層パッケージ。
+ *
+ * &lt;p&gt;このパッケージはビジネスロジックを提供するサービスクラスを含みます。&lt;/p&gt;
+ *
+ * &lt;h2&gt;主要クラス&lt;/h2&gt;
+ * &lt;ul&gt;
+ *   &lt;li&gt;{@link com.example.todo.service.TodoService} - ToDoのCRUD操作&lt;/li&gt;
+ *   &lt;li&gt;{@link com.example.todo.service.UserService} - ユーザー管理&lt;/li&gt;
+ *   &lt;li&gt;{@link com.example.todo.service.MailService} - メール送信&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * @author yamada
+ * @since 1.0
+ */</span>
+<span class="code-keyword">package</span> com.example.todo.service;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="diagram-container">
+        <h4><span class="material-icons">schema</span> Javadoc生成の流れ</h4>
+        <div class="diagram-box">
+          <pre style="color: white; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8;">
+【Javadoc生成コマンド】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  $ mvn javadoc:javadoc
+
+  ┌─────────────────────────────────────────────────────────┐
+  │  入力: Javaソースコード                                   │
+  │  ┌─────────────────────────────────────────────────┐   │
+  │  │ src/main/java/                                   │   │
+  │  │   └── com/example/todo/                          │   │
+  │  │       ├── service/                               │   │
+  │  │       │   ├── package-info.java                  │   │
+  │  │       │   └── TodoService.java                   │   │
+  │  │       └── controller/                            │   │
+  │  │           └── TodoController.java                │   │
+  │  └─────────────────────────────────────────────────┘   │
+  │                         ↓                              │
+  │                   maven-javadoc-plugin                  │
+  │                         ↓                              │
+  │  出力: HTMLドキュメント                                   │
+  │  ┌─────────────────────────────────────────────────┐   │
+  │  │ target/site/apidocs/                             │   │
+  │  │   ├── index.html          (トップページ)         │   │
+  │  │   ├── overview-summary.html                      │   │
+  │  │   └── com/example/todo/service/                  │   │
+  │  │       ├── package-summary.html                   │   │
+  │  │       └── TodoService.html                       │   │
+  │  └─────────────────────────────────────────────────┘   │
+  └─────────────────────────────────────────────────────────┘
+
+
+【Javadocタグ一覧】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  @param      │ メソッドのパラメータを説明
+  @return     │ 戻り値を説明
+  @throws     │ 発生する例外を説明
+  @author     │ 作者名
+  @version    │ バージョン番号
+  @since      │ 導入バージョン
+  @see        │ 関連クラス・メソッドへのリンク
+  @deprecated │ 非推奨であることを示す
+  {@code}     │ コードとしてフォーマット
+  {@link}     │ インラインリンク
+  {@inheritDoc} │ 親クラスのJavadocを継承
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 26-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 26-3</span>
+        <h2 class="section-title">生成プロンプト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、実装コードを生成できます。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4><span class="material-icons">auto_awesome</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre id="prompt-26">あなたはJavaプログラマーです。
+
+Spring Boot 3.xのToDoアプリにJavadocを追加してください。
+
+【現在の状態】
+- Spring Boot 3.x + MyBatis + Thymeleafで構築されたToDoアプリ
+- 各クラスにはコメントがほとんどない
+- APIドキュメントが存在しない
+
+【実装要件】
+1. pom.xmlにmaven-javadoc-pluginを追加
+   - UTF-8エンコーディング
+   - 日本語ロケール
+   - ビルド時にJavadoc jarを生成
+
+2. 各クラスにJavadocコメントを追加
+   - クラスレベル: 概要、@author、@version、@since、@see
+   - メソッドレベル: 概要、@param、@return、@throws
+   - フィールドレベル: 各フィールドの説明
+
+3. package-info.javaの作成
+   - 各パッケージの概要を説明
+   - 主要クラスへのリンク
+
+4. Javadocタグの使用例
+   - {@code コード}
+   - {@link クラス名}
+   - {@inheritDoc}
+   - <p>、<ul>、<li>などのHTML
+
+5. 以下のクラスにJavadocを追加
+   - TodoService（全メソッド）
+   - TodoController（全エンドポイント）
+   - Todo（エンティティ）
+   - TodoForm（フォームクラス）
+
+【技術スタック】
+- Java 17+
+- Maven
+- maven-javadoc-plugin 3.6.0
+
+必要なコードの変更点を提示してください。
+また、Javadoc生成コマンド（mvn javadoc:javadoc）の実行方法も説明してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="copyPrompt('prompt-26')">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box success">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> ポイント</div>
+        <div class="info-box-content">
+          <p>Swagger/OpenAPIを併用すると、REST APIのドキュメントも自動生成できます。フロントエンド開発者との連携に便利です。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="25_audit_log.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前の機能</div>
+      <div class="page-nav-title">25 監査ログ</div>
+    </a>
+    <a href="../../../exercises/generaltraining/web-exercises-3.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">演習トップ</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 3 - Phase 2: 機能追加</p>
+  </footer>
+
+  <script>
+    function copyPrompt(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons">check</span> コピーしました';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

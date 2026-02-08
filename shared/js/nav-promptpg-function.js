@@ -45,12 +45,12 @@ const navData = {
         { href: "01_extends-todo.html", text: "機能追加", icon: "build", iconType: "material" }
     ],
     categories: [
-        { href: "../index.html", text: "ダッシュボード" },
-        { href: "../index.html#frontend", text: "フロントエンド基礎" },
-        { href: "../index.html#backend", text: "バックエンド開発" },
-        { href: "../index.html#ai", text: "AI・自動化" },
-        { href: "../index.html#design", text: "デザイン・UX" },
-        { href: "../index.html#business", text: "ビジネススキル" }
+        { href: "../../index.html", text: "ダッシュボード" },
+        { href: "../../index.html#frontend", text: "フロントエンド基礎" },
+        { href: "../../index.html#backend", text: "バックエンド開発" },
+        { href: "../../index.html#ai", text: "AI・自動化" },
+        { href: "../../index.html#design", text: "デザイン・UX" },
+        { href: "../../index.html#business", text: "ビジネススキル" }
     ]
 };
 

@@ -9,38 +9,38 @@ const footerData = {
         {
             title: "フロントエンド",
             links: [
-                { href: "html/index.html", text: "HTML/CSS入門" },
-                { href: "javascript/index.html", text: "JavaScript入門" }
+                { href: "frontend/html/index.html", text: "HTML/CSS入門" },
+                { href: "frontend/javascript/index.html", text: "JavaScript入門" }
             ]
         },
         {
             title: "バックエンド",
             links: [
-                { href: "java/index.html", text: "Java基礎" },
-                { href: "spring/index.html", text: "Spring基礎" },
-                { href: "system-dev/index.html", text: "システム開発概論" }
+                { href: "backend/java/index.html", text: "Java基礎" },
+                { href: "backend/spring/index.html", text: "Spring基礎" },
+                { href: "backend/system-dev/index.html", text: "システム開発概論" }
             ]
         },
         {
             title: "AI・自動化",
             links: [
-                { href: "promptpg-step/index.html", text: "プロンプトプログラミング" },
-                { href: "chatgpt/index.html", text: "ChatGPT活用" }
+                { href: "ai/promptpg-step/index.html", text: "プロンプトプログラミング" },
+                { href: "ai/chatgpt/index.html", text: "ChatGPT活用" }
             ]
         },
         {
             title: "デザイン",
             links: [
-                { href: "uiux/index.html", text: "UI/UX概論" },
-                { href: "figma/index.html", text: "Figma入門" }
+                { href: "design/uiux/index.html", text: "UI/UX概論" },
+                { href: "design/figma/index.html", text: "Figma入門" }
             ]
         },
         {
             title: "ビジネス",
             links: [
-                { href: "security/index.html", text: "情報セキュリティ" },
-                { href: "ga4/index.html", text: "GA4入門" },
-                { href: "marketing/index.html", text: "マーケティング入門" }
+                { href: "business/security/index.html", text: "情報セキュリティ" },
+                { href: "business/ga4/index.html", text: "GA4入門" },
+                { href: "business/marketing/index.html", text: "マーケティング入門" }
             ]
         }
     ],

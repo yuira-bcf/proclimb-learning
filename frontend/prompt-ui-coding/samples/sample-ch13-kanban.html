@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>実行結果サンプル - 第13章 看板ボードの実装</title>
+  <style>
+    :root {
+      --primary: #007ACC;
+      --success: #34C759;
+      --warning: #FF9F0A;
+      --danger: #FF3B30;
+      --purple: #5856D6;
+      --text: #1D1D1F;
+      --text-sub: #6E6E73;
+      --border: #D2D2D7;
+      --bg: #F5F5F7;
+      --white: #FFFFFF;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .page-header {
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      color: white; border-radius: 16px; padding: 40px 32px;
+      margin-bottom: 32px; text-align: center;
+      box-shadow: 0 4px 16px rgba(0,122,204,0.3);
+    }
+    .page-header h1 { font-size: 24px; margin-bottom: 8px; }
+    .page-header p { opacity: 0.9; font-size: 14px; }
+    .card {
+      background: var(--white); border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 32px; margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 18px; font-weight: 700; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 2px solid var(--primary);
+    }
+    .card-description { font-size: 14px; color: var(--text-sub); margin-bottom: 20px; }
+
+    /* 看板ボード */
+    .kanban {
+      display: flex; gap: 16px;
+      overflow-x: auto; padding-bottom: 16px;
+    }
+    .kanban-column {
+      background: var(--bg); border-radius: 12px;
+      min-width: 260px; flex: 1; display: flex;
+      flex-direction: column;
+    }
+    .kanban-column__header {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 14px 16px;
+      font-weight: 700; font-size: 14px;
+    }
+    .kanban-column__count {
+      background: rgba(0,0,0,0.08); border-radius: 12px;
+      padding: 2px 10px; font-size: 12px; font-weight: 600;
+    }
+    .kanban-column__body {
+      padding: 0 12px 12px; display: flex;
+      flex-direction: column; gap: 10px; flex: 1; min-height: 120px;
+    }
+
+    /* タスクカード */
+    .task-card {
+      background: var(--white); border-radius: 8px;
+      padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      cursor: grab; transition: box-shadow 0.2s, transform 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .task-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-1px);
+    }
+    .task-card--high { border-left-color: var(--danger); }
+    .task-card--medium { border-left-color: var(--warning); }
+    .task-card--low { border-left-color: var(--success); }
+
+    .task-card__title {
+      font-size: 14px; font-weight: 600; margin-bottom: 6px;
+    }
+    .task-card__desc {
+      font-size: 12px; color: var(--text-sub); margin-bottom: 10px;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .task-card__meta {
+      display: flex; justify-content: space-between;
+      align-items: center; font-size: 11px;
+    }
+    .task-card__priority {
+      padding: 2px 8px; border-radius: 4px;
+      font-weight: 600; font-size: 10px;
+      text-transform: uppercase;
+    }
+    .task-card__priority--high { background: #fde8e8; color: #c53030; }
+    .task-card__priority--medium { background: #fff3cd; color: #856404; }
+    .task-card__priority--low { background: #dcf5e7; color: #1b7a3d; }
+    .task-card__avatar {
+      width: 24px; height: 24px; background: var(--primary);
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; color: white; font-size: 10px;
+      font-weight: 700;
+    }
+    .task-card__deadline {
+      color: var(--text-sub); display: flex; align-items: center; gap: 3px;
+    }
+    .task-card__deadline--soon { color: var(--danger); font-weight: 600; }
+
+    /* 追加ボタン */
+    .kanban-add {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; padding: 10px; margin: 0 12px 12px;
+      border: 2px dashed var(--border); border-radius: 8px;
+      color: var(--text-sub); font-size: 13px;
+      cursor: pointer; transition: all 0.15s; background: transparent;
+      font-family: inherit;
+    }
+    .kanban-add:hover {
+      border-color: var(--primary); color: var(--primary);
+      background: rgba(0,122,204,0.03);
+    }
+
+    /* ドラッグ中のプレースホルダー */
+    .drag-placeholder {
+      border: 2px dashed var(--primary); border-radius: 8px;
+      background: rgba(0,122,204,0.04); min-height: 80px;
+    }
+
+    @media (max-width: 767px) {
+      .kanban { flex-direction: column; }
+      .kanban-column { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1>第13章 看板ボードの実装</h1>
+      <p>プロンプトUIコーディング - 実行結果サンプル</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">タスク管理 看板ボード（Trello風）</div>
+      <p class="card-description">ドラッグ&ドロップでカラム間を移動可能。優先度は左のカラーバーで識別。</p>
+
+      <div class="kanban">
+        <!-- 未着手 -->
+        <div class="kanban-column">
+          <div class="kanban-column__header">
+            未着手（To Do）
+            <span class="kanban-column__count">3</span>
+          </div>
+          <div class="kanban-column__body">
+            <div class="task-card task-card--high">
+              <div class="task-card__title">LP デザイン作成</div>
+              <div class="task-card__desc">新規サービスのランディングページのデザインを作成する</div>
+              <div class="task-card__meta">
+                <span class="task-card__priority task-card__priority--high">高</span>
+                <span class="task-card__deadline task-card__deadline--soon">2/10</span>
+                <span class="task-card__avatar">YT</span>
+              </div>
+            </div>
+            <div class="task-card task-card--medium">
+              <div class="task-card__title">API ドキュメント更新</div>
+              <div class="task-card__desc">新エンドポイントのAPIドキュメントを追加</div>
+              <div class="task-card__meta">
+                <span class="task-card__priority task-card__priority--medium">中</span>
+                <span class="task-card__deadline">2/15</span>
+                <span class="task-card__avatar">SK</span>
+              </div>
+            </div>
+            <div class="task-card task-card--low">
+              <div class="task-card__title">テスト環境の整備</div>
+              <div class="task-card__desc">CI/CDパイプラインのテスト環境を構築</div>
+              <div class="task-card__meta">
+                <span class="task-card__priority task-card__priority--low">低</span>
+                <span class="task-card__deadline">2/20</span>
+                <span class="task-card__avatar">TN</span>
+              </div>
+            </div>
+          </div>
+          <button class="kanban-add">+ タスクを追加</button>
+        </div>
+
+        <!-- 進行中 -->
+        <div class="kanban-column">
+          <div class="kanban-column__header">
+            進行中（In Progress）
+            <span class="kanban-column__count">2</span>
+          </div>
+          <div class="kanban-column__body">
+            <div class="task-card task-card--high">
+              <div class="task-card__title">ユーザー認証機能</div>
+              <div class="task-card__desc">OAuth2.0を使ったソーシャルログイン実装</div>
+              <div class="task-card__meta">
+                <span class="task-card__priority task-card__priority--high">高</span>
+                <span class="task-card__deadline task-card__deadline--soon">2/8</span>
+                <span class="task-card__avatar">SK</span>
+              </div>
+            </div>
+            <div class="task-card task-card--medium">
+              <div class="task-card__title">レスポンシブ対応</div>
+              <div class="task-card__desc">モバイル・タブレットの表示を最適化</div>
+              <div class="task-card__meta">
+                <span class="task-card__priority task-card__priority--medium">中</span>
+                <span class="task-card__deadline">2/12</span>
+                <span class="task-card__avatar">YT</span>
+              </div>
+            </div>
+          </div>
+          <button class="kanban-add">+ タスクを追加</button>
+        </div>
+
+        <!-- レビュー待ち -->
+        <div class="kanban-column">
+          <div class="kanban-column__header">
+            レビュー待ち（Review）
+            <span class="kanban-column__count">1</span>
+          </div>
+          <div class="kanban-column__body">
+            <div class="task-card task-card--medium">
+              <div class="task-card__title">ダッシュボードUI</div>
+              <div class="task-card__desc">管理画面のダッシュボードUIの実装完了</div>
+              <div class="task-card__meta">
+                <span class="task-card__priority task-card__priority--medium">中</span>
+                <span class="task-card__deadline">2/9</span>
+                <span class="task-card__avatar">TN</span>
+              </div>
+            </div>
+            <div class="drag-placeholder"></div>
+          </div>
+          <button class="kanban-add">+ タスクを追加</button>
+        </div>
+
+        <!-- 完了 -->
+        <div class="kanban-column">
+          <div class="kanban-column__header">
+            完了（Done）
+            <span class="kanban-column__count">2</span>
+          </div>
+          <div class="kanban-column__body">
+            <div class="task-card task-card--high" style="opacity: 0.7;">
+              <div class="task-card__title" style="text-decoration: line-through;">データベース設計</div>
+              <div class="task-card__desc">ER図の作成とテーブル定義の確定</div>
+              <div class="task-card__meta">
+                <span class="task-card__priority task-card__priority--high">高</span>
+                <span class="task-card__deadline">完了</span>
+                <span class="task-card__avatar">SK</span>
+              </div>
+            </div>
+            <div class="task-card task-card--low" style="opacity: 0.7;">
+              <div class="task-card__title" style="text-decoration: line-through;">環境構築手順書</div>
+              <div class="task-card__desc">開発環境のセットアップ手順を文書化</div>
+              <div class="task-card__meta">
+                <span class="task-card__priority task-card__priority--low">低</span>
+                <span class="task-card__deadline">完了</span>
+                <span class="task-card__avatar">TN</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

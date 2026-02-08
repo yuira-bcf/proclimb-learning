@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 9: ログの設計と運用 - システム開発概論</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #B2EBF2;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-system-dev.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Chapter</div>
+      <div class="chapter-number">9</div>
+      <h1 class="chapter-title">ログの設計と運用</h1>
+      <p class="chapter-subtitle">システムの状態を可視化し、トラブルに備える</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">9-1</span>この章のねらい</li>
+        <li class="toc-item"><span class="toc-number">9-2</span>ログの目的と種類</li>
+        <li class="toc-item"><span class="toc-number">9-3</span>ログレベル</li>
+        <li class="toc-item"><span class="toc-number">9-4</span>出力すべき情報</li>
+        <li class="toc-item"><span class="toc-number">9-5</span>ログ設計のベストプラクティス</li>
+        <li class="toc-item"><span class="toc-number">9-6</span>運用時の活用方法</li>
+        <li class="toc-item"><span class="toc-number">9-7</span>まとめ</li>
+      </ul>
+    </nav>
+
+    <!-- Section 9-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-1</span>
+        <h2 class="section-title">この章のねらい</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この章では、システム開発における <strong>ログ</strong> の重要性と、その設計・運用方法について学びます。ログは、システムが「何をしたか」「何が起きたか」を記録するものであり、障害対応やセキュリティ監査において欠かせない存在です。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>この章を読み終わる頃の目標</h3>
+        <ul class="custom-list">
+          <li>ログの目的と種類を説明できる</li>
+          <li>ログレベルの使い分けを理解できる</li>
+          <li>ログに出力すべき情報を判断できる</li>
+          <li>ログ設計のベストプラクティスを説明できる</li>
+          <li>運用時にログをどう活用するかイメージできる</li>
+        </ul>
+
+        <div class="warning-box">
+          <div class="warning-box-title">重要なポイント</div>
+          <div class="warning-box-content">
+            <p>「ログをちゃんと出していれば」障害原因が分かったのに…、「ログを見れば」不正アクセスに気づけたのに…、という後悔は、現場でよく聞かれます。ログは「出しておけばよかった」と思っても、後からは取得できません。最初から設計しておくことが大切です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 9-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-2</span>
+        <h2 class="section-title">ログの目的と種類</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　ログの目的</h3>
+        <p>ログを出力する目的は、主に次のようなものがあります。</p>
+
+        <div class="info-box">
+          <div class="info-box-title">障害調査・トラブルシューティング</div>
+          <div class="info-box-content">
+            <p>システムで問題が発生したとき、「いつ」「何が」「どのような順序で」起きたのかを追跡するために使います。ログがなければ、障害の原因究明は非常に困難になります。</p>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">監査・コンプライアンス</div>
+          <div class="info-box-content">
+            <p>「誰が」「いつ」「何をしたか」を記録し、後から確認できるようにします。法令やセキュリティ基準で、一定期間のログ保存が義務付けられていることもあります。</p>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">セキュリティ監視</div>
+          <div class="info-box-content">
+            <p>不正アクセスや異常な操作を検知するために、アクセスログや認証ログを監視します。</p>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">パフォーマンス分析</div>
+          <div class="info-box-content">
+            <p>処理時間やリソース使用状況を記録し、性能問題の特定やチューニングに活用します。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>2　ログの種類</h3>
+        <p>システムでは、さまざまな種類のログが出力されます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ログの種類</th>
+                <th>内容</th>
+                <th>例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>アプリケーションログ</strong></td>
+                <td>アプリケーションが出力するログ</td>
+                <td>処理開始・終了、エラー発生、業務ロジックの経過など</td>
+              </tr>
+              <tr>
+                <td><strong>アクセスログ</strong></td>
+                <td>HTTPリクエストの記録</td>
+                <td>リクエストURL、メソッド、ステータスコード、応答時間など</td>
+              </tr>
+              <tr>
+                <td><strong>認証・認可ログ</strong></td>
+                <td>ログイン・ログアウト、権限チェックの記録</td>
+                <td>ログイン成功・失敗、アクセス拒否など</td>
+              </tr>
+              <tr>
+                <td><strong>エラーログ</strong></td>
+                <td>エラーや例外の記録</td>
+                <td>例外のスタックトレース、エラーメッセージなど</td>
+              </tr>
+              <tr>
+                <td><strong>監査ログ</strong></td>
+                <td>重要な操作の記録</td>
+                <td>データの作成・更新・削除、設定変更など</td>
+              </tr>
+              <tr>
+                <td><strong>システムログ</strong></td>
+                <td>OS やミドルウェアが出力するログ</td>
+                <td>サービスの起動・停止、リソース使用状況など</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 9-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-3</span>
+        <h2 class="section-title">ログレベル</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>ログには「重要度」や「深刻度」を表す <strong>ログレベル</strong> を付けるのが一般的です。これにより、本番環境では重要なログだけを出力し、開発環境では詳細なログを出力する、といった切り替えが可能になります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>1　代表的なログレベル</h3>
+        <p>一般的に使われるログレベルを、深刻度の高い順に並べると次のようになります。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>レベル</th>
+                <th>意味</th>
+                <th>使用例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>FATAL / CRITICAL</strong></td>
+                <td>システムが動作不能になるような致命的エラー</td>
+                <td>DBに接続できない、必須の設定ファイルがないなど</td>
+              </tr>
+              <tr>
+                <td><strong>ERROR</strong></td>
+                <td>処理が正常に完了しなかったエラー</td>
+                <td>例外発生、APIからのエラーレスポンス、バリデーションエラーなど</td>
+              </tr>
+              <tr>
+                <td><strong>WARN</strong></td>
+                <td>問題ではあるが、処理は継続できる警告</td>
+                <td>非推奨のAPIを使用、リトライが発生、想定外の値など</td>
+              </tr>
+              <tr>
+                <td><strong>INFO</strong></td>
+                <td>システムの正常な動作の記録</td>
+                <td>処理開始・終了、ユーザーログイン、主要な業務イベントなど</td>
+              </tr>
+              <tr>
+                <td><strong>DEBUG</strong></td>
+                <td>開発・デバッグ用の詳細情報</td>
+                <td>変数の値、処理の分岐、SQLの内容など</td>
+              </tr>
+              <tr>
+                <td><strong>TRACE</strong></td>
+                <td>さらに詳細なトレース情報</td>
+                <td>メソッドの入出力、ループの各イテレーションなど</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>2　ログレベルの使い分け</h3>
+        <ul class="custom-list">
+          <li><strong>本番環境</strong>：INFO以上を出力するのが一般的。問題発生時にDEBUGに切り替えることもある</li>
+          <li><strong>開発・テスト環境</strong>：DEBUG以下も出力して、詳細に動作を確認</li>
+        </ul>
+
+        <div class="warning-box">
+          <div class="warning-box-title">注意</div>
+          <div class="warning-box-content">
+            <p>本番環境でDEBUGログを常時出力すると、ログファイルが膨大になり、ディスク容量を圧迫したり、パフォーマンスに影響したりすることがあります。適切なレベル設定が重要です。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>3　ログレベル選択の目安</h3>
+        <ul class="custom-list">
+          <li>「このログがなければ障害調査が困難」→ INFO以上</li>
+          <li>「問題発生時に調査の手がかりになる」→ DEBUG</li>
+          <li>「正常時は不要だが、異常時に切り替えて出す」→ DEBUG / TRACE</li>
+          <li>「放置すると問題になりそうな状態」→ WARN</li>
+          <li>「処理が失敗した」→ ERROR</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 9-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-4</span>
+        <h2 class="section-title">出力すべき情報</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>ログは、後から見たときに「何が起きたか」を理解できなければ意味がありません。ここでは、ログに含めるべき情報を整理します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>1　基本的な情報</h3>
+        <ul class="custom-list">
+          <li><strong>タイムスタンプ</strong>：いつ発生したか（ミリ秒単位、タイムゾーン付きが望ましい）</li>
+          <li><strong>ログレベル</strong>：INFO、ERROR など</li>
+          <li><strong>メッセージ</strong>：何が起きたかの説明</li>
+          <li><strong>発生場所</strong>：クラス名、メソッド名、行番号など</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>2　追跡のための情報</h3>
+        <ul class="custom-list">
+          <li><strong>リクエストID / トランザクションID</strong>：一連の処理を追跡するための識別子</li>
+          <li><strong>ユーザーID / セッションID</strong>：誰の操作かを特定</li>
+          <li><strong>スレッドID</strong>：マルチスレッド環境でのログの切り分け</li>
+        </ul>
+
+        <div class="info-box">
+          <div class="info-box-title">トレースIDの重要性</div>
+          <div class="info-box-content">
+            <p>1つのユーザー操作が複数のサービスやログファイルにまたがる場合、共通のトレースIDがあれば、それをキーにして関連するログを集約できます。マイクロサービスアーキテクチャでは特に重要です。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>3　エラー時に必要な情報</h3>
+        <ul class="custom-list">
+          <li><strong>エラーメッセージ</strong>：何が問題だったか</li>
+          <li><strong>スタックトレース</strong>：どこで例外が発生したか</li>
+          <li><strong>入力値・パラメータ</strong>：どんなデータで問題が起きたか</li>
+          <li><strong>外部システムの応答</strong>：API呼び出しの結果、HTTPステータスなど</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　出力してはいけない情報</h3>
+        <p>セキュリティの観点から、ログに出力してはいけない情報もあります。</p>
+
+        <div class="warning-box">
+          <div class="warning-box-title">ログに出してはいけない情報</div>
+          <div class="warning-box-content">
+            <ul class="custom-list">
+              <li><strong>パスワード</strong>（平文・ハッシュ化後も避けるべき）</li>
+              <li><strong>クレジットカード番号</strong></li>
+              <li><strong>マイナンバー</strong></li>
+              <li><strong>セッションID / アクセストークン</strong>（全体を出すのは危険）</li>
+              <li><strong>個人情報</strong>（必要最小限にし、マスキングを検討）</li>
+            </ul>
+          </div>
+        </div>
+
+        <p>これらの情報は、ログファイルが漏洩した場合に深刻な被害につながります。どうしても必要な場合は、マスキング（一部を伏せる）やハッシュ化を検討します。</p>
+      </div>
+    </section>
+
+    <!-- Section 9-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-5</span>
+        <h2 class="section-title">ログ設計のベストプラクティス</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　フォーマットを統一する</h3>
+        <p>ログのフォーマットは、プロジェクト内で統一することが重要です。</p>
+        <ul class="custom-list">
+          <li>タイムスタンプの形式（ISO 8601形式など）</li>
+          <li>フィールドの順序</li>
+          <li>区切り文字（スペース、タブ、JSON形式など）</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>フォーマット例</span>
+          </div>
+          <pre><code>2024-01-15T10:30:45.123+09:00 [INFO ] [req-abc123] [user-456] OrderService.createOrder - 注文処理を開始しました orderId=789
+
+2024-01-15T10:30:45.456+09:00 [ERROR] [req-abc123] [user-456] PaymentService.process - 決済処理に失敗しました paymentId=101 errorCode=CARD_DECLINED</code></pre>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>2　構造化ログ（JSON形式）の活用</h3>
+        <p>ログ分析ツールで検索・集計しやすくするため、JSON形式でログを出力することが増えています。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>JSON形式のログ例</span>
+          </div>
+          <pre><code>{
+  "timestamp": "2024-01-15T10:30:45.123+09:00",
+  "level": "ERROR",
+  "requestId": "req-abc123",
+  "userId": "user-456",
+  "class": "PaymentService",
+  "method": "process",
+  "message": "決済処理に失敗しました",
+  "paymentId": "101",
+  "errorCode": "CARD_DECLINED"
+}</code></pre>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>3　ログローテーション</h3>
+        <p>ログファイルが際限なく大きくなるのを防ぐため、<strong>ログローテーション</strong>を設定します。</p>
+        <ul class="custom-list">
+          <li>一定のサイズ（例：100MB）に達したら新しいファイルに切り替える</li>
+          <li>日次でファイルを切り替える</li>
+          <li>古いログは圧縮・削除する（保存期間は要件に応じて）</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　ログの集約</h3>
+        <p>複数のサーバやサービスからログを収集し、一元管理することで、調査効率が大きく向上します。</p>
+        <ul class="custom-list">
+          <li>ELKスタック（Elasticsearch, Logstash, Kibana）</li>
+          <li>Fluentd / Fluent Bit</li>
+          <li>クラウドサービス（AWS CloudWatch Logs、GCP Cloud Logging など）</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>5　意味のあるメッセージを書く</h3>
+        <p>ログメッセージは、後から見たときに状況が分かるように書きます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>悪い例</th>
+                <th>良い例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>エラーが発生しました</code></td>
+                <td><code>決済処理に失敗しました paymentId=101 errorCode=CARD_DECLINED</code></td>
+              </tr>
+              <tr>
+                <td><code>処理完了</code></td>
+                <td><code>注文処理が完了しました orderId=789 totalAmount=5000</code></td>
+              </tr>
+              <tr>
+                <td><code>ここに来た</code></td>
+                <td><code>在庫確認処理を開始します productId=123 quantity=2</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 9-6 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-6</span>
+        <h2 class="section-title">運用時の活用方法</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　障害発生時の調査</h3>
+        <p>障害が発生したときの調査手順の例：</p>
+        <ol class="custom-list">
+          <li>障害発生時刻を特定する</li>
+          <li>該当時刻のERROR / WARNログを確認する</li>
+          <li>リクエストIDやユーザーIDで関連するログを追跡する</li>
+          <li>エラーの直前に何が起きていたかを確認する</li>
+          <li>スタックトレースから、問題の発生箇所を特定する</li>
+        </ol>
+
+        <div class="info-box">
+          <div class="info-box-title">調査のコツ</div>
+          <div class="info-box-content">
+            <p>「正常な場合のログパターン」を知っておくと、異常なログを見つけやすくなります。普段から正常時のログを眺めておくことも大切です。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>2　監視とアラート</h3>
+        <p>ログを監視し、特定のパターンが検出されたらアラートを上げる仕組みを構築します。</p>
+        <ul class="custom-list">
+          <li>ERRORログが一定数を超えたらアラート</li>
+          <li>特定のエラーコード（認証失敗など）が連続したらアラート</li>
+          <li>レスポンス時間が閾値を超えたらアラート</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　定期的な分析</h3>
+        <p>運用が安定している時期でも、定期的にログを分析することで、潜在的な問題を発見できます。</p>
+        <ul class="custom-list">
+          <li>WARNログの傾向を確認し、将来の問題を予測する</li>
+          <li>レスポンス時間の推移をグラフ化し、性能劣化を検知する</li>
+          <li>エラーの発生パターン（時間帯、ユーザー、機能など）を分析する</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　ログの保管と削除</h3>
+        <p>ログの保管期間は、法令や社内ルール、運用上の必要性に応じて決めます。</p>
+        <ul class="custom-list">
+          <li>監査目的のログは、1年以上の保管が求められることが多い</li>
+          <li>DEBUGログは短期間で削除してもよい場合が多い</li>
+          <li>ログが漏洩した場合のリスクも考慮し、不要になったログは適切に削除する</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 9-7 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-7</span>
+        <h2 class="section-title">まとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul class="custom-list">
+          <li>ログの目的は、障害調査、監査、セキュリティ監視、パフォーマンス分析など多岐にわたる。目的に応じて適切なログを設計することが重要である。</li>
+          <li>ログにはアプリケーションログ、アクセスログ、認証ログ、エラーログ、監査ログなどの種類があり、それぞれ適切に出力する必要がある。</li>
+          <li>ログレベル（FATAL、ERROR、WARN、INFO、DEBUG、TRACE）を適切に使い分け、環境に応じて出力レベルを調整する。</li>
+          <li>ログには、タイムスタンプ、ログレベル、メッセージ、発生場所、リクエストID、ユーザーIDなどを含める。一方で、パスワードや個人情報などセンシティブな情報は出力しない。</li>
+          <li>ログのフォーマットを統一し、構造化ログ（JSON形式など）を活用することで、検索・分析がしやすくなる。ログローテーションと集約も重要である。</li>
+          <li>運用時には、障害調査、監視・アラート、定期的な分析にログを活用する。ログの保管期間も適切に設定する。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ページナビゲーション -->
+    <nav class="page-nav">
+      <a href="8sd-security.html" class="page-nav-link prev">
+        <span class="page-nav-label">前の章</span>
+        <span class="page-nav-title">情報セキュリティの基礎</span>
+      </a>
+      <a href="10sd-compliance.html" class="page-nav-link next">
+        <span class="page-nav-label">次の章</span>
+        <span class="page-nav-title">法令・コンプライアンス・ガバナンス</span>
+      </a>
+    </nav>
+  </div>
+
+  <footer class="footer">
+    <p>システム開発概論 - 職業訓練校教材</p>
+  </footer>
+
+  <script src="../../shared/demo.js"></script>
+</body>
+</html>

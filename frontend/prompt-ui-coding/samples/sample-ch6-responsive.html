@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>実行結果サンプル - 第6章 レスポンシブデザイン生成</title>
+  <style>
+    :root {
+      --primary: #007ACC;
+      --text: #1D1D1F;
+      --text-sub: #6E6E73;
+      --border: #D2D2D7;
+      --bg: #F5F5F7;
+      --white: #FFFFFF;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 16px;
+      font-size: 14px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .page-header {
+      background: linear-gradient(135deg, var(--primary), #5856D6);
+      color: white; border-radius: 16px; padding: 40px 32px;
+      margin-bottom: 32px; text-align: center;
+      box-shadow: 0 4px 16px rgba(0,122,204,0.3);
+    }
+    .page-header h1 { font-size: 24px; margin-bottom: 8px; }
+    .page-header p { opacity: 0.9; font-size: 14px; }
+    .card {
+      background: var(--white); border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 32px; margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 18px; font-weight: 700; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 2px solid var(--primary);
+    }
+    .card-description { font-size: 14px; color: var(--text-sub); margin-bottom: 20px; }
+
+    /* ブレイクポイント表示 */
+    .bp-indicator {
+      background: var(--primary); color: white;
+      padding: 8px 16px; border-radius: 8px;
+      text-align: center; font-weight: 600; font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .bp-indicator::after { content: "モバイル (〜767px)"; }
+
+    /* レスポンシブグリッド */
+    .resp-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .resp-card {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .resp-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+    .resp-card__image {
+      height: 160px;
+      background: linear-gradient(135deg, #e8f4fd, #d0d0d0);
+      display: flex; align-items: center; justify-content: center;
+      color: #999; font-size: 13px;
+    }
+    .resp-card__body { padding: 16px; }
+    .resp-card__title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .resp-card__text { font-size: 13px; color: var(--text-sub); }
+
+    /* タッチ最適化ボタン */
+    .touch-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 44px; min-height: 44px;
+      padding: 12px 24px;
+      background: var(--primary); color: white;
+      border: none; border-radius: 8px;
+      font-size: 16px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.2s, transform 0.1s;
+      margin: 4px;
+    }
+    .touch-btn:active {
+      transform: scale(0.96);
+      opacity: 0.9;
+    }
+    .touch-btn:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+    .touch-btn--secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    /* 表示切り替えユーティリティ */
+    .visible-mobile { display: block; }
+    .visible-tablet { display: none; }
+    .visible-desktop { display: none; }
+    .hidden-mobile { display: none; }
+
+    .utility-demo {
+      display: grid; gap: 8px;
+    }
+    .utility-box {
+      padding: 12px 16px; border-radius: 8px;
+      font-size: 13px; font-weight: 600; text-align: center;
+    }
+    .utility-box--green { background: #dcf5e7; color: #1b7a3d; }
+    .utility-box--red { background: #fde8e8; color: #c53030; }
+
+    /* ヘッダーデモ */
+    .header-demo {
+      background: white; border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .header-demo__inner {
+      display: flex; justify-content: space-between;
+      align-items: center; height: 64px; padding: 0 24px;
+    }
+    .header-demo__logo { font-size: 18px; font-weight: 800; color: var(--primary); }
+    .header-demo__nav { display: none; list-style: none; gap: 20px; }
+    .header-demo__nav a {
+      text-decoration: none; color: var(--text); font-size: 14px; font-weight: 500;
+    }
+    .header-demo__cta {
+      display: none; background: var(--primary); color: white;
+      padding: 8px 16px; border-radius: 6px; font-size: 13px;
+      font-weight: 600; text-decoration: none;
+    }
+    .header-demo__hamburger {
+      width: 32px; height: 32px; display: flex;
+      flex-direction: column; justify-content: center; gap: 5px;
+      cursor: pointer; background: none; border: none; padding: 4px;
+    }
+    .header-demo__hamburger span {
+      display: block; width: 100%; height: 2px; background: var(--text);
+      border-radius: 1px;
+    }
+    .header-demo__mobile-menu {
+      display: none; background: white;
+      border-top: 1px solid #eee; padding: 16px;
+    }
+    .header-demo__mobile-menu.active { display: block; }
+    .header-demo__mobile-menu a {
+      display: block; padding: 12px 16px; text-decoration: none;
+      color: var(--text); font-size: 15px; border-radius: 6px;
+    }
+    .header-demo__mobile-menu a:hover { background: var(--bg); }
+
+    .demo-area {
+      background: var(--bg); border-radius: 8px; padding: 24px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; flex-wrap: wrap;
+    }
+
+    /* タブレット */
+    @media (min-width: 768px) {
+      body { padding: 24px; font-size: 15px; }
+      .resp-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+      .bp-indicator::after { content: "タブレット (768px〜1023px)"; }
+      .bp-indicator { background: #5856D6; }
+      .visible-mobile { display: none; }
+      .visible-tablet { display: block; }
+      .hidden-mobile { display: block; }
+    }
+
+    /* PC */
+    @media (min-width: 1024px) {
+      body { padding: 32px; font-size: 16px; }
+      .resp-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+      .bp-indicator::after { content: "PC (1024px以上)"; }
+      .bp-indicator { background: #34C759; }
+      .visible-tablet { display: none; }
+      .visible-desktop { display: block; }
+      .header-demo__nav { display: flex; }
+      .header-demo__cta { display: inline-block; }
+      .header-demo__hamburger { display: none; }
+    }
+
+    /* ホバーはマウスデバイスのみ */
+    @media (hover: hover) {
+      .touch-btn:hover {
+        background: var(--primary);
+        filter: brightness(0.9);
+        box-shadow: 0 4px 12px rgba(0,122,204,0.3);
+      }
+      .touch-btn--secondary:hover {
+        background: rgba(0,122,204,0.08);
+        filter: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1>第6章 レスポンシブデザイン生成</h1>
+      <p>プロンプトUIコーディング - 実行結果サンプル</p>
+    </div>
+
+    <!-- ブレイクポイント表示 -->
+    <div class="card">
+      <div class="card-title">現在のブレイクポイント</div>
+      <p class="card-description">ブラウザの幅を変えてブレイクポイントの変化を確認してください</p>
+      <div class="bp-indicator"></div>
+    </div>
+
+    <!-- レスポンシブヘッダー -->
+    <div class="card">
+      <div class="card-title">レスポンシブヘッダー</div>
+      <p class="card-description">PC: ナビリンク表示 / モバイル: ハンバーガーメニュー</p>
+      <div class="header-demo">
+        <div class="header-demo__inner">
+          <div class="header-demo__logo">SampleApp</div>
+          <nav>
+            <ul class="header-demo__nav">
+              <li><a href="#">ホーム</a></li>
+              <li><a href="#">サービス</a></li>
+              <li><a href="#">事例</a></li>
+              <li><a href="#">会社概要</a></li>
+              <li><a href="#">お問い合わせ</a></li>
+            </ul>
+          </nav>
+          <a href="#" class="header-demo__cta">無料で始める</a>
+          <button class="header-demo__hamburger" aria-label="メニューを開く" onclick="this.closest('.header-demo').querySelector('.header-demo__mobile-menu').classList.toggle('active')">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+        <div class="header-demo__mobile-menu">
+          <a href="#">ホーム</a>
+          <a href="#">サービス</a>
+          <a href="#">事例</a>
+          <a href="#">会社概要</a>
+          <a href="#">お問い合わせ</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- レスポンシブカードグリッド -->
+    <div class="card">
+      <div class="card-title">レスポンシブカードグリッド</div>
+      <p class="card-description">モバイル: 1カラム / タブレット: 2カラム / PC: 3カラム</p>
+      <div class="resp-grid">
+        <div class="resp-card">
+          <div class="resp-card__image">480 x 320</div>
+          <div class="resp-card__body">
+            <h3 class="resp-card__title">高速な処理</h3>
+            <p class="resp-card__text">最新技術で業界最速のパフォーマンスを実現します。</p>
+          </div>
+        </div>
+        <div class="resp-card">
+          <div class="resp-card__image">480 x 320</div>
+          <div class="resp-card__body">
+            <h3 class="resp-card__title">安全性</h3>
+            <p class="resp-card__text">エンタープライズレベルのセキュリティで保護。</p>
+          </div>
+        </div>
+        <div class="resp-card">
+          <div class="resp-card__image">480 x 320</div>
+          <div class="resp-card__body">
+            <h3 class="resp-card__title">簡単操作</h3>
+            <p class="resp-card__text">直感的なUIで誰でもすぐに始められます。</p>
+          </div>
+        </div>
+        <div class="resp-card">
+          <div class="resp-card__image">480 x 320</div>
+          <div class="resp-card__body">
+            <h3 class="resp-card__title">24時間サポート</h3>
+            <p class="resp-card__text">いつでもお問い合わせいただけます。</p>
+          </div>
+        </div>
+        <div class="resp-card">
+          <div class="resp-card__image">480 x 320</div>
+          <div class="resp-card__body">
+            <h3 class="resp-card__title">多言語対応</h3>
+            <p class="resp-card__text">20以上の言語に対応しています。</p>
+          </div>
+        </div>
+        <div class="resp-card">
+          <div class="resp-card__image">480 x 320</div>
+          <div class="resp-card__body">
+            <h3 class="resp-card__title">API連携</h3>
+            <p class="resp-card__text">豊富なAPIで外部サービスと統合可能。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 表示切り替えユーティリティ -->
+    <div class="card">
+      <div class="card-title">表示切り替えユーティリティ</div>
+      <p class="card-description">各ブレイクポイントで要素の表示/非表示を切り替えるクラス</p>
+      <div class="utility-demo">
+        <div class="visible-mobile utility-box utility-box--green">visible-mobile: モバイルで表示中</div>
+        <div class="visible-tablet utility-box utility-box--green">visible-tablet: タブレットで表示中</div>
+        <div class="visible-desktop utility-box utility-box--green">visible-desktop: PCで表示中</div>
+      </div>
+    </div>
+
+    <!-- タッチ最適化ボタン -->
+    <div class="card">
+      <div class="card-title">タッチ最適化ボタン</div>
+      <p class="card-description">最小タップ領域44x44px / @media(hover:hover)でホバー制御 / :activeフィードバック</p>
+      <div class="demo-area">
+        <button class="touch-btn">プライマリ</button>
+        <button class="touch-btn touch-btn--secondary">セカンダリ</button>
+        <button class="touch-btn">お問い合わせ</button>
+        <button class="touch-btn touch-btn--secondary">詳しく見る</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

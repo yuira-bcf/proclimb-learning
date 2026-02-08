@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>機能12: CSVエクスポート - WEB総合制作演習 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
+    }
+    .nav-category-links { display: none; }
+    .level-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-left: 12px; }
+    .level-beginner { background: #dcfce7; color: #166534; }
+    .level-intermediate { background: #fef9c3; color: #854d0e; }
+    .level-advanced { background: #ffedd5; color: #9a3412; }
+    .level-expert { background: #fee2e2; color: #991b1b; }
+    .prompt-card { background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #4285F4; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+    .diagram-container { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .diagram-container h4 { margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: white; }
+    .code-explanation { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 20px; margin: 16px 0; }
+    .code-explanation h4 { margin: 0 0 16px 0; color: #92400e; display: flex; align-items: center; gap: 8px; }
+    .code-explanation ul { margin: 0; padding-left: 20px; color: #78350f; }
+    .code-explanation li { margin-bottom: 8px; line-height: 1.6; }
+    /* コードブロック（spring/style.css準拠） */
+    .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .code-dot.red { background: #ff5f56; }
+    .code-dot.yellow { background: #ffbd2e; }
+    .code-dot.green { background: #27ca40; }
+    .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .code-content { padding: 16px; overflow-x: auto; }
+    .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+    .code-keyword { color: #c084fc; }
+    .code-class { color: #67e8f9; }
+    .code-string { color: #86efac; }
+    .code-comment { color: #94a3b8; }
+    .code-annotation { color: #fbbf24; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../../shared/js/nav-exercises-3.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">機能</div>
+      <div class="chapter-number">12</div>
+      <h1 class="chapter-title">CSVエクスポート<span class="level-badge level-intermediate">中級</span></h1>
+      <p class="chapter-subtitle">ToDoデータをCSVファイルとしてダウンロード</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この機能の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">12-1</span>工程概要</li>
+        <li class="toc-item"><span class="toc-number">12-2</span>成果物</li>
+        <li class="toc-item"><span class="toc-number">12-3</span>生成プロンプト</li>
+      </ul>
+    </nav>
+
+    <!-- Section 12-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-1</span>
+        <h2 class="section-title">工程概要</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>ToDoデータを<strong>CSVファイルとしてダウンロード</strong>し、Excelなどの外部ツールで活用できるようにします。</p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: var(--primary); color: white;">学習テーマ</div>
+          <p>ファイル出力</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #007AFF; color: white;">主な技術</div>
+          <p>HttpServletResponse / CSV生成</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #34C759; color: white;">関連レイヤー</div>
+          <p>Controller / Service</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>この機能で行うこと</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: var(--primary);">
+              <span class="material-icons" style="color: white;">table_view</span>
+            </div>
+            <div class="feature-content">
+              <h4>CSVサービス作成</h4>
+              <p>データをCSV形式に変換</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">download</span>
+            </div>
+            <div class="feature-content">
+              <h4>ダウンロード処理</h4>
+              <p>HTTPレスポンスでファイル送信</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">translate</span>
+            </div>
+            <div class="feature-content">
+              <h4>文字コード対応</h4>
+              <p>Excel対応のためBOM付きUTF-8</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">file_download</span>
+            </div>
+            <div class="feature-content">
+              <h4>ダウンロードボタン</h4>
+              <p>一覧画面にエクスポート機能追加</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 12-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-2</span>
+        <h2 class="section-title">成果物</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この機能で作成・更新するファイルの一覧です。</p>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ファイル</th>
+              <th>変更内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>TodoController.java</code></td>
+              <td>CSVダウンロードエンドポイント追加</td>
+            </tr>
+            <tr>
+              <td><code>CsvExportService.java</code></td>
+              <td>CSV生成サービス（新規作成）</td>
+            </tr>
+            <tr>
+              <td><code>list.html</code></td>
+              <td>CSVダウンロードボタン追加</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <h4>CSV出力フォーマット</h4>
+        <ul>
+          <li><strong>カラム</strong> - ID, タイトル, 説明, 優先度, カテゴリ, 期限, ステータス, 作成日</li>
+          <li><strong>Content-Type</strong> - text/csv; charset=UTF-8</li>
+          <li><strong>ファイル名</strong> - todo_export_20250120.csv（日付付き）</li>
+          <li><strong>BOM</strong> - 0xEF 0xBB 0xBF を先頭に付与（Excel対応）</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 12-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-3</span>
+        <h2 class="section-title">生成プロンプト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、実装コードを生成できます。</p>
+      </div>
+
+      <!-- サンプルソースコード -->
+      <div class="subsection">
+        <h3>サンプルソースコード</h3>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">TodoController.java</span>
+          </div>
+          <div class="code-content">
+<pre><span class="code-annotation">@GetMapping</span>(<span class="code-string">"/export/csv"</span>)
+<span class="code-keyword">public void</span> <span class="code-class">exportCsv</span>(HttpServletResponse response) <span class="code-keyword">throws</span> IOException {
+    response.setContentType(<span class="code-string">"text/csv; charset=UTF-8"</span>);
+
+    String filename = <span class="code-string">"todo_export_"</span> +
+        LocalDate.now().format(DateTimeFormatter.ofPattern(<span class="code-string">"yyyyMMdd"</span>)) + <span class="code-string">".csv"</span>;
+    response.setHeader(<span class="code-string">"Content-Disposition"</span>,
+        <span class="code-string">"attachment; filename=\""</span> + filename + <span class="code-string">"\""</span>);
+
+    <span class="code-keyword">try</span> (PrintWriter writer = response.getWriter()) {
+        writer.write(<span class="code-string">'\uFEFF'</span>); <span class="code-comment">// BOM for Excel</span>
+        csvExportService.writeCsv(writer, todoService.findAll());
+    }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- コード解説 -->
+      <div class="code-explanation">
+        <h4><span class="material-icons" style="color: #92400e;">menu_book</span> コード解説</h4>
+        <ul>
+          <li><strong>Content-Type</strong>: text/csvでCSVファイルとして認識</li>
+          <li><strong>Content-Disposition</strong>: attachment指定でダウンロードを強制</li>
+          <li><strong>'\uFEFF'</strong>: BOM（Byte Order Mark）でExcelの文字化け防止</li>
+          <li><strong>PrintWriter</strong>: テキストデータをレスポンスに出力</li>
+        </ul>
+      </div>
+
+      <!-- 図解 -->
+      <div class="diagram-container">
+        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: white;">
+          <span class="material-icons" style="color: white;">psychology</span> CSVエクスポートの流れ
+        </h4>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+          <div style="background: rgba(255,255,255,0.2); padding: 12px 16px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.2rem;">📥</div>
+            <div style="font-size: 0.85rem;">ボタンクリック</div>
+          </div>
+          <div>→</div>
+          <div style="background: rgba(255,255,255,0.2); padding: 12px 16px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.2rem;">🗄️</div>
+            <div style="font-size: 0.85rem;">データ取得</div>
+          </div>
+          <div>→</div>
+          <div style="background: rgba(255,255,255,0.2); padding: 12px 16px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.2rem;">📝</div>
+            <div style="font-size: 0.85rem;">CSV変換</div>
+          </div>
+          <div>→</div>
+          <div style="background: rgba(255,255,255,0.2); padding: 12px 16px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.2rem;">💾</div>
+            <div style="font-size: 0.85rem;">ダウンロード</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prompt-card">
+        <h4><span class="material-icons">auto_awesome</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre id="prompt-12">あなたはJavaプログラマーです。
+
+ToDoアプリにCSVエクスポート機能を追加してください。
+
+【要件】
+- 一覧画面に「CSVダウンロード」ボタンを配置
+- 全ToDoデータをCSV形式でダウンロード
+- Excelで開けるようにBOM付きUTF-8で出力
+- ファイル名に日付を含める（todo_export_20250120.csv）
+
+【CSVカラム】
+ID, タイトル, 説明, 優先度, カテゴリ, 期限, ステータス, 作成日
+
+【実装箇所】
+
+■ TodoController.java
+```java
+@GetMapping("/export/csv")
+public void exportCsv(HttpServletResponse response) throws IOException {
+    // Content-Type設定
+    response.setContentType("text/csv; charset=UTF-8");
+
+    // ファイル名設定（日付付き）
+    String filename = "todo_export_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".csv";
+    response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+    // BOM付きUTF-8で出力
+    try (PrintWriter writer = response.getWriter()) {
+        writer.write('\uFEFF'); // BOM
+        csvExportService.writeCsv(writer, todoService.findAll());
+    }
+}
+```
+
+■ CsvExportService.java（新規作成）
+- ヘッダー行の出力
+- データ行の出力
+- カンマを含む値のダブルクォート処理
+- 改行コードの処理
+- null値の空文字変換
+
+■ list.html
+- CSVダウンロードボタン追加
+- &lt;a href="/todo/export/csv" class="btn btn-secondary"&gt;
+    &lt;span class="material-icons"&gt;download&lt;/span&gt; CSVダウンロード
+  &lt;/a&gt;
+
+【注意点】
+- CSVの値にカンマが含まれる場合はダブルクォートで囲む
+- ダブルクォート自体はエスケープ（""）
+- BOMがないとExcelで日本語が文字化けする
+
+必要なコードを提示してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="copyPrompt('prompt-12')">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box success">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> ポイント</div>
+        <div class="info-box-content">
+          <p>BOM（Byte Order Mark）を付けることで、ExcelでCSVを開いた際の日本語文字化けを防げます。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="11_bulk_delete.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前の機能</div>
+      <div class="page-nav-title">11 一括削除</div>
+    </a>
+    <a href="13_login.html" class="page-nav-btn next">
+      <div class="page-nav-label">次の機能</div>
+      <div class="page-nav-title">13 ログイン機能</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 3 - Phase 2: 機能追加</p>
+  </footer>
+
+  <script>
+    function copyPrompt(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons">check</span> コピーしました';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

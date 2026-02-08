@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>実行結果サンプル - 第9章 コードのリファクタリング</title>
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-hover: #005A9E;
+      --primary-light: #E8F4FD;
+      --danger: #FF3B30;
+      --success: #34C759;
+      --text: #1D1D1F;
+      --text-sub: #6E6E73;
+      --border: #D2D2D7;
+      --bg: #F5F5F7;
+      --white: #FFFFFF;
+      --radius: 8px;
+      --shadow: 0 2px 8px rgba(0,0,0,0.06);
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 24px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    .page-header {
+      background: linear-gradient(135deg, var(--primary), #5856D6);
+      color: white; border-radius: 16px; padding: 40px 32px;
+      margin-bottom: 32px; text-align: center;
+      box-shadow: 0 4px 16px rgba(0,122,204,0.3);
+    }
+    .page-header h1 { font-size: 24px; margin-bottom: 8px; }
+    .page-header p { opacity: 0.9; font-size: 14px; }
+    .card {
+      background: var(--white); border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: var(--space-xl); margin-bottom: var(--space-lg);
+    }
+    .card-title {
+      font-size: 18px; font-weight: 700; margin-bottom: var(--space-md);
+      padding-bottom: 12px; border-bottom: 2px solid var(--primary);
+    }
+    .card-description { font-size: 14px; color: var(--text-sub); margin-bottom: 20px; }
+
+    /* コード比較 */
+    .code-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+    .code-panel {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .code-panel__header {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .code-panel__header--before {
+      background: #fde8e8;
+      color: #c53030;
+    }
+    .code-panel__header--after {
+      background: #dcf5e7;
+      color: #1b7a3d;
+    }
+    .code-panel__body {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .code-panel__body .keyword { color: #569cd6; }
+    .code-panel__body .tag { color: #4ec9b0; }
+    .code-panel__body .attr { color: #9cdcfe; }
+    .code-panel__body .string { color: #ce9178; }
+    .code-panel__body .comment { color: #6a9955; }
+    .code-panel__body .property { color: #9cdcfe; }
+    .code-panel__body .value { color: #ce9178; }
+    .code-panel__body .highlight { background: rgba(255,255,0,0.1); display: inline; }
+
+    /* 変更点リスト */
+    .changes-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .changes-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      padding: 10px 14px;
+      background: var(--bg);
+      border-radius: var(--radius);
+    }
+    .changes-list li::before {
+      content: "→";
+      color: var(--success);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* リファクタリング結果デモ */
+    .refactored-demo {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .demo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 64px;
+      padding: 0 var(--space-lg);
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+    .demo-header__logo {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .demo-header__nav {
+      display: flex;
+      gap: var(--space-lg);
+      list-style: none;
+    }
+    .demo-header__nav a {
+      text-decoration: none;
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .demo-main {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+      padding: var(--space-lg);
+      background: var(--bg);
+    }
+    .demo-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: var(--space-lg);
+      box-shadow: var(--shadow);
+    }
+    .demo-card__title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: var(--space-sm);
+    }
+    .demo-card__text {
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+    .demo-footer {
+      background: #1d1d1f;
+      color: #a1a1a6;
+      padding: var(--space-md) var(--space-lg);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 767px) {
+      .code-compare { grid-template-columns: 1fr; }
+      .demo-main { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1>第9章 コードのリファクタリング</h1>
+      <p>プロンプトUIコーディング - 実行結果サンプル</p>
+    </div>
+
+    <!-- HTML構造改善 -->
+    <div class="card">
+      <div class="card-title">HTML構造改善（Before / After）</div>
+      <p class="card-description">div地獄からセマンティックHTMLへのリファクタリング</p>
+      <div class="code-compare">
+        <div class="code-panel">
+          <div class="code-panel__header code-panel__header--before">Before（リファクタリング前）</div>
+          <div class="code-panel__body"><span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"header"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"logo"</span><span class="tag">&gt;</span>Logo<span class="tag">&lt;/div&gt;</span>
+  <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"nav"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"nav-item"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="string">"#"</span><span class="tag">&gt;</span>Home<span class="tag">&lt;/a&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"nav-item"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="string">"#"</span><span class="tag">&gt;</span>About<span class="tag">&lt;/a&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  <span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/div&gt;</span></div>
+        </div>
+        <div class="code-panel">
+          <div class="code-panel__header code-panel__header--after">After（リファクタリング後）</div>
+          <div class="code-panel__body"><span class="highlight"><span class="tag">&lt;header</span> <span class="attr">class</span>=<span class="string">"site-header"</span><span class="tag">&gt;</span></span>
+  <span class="tag">&lt;h1&gt;</span><span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="string">"/"</span><span class="tag">&gt;</span>Logo<span class="tag">&lt;/a&gt;</span><span class="tag">&lt;/h1&gt;</span>
+  <span class="highlight"><span class="tag">&lt;nav</span> <span class="attr">aria-label</span>=<span class="string">"メイン"</span><span class="tag">&gt;</span></span>
+    <span class="highlight"><span class="tag">&lt;ul</span> <span class="attr">class</span>=<span class="string">"site-header__nav"</span><span class="tag">&gt;</span></span>
+      <span class="tag">&lt;li&gt;</span><span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="string">"#"</span><span class="tag">&gt;</span>Home<span class="tag">&lt;/a&gt;</span><span class="tag">&lt;/li&gt;</span>
+      <span class="tag">&lt;li&gt;</span><span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="string">"#"</span><span class="tag">&gt;</span>About<span class="tag">&lt;/a&gt;</span><span class="tag">&lt;/li&gt;</span>
+    <span class="tag">&lt;/ul&gt;</span>
+  <span class="tag">&lt;/nav&gt;</span>
+<span class="tag">&lt;/header&gt;</span></div>
+        </div>
+      </div>
+      <ul class="changes-list" style="margin-top: 16px;">
+        <li>div.header を <code>header</code> セマンティックタグに変更</li>
+        <li>div.nav を <code>nav</code> + <code>ul/li</code> 構造に変更</li>
+        <li>BEM命名規則（site-header__nav）に統一</li>
+        <li><code>aria-label</code> 属性を追加してアクセシビリティ向上</li>
+      </ul>
+    </div>
+
+    <!-- CSSリファクタリング -->
+    <div class="card">
+      <div class="card-title">CSSリファクタリング（Before / After）</div>
+      <p class="card-description">重複排除・CSS変数化・Flexbox化</p>
+      <div class="code-compare">
+        <div class="code-panel">
+          <div class="code-panel__header code-panel__header--before">Before</div>
+          <div class="code-panel__body"><span class="comment">/* 重複・マジックナンバー */</span>
+<span class="tag">.header</span> {
+  <span class="property">background</span>: <span class="value">#007ACC</span>;
+  <span class="property">height</span>: <span class="value">64px</span>;
+  <span class="property">overflow</span>: <span class="value">hidden</span>;  <span class="comment">/* clearfix */</span>
+}
+<span class="tag">.logo</span> {
+  <span class="property">float</span>: <span class="value">left</span>;
+  <span class="property">color</span>: <span class="value">#007ACC</span>;
+}
+<span class="tag">.nav</span> {
+  <span class="property">float</span>: <span class="value">right</span>;
+}
+<span class="tag">.btn</span> {
+  <span class="property">background</span>: <span class="value">#007ACC</span>;
+  <span class="property">color</span>: <span class="value">#fff</span> <span class="keyword">!important</span>;
+  <span class="property">padding</span>: <span class="value">12px 24px</span>;
+}
+<span class="tag">.card</span> {
+  <span class="property">padding</span>: <span class="value">24px</span>;
+  <span class="property">border-radius</span>: <span class="value">8px</span>;
+  <span class="property">color</span>: <span class="value">#007ACC</span>;
+}</div>
+        </div>
+        <div class="code-panel">
+          <div class="code-panel__header code-panel__header--after">After</div>
+          <div class="code-panel__body"><span class="highlight"><span class="keyword">:root</span> {</span>
+  <span class="property">--color-primary</span>: <span class="value">#007ACC</span>;
+  <span class="property">--space-md</span>: <span class="value">16px</span>;
+  <span class="property">--space-lg</span>: <span class="value">24px</span>;
+  <span class="property">--radius</span>: <span class="value">8px</span>;
+<span class="highlight">}</span>
+
+<span class="tag">.site-header</span> {
+  <span class="highlight"><span class="property">display</span>: <span class="value">flex</span>;</span>
+  <span class="highlight"><span class="property">justify-content</span>: <span class="value">space-between</span>;</span>
+  <span class="highlight"><span class="property">align-items</span>: <span class="value">center</span>;</span>
+  <span class="property">height</span>: <span class="value">64px</span>;
+}
+<span class="tag">.site-header__logo</span> {
+  <span class="property">color</span>: <span class="value">var(--color-primary)</span>;
+}
+<span class="tag">.btn</span> {
+  <span class="property">background</span>: <span class="value">var(--color-primary)</span>;
+  <span class="property">color</span>: <span class="value">#fff</span>;
+  <span class="property">padding</span>: <span class="value">var(--space-md) var(--space-lg)</span>;
+}
+<span class="tag">.card</span> {
+  <span class="property">padding</span>: <span class="value">var(--space-lg)</span>;
+  <span class="property">border-radius</span>: <span class="value">var(--radius)</span>;
+}</div>
+        </div>
+      </div>
+      <ul class="changes-list" style="margin-top: 16px;">
+        <li>カラーコード #007ACC を CSS変数 <code>var(--color-primary)</code> に統一</li>
+        <li>マジックナンバー(24px, 8px)をCSS変数に置き換え</li>
+        <li><code>float</code> を <code>display: flex</code> に変換、clearfixを削除</li>
+        <li><code>!important</code> を排除して詳細度を適正化</li>
+        <li>BEM命名規則（site-header, site-header__logo）に統一</li>
+      </ul>
+    </div>
+
+    <!-- Tailwind CSS変換 -->
+    <div class="card">
+      <div class="card-title">Tailwind CSSへの変換（Before / After）</div>
+      <p class="card-description">通常CSSからTailwind CSSユーティリティクラスへの書き換え</p>
+      <div class="code-compare">
+        <div class="code-panel">
+          <div class="code-panel__header code-panel__header--before">Before（通常CSS）</div>
+          <div class="code-panel__body"><span class="comment">&lt;!-- HTML --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"card"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;h3</span> <span class="attr">class</span>=<span class="string">"card-title"</span><span class="tag">&gt;</span>Title<span class="tag">&lt;/h3&gt;</span>
+  <span class="tag">&lt;p</span> <span class="attr">class</span>=<span class="string">"card-text"</span><span class="tag">&gt;</span>Text<span class="tag">&lt;/p&gt;</span>
+  <span class="tag">&lt;a</span> <span class="attr">class</span>=<span class="string">"card-btn"</span><span class="tag">&gt;</span>More<span class="tag">&lt;/a&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+
+<span class="comment">&lt;!-- CSS --&gt;</span>
+<span class="tag">.card</span> {
+  <span class="property">background</span>: <span class="value">#fff</span>;
+  <span class="property">padding</span>: <span class="value">24px</span>;
+  <span class="property">border-radius</span>: <span class="value">12px</span>;
+  <span class="property">box-shadow</span>: <span class="value">0 2px 8px rgba(0,0,0,.08)</span>;
+}
+<span class="tag">.card-title</span> {
+  <span class="property">font-size</span>: <span class="value">18px</span>;
+  <span class="property">font-weight</span>: <span class="value">700</span>;
+  <span class="property">margin-bottom</span>: <span class="value">8px</span>;
+}
+<span class="tag">.card-text</span> {
+  <span class="property">font-size</span>: <span class="value">14px</span>;
+  <span class="property">color</span>: <span class="value">#6e6e73</span>;
+  <span class="property">margin-bottom</span>: <span class="value">16px</span>;
+}
+<span class="tag">.card-btn</span> {
+  <span class="property">background</span>: <span class="value">#007ACC</span>;
+  <span class="property">color</span>: <span class="value">#fff</span>;
+  <span class="property">padding</span>: <span class="value">8px 16px</span>;
+  <span class="property">border-radius</span>: <span class="value">8px</span>;
+}</div>
+        </div>
+        <div class="code-panel">
+          <div class="code-panel__header code-panel__header--after">After（Tailwind CSS）</div>
+          <div class="code-panel__body"><span class="comment">&lt;!-- CSSファイル不要！ --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="string">"<span class="highlight">bg-white p-6 rounded-xl
+     shadow-md</span>"</span><span class="tag">&gt;</span>
+
+  <span class="tag">&lt;h3</span> <span class="attr">class</span>=<span class="string">"<span class="highlight">text-lg font-bold mb-2</span>"</span><span class="tag">&gt;</span>
+    Title
+  <span class="tag">&lt;/h3&gt;</span>
+
+  <span class="tag">&lt;p</span> <span class="attr">class</span>=<span class="string">"<span class="highlight">text-sm text-gray-500 mb-4</span>"</span><span class="tag">&gt;</span>
+    Text
+  <span class="tag">&lt;/p&gt;</span>
+
+  <span class="tag">&lt;a</span> <span class="attr">class</span>=<span class="string">"<span class="highlight">bg-blue-500 text-white
+     px-4 py-2 rounded-lg
+     hover:bg-blue-600
+     transition-colors</span>"</span><span class="tag">&gt;</span>
+    More
+  <span class="tag">&lt;/a&gt;</span>
+
+<span class="tag">&lt;/div&gt;</span></div>
+        </div>
+      </div>
+      <ul class="changes-list" style="margin-top: 16px;">
+        <li>CSSファイルが不要に（ユーティリティクラスで完結）</li>
+        <li><code>.card { padding: 24px }</code> → <code>p-6</code></li>
+        <li><code>.card { border-radius: 12px }</code> → <code>rounded-xl</code></li>
+        <li><code>.card-title { font-weight: 700 }</code> → <code>font-bold</code></li>
+        <li><code>.card-btn:hover</code> → <code>hover:bg-blue-600</code>（状態もクラスで指定）</li>
+      </ul>
+    </div>
+
+    <!-- リファクタリング後のUI -->
+    <div class="card">
+      <div class="card-title">リファクタリング後のUI表示</div>
+      <p class="card-description">CSS変数・Flexbox・BEMを適用した結果（見た目は変わらない）</p>
+      <div class="refactored-demo">
+        <header class="demo-header">
+          <div class="demo-header__logo">SampleCorp</div>
+          <nav>
+            <ul class="demo-header__nav">
+              <li><a href="#">ホーム</a></li>
+              <li><a href="#">サービス</a></li>
+              <li><a href="#">お問い合わせ</a></li>
+            </ul>
+          </nav>
+        </header>
+        <main class="demo-main">
+          <article class="demo-card">
+            <h3 class="demo-card__title">カード1</h3>
+            <p class="demo-card__text">CSS変数でカラーを統一管理しています。</p>
+          </article>
+          <article class="demo-card">
+            <h3 class="demo-card__title">カード2</h3>
+            <p class="demo-card__text">Flexboxでレイアウトを構築しています。</p>
+          </article>
+          <article class="demo-card">
+            <h3 class="demo-card__title">カード3</h3>
+            <p class="demo-card__text">BEM命名規則でクラス名を整理しています。</p>
+          </article>
+        </main>
+        <footer class="demo-footer">
+          &copy; 2026 SampleCorp. All rights reserved.
+        </footer>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -24,12 +24,12 @@ const navData = {
         { href: "10docker-ai-mcp.html", num: "10", text: "Docker × AI・MCP活用" }
     ],
     categories: [
-        { href: "../index.html", text: "ダッシュボード" },
-        { href: "../index.html#frontend", text: "フロントエンド基礎" },
-        { href: "../index.html#backend", text: "バックエンド開発" },
-        { href: "../index.html#ai", text: "AI・自動化" },
-        { href: "../index.html#design", text: "デザイン・UX" },
-        { href: "../index.html#business", text: "ビジネススキル" }
+        { href: "../../index.html", text: "ダッシュボード" },
+        { href: "../../index.html#frontend", text: "フロントエンド基礎" },
+        { href: "../../index.html#backend", text: "バックエンド開発" },
+        { href: "../../index.html#ai", text: "AI・自動化" },
+        { href: "../../index.html#design", text: "デザイン・UX" },
+        { href: "../../index.html#business", text: "ビジネススキル" }
     ]
 };
 
@@ -75,7 +75,7 @@ function generateNavHTML() {
     return `
         <div class="nav-container">
             <a href="${navData.logo.href}" class="nav-logo${logoActive}">
-                <span class="nav-logo-icon" style="background: #2496ED; color: white;">${logoIcon}</span>
+                <span class="nav-logo-icon" style="background: #F5A623; color: white;">${logoIcon}</span>
                 <span>${navData.logo.text}</span>
             </a>
             <div class="nav-category-links">

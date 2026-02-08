@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>機能10: 期限設定 - WEB総合制作演習 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
+    }
+    .nav-category-links { display: none; }
+    .level-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-left: 12px; }
+    .level-beginner { background: #dcfce7; color: #166534; }
+    .level-intermediate { background: #fef9c3; color: #854d0e; }
+    .level-advanced { background: #ffedd5; color: #9a3412; }
+    .level-expert { background: #fee2e2; color: #991b1b; }
+    .prompt-card { background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #4285F4; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+    /* 図解コンテナ */
+    .diagram-container { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .diagram-container h4 { margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: white; }
+    /* コード解説 */
+    .code-explanation { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 20px; margin: 16px 0; }
+    .code-explanation h4 { margin: 0 0 16px 0; color: #92400e; display: flex; align-items: center; gap: 8px; }
+    .code-explanation ul { margin: 0; padding-left: 20px; color: #78350f; }
+    .code-explanation li { margin-bottom: 8px; line-height: 1.6; }
+    /* コードブロック（spring/style.css準拠） */
+    .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .code-dot.red { background: #ff5f56; }
+    .code-dot.yellow { background: #ffbd2e; }
+    .code-dot.green { background: #27ca40; }
+    .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .code-content { padding: 16px; overflow-x: auto; }
+    .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+    .code-keyword { color: #c084fc; }
+    .code-class { color: #67e8f9; }
+    .code-string { color: #86efac; }
+    .code-comment { color: #94a3b8; }
+    .code-annotation { color: #fbbf24; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../../shared/js/nav-exercises-3.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">機能</div>
+      <div class="chapter-number">10</div>
+      <h1 class="chapter-title">期限設定<span class="level-badge level-intermediate">中級</span></h1>
+      <p class="chapter-subtitle">締め切り日の設定と警告表示</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この機能の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">10-1</span>工程概要</li>
+        <li class="toc-item"><span class="toc-number">10-2</span>成果物</li>
+        <li class="toc-item"><span class="toc-number">10-3</span>生成プロンプト</li>
+      </ul>
+    </nav>
+
+    <!-- Section 10-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 10-1</span>
+        <h2 class="section-title">工程概要</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>ToDoに<strong>締め切り日を設定</strong>し、期限切れ・期限間近のタスクを視覚的に警告表示します。</p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: var(--primary); color: white;">学習テーマ</div>
+          <p>日付処理</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #007AFF; color: white;">主な技術</div>
+          <p>LocalDate / Thymeleaf</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #34C759; color: white;">関連レイヤー</div>
+          <p>Entity / View</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>この機能で行うこと</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: var(--primary);">
+              <span class="material-icons" style="color: white;">event</span>
+            </div>
+            <div class="feature-content">
+              <h4>期限フィールド追加</h4>
+              <p>deadlineカラムの追加</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">date_range</span>
+            </div>
+            <div class="feature-content">
+              <h4>日付入力UI</h4>
+              <p>カレンダー入力の実装</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">calculate</span>
+            </div>
+            <div class="feature-content">
+              <h4>期限判定ロジック</h4>
+              <p>期限切れ・期限間近の判定</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">warning</span>
+            </div>
+            <div class="feature-content">
+              <h4>警告表示</h4>
+              <p>視覚的なアラート表示</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 10-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 10-2</span>
+        <h2 class="section-title">成果物</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この機能で作成・更新するファイルの一覧です。</p>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ファイル</th>
+              <th>変更内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Todo.java</code></td>
+              <td>deadline (LocalDate) フィールド追加</td>
+            </tr>
+            <tr>
+              <td><code>schema.sql</code></td>
+              <td>deadline DATE カラム追加</td>
+            </tr>
+            <tr>
+              <td><code>TodoMapper.xml</code></td>
+              <td>期限関連のクエリ追加</td>
+            </tr>
+            <tr>
+              <td><code>form.html</code></td>
+              <td>日付入力 input[type="date"]</td>
+            </tr>
+            <tr>
+              <td><code>list.html</code></td>
+              <td>期限表示と警告スタイル</td>
+            </tr>
+            <tr>
+              <td><code>style.css</code></td>
+              <td>期限切れ・期限間近スタイル</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <h4>期限表示のルール</h4>
+        <ul>
+          <li><strong>期限切れ（過去日）</strong> - 赤背景 + 「期限切れ」表示</li>
+          <li><strong>本日期限</strong> - オレンジ背景 + 「本日期限」表示</li>
+          <li><strong>期限3日以内</strong> - 黄色背景 + 「あと○日」表示</li>
+          <li><strong>期限4日以上先</strong> - 通常表示 + 日付のみ</li>
+          <li><strong>期限未設定</strong> - 「-」表示</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 10-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 10-3</span>
+        <h2 class="section-title">生成プロンプト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、実装コードを生成できます。</p>
+      </div>
+
+      <!-- サンプルソースコード -->
+      <div class="subsection">
+        <h3>サンプルソースコード</h3>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">Todo.java（期限関連）</span>
+          </div>
+          <div class="code-content">
+<pre><span class="code-annotation">@DateTimeFormat</span>(pattern = <span class="code-string">"yyyy-MM-dd"</span>)
+<span class="code-keyword">private</span> LocalDate deadline;
+
+<span class="code-comment">// 期限切れ判定</span>
+<span class="code-keyword">public boolean</span> <span class="code-class">isOverdue</span>() {
+    <span class="code-keyword">return</span> deadline != <span class="code-keyword">null</span> &amp;&amp; deadline.isBefore(LocalDate.now());
+}
+
+<span class="code-comment">// 残り日数計算</span>
+<span class="code-keyword">public long</span> <span class="code-class">getDaysUntilDeadline</span>() {
+    <span class="code-keyword">if</span> (deadline == <span class="code-keyword">null</span>) <span class="code-keyword">return</span> Long.MAX_VALUE;
+    <span class="code-keyword">return</span> ChronoUnit.DAYS.between(LocalDate.now(), deadline);
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">list.html（Thymeleaf）</span>
+          </div>
+          <div class="code-content">
+<pre><span class="code-comment">&lt;!-- 期限切れ判定 --&gt;</span>
+<span class="code-keyword">&lt;span</span> th:if=<span class="code-string">"${todo.overdue}"</span>
+      class=<span class="code-string">"deadline-overdue"</span><span class="code-keyword">&gt;</span>期限切れ<span class="code-keyword">&lt;/span&gt;</span>
+
+<span class="code-comment">&lt;!-- 期限間近（3日以内） --&gt;</span>
+<span class="code-keyword">&lt;span</span> th:if=<span class="code-string">"${!todo.overdue and todo.daysUntilDeadline &lt;= 3}"</span>
+      class=<span class="code-string">"deadline-soon"</span><span class="code-keyword">&gt;</span>
+    あと<span class="code-keyword">&lt;span</span> th:text=<span class="code-string">"${todo.daysUntilDeadline}"</span><span class="code-keyword">&gt;&lt;/span&gt;</span>日
+<span class="code-keyword">&lt;/span&gt;</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- コード解説 -->
+      <div class="code-explanation">
+        <h4><span class="material-icons" style="color: #92400e;">menu_book</span> コード解説</h4>
+        <ul>
+          <li><strong>@DateTimeFormat</strong>: フォーム入力値のパース形式を指定</li>
+          <li><strong>LocalDate</strong>: 日付のみ（時刻なし）を扱うJava 8日付API</li>
+          <li><strong>ChronoUnit.DAYS.between()</strong>: 2つの日付間の日数を計算</li>
+          <li><strong>isOverdue()</strong>: Thymeleafで${todo.overdue}としてアクセス可能</li>
+        </ul>
+      </div>
+
+      <!-- 図解 -->
+      <div class="diagram-container">
+        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: white;">
+          <span class="material-icons" style="color: white;">psychology</span> 期限表示のルール
+        </h4>
+        <div style="display: grid; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px; background: rgba(220,38,38,0.3); padding: 12px 16px; border-radius: 8px;">
+            <span style="font-size: 1.2rem;">🔴</span>
+            <div>
+              <div style="font-weight: 600;">期限切れ</div>
+              <div style="font-size: 0.85rem; opacity: 0.9;">過去日 → 赤背景で警告表示</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; background: rgba(234,88,12,0.3); padding: 12px 16px; border-radius: 8px;">
+            <span style="font-size: 1.2rem;">🟠</span>
+            <div>
+              <div style="font-weight: 600;">本日期限</div>
+              <div style="font-size: 0.85rem; opacity: 0.9;">残り0日 → オレンジ背景</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; background: rgba(217,119,6,0.3); padding: 12px 16px; border-radius: 8px;">
+            <span style="font-size: 1.2rem;">🟡</span>
+            <div>
+              <div style="font-weight: 600;">期限間近（1〜3日）</div>
+              <div style="font-size: 0.85rem; opacity: 0.9;">「あと○日」と表示</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.15); padding: 12px 16px; border-radius: 8px;">
+            <span style="font-size: 1.2rem;">⚪</span>
+            <div>
+              <div style="font-weight: 600;">通常（4日以上先）</div>
+              <div style="font-size: 0.85rem; opacity: 0.9;">日付のみ表示</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prompt-card">
+        <h4><span class="material-icons">auto_awesome</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre id="prompt-10">あなたはJavaプログラマーです。
+
+ToDoアプリに期限設定機能を追加してください。
+
+【要件】
+- 期限は日付のみ（時刻なし）
+- 期限は任意入力（未設定可）
+- 期限切れのタスクを赤く警告表示
+- 期限間近（3日以内）を黄色で警告
+- 期限でのソート機能
+
+【実装箇所】
+
+■ Todo.java
+- deadline (LocalDate) フィールド追加
+- @DateTimeFormat(pattern = "yyyy-MM-dd") アノテーション
+- isOverdue() メソッド - 期限切れ判定
+- getDaysUntilDeadline() メソッド - 残り日数計算
+
+■ schema.sql
+- deadline DATE カラム追加（NULL許容）
+
+■ TodoMapper.xml
+- INSERT/UPDATE文にdeadlineを追加
+- 期限順ソートのORDER BY対応
+- 期限切れ一覧取得クエリ（WHERE deadline &lt; CURRENT_DATE）
+
+■ form.html
+- &lt;input type="date" th:field="*{deadline}"&gt;
+- @DateTimeFormatでフォーマット指定
+- min属性で過去日入力を制限（任意）
+
+■ list.html
+- 期限表示: th:text="${#temporals.format(todo.deadline, 'yyyy/MM/dd')}"
+- 期限切れ判定: th:if="${todo.deadline != null and todo.deadline.isBefore(#temporals.createToday())}"
+- 期限間近判定: 残り日数が0〜3日の場合
+- 条件に応じたクラス付与（deadline-overdue, deadline-soon等）
+
+■ style.css
+- .deadline-overdue { background: #fef2f2; color: #dc2626; border-left: 4px solid #dc2626; }
+- .deadline-today { background: #fff7ed; color: #ea580c; }
+- .deadline-soon { background: #fffbeb; color: #d97706; }
+
+■ Controller
+- 期限順ソートのパラメータ対応
+
+必要なコードを提示してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="copyPrompt('prompt-10')">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box success">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> ポイント</div>
+        <div class="info-box-content">
+          <p>Thymeleafの#temporalsユーティリティを使うと、日付のフォーマットや比較が簡単に行えます。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="09_category.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前の機能</div>
+      <div class="page-nav-title">09 カテゴリ管理</div>
+    </a>
+    <a href="11_bulk_delete.html" class="page-nav-btn next">
+      <div class="page-nav-label">次の機能</div>
+      <div class="page-nav-title">11 一括削除</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 3 - Phase 2: 機能追加</p>
+  </footer>
+
+  <script>
+    function copyPrompt(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons">check</span> コピーしました';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

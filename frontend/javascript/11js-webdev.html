@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第11章: 応用 JavaScript × Web制作の実践 - JavaScript入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-dark: #005A9E;
+      --primary-light: #E8F4FD;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-javascript.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">JavaScript超入門</div>
+      <div class="chapter-number">11</div>
+      <h1 class="chapter-title">応用：JavaScript × Web制作の実践</h1>
+      <p class="chapter-subtitle">実務で使えるテクニック集</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">1</span>この章で学ぶこと</li>
+        <li class="toc-item"><span class="toc-number">2</span>スムーズスクロール</li>
+        <li class="toc-item"><span class="toc-number">3</span>ハンバーガーメニュー</li>
+        <li class="toc-item"><span class="toc-number">4</span>モーダルウィンドウ</li>
+        <li class="toc-item"><span class="toc-number">5</span>画像スライダー</li>
+        <li class="toc-item"><span class="toc-number">6</span>フォームバリデーション</li>
+        <li class="toc-item"><span class="toc-number">7</span>スクロールアニメーション</li>
+      </ul>
+    </nav>
+
+    <!-- Section 1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 1</span>
+        <h2 class="section-title">この章で学ぶこと</h2>
+      </div>
+
+      <div class="subsection">
+        <p>これまで学んだJavaScriptの基本を使って、<strong>実際のWebサイトでよく使われる機能</strong>を作ってみましょう！</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>機能</th>
+                <th>内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>スムーズスクロール</td>
+                <td>リンクをクリックすると滑らかにスクロール</td>
+              </tr>
+              <tr>
+                <td>ハンバーガーメニュー</td>
+                <td>スマホ用のメニュー開閉</td>
+              </tr>
+              <tr>
+                <td>モーダルウィンドウ</td>
+                <td>画面中央にポップアップ表示</td>
+              </tr>
+              <tr>
+                <td>画像スライダー</td>
+                <td>画像を左右にスライド切り替え</td>
+              </tr>
+              <tr>
+                <td>フォームバリデーション</td>
+                <td>入力チェックとエラー表示</td>
+              </tr>
+              <tr>
+                <td>スクロールアニメーション</td>
+                <td>スクロールに応じて要素をフェードイン</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="highlight-box">
+          <h4>この章のポイント</h4>
+          <p>これらの機能は、<strong>DOM操作</strong>、<strong>イベント</strong>、<strong>classList</strong>を組み合わせて作ります。基本を理解していれば、応用は怖くない！</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2</span>
+        <h2 class="section-title">スムーズスクロール</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>ページ内リンクをクリックしたとき、<strong>スルスルと滑らかにスクロール</strong>する機能</p>
+      </div>
+
+      <div class="subsection">
+        <p><strong>ファイル：Chapter_11-2 \ index.html</strong></p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;スムーズスクロール&lt;/title&gt;
+  &lt;style&gt;
+    section { height: 100vh; padding: 20px; }
+    #section1 { background: #ffcccc; }
+    #section2 { background: #ccffcc; }
+    #section3 { background: #ccccff; }
+    nav { position: fixed; top: 0; background: white; padding: 10px; }
+    nav a { margin: 0 10px; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;nav&gt;
+    &lt;a href="#section1"&gt;セクション1&lt;/a&gt;
+    &lt;a href="#section2"&gt;セクション2&lt;/a&gt;
+    &lt;a href="#section3"&gt;セクション3&lt;/a&gt;
+  &lt;/nav&gt;
+
+  &lt;section id="section1"&gt;&lt;h2&gt;セクション1&lt;/h2&gt;&lt;/section&gt;
+  &lt;section id="section2"&gt;&lt;h2&gt;セクション2&lt;/h2&gt;&lt;/section&gt;
+  &lt;section id="section3"&gt;&lt;h2&gt;セクション3&lt;/h2&gt;&lt;/section&gt;
+
+  &lt;script&gt;
+    const links = document.querySelectorAll('nav a');
+
+    links.forEach((link) =&gt; {
+      link.addEventListener('click', (e) =&gt; {
+        e.preventDefault();
+        const targetId = link.getAttribute('href');
+        const target = document.querySelector(targetId);
+        target.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>ポイント</h4>
+          <ul>
+            <li><code>e.preventDefault()</code> - デフォルトのジャンプ動作を止める</li>
+            <li><code>getAttribute('href')</code> - リンク先のIDを取得</li>
+            <li><code>scrollIntoView({ behavior: 'smooth' })</code> - 滑らかにスクロール</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3</span>
+        <h2 class="section-title">ハンバーガーメニュー</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>スマホサイトでよく見る<strong>三本線のメニュー</strong>ボタン</p>
+      </div>
+
+      <div class="subsection">
+        <p><strong>ファイル：Chapter_11-3 \ index.html</strong></p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;ハンバーガーメニュー&lt;/title&gt;
+  &lt;style&gt;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    .hamburger {
+      width: 30px;
+      height: 25px;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 100%;
+      height: 3px;
+      background: #333;
+      margin-bottom: 8px;
+      transition: 0.3s;
+    }
+
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(8px, 8px);
+    }
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(8px, -8px);
+    }
+
+    .menu {
+      position: fixed;
+      top: 0;
+      right: -250px;
+      width: 250px;
+      height: 100vh;
+      background: #333;
+      transition: 0.3s;
+      padding-top: 80px;
+    }
+
+    .menu.active {
+      right: 0;
+    }
+
+    .menu a {
+      display: block;
+      color: white;
+      padding: 15px 20px;
+      text-decoration: none;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="hamburger" id="hamburger"&gt;
+    &lt;span&gt;&lt;/span&gt;
+    &lt;span&gt;&lt;/span&gt;
+    &lt;span&gt;&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;nav class="menu" id="menu"&gt;
+    &lt;a href="#"&gt;ホーム&lt;/a&gt;
+    &lt;a href="#"&gt;サービス&lt;/a&gt;
+    &lt;a href="#"&gt;会社概要&lt;/a&gt;
+    &lt;a href="#"&gt;お問い合わせ&lt;/a&gt;
+  &lt;/nav&gt;
+
+  &lt;h1 style="padding: 100px 20px;"&gt;ハンバーガーメニュー&lt;/h1&gt;
+
+  &lt;script&gt;
+    const hamburger = document.getElementById('hamburger');
+    const menu = document.getElementById('menu');
+
+    hamburger.addEventListener('click', () =&gt; {
+      hamburger.classList.toggle('active');
+      menu.classList.toggle('active');
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>ポイント</h4>
+          <ul>
+            <li><code>classList.toggle('active')</code> - クラスの追加/削除を切り替え</li>
+            <li>CSSの<code>transition</code>でアニメーション効果</li>
+            <li><code>transform: rotate()</code>で三本線を×に変形</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4</span>
+        <h2 class="section-title">モーダルウィンドウ</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>画面中央にポップアップで表示される<strong>ダイアログ</strong></p>
+      </div>
+
+      <div class="subsection">
+        <p><strong>ファイル：Chapter_11-4 \ index.html</strong></p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;モーダルウィンドウ&lt;/title&gt;
+  &lt;style&gt;
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .overlay.active {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .modal h2 { margin-bottom: 15px; }
+    .modal p { margin-bottom: 20px; color: #666; }
+
+    .btn {
+      padding: 10px 30px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .btn-open { background: #007bff; color: white; }
+    .btn-close { background: #6c757d; color: white; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div style="padding: 50px;"&gt;
+    &lt;button class="btn btn-open" id="openBtn"&gt;モーダルを開く&lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;div class="overlay" id="overlay"&gt;
+    &lt;div class="modal"&gt;
+      &lt;h2&gt;お知らせ&lt;/h2&gt;
+      &lt;p&gt;これはモーダルウィンドウです。背景をクリックしても閉じます。&lt;/p&gt;
+      &lt;button class="btn btn-close" id="closeBtn"&gt;閉じる&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    const openBtn = document.getElementById('openBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    const overlay = document.getElementById('overlay');
+
+    openBtn.addEventListener('click', () =&gt; {
+      overlay.classList.add('active');
+    });
+
+    closeBtn.addEventListener('click', () =&gt; {
+      overlay.classList.remove('active');
+    });
+
+    // 背景クリックで閉じる
+    overlay.addEventListener('click', (e) =&gt; {
+      if (e.target === overlay) {
+        overlay.classList.remove('active');
+      }
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>ポイント</h4>
+          <ul>
+            <li><code>display: none</code>と<code>display: flex</code>で表示切り替え</li>
+            <li><code>e.target === overlay</code>で背景クリックを判定</li>
+            <li><code>rgba(0, 0, 0, 0.5)</code>で半透明の背景</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5</span>
+        <h2 class="section-title">画像スライダー</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>画像を左右にスライドして<strong>切り替える</strong>機能</p>
+      </div>
+
+      <div class="subsection">
+        <p><strong>ファイル：Chapter_11-5 \ index.html</strong></p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;画像スライダー&lt;/title&gt;
+  &lt;style&gt;
+    .slider {
+      width: 400px;
+      margin: 50px auto;
+      text-align: center;
+    }
+
+    .slider img {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .controls {
+      margin-top: 15px;
+    }
+
+    .controls button {
+      padding: 10px 20px;
+      margin: 0 5px;
+      border: none;
+      background: #333;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .dots {
+      margin-top: 10px;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      background: #ccc;
+      border-radius: 50%;
+      margin: 0 5px;
+      cursor: pointer;
+    }
+
+    .dot.active {
+      background: #333;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="slider"&gt;
+    &lt;img id="slideImg" src="https://picsum.photos/400/300?random=1" alt="スライド"&gt;
+
+    &lt;div class="controls"&gt;
+      &lt;button id="prevBtn"&gt;← 前へ&lt;/button&gt;
+      &lt;button id="nextBtn"&gt;次へ →&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;div class="dots" id="dots"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    const images = [
+      'https://picsum.photos/400/300?random=1',
+      'https://picsum.photos/400/300?random=2',
+      'https://picsum.photos/400/300?random=3',
+      'https://picsum.photos/400/300?random=4'
+    ];
+
+    let currentIndex = 0;
+    const slideImg = document.getElementById('slideImg');
+    const dotsContainer = document.getElementById('dots');
+
+    // ドットを生成
+    images.forEach((_, i) =&gt; {
+      const dot = document.createElement('span');
+      dot.classList.add('dot');
+      if (i === 0) dot.classList.add('active');
+      dot.addEventListener('click', () =&gt; goToSlide(i));
+      dotsContainer.appendChild(dot);
+    });
+
+    function updateSlide() {
+      slideImg.src = images[currentIndex];
+      // ドットの更新
+      document.querySelectorAll('.dot').forEach((dot, i) =&gt; {
+        dot.classList.toggle('active', i === currentIndex);
+      });
+    }
+
+    function goToSlide(index) {
+      currentIndex = index;
+      updateSlide();
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () =&gt; {
+      currentIndex = (currentIndex - 1 + images.length) % images.length;
+      updateSlide();
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () =&gt; {
+      currentIndex = (currentIndex + 1) % images.length;
+      updateSlide();
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>ポイント</h4>
+          <ul>
+            <li><code>% images.length</code> - 配列の範囲内でループ</li>
+            <li><code>forEach</code>でドットを動的に生成</li>
+            <li><code>classList.toggle('active', 条件)</code> - 条件に応じてクラス切り替え</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6</span>
+        <h2 class="section-title">フォームバリデーション</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>入力内容をチェックして<strong>エラーメッセージ</strong>を表示</p>
+      </div>
+
+      <div class="subsection">
+        <p><strong>ファイル：Chapter_11-6 \ index.html</strong></p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;フォームバリデーション&lt;/title&gt;
+  &lt;style&gt;
+    .form-group {
+      margin-bottom: 20px;
+      max-width: 400px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    input.error {
+      border-color: #dc3545;
+    }
+
+    input.success {
+      border-color: #28a745;
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    button {
+      padding: 12px 30px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div style="padding: 50px;"&gt;
+    &lt;h1&gt;お問い合わせフォーム&lt;/h1&gt;
+
+    &lt;form id="contactForm"&gt;
+      &lt;div class="form-group"&gt;
+        &lt;label&gt;お名前&lt;/label&gt;
+        &lt;input type="text" id="name"&gt;
+        &lt;div class="error-message" id="nameError"&gt;&lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class="form-group"&gt;
+        &lt;label&gt;メールアドレス&lt;/label&gt;
+        &lt;input type="text" id="email"&gt;
+        &lt;div class="error-message" id="emailError"&gt;&lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class="form-group"&gt;
+        &lt;label&gt;電話番号&lt;/label&gt;
+        &lt;input type="text" id="tel"&gt;
+        &lt;div class="error-message" id="telError"&gt;&lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;button type="submit"&gt;送信&lt;/button&gt;
+    &lt;/form&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    const form = document.getElementById('contactForm');
+
+    form.addEventListener('submit', (e) =&gt; {
+      e.preventDefault();
+      let isValid = true;
+
+      // 名前のチェック
+      const name = document.getElementById('name');
+      const nameError = document.getElementById('nameError');
+      if (name.value.trim() === '') {
+        nameError.textContent = 'お名前を入力してください';
+        name.classList.add('error');
+        name.classList.remove('success');
+        isValid = false;
+      } else {
+        nameError.textContent = '';
+        name.classList.remove('error');
+        name.classList.add('success');
+      }
+
+      // メールのチェック
+      const email = document.getElementById('email');
+      const emailError = document.getElementById('emailError');
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(email.value)) {
+        emailError.textContent = '正しいメールアドレスを入力してください';
+        email.classList.add('error');
+        email.classList.remove('success');
+        isValid = false;
+      } else {
+        emailError.textContent = '';
+        email.classList.remove('error');
+        email.classList.add('success');
+      }
+
+      // 電話番号のチェック
+      const tel = document.getElementById('tel');
+      const telError = document.getElementById('telError');
+      const telPattern = /^[0-9-]+$/;
+      if (tel.value !== '' && !telPattern.test(tel.value)) {
+        telError.textContent = '数字とハイフンのみ入力してください';
+        tel.classList.add('error');
+        tel.classList.remove('success');
+        isValid = false;
+      } else {
+        telError.textContent = '';
+        tel.classList.remove('error');
+        if (tel.value !== '') tel.classList.add('success');
+      }
+
+      if (isValid) {
+        alert('送信完了！');
+      }
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>ポイント</h4>
+          <ul>
+            <li><code>e.preventDefault()</code> - フォームの送信を止める</li>
+            <li><code>trim()</code> - 前後の空白を除去</li>
+            <li><code>/正規表現/.test(値)</code> - パターンマッチングでチェック</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7</span>
+        <h2 class="section-title">スクロールアニメーション</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>スクロールすると要素が<strong>フェードインして登場</strong>する効果</p>
+      </div>
+
+      <div class="subsection">
+        <p><strong>ファイル：Chapter_11-7 \ index.html</strong></p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;スクロールアニメーション&lt;/title&gt;
+  &lt;style&gt;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: sans-serif;
+      line-height: 1.8;
+    }
+
+    section {
+      padding: 100px 50px;
+      text-align: center;
+    }
+
+    section:nth-child(odd) {
+      background: #f5f5f5;
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s, transform 0.6s;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    h2 { margin-bottom: 20px; }
+    p { max-width: 600px; margin: 0 auto; color: #666; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;section&gt;
+    &lt;div class="fade-in"&gt;
+      &lt;h2&gt;セクション 1&lt;/h2&gt;
+      &lt;p&gt;スクロールすると下のセクションがフェードインします。&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section&gt;
+    &lt;div class="fade-in"&gt;
+      &lt;h2&gt;セクション 2&lt;/h2&gt;
+      &lt;p&gt;このように、スクロールに応じてコンテンツを表示できます。&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section&gt;
+    &lt;div class="fade-in"&gt;
+      &lt;h2&gt;セクション 3&lt;/h2&gt;
+      &lt;p&gt;Webサイトの演出によく使われるテクニックです。&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section&gt;
+    &lt;div class="fade-in"&gt;
+      &lt;h2&gt;セクション 4&lt;/h2&gt;
+      &lt;p&gt;最後のセクションです。お疲れ様でした！&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;script&gt;
+    const fadeElements = document.querySelectorAll('.fade-in');
+
+    function checkScroll() {
+      fadeElements.forEach((el) =&gt; {
+        const rect = el.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+
+        // 要素が画面の80%の位置に来たら表示
+        if (rect.top &lt; windowHeight * 0.8) {
+          el.classList.add('visible');
+        }
+      });
+    }
+
+    // スクロール時にチェック
+    window.addEventListener('scroll', checkScroll);
+
+    // ページ読み込み時にもチェック
+    window.addEventListener('load', checkScroll);
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>ポイント</h4>
+          <ul>
+            <li><code>getBoundingClientRect()</code> - 要素の位置を取得</li>
+            <li><code>window.innerHeight</code> - ウィンドウの高さ</li>
+            <li><code>rect.top &lt; windowHeight * 0.8</code> - 80%の位置で発火</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第11章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>スムーズスクロール</strong> - scrollIntoView()で滑らかに移動</li>
+          <li><strong>ハンバーガーメニュー</strong> - classList.toggle()で開閉</li>
+          <li><strong>モーダル</strong> - オーバーレイとポップアップの組み合わせ</li>
+          <li><strong>スライダー</strong> - 配列のインデックスで画像を切り替え</li>
+          <li><strong>バリデーション</strong> - 正規表現でパターンチェック</li>
+          <li><strong>スクロールアニメーション</strong> - getBoundingClientRect()で位置検出</li>
+        </ul>
+      </div>
+
+      <div class="highlight-box" style="margin-top: 2rem;">
+        <h4>JavaScript超入門 完了！</h4>
+        <p>ここまで学んだ内容で、基本的なWebサイトの動きはほとんど作れます。あとは実際に手を動かして、いろいろ試してみましょう！</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="10js-advanced.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">参考：JavaScriptの世界を広げよう</div>
+    </a>
+    <a href="index.html" class="page-nav-btn next">
+      <div class="page-nav-label">目次へ</div>
+      <div class="page-nav-title">JavaScript超入門</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>JavaScript入門 - 職業訓練校教材</p>
+  </footer>
+
+  <script src="../../shared/demo.js"></script>
+</body>
+</html>

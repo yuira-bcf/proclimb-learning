@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 3: フォームデータ持ち回り - プロンプトプログラミング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
+    }
+    .nav-category-links { display: none; }
+    .prompt-card { background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #AF52DE; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+    /* コードブロック（spring/style.css準拠） */
+    .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .code-dot.red { background: #ff5f56; }
+    .code-dot.yellow { background: #ffbd2e; }
+    .code-dot.green { background: #27ca40; }
+    .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .code-content { padding: 16px; overflow-x: auto; }
+    .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+    .code-keyword { color: #c084fc; }
+    .code-class { color: #67e8f9; }
+    .code-string { color: #86efac; }
+    .code-comment { color: #94a3b8; }
+    .code-annotation { color: #fbbf24; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-promptpg-step.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge">Chapter</div>
+      <div class="chapter-number">3</div>
+      <h1 class="chapter-title">フォームデータ持ち回り</h1>
+      <p class="chapter-subtitle">フォームから送信されたデータを次の画面に渡す方法</p>
+    </header>
+
+    <nav class="toc">
+      <h2 class="toc-title">この Chapter の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">3-1</span>@RequestParamでフォームデータを受け取る</li>
+        <li class="toc-item"><span class="toc-number">3-2</span>フォームの送信と受け取り</li>
+        <li class="toc-item"><span class="toc-number">3-3</span>確認画面への遷移</li>
+      </ul>
+    </nav>
+
+    <div class="overview-box" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd; border-radius: 12px; padding: 24px; margin: 24px 0;">
+      <h3 style="margin: 0 0 16px 0; color: #0369a1; display: flex; align-items: center; gap: 8px;">
+        <span class="material-icons">info</span> このChapterで学ぶこと
+      </h3>
+      <p style="margin: 0 0 16px 0; color: #0c4a6e; line-height: 1.7;">
+        このChapterでは、<strong>HTMLフォームから送信されたデータをControllerで受け取り</strong>、<strong>確認画面に表示する</strong>処理を実装します。
+        シンプルな@RequestParamを使用してフォームデータを処理する方法を学びます。
+      </p>
+      <div style="background: white; border-radius: 8px; padding: 16px;">
+        <h4 style="margin: 0 0 12px 0; color: #0369a1; font-size: 0.95rem;">使用するアノテーション</h4>
+        <ul style="margin: 0; padding-left: 20px; color: #334155; line-height: 1.8;">
+          <li><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">@PostMapping</code> - POSTリクエストを処理するメソッドを定義</li>
+          <li><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">@RequestParam</code> - フォームから送信されたパラメータを受け取る</li>
+          <li><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">Model</code> - Viewにデータを渡すためのオブジェクト</li>
+          <li><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">RedirectAttributes</code> - リダイレクト時にデータを保持する</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- フォームデータフロー図解 -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
+      <h3 style="margin: 0 0 20px 0; color: #334155; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+        <span class="material-icons" style="color: #6366f1;">sync_alt</span> フォームデータの流れ
+      </h3>
+      <div style="display: flex; align-items: stretch; justify-content: center; gap: 8px; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+        <!-- HTMLフォーム -->
+        <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; padding: 16px; text-align: center; min-width: 140px;">
+          <div style="font-weight: 700; color: #1e40af; margin-bottom: 8px;">HTMLフォーム</div>
+          <div style="background: white; border-radius: 4px; padding: 8px; font-size: 0.75rem; text-align: left;">
+            <div style="color: #64748b;">name="title"</div>
+            <div style="color: #64748b;">name="description"</div>
+            <div style="color: #64748b;">name="priority"</div>
+          </div>
+        </div>
+        <!-- 矢印とPOST -->
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <div style="background: #22c55e; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">POST</div>
+          <div style="color: #94a3b8; font-size: 1.5rem;">→</div>
+        </div>
+        <!-- Controller -->
+        <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 16px; text-align: center; min-width: 180px;">
+          <div style="font-weight: 700; color: #92400e; margin-bottom: 8px;">@Controller</div>
+          <div style="background: white; border-radius: 4px; padding: 8px; font-size: 0.7rem; text-align: left;">
+            <div style="color: #7c3aed;">@RequestParam("title")</div>
+            <div style="color: #7c3aed;">@RequestParam("description")</div>
+            <div style="color: #7c3aed;">@RequestParam("priority")</div>
+          </div>
+        </div>
+        <!-- 矢印とModel -->
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <div style="background: #a855f7; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Model</div>
+          <div style="color: #94a3b8; font-size: 1.5rem;">→</div>
+        </div>
+        <!-- View -->
+        <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 8px; padding: 16px; text-align: center; min-width: 140px;">
+          <div style="font-weight: 700; color: #166534; margin-bottom: 8px;">Thymeleaf</div>
+          <div style="background: white; border-radius: 4px; padding: 8px; font-size: 0.75rem; text-align: left;">
+            <div style="color: #64748b;">${title}</div>
+            <div style="color: #64748b;">${description}</div>
+            <div style="color: #64748b;">${priority}</div>
+          </div>
+        </div>
+      </div>
+      <p style="margin: 16px 0 0 0; color: #64748b; font-size: 0.85rem; text-align: center;">
+        フォームのname属性 → @RequestParamで受け取り → model.addAttribute() → Thymeleafで${変数名}
+      </p>
+    </div>
+
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-1</span>
+        <h2 class="section-title">@RequestParamでフォームデータを受け取る</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>@RequestParam</strong>を使用して、HTMLフォームから送信されたデータをControllerで直接受け取ります。シンプルなフォーム処理に最適な方法です。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>Spring BootでToDoの新規作成フォームを@RequestParamで処理してください。
+
+要件:
+- 入力画面を表示するGET /todos/new
+- フォームデータを受け取るPOST /todos/confirm
+- 受け取るパラメータ:
+  - title（タイトル）: String（必須）
+  - description（説明）: String（任意）
+  - priority（優先度）: Integer（デフォルト値: 3）
+- @RequestParamアノテーションを使用
+- 受け取ったデータはModelに格納して確認画面に渡す
+
+Controllerのコードを示してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <h3 style="margin: 32px 0 16px 0; color: #334155; display: flex; align-items: center; gap: 8px;">
+        <span class="material-icons" style="color: #22c55e;">auto_awesome</span> 生成されるソースコード
+      </h3>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-title">TodoController.java（@RequestParam版）</span>
+        </div>
+        <div class="code-content">
+          <pre><span class="code-keyword">package</span> com.example.todo.controller;
+
+<span class="code-keyword">import</span> org.springframework.stereotype.Controller;
+<span class="code-keyword">import</span> org.springframework.ui.Model;
+<span class="code-keyword">import</span> org.springframework.web.bind.annotation.GetMapping;
+<span class="code-keyword">import</span> org.springframework.web.bind.annotation.PostMapping;
+<span class="code-keyword">import</span> org.springframework.web.bind.annotation.RequestMapping;
+<span class="code-keyword">import</span> org.springframework.web.bind.annotation.RequestParam;
+
+<span class="code-annotation">@Controller</span>
+<span class="code-annotation">@RequestMapping</span>(<span class="code-string">"/todos"</span>)
+<span class="code-keyword">public class</span> <span class="code-class">TodoController</span> {
+
+    <span class="code-comment">/**
+     * 新規作成画面を表示
+     */</span>
+    <span class="code-annotation">@GetMapping</span>(<span class="code-string">"/new"</span>)
+    <span class="code-keyword">public</span> String <span class="code-class">showCreateForm</span>() {
+        <span class="code-keyword">return</span> <span class="code-string">"todo/form"</span>;
+    }
+
+    <span class="code-comment">/**
+     * フォームデータを受け取り確認画面へ
+     * @RequestParam でフォームの各フィールドを個別に受け取る
+     */</span>
+    <span class="code-annotation">@PostMapping</span>(<span class="code-string">"/confirm"</span>)
+    <span class="code-keyword">public</span> String <span class="code-class">confirm</span>(
+            <span class="code-annotation">@RequestParam</span>(<span class="code-string">"title"</span>) String title,
+            <span class="code-annotation">@RequestParam</span>(value = <span class="code-string">"description"</span>, required = <span class="code-keyword">false</span>) String description,
+            <span class="code-annotation">@RequestParam</span>(value = <span class="code-string">"priority"</span>, defaultValue = <span class="code-string">"3"</span>) Integer priority,
+            Model model) {
+
+        <span class="code-comment">// 受け取ったデータをModelに格納</span>
+        model.addAttribute(<span class="code-string">"title"</span>, title);
+        model.addAttribute(<span class="code-string">"description"</span>, description);
+        model.addAttribute(<span class="code-string">"priority"</span>, priority);
+
+        <span class="code-keyword">return</span> <span class="code-string">"todo/confirm"</span>;
+    }
+}</pre>
+        </div>
+      </div>
+
+      <div class="info-box" style="background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); border: 1px solid #fde047; border-radius: 12px; padding: 20px; margin: 24px 0;">
+        <div class="info-box-title" style="color: #854d0e; margin-bottom: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <span class="material-icons">lightbulb</span> コード解説
+        </div>
+        <div class="info-box-content" style="color: #713f12; line-height: 1.8;">
+          <p style="margin: 0 0 16px 0;"><strong>@RequestParam の属性</strong></p>
+          <ul style="margin: 0 0 16px 0; padding-left: 20px;">
+            <li><code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px;">@RequestParam("title")</code> - フォームのname属性と一致するパラメータを取得（必須）</li>
+            <li><code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px;">required = false</code> - パラメータを任意にする（送信されなくてもOK）</li>
+            <li><code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px;">defaultValue = "3"</code> - パラメータがない場合のデフォルト値を設定</li>
+          </ul>
+
+          <p style="margin: 0 0 16px 0;"><strong>Model の役割</strong></p>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li><code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px;">model.addAttribute()</code> - ViewにデータをKey-Value形式で渡す</li>
+            <li>Thymeleafでは <code>${key}</code> で値を取得できる</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-2</span>
+        <h2 class="section-title">フォームの送信と受け取り</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>HTMLフォームからPOSTでデータを送信し、<strong>@RequestParam</strong>でControllerで受け取ります。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>Thymeleafで入力フォーム画面を作成してください。
+
+要件:
+- ファイル名: form.html
+- 場所: src/main/resources/templates/todo/
+- 入力フィールド:
+  - タイトル（text、必須）
+  - 説明（textarea、任意）
+  - 優先度（select、1〜5）
+- th:actionでPOST /todos/confirmに送信
+- Bootstrap 5でスタイリング
+- 戻るボタンで一覧画面へ
+
+シンプルなHTMLのname属性でフォームを作成してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <h3 style="margin: 32px 0 16px 0; color: #334155; display: flex; align-items: center; gap: 8px;">
+        <span class="material-icons" style="color: #22c55e;">auto_awesome</span> 生成されるソースコード
+      </h3>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-title">src/main/resources/templates/todo/form.html</span>
+        </div>
+        <div class="code-content">
+          <pre><span class="code-keyword">&lt;!DOCTYPE html&gt;</span>
+<span class="code-keyword">&lt;html</span> <span class="code-annotation">xmlns:th</span>=<span class="code-string">"http://www.thymeleaf.org"</span><span class="code-keyword">&gt;</span>
+<span class="code-keyword">&lt;head&gt;</span>
+    <span class="code-keyword">&lt;meta</span> charset=<span class="code-string">"UTF-8"</span><span class="code-keyword">&gt;</span>
+    <span class="code-keyword">&lt;title&gt;</span>ToDo新規作成<span class="code-keyword">&lt;/title&gt;</span>
+    <span class="code-keyword">&lt;link</span> href=<span class="code-string">"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"</span>
+          rel=<span class="code-string">"stylesheet"</span><span class="code-keyword">&gt;</span>
+<span class="code-keyword">&lt;/head&gt;</span>
+<span class="code-keyword">&lt;body&gt;</span>
+    <span class="code-keyword">&lt;div</span> class=<span class="code-string">"container mt-4"</span><span class="code-keyword">&gt;</span>
+        <span class="code-keyword">&lt;h1&gt;</span>ToDo新規作成<span class="code-keyword">&lt;/h1&gt;</span>
+
+        <span class="code-comment">&lt;!-- th:action でPOST先を指定 --&gt;</span>
+        <span class="code-keyword">&lt;form</span> <span class="code-annotation">th:action</span>=<span class="code-string">"@{/todos/confirm}"</span> method=<span class="code-string">"post"</span><span class="code-keyword">&gt;</span>
+
+            <span class="code-comment">&lt;!-- タイトル（必須） --&gt;</span>
+            <span class="code-keyword">&lt;div</span> class=<span class="code-string">"mb-3"</span><span class="code-keyword">&gt;</span>
+                <span class="code-keyword">&lt;label</span> for=<span class="code-string">"title"</span> class=<span class="code-string">"form-label"</span><span class="code-keyword">&gt;</span>タイトル <span class="code-keyword">&lt;span</span> class=<span class="code-string">"text-danger"</span><span class="code-keyword">&gt;</span>*<span class="code-keyword">&lt;/span&gt;&lt;/label&gt;</span>
+                <span class="code-keyword">&lt;input</span> type=<span class="code-string">"text"</span> class=<span class="code-string">"form-control"</span>
+                       id=<span class="code-string">"title"</span> name=<span class="code-string">"title"</span> required<span class="code-keyword">&gt;</span>
+            <span class="code-keyword">&lt;/div&gt;</span>
+
+            <span class="code-comment">&lt;!-- 説明（任意） --&gt;</span>
+            <span class="code-keyword">&lt;div</span> class=<span class="code-string">"mb-3"</span><span class="code-keyword">&gt;</span>
+                <span class="code-keyword">&lt;label</span> for=<span class="code-string">"description"</span> class=<span class="code-string">"form-label"</span><span class="code-keyword">&gt;</span>説明<span class="code-keyword">&lt;/label&gt;</span>
+                <span class="code-keyword">&lt;textarea</span> class=<span class="code-string">"form-control"</span> id=<span class="code-string">"description"</span>
+                          name=<span class="code-string">"description"</span> rows=<span class="code-string">"3"</span><span class="code-keyword">&gt;&lt;/textarea&gt;</span>
+            <span class="code-keyword">&lt;/div&gt;</span>
+
+            <span class="code-comment">&lt;!-- 優先度（セレクトボックス） --&gt;</span>
+            <span class="code-keyword">&lt;div</span> class=<span class="code-string">"mb-3"</span><span class="code-keyword">&gt;</span>
+                <span class="code-keyword">&lt;label</span> for=<span class="code-string">"priority"</span> class=<span class="code-string">"form-label"</span><span class="code-keyword">&gt;</span>優先度<span class="code-keyword">&lt;/label&gt;</span>
+                <span class="code-keyword">&lt;select</span> class=<span class="code-string">"form-select"</span> id=<span class="code-string">"priority"</span> name=<span class="code-string">"priority"</span><span class="code-keyword">&gt;</span>
+                    <span class="code-keyword">&lt;option</span> value=<span class="code-string">"1"</span><span class="code-keyword">&gt;</span>1（最高）<span class="code-keyword">&lt;/option&gt;</span>
+                    <span class="code-keyword">&lt;option</span> value=<span class="code-string">"2"</span><span class="code-keyword">&gt;</span>2（高）<span class="code-keyword">&lt;/option&gt;</span>
+                    <span class="code-keyword">&lt;option</span> value=<span class="code-string">"3"</span> selected<span class="code-keyword">&gt;</span>3（普通）<span class="code-keyword">&lt;/option&gt;</span>
+                    <span class="code-keyword">&lt;option</span> value=<span class="code-string">"4"</span><span class="code-keyword">&gt;</span>4（低）<span class="code-keyword">&lt;/option&gt;</span>
+                    <span class="code-keyword">&lt;option</span> value=<span class="code-string">"5"</span><span class="code-keyword">&gt;</span>5（最低）<span class="code-keyword">&lt;/option&gt;</span>
+                <span class="code-keyword">&lt;/select&gt;</span>
+            <span class="code-keyword">&lt;/div&gt;</span>
+
+            <span class="code-comment">&lt;!-- ボタン --&gt;</span>
+            <span class="code-keyword">&lt;div</span> class=<span class="code-string">"d-flex gap-2"</span><span class="code-keyword">&gt;</span>
+                <span class="code-keyword">&lt;button</span> type=<span class="code-string">"submit"</span> class=<span class="code-string">"btn btn-primary"</span><span class="code-keyword">&gt;</span>確認<span class="code-keyword">&lt;/button&gt;</span>
+                <span class="code-keyword">&lt;a</span> <span class="code-annotation">th:href</span>=<span class="code-string">"@{/todos}"</span> class=<span class="code-string">"btn btn-secondary"</span><span class="code-keyword">&gt;</span>戻る<span class="code-keyword">&lt;/a&gt;</span>
+            <span class="code-keyword">&lt;/div&gt;</span>
+        <span class="code-keyword">&lt;/form&gt;</span>
+    <span class="code-keyword">&lt;/div&gt;</span>
+<span class="code-keyword">&lt;/body&gt;</span>
+<span class="code-keyword">&lt;/html&gt;</span></pre>
+        </div>
+      </div>
+
+      <div class="info-box" style="background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); border: 1px solid #fde047; border-radius: 12px; padding: 20px; margin: 24px 0;">
+        <div class="info-box-title" style="color: #854d0e; margin-bottom: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <span class="material-icons">lightbulb</span> コード解説
+        </div>
+        <div class="info-box-content" style="color: #713f12; line-height: 1.8;">
+          <p style="margin: 0 0 16px 0;"><strong>フォームのname属性と@RequestParam</strong></p>
+          <ul style="margin: 0 0 16px 0; padding-left: 20px;">
+            <li>HTML側: <code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px;">name="title"</code></li>
+            <li>Controller側: <code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px;">@RequestParam("title")</code></li>
+            <li>name属性の値が一致していれば、自動的にデータが渡される</li>
+          </ul>
+
+          <p style="margin: 0 0 16px 0;"><strong>th:action の仕組み</strong></p>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li><code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px;">th:action="@{/todos/confirm}"</code> - Thymeleafのリンク式でURLを生成</li>
+            <li><code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px;">method="post"</code> - POSTメソッドで送信</li>
+            <li>送信ボタンをクリック → Controller の @PostMapping("/confirm") が呼ばれる</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>HTML要素</th>
+              <th>name属性</th>
+              <th>@RequestParam</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>&lt;input name="title"&gt;</code></td>
+              <td>title</td>
+              <td><code>@RequestParam("title") String title</code></td>
+            </tr>
+            <tr>
+              <td><code>&lt;textarea name="description"&gt;</code></td>
+              <td>description</td>
+              <td><code>@RequestParam("description") String description</code></td>
+            </tr>
+            <tr>
+              <td><code>&lt;select name="priority"&gt;</code></td>
+              <td>priority</td>
+              <td><code>@RequestParam("priority") Integer priority</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-3</span>
+        <h2 class="section-title">確認画面への遷移</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>入力されたデータを<strong>確認画面</strong>に表示し、hidden項目でデータを保持して登録処理に渡します。</p>
+      </div>
+
+      <!-- 入力→確認→完了フロー図解 -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
+        <h4 style="margin: 0 0 20px 0; color: #334155; display: flex; align-items: center; gap: 8px; font-size: 0.95rem;">
+          <span class="material-icons" style="color: #6366f1;">linear_scale</span> 入力 → 確認 → 完了 の画面フロー
+        </h4>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+          <!-- 入力画面 -->
+          <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; padding: 16px; text-align: center; min-width: 120px;">
+            <div style="font-weight: 700; color: #1e40af;">入力画面</div>
+            <div style="font-size: 0.7rem; color: #3b82f6; margin-top: 4px;">form.html</div>
+            <div style="font-size: 0.65rem; color: #64748b; margin-top: 4px;">/todos/new</div>
+          </div>
+          <!-- 矢印1 -->
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="background: #22c55e; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 600;">POST</div>
+            <div style="color: #94a3b8; font-size: 1.2rem;">→</div>
+            <div style="font-size: 0.65rem; color: #64748b;">確認ボタン</div>
+          </div>
+          <!-- 確認画面 -->
+          <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 16px; text-align: center; min-width: 120px;">
+            <div style="font-weight: 700; color: #92400e;">確認画面</div>
+            <div style="font-size: 0.7rem; color: #b45309; margin-top: 4px;">confirm.html</div>
+            <div style="font-size: 0.65rem; color: #64748b; margin-top: 4px;">/todos/confirm</div>
+            <div style="background: white; border-radius: 4px; padding: 4px; margin-top: 8px; font-size: 0.6rem; color: #7c3aed;">hidden項目でデータ保持</div>
+          </div>
+          <!-- 矢印2 -->
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="background: #22c55e; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 600;">POST</div>
+            <div style="color: #94a3b8; font-size: 1.2rem;">→</div>
+            <div style="font-size: 0.65rem; color: #64748b;">登録ボタン</div>
+          </div>
+          <!-- 完了画面 -->
+          <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 8px; padding: 16px; text-align: center; min-width: 120px;">
+            <div style="font-weight: 700; color: #166534;">完了画面</div>
+            <div style="font-size: 0.7rem; color: #16a34a; margin-top: 4px;">complete.html</div>
+            <div style="font-size: 0.65rem; color: #64748b; margin-top: 4px;">/todos/complete</div>
+          </div>
+        </div>
+        <!-- 戻るボタンの説明 -->
+        <div style="display: flex; justify-content: center; margin-top: 16px;">
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 16px; display: flex; align-items: center; gap: 8px;">
+            <span class="material-icons" style="color: #64748b; font-size: 1rem;">undo</span>
+            <span style="color: #64748b; font-size: 0.8rem;">確認画面の「戻る」→ <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">history.back()</code> で入力画面へ（入力値保持）</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>Thymeleafで確認画面と完了画面を作成してください。
+
+要件:
+1. 確認画面（confirm.html）
+   - 入力内容を読み取り専用で表示
+   - hidden項目で入力データを保持
+   - 「戻る」で入力画面へ（JavaScriptのhistory.back()）
+   - 「登録」でPOST /todos/completeへ送信
+
+2. 完了画面（complete.html）
+   - 登録完了メッセージを表示
+   - 一覧画面へのリンク
+
+3. Controller
+   - POST /todos/complete で登録処理
+   - @RequestParamで確認画面のhidden値を受け取る
+
+Bootstrap 5でスタイリングしてください。</pre>
+        </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <h3 style="margin: 32px 0 16px 0; color: #334155; display: flex; align-items: center; gap: 8px;">
+        <span class="material-icons" style="color: #22c55e;">auto_awesome</span> 生成されるソースコード
+      </h3>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-title">src/main/resources/templates/todo/confirm.html（確認画面）</span>
+        </div>
+        <div class="code-content">
+          <pre><span class="code-keyword">&lt;!DOCTYPE html&gt;</span>
+<span class="code-keyword">&lt;html</span> <span class="code-annotation">xmlns:th</span>=<span class="code-string">"http://www.thymeleaf.org"</span><span class="code-keyword">&gt;</span>
+<span class="code-keyword">&lt;head&gt;</span>
+    <span class="code-keyword">&lt;meta</span> charset=<span class="code-string">"UTF-8"</span><span class="code-keyword">&gt;</span>
+    <span class="code-keyword">&lt;title&gt;</span>入力内容の確認<span class="code-keyword">&lt;/title&gt;</span>
+    <span class="code-keyword">&lt;link</span> href=<span class="code-string">"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"</span>
+          rel=<span class="code-string">"stylesheet"</span><span class="code-keyword">&gt;</span>
+<span class="code-keyword">&lt;/head&gt;</span>
+<span class="code-keyword">&lt;body&gt;</span>
+    <span class="code-keyword">&lt;div</span> class=<span class="code-string">"container mt-4"</span><span class="code-keyword">&gt;</span>
+        <span class="code-keyword">&lt;h1&gt;</span>入力内容の確認<span class="code-keyword">&lt;/h1&gt;</span>
+
+        <span class="code-comment">&lt;!-- 入力内容を表示 --&gt;</span>
+        <span class="code-keyword">&lt;div</span> class=<span class="code-string">"card mb-4"</span><span class="code-keyword">&gt;</span>
+            <span class="code-keyword">&lt;div</span> class=<span class="code-string">"card-body"</span><span class="code-keyword">&gt;</span>
+                <span class="code-keyword">&lt;dl</span> class=<span class="code-string">"row"</span><span class="code-keyword">&gt;</span>
+                    <span class="code-keyword">&lt;dt</span> class=<span class="code-string">"col-sm-3"</span><span class="code-keyword">&gt;</span>タイトル<span class="code-keyword">&lt;/dt&gt;</span>
+                    <span class="code-keyword">&lt;dd</span> class=<span class="code-string">"col-sm-9"</span> <span class="code-annotation">th:text</span>=<span class="code-string">"${title}"</span><span class="code-keyword">&gt;</span>サンプル<span class="code-keyword">&lt;/dd&gt;</span>
+
+                    <span class="code-keyword">&lt;dt</span> class=<span class="code-string">"col-sm-3"</span><span class="code-keyword">&gt;</span>説明<span class="code-keyword">&lt;/dt&gt;</span>
+                    <span class="code-keyword">&lt;dd</span> class=<span class="code-string">"col-sm-9"</span> <span class="code-annotation">th:text</span>=<span class="code-string">"${description} ?: '（なし）'"</span><span class="code-keyword">&gt;</span>説明文<span class="code-keyword">&lt;/dd&gt;</span>
+
+                    <span class="code-keyword">&lt;dt</span> class=<span class="code-string">"col-sm-3"</span><span class="code-keyword">&gt;</span>優先度<span class="code-keyword">&lt;/dt&gt;</span>
+                    <span class="code-keyword">&lt;dd</span> class=<span class="code-string">"col-sm-9"</span> <span class="code-annotation">th:text</span>=<span class="code-string">"${priority}"</span><span class="code-keyword">&gt;</span>3<span class="code-keyword">&lt;/dd&gt;</span>
+                <span class="code-keyword">&lt;/dl&gt;</span>
+            <span class="code-keyword">&lt;/div&gt;</span>
+        <span class="code-keyword">&lt;/div&gt;</span>
+
+        <span class="code-comment">&lt;!-- 登録用フォーム（hidden項目でデータを持ち回り） --&gt;</span>
+        <span class="code-keyword">&lt;form</span> <span class="code-annotation">th:action</span>=<span class="code-string">"@{/todos/complete}"</span> method=<span class="code-string">"post"</span><span class="code-keyword">&gt;</span>
+            <span class="code-keyword">&lt;input</span> type=<span class="code-string">"hidden"</span> name=<span class="code-string">"title"</span> <span class="code-annotation">th:value</span>=<span class="code-string">"${title}"</span><span class="code-keyword">&gt;</span>
+            <span class="code-keyword">&lt;input</span> type=<span class="code-string">"hidden"</span> name=<span class="code-string">"description"</span> <span class="code-annotation">th:value</span>=<span class="code-string">"${description}"</span><span class="code-keyword">&gt;</span>
+            <span class="code-keyword">&lt;input</span> type=<span class="code-string">"hidden"</span> name=<span class="code-string">"priority"</span> <span class="code-annotation">th:value</span>=<span class="code-string">"${priority}"</span><span class="code-keyword">&gt;</span>
+
+            <span class="code-keyword">&lt;div</span> class=<span class="code-string">"d-flex gap-2"</span><span class="code-keyword">&gt;</span>
+                <span class="code-keyword">&lt;button</span> type=<span class="code-string">"button"</span> class=<span class="code-string">"btn btn-secondary"</span>
+                        onclick=<span class="code-string">"history.back()"</span><span class="code-keyword">&gt;</span>戻る<span class="code-keyword">&lt;/button&gt;</span>
+                <span class="code-keyword">&lt;button</span> type=<span class="code-string">"submit"</span> class=<span class="code-string">"btn btn-success"</span><span class="code-keyword">&gt;</span>登録<span class="code-keyword">&lt;/button&gt;</span>
+            <span class="code-keyword">&lt;/div&gt;</span>
+        <span class="code-keyword">&lt;/form&gt;</span>
+    <span class="code-keyword">&lt;/div&gt;</span>
+<span class="code-keyword">&lt;/body&gt;</span>
+<span class="code-keyword">&lt;/html&gt;</span></pre>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-title">TodoController.java（登録処理追加）</span>
+        </div>
+        <div class="code-content">
+          <pre><span class="code-comment">/**
+ * 登録処理を実行し完了画面へ
+ */</span>
+<span class="code-annotation">@PostMapping</span>(<span class="code-string">"/complete"</span>)
+<span class="code-keyword">public</span> String <span class="code-class">complete</span>(
+        <span class="code-annotation">@RequestParam</span>(<span class="code-string">"title"</span>) String title,
+        <span class="code-annotation">@RequestParam</span>(value = <span class="code-string">"description"</span>, required = <span class="code-keyword">false</span>) String description,
+        <span class="code-annotation">@RequestParam</span>(value = <span class="code-string">"priority"</span>, defaultValue = <span class="code-string">"3"</span>) Integer priority,
+        Model model) {
+
+    <span class="code-comment">// TODO: ここでデータベースに保存する処理を実装</span>
+    <span class="code-comment">// todoService.save(title, description, priority);</span>
+
+    <span class="code-comment">// 完了画面にタイトルを渡す</span>
+    model.addAttribute(<span class="code-string">"title"</span>, title);
+
+    <span class="code-keyword">return</span> <span class="code-string">"todo/complete"</span>;
+}</pre>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-title">src/main/resources/templates/todo/complete.html（完了画面）</span>
+        </div>
+        <div class="code-content">
+          <pre><span class="code-keyword">&lt;!DOCTYPE html&gt;</span>
+<span class="code-keyword">&lt;html</span> <span class="code-annotation">xmlns:th</span>=<span class="code-string">"http://www.thymeleaf.org"</span><span class="code-keyword">&gt;</span>
+<span class="code-keyword">&lt;head&gt;</span>
+    <span class="code-keyword">&lt;meta</span> charset=<span class="code-string">"UTF-8"</span><span class="code-keyword">&gt;</span>
+    <span class="code-keyword">&lt;title&gt;</span>登録完了<span class="code-keyword">&lt;/title&gt;</span>
+    <span class="code-keyword">&lt;link</span> href=<span class="code-string">"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"</span>
+          rel=<span class="code-string">"stylesheet"</span><span class="code-keyword">&gt;</span>
+<span class="code-keyword">&lt;/head&gt;</span>
+<span class="code-keyword">&lt;body&gt;</span>
+    <span class="code-keyword">&lt;div</span> class=<span class="code-string">"container mt-4"</span><span class="code-keyword">&gt;</span>
+        <span class="code-keyword">&lt;div</span> class=<span class="code-string">"alert alert-success"</span><span class="code-keyword">&gt;</span>
+            <span class="code-keyword">&lt;h4</span> class=<span class="code-string">"alert-heading"</span><span class="code-keyword">&gt;</span>登録が完了しました！<span class="code-keyword">&lt;/h4&gt;</span>
+            <span class="code-keyword">&lt;p&gt;</span>「<span class="code-keyword">&lt;span</span> <span class="code-annotation">th:text</span>=<span class="code-string">"${title}"</span><span class="code-keyword">&gt;</span>タイトル<span class="code-keyword">&lt;/span&gt;</span>」を登録しました。<span class="code-keyword">&lt;/p&gt;</span>
+        <span class="code-keyword">&lt;/div&gt;</span>
+
+        <span class="code-keyword">&lt;a</span> <span class="code-annotation">th:href</span>=<span class="code-string">"@{/todos}"</span> class=<span class="code-string">"btn btn-primary"</span><span class="code-keyword">&gt;</span>
+            一覧画面へ戻る
+        <span class="code-keyword">&lt;/a&gt;</span>
+    <span class="code-keyword">&lt;/div&gt;</span>
+<span class="code-keyword">&lt;/body&gt;</span>
+<span class="code-keyword">&lt;/html&gt;</span></pre>
+        </div>
+      </div>
+
+      <div class="info-box" style="background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); border: 1px solid #fde047; border-radius: 12px; padding: 20px; margin: 24px 0;">
+        <div class="info-box-title" style="color: #854d0e; margin-bottom: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <span class="material-icons">lightbulb</span> コード解説
+        </div>
+        <div class="info-box-content" style="color: #713f12; line-height: 1.8;">
+          <p style="margin: 0 0 16px 0;"><strong>hidden項目でのデータ持ち回り</strong></p>
+          <ul style="margin: 0 0 16px 0; padding-left: 20px;">
+            <li><code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px;">&lt;input type="hidden" name="title" th:value="${title}"&gt;</code></li>
+            <li>画面には表示されないが、フォーム送信時にデータが送られる</li>
+            <li>確認画面から登録処理へデータを渡すために使用</li>
+          </ul>
+
+          <p style="margin: 0 0 16px 0;"><strong>history.back() による戻る処理</strong></p>
+          <ul style="margin: 0 0 16px 0; padding-left: 20px;">
+            <li><code style="background: #fef3c7; padding: 2px 6px; border-radius: 4px;">onclick="history.back()"</code> - ブラウザの履歴を1つ戻る</li>
+            <li>入力画面に戻ると、ブラウザが入力値をキャッシュしているため値が復元される</li>
+          </ul>
+
+          <p style="margin: 0 0 16px 0;"><strong>画面遷移フロー</strong></p>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li>入力画面（form.html）→ POST → 確認画面（confirm.html）</li>
+            <li>確認画面（confirm.html）→ POST → 完了画面（complete.html）</li>
+            <li>戻るボタン → history.back() → 入力画面へ</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-title"><span class="material-icons">check_circle</span> 確認ポイント</div>
+        <div class="info-box-content">
+          <p>「戻る」ボタンを押した際に、入力した値が保持されていることを確認してください。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="page-nav">
+    <a href="promptpg-2.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">Chapter 2: 画面作成</div>
+    </a>
+    <a href="promptpg-4.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">Chapter 4: データベース設定</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトプログラミング - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

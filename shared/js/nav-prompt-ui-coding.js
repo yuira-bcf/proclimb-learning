@@ -31,12 +31,12 @@ const navData = {
         { href: "search.html", icon: "search", text: "検索" }
     ],
     categories: [
-        { href: "../index.html", text: "ダッシュボード" },
-        { href: "../index.html#frontend", text: "フロントエンド基礎" },
-        { href: "../index.html#backend", text: "バックエンド開発" },
-        { href: "../index.html#ai", text: "AI・自動化" },
-        { href: "../index.html#design", text: "デザイン・UX" },
-        { href: "../index.html#business", text: "ビジネススキル" }
+        { href: "../../index.html", text: "ダッシュボード" },
+        { href: "../../index.html#frontend", text: "フロントエンド基礎" },
+        { href: "../../index.html#backend", text: "バックエンド開発" },
+        { href: "../../index.html#ai", text: "AI・自動化" },
+        { href: "../../index.html#design", text: "デザイン・UX" },
+        { href: "../../index.html#business", text: "ビジネススキル" }
     ]
 };
 
@@ -88,7 +88,7 @@ function generateNavHTML() {
     return `
         <div class="nav-container">
             <a href="${navData.logo.href}" class="nav-logo${logoActive}">
-                <span class="nav-logo-icon" style="background: #007AFF; color: white;">${logoIcon}</span>
+                <span class="nav-logo-icon" style="background: #007ACC; color: white;">${logoIcon}</span>
                 <span>${navData.logo.text}</span>
             </a>
             <div class="nav-category-links">

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>実行結果サンプル - 第10章 ベストプラクティス</title>
+  <style>
+    :root {
+      --primary: #007ACC;
+      --success: #34C759;
+      --warning: #FF9F0A;
+      --danger: #FF3B30;
+      --text: #1D1D1F;
+      --text-sub: #6E6E73;
+      --border: #D2D2D7;
+      --bg: #F5F5F7;
+      --white: #FFFFFF;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 24px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    .page-header {
+      background: linear-gradient(135deg, var(--primary), #5856D6);
+      color: white; border-radius: 16px; padding: 40px 32px;
+      margin-bottom: 32px; text-align: center;
+      box-shadow: 0 4px 16px rgba(0,122,204,0.3);
+    }
+    .page-header h1 { font-size: 24px; margin-bottom: 8px; }
+    .page-header p { opacity: 0.9; font-size: 14px; }
+    .card {
+      background: var(--white); border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 32px; margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 18px; font-weight: 700; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 2px solid var(--primary);
+    }
+    .card-description { font-size: 14px; color: var(--text-sub); margin-bottom: 20px; }
+
+    /* チェックリスト */
+    .checklist { list-style: none; }
+    .checklist__item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px; border-radius: 8px;
+      margin-bottom: 8px; font-size: 14px;
+      transition: background 0.15s;
+    }
+    .checklist__item:hover { background: var(--bg); }
+    .checklist__checkbox {
+      width: 20px; height: 20px; border: 2px solid var(--border);
+      border-radius: 4px; flex-shrink: 0; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; margin-top: 2px;
+    }
+    .checklist__checkbox.checked {
+      background: var(--success); border-color: var(--success);
+    }
+    .checklist__checkbox.checked::after {
+      content: ""; width: 5px; height: 10px;
+      border: solid white; border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+    .checklist__text { flex: 1; }
+    .checklist__text.done { text-decoration: line-through; color: var(--text-sub); }
+
+    /* ワークフロー */
+    .workflow { display: flex; gap: 0; flex-wrap: wrap; justify-content: center; }
+    .workflow__step {
+      background: var(--white); border-radius: 12px;
+      padding: 20px; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      flex: 1; min-width: 140px; max-width: 180px;
+      position: relative;
+    }
+    .workflow__step::after {
+      content: "→"; position: absolute; right: -14px; top: 50%;
+      transform: translateY(-50%); font-size: 20px; color: var(--primary);
+      font-weight: 700;
+    }
+    .workflow__step:last-child::after { display: none; }
+    .workflow__number {
+      width: 32px; height: 32px; background: var(--primary);
+      color: white; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; margin: 0 auto 8px;
+    }
+    .workflow__title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .workflow__desc { font-size: 11px; color: var(--text-sub); }
+
+    /* 失敗パターン */
+    .pattern-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .pattern-card {
+      border-radius: 12px; padding: 20px;
+      border: 1px solid var(--border);
+    }
+    .pattern-card--bad { border-left: 4px solid var(--danger); }
+    .pattern-card--good { border-left: 4px solid var(--success); }
+    .pattern-card__label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+    .pattern-card--bad .pattern-card__label { color: var(--danger); }
+    .pattern-card--good .pattern-card__label { color: var(--success); }
+    .pattern-card__title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .pattern-card__text { font-size: 13px; color: var(--text-sub); }
+
+    /* 進捗バー */
+    .progress { margin-bottom: 20px; }
+    .progress__header {
+      display: flex; justify-content: space-between;
+      margin-bottom: 6px; font-size: 13px;
+    }
+    .progress__label { font-weight: 600; }
+    .progress__value { color: var(--text-sub); }
+    .progress__bar {
+      height: 8px; background: #e5e5e5; border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress__fill {
+      height: 100%; border-radius: 4px; transition: width 0.5s ease;
+    }
+    .progress__fill--high { background: var(--success); }
+    .progress__fill--mid { background: var(--warning); }
+    .progress__fill--low { background: var(--danger); }
+
+    @media (max-width: 767px) {
+      .pattern-grid { grid-template-columns: 1fr; }
+      .workflow { flex-direction: column; align-items: center; }
+      .workflow__step::after { display: none; }
+      .workflow__step { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1>第10章 ベストプラクティス</h1>
+      <p>プロンプトUIコーディング - 実行結果サンプル</p>
+    </div>
+
+    <!-- 品質チェックリスト -->
+    <div class="card">
+      <div class="card-title">品質チェックリスト</div>
+      <p class="card-description">AI生成コードの品質確認に使うチェックリスト</p>
+
+      <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--primary);">HTML品質</h4>
+      <ul class="checklist">
+        <li class="checklist__item"><div class="checklist__checkbox checked" onclick="this.classList.toggle('checked'); this.closest('.checklist__item').querySelector('.checklist__text').classList.toggle('done')"></div><span class="checklist__text done">セマンティックタグを使用しているか</span></li>
+        <li class="checklist__item"><div class="checklist__checkbox checked" onclick="this.classList.toggle('checked'); this.closest('.checklist__item').querySelector('.checklist__text').classList.toggle('done')"></div><span class="checklist__text done">見出しレベルが適切か（h1→h2→h3）</span></li>
+        <li class="checklist__item"><div class="checklist__checkbox" onclick="this.classList.toggle('checked'); this.closest('.checklist__item').querySelector('.checklist__text').classList.toggle('done')"></div><span class="checklist__text">画像にalt属性が設定されているか</span></li>
+        <li class="checklist__item"><div class="checklist__checkbox" onclick="this.classList.toggle('checked'); this.closest('.checklist__item').querySelector('.checklist__text').classList.toggle('done')"></div><span class="checklist__text">フォームにlabelが紐付けされているか</span></li>
+      </ul>
+
+      <h4 style="font-size: 14px; font-weight: 700; margin: 20px 0 12px; color: var(--primary);">CSS品質</h4>
+      <ul class="checklist">
+        <li class="checklist__item"><div class="checklist__checkbox checked" onclick="this.classList.toggle('checked'); this.closest('.checklist__item').querySelector('.checklist__text').classList.toggle('done')"></div><span class="checklist__text done">!importantを使用していないか</span></li>
+        <li class="checklist__item"><div class="checklist__checkbox" onclick="this.classList.toggle('checked'); this.closest('.checklist__item').querySelector('.checklist__text').classList.toggle('done')"></div><span class="checklist__text">CSS変数でカラーを管理しているか</span></li>
+        <li class="checklist__item"><div class="checklist__checkbox" onclick="this.classList.toggle('checked'); this.closest('.checklist__item').querySelector('.checklist__text').classList.toggle('done')"></div><span class="checklist__text">重複したスタイルがないか</span></li>
+        <li class="checklist__item"><div class="checklist__checkbox" onclick="this.classList.toggle('checked'); this.closest('.checklist__item').querySelector('.checklist__text').classList.toggle('done')"></div><span class="checklist__text">BEM命名規則に従っているか</span></li>
+      </ul>
+
+      <h4 style="font-size: 14px; font-weight: 700; margin: 20px 0 12px; color: var(--primary);">レスポンシブ</h4>
+      <ul class="checklist">
+        <li class="checklist__item"><div class="checklist__checkbox" onclick="this.classList.toggle('checked'); this.closest('.checklist__item').querySelector('.checklist__text').classList.toggle('done')"></div><span class="checklist__text">モバイル（375px）で崩れないか</span></li>
+        <li class="checklist__item"><div class="checklist__checkbox" onclick="this.classList.toggle('checked'); this.closest('.checklist__item').querySelector('.checklist__text').classList.toggle('done')"></div><span class="checklist__text">タブレット（768px）で正しく表示されるか</span></li>
+        <li class="checklist__item"><div class="checklist__checkbox" onclick="this.classList.toggle('checked'); this.closest('.checklist__item').querySelector('.checklist__text').classList.toggle('done')"></div><span class="checklist__text">タップ領域が44px以上あるか</span></li>
+      </ul>
+    </div>
+
+    <!-- 進捗ダッシュボード -->
+    <div class="card">
+      <div class="card-title">品質スコアダッシュボード</div>
+      <p class="card-description">各カテゴリの品質スコアを可視化</p>
+      <div class="progress">
+        <div class="progress__header">
+          <span class="progress__label">HTML品質</span>
+          <span class="progress__value">85%</span>
+        </div>
+        <div class="progress__bar"><div class="progress__fill progress__fill--high" style="width: 85%;"></div></div>
+      </div>
+      <div class="progress">
+        <div class="progress__header">
+          <span class="progress__label">CSS品質</span>
+          <span class="progress__value">72%</span>
+        </div>
+        <div class="progress__bar"><div class="progress__fill progress__fill--mid" style="width: 72%;"></div></div>
+      </div>
+      <div class="progress">
+        <div class="progress__header">
+          <span class="progress__label">レスポンシブ対応</span>
+          <span class="progress__value">90%</span>
+        </div>
+        <div class="progress__bar"><div class="progress__fill progress__fill--high" style="width: 90%;"></div></div>
+      </div>
+      <div class="progress">
+        <div class="progress__header">
+          <span class="progress__label">アクセシビリティ</span>
+          <span class="progress__value">45%</span>
+        </div>
+        <div class="progress__bar"><div class="progress__fill progress__fill--low" style="width: 45%;"></div></div>
+      </div>
+      <div class="progress">
+        <div class="progress__header">
+          <span class="progress__label">パフォーマンス</span>
+          <span class="progress__value">68%</span>
+        </div>
+        <div class="progress__bar"><div class="progress__fill progress__fill--mid" style="width: 68%;"></div></div>
+      </div>
+    </div>
+
+    <!-- AIワークフロー -->
+    <div class="card">
+      <div class="card-title">AIとの効果的なワークフロー</div>
+      <p class="card-description">5ステップで高品質なUI開発を実現</p>
+      <div class="workflow">
+        <div class="workflow__step">
+          <div class="workflow__number">1</div>
+          <div class="workflow__title">要件整理</div>
+          <div class="workflow__desc">目的・仕様を明確にする</div>
+        </div>
+        <div class="workflow__step">
+          <div class="workflow__number">2</div>
+          <div class="workflow__title">プロンプト作成</div>
+          <div class="workflow__desc">具体的な指示を書く</div>
+        </div>
+        <div class="workflow__step">
+          <div class="workflow__number">3</div>
+          <div class="workflow__title">検証</div>
+          <div class="workflow__desc">生成コードを確認</div>
+        </div>
+        <div class="workflow__step">
+          <div class="workflow__number">4</div>
+          <div class="workflow__title">修正指示</div>
+          <div class="workflow__desc">改善点をフィードバック</div>
+        </div>
+        <div class="workflow__step">
+          <div class="workflow__number">5</div>
+          <div class="workflow__title">微調整</div>
+          <div class="workflow__desc">手作業で仕上げ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 失敗パターン -->
+    <div class="card">
+      <div class="card-title">よくある失敗パターンと対策</div>
+      <div class="pattern-grid">
+        <div class="pattern-card pattern-card--bad">
+          <div class="pattern-card__label">NG パターン</div>
+          <div class="pattern-card__title">曖昧なプロンプト</div>
+          <div class="pattern-card__text">「おしゃれなボタンを作って」のような抽象的な指示では意図したUIにならない。</div>
+        </div>
+        <div class="pattern-card pattern-card--good">
+          <div class="pattern-card__label">OK パターン</div>
+          <div class="pattern-card__title">具体的な仕様を記載</div>
+          <div class="pattern-card__text">サイズ・色・角丸・ホバー効果など数値で具体的に指定する。</div>
+        </div>
+        <div class="pattern-card pattern-card--bad">
+          <div class="pattern-card__label">NG パターン</div>
+          <div class="pattern-card__title">検証せずに使用</div>
+          <div class="pattern-card__text">AIの出力をそのまま本番に適用すると、アクセシビリティやレスポンシブの問題が残る。</div>
+        </div>
+        <div class="pattern-card pattern-card--good">
+          <div class="pattern-card__label">OK パターン</div>
+          <div class="pattern-card__title">チェックリストで確認</div>
+          <div class="pattern-card__text">品質チェックリストで必ず確認してから採用する。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

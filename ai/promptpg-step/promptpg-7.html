@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 7: 削除機能 - プロンプトプログラミング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
+    }
+    .nav-category-links { display: none; }
+    .prompt-card { background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #AF52DE; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+    /* コードブロック（spring/style.css準拠） */
+    .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .code-dot.red { background: #ff5f56; }
+    .code-dot.yellow { background: #ffbd2e; }
+    .code-dot.green { background: #27ca40; }
+    .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .code-content { padding: 16px; overflow-x: auto; }
+    .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+    .code-keyword { color: #c084fc; }
+    .code-class { color: #67e8f9; }
+    .code-string { color: #86efac; }
+    .code-comment { color: #94a3b8; }
+    .code-annotation { color: #fbbf24; }
+
+    /* 図解用スタイル */
+    .diagram-container {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+    .diagram-title {
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .diagram-content {
+      background: rgba(255,255,255,0.95);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .flow-box {
+      background: #f1f5f9;
+      border: 2px solid #e2e8f0;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    .flow-box.highlight {
+      background: linear-gradient(135deg, #4285F4, #1a73e8);
+      color: white;
+      border-color: transparent;
+    }
+    .flow-box.danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+      border-color: transparent;
+    }
+    .flow-arrow {
+      color: #6366f1;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-promptpg-step.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge">Chapter</div>
+      <div class="chapter-number">7</div>
+      <h1 class="chapter-title">削除機能</h1>
+      <p class="chapter-subtitle">削除確認ダイアログとDELETE処理を実装</p>
+    </header>
+
+    <nav class="toc">
+      <h2 class="toc-title">この Chapter の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">7-1</span>削除処理の実装</li>
+        <li class="toc-item"><span class="toc-number">7-2</span>確認ダイアログの実装</li>
+        <li class="toc-item"><span class="toc-number">7-3</span>削除完了メッセージ</li>
+      </ul>
+    </nav>
+
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-1</span>
+        <h2 class="section-title">削除処理の実装</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>Repositoryの<strong>deleteById()</strong>メソッドを使用して、指定したIDのデータを削除します。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>Spring BootでToDoの削除機能を実装してください。
+
+要件:
+- POST /todos/{id}/delete で削除処理
+- Serviceクラスで削除処理を実行
+- 削除成功後は一覧画面にリダイレクト
+- 存在しないIDの場合のエラーハンドリング
+
+Controller、Service、例外処理を含めてください。</pre>
+        </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <!-- Serviceサンプルコード -->
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-title">TodoService.java（削除処理）</span>
+        </div>
+        <div class="code-content">
+          <pre><span class="code-annotation">@Transactional</span>
+<span class="code-keyword">public void</span> delete(Long id) {
+    <span class="code-keyword">if</span> (!todoRepository.existsById(id)) {
+        <span class="code-keyword">throw new</span> IllegalArgumentException(<span class="code-string">"指定されたToDoが見つかりません: "</span> + id);
+    }
+    todoRepository.deleteById(id);
+}</pre>
+        </div>
+      </div>
+
+      <!-- Controllerサンプルコード -->
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-title">TodoController.java（削除処理）</span>
+        </div>
+        <div class="code-content">
+          <pre><span class="code-annotation">@PostMapping</span>(<span class="code-string">"/todos/{id}/delete"</span>)
+<span class="code-keyword">public</span> String delete(
+        <span class="code-annotation">@PathVariable</span> Long id,
+        RedirectAttributes redirectAttributes) {
+    <span class="code-keyword">try</span> {
+        todoService.delete(id);
+        redirectAttributes.addFlashAttribute(<span class="code-string">"message"</span>, <span class="code-string">"ToDoを削除しました"</span>);
+        redirectAttributes.addFlashAttribute(<span class="code-string">"messageType"</span>, <span class="code-string">"success"</span>);
+    } <span class="code-keyword">catch</span> (IllegalArgumentException e) {
+        redirectAttributes.addFlashAttribute(<span class="code-string">"message"</span>, <span class="code-string">"削除に失敗しました"</span>);
+        redirectAttributes.addFlashAttribute(<span class="code-string">"messageType"</span>, <span class="code-string">"danger"</span>);
+    }
+    <span class="code-keyword">return</span> <span class="code-string">"redirect:/todos"</span>;
+}</pre>
+        </div>
+      </div>
+
+      <!-- try-catchの役割説明 -->
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; margin: 24px 0; color: white;">
+        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: white;">
+          <span class="material-icons" style="color: white;">psychology</span> try-catchとは？
+        </h4>
+
+        <p style="margin: 0 0 20px 0; line-height: 1.8; opacity: 0.95;">
+          <strong>try-catch</strong>は、<strong>エラー（例外）が発生する可能性のある処理を安全に実行</strong>するための構文です。
+          エラーが起きてもプログラムがクラッシュせず、適切なエラーメッセージをユーザーに返すことができます。
+        </p>
+
+        <!-- try-catch構文 -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+          <div style="font-weight: 600; margin-bottom: 12px; color: #fbbf24;">基本構文</div>
+          <pre style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; color: #e2e8f0;"><span style="color: #c084fc;">try</span> {
+    <span style="color: #94a3b8;">// エラーが起きる可能性のある処理</span>
+    todoService.delete(id);
+    <span style="color: #94a3b8;">// 成功時の処理</span>
+    redirectAttributes.addFlashAttribute(<span style="color: #86efac;">"message"</span>, <span style="color: #86efac;">"成功しました"</span>);
+} <span style="color: #c084fc;">catch</span> (IllegalArgumentException e) {
+    <span style="color: #94a3b8;">// エラー発生時の処理</span>
+    redirectAttributes.addFlashAttribute(<span style="color: #86efac;">"message"</span>, <span style="color: #86efac;">"失敗しました"</span>);
+}</pre>
+        </div>
+
+        <!-- 役割の図解 -->
+        <div style="display: flex; flex-direction: column; gap: 16px; background: rgba(255,255,255,0.15); border-radius: 12px; padding: 20px;">
+          <div style="font-weight: 600; text-align: center; margin-bottom: 8px;">try-catchの3つの役割</div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+            <!-- 1. エラー検知 -->
+            <div style="background: rgba(255,255,255,0.95); border-radius: 8px; padding: 16px; color: #334155;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="background: #3b82f6; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">1</span>
+                <strong style="color: #1e40af;">エラー検知</strong>
+              </div>
+              <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.6;">
+                try ブロック内で発生したエラーを自動的にキャッチ
+              </p>
+            </div>
+
+            <!-- 2. クラッシュ防止 -->
+            <div style="background: rgba(255,255,255,0.95); border-radius: 8px; padding: 16px; color: #334155;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="background: #22c55e; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">2</span>
+                <strong style="color: #166534;">クラッシュ防止</strong>
+              </div>
+              <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.6;">
+                エラーが起きてもアプリが止まらず処理を継続
+              </p>
+            </div>
+
+            <!-- 3. ユーザー通知 -->
+            <div style="background: rgba(255,255,255,0.95); border-radius: 8px; padding: 16px; color: #334155;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="background: #ef4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">3</span>
+                <strong style="color: #991b1b;">ユーザー通知</strong>
+              </div>
+              <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.6;">
+                catch ブロックで適切なエラーメッセージを表示
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 重要ポイント -->
+        <div style="background: rgba(255,255,255,0.2); border-radius: 8px; padding: 16px; margin-top: 16px;">
+          <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <span class="material-icons" style="color: #fbbf24;">info</span>
+            <div style="font-size: 0.9rem; line-height: 1.7;">
+              <strong>catch(IllegalArgumentException e)</strong> は「IllegalArgumentException」型のエラーをキャッチします。<br>
+              <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">e</code> にはエラーの詳細情報が入っており、<code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">e.getMessage()</code> でエラーメッセージを取得できます。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- try-catch フロー図解 -->
+      <div class="diagram-container">
+        <div class="diagram-title">
+          <span class="material-icons">account_tree</span>
+          try-catch 処理フロー
+        </div>
+        <div class="diagram-content">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <!-- 正常系 -->
+            <div style="background: #dcfce7; padding: 20px; border-radius: 12px; border: 2px solid #22c55e;">
+              <div style="font-weight: 700; color: #16a34a; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="material-icons">check_circle</span> 正常時（エラーなし）
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;">
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                  <strong>1.</strong> try ブロック開始
+                </div>
+                <div style="text-align: center; color: #22c55e;">↓</div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #22c55e;">
+                  <strong>2.</strong> todoService.delete(id) 成功
+                </div>
+                <div style="text-align: center; color: #22c55e;">↓</div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #22c55e;">
+                  <strong>3.</strong> 成功メッセージをセット
+                </div>
+                <div style="text-align: center; color: #22c55e;">↓</div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #a855f7;">
+                  <strong>4.</strong> try 終了 → catch をスキップ
+                </div>
+              </div>
+            </div>
+
+            <!-- 異常系 -->
+            <div style="background: #fef2f2; padding: 20px; border-radius: 12px; border: 2px solid #ef4444;">
+              <div style="font-weight: 700; color: #dc2626; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="material-icons">error</span> 異常時（エラー発生）
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;">
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                  <strong>1.</strong> try ブロック開始
+                </div>
+                <div style="text-align: center; color: #ef4444;">↓</div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #ef4444;">
+                  <strong>2.</strong> delete() で例外発生！
+                </div>
+                <div style="text-align: center; color: #ef4444;">↓ 即座にジャンプ</div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #f59e0b;">
+                  <strong>3.</strong> catch ブロックへ移動
+                </div>
+                <div style="text-align: center; color: #ef4444;">↓</div>
+                <div style="background: white; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #ef4444;">
+                  <strong>4.</strong> エラーメッセージをセット
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; padding: 16px; background: #f8fafc; border-radius: 8px; font-size: 0.85rem; color: #64748b;">
+            <strong>ポイント:</strong> どちらのケースでも最終的に <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">return "redirect:/todos";</code> が実行され、一覧画面に遷移します。
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: none; margin: 16px 0;">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> コード解説</div>
+        <div class="info-box-content">
+          <ul style="margin: 0; padding-left: 20px;">
+            <li><code>existsById()</code> - IDの存在確認（削除前のチェック）</li>
+            <li><code>deleteById()</code> - 指定IDのデータを削除</li>
+            <li><code>@PathVariable</code> - URLのパス変数からIDを取得</li>
+            <li><code>try-catch</code> - エラーハンドリングでユーザーにフィードバック</li>
+            <li><code>addFlashAttribute</code> - リダイレクト先で1回だけ使えるメッセージ</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 削除処理フロー図解 -->
+      <div class="diagram-container">
+        <div class="diagram-title">
+          <span class="material-icons">delete</span>
+          削除処理フロー
+        </div>
+        <div class="diagram-content">
+          <div class="flow-diagram">
+            <div class="flow-box">
+              <span class="material-icons" style="font-size: 1.5rem; display: block; margin-bottom: 4px;">touch_app</span>
+              削除ボタン<br>クリック
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box highlight">
+              <span class="material-icons" style="font-size: 1.5rem; display: block; margin-bottom: 4px;">send</span>
+              POST送信<br><small>/todos/{id}/delete</small>
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box highlight">
+              <span class="material-icons" style="font-size: 1.5rem; display: block; margin-bottom: 4px;">search</span>
+              存在確認<br><small>existsById()</small>
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box danger">
+              <span class="material-icons" style="font-size: 1.5rem; display: block; margin-bottom: 4px;">delete_forever</span>
+              削除実行<br><small>deleteById()</small>
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box">
+              <span class="material-icons" style="font-size: 1.5rem; display: block; margin-bottom: 4px;">redo</span>
+              リダイレクト<br><small>/todos</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box warning">
+        <div class="info-box-title"><span class="material-icons">warning</span> 注意</div>
+        <div class="info-box-content">
+          <p>削除処理は<strong>POST</strong>または<strong>DELETE</strong>メソッドで実装してください。GETメソッドで削除を行うと、ブックマークやクローラーによる意図しない削除が発生する可能性があります。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-2</span>
+        <h2 class="section-title">確認ダイアログの実装</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>誤操作を防ぐため、削除前に<strong>確認ダイアログ</strong>を表示します。JavaScriptの<code>confirm()</code>を使用します。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>削除ボタンに確認ダイアログを追加してください。
+
+要件:
+- JavaScriptのconfirm()を使用
+- 「本当に削除しますか？」というメッセージを表示
+- 「OK」を押した場合のみ削除処理を実行
+- 「キャンセル」を押した場合は何もしない
+
+フォーム送信と組み合わせた実装を示してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-title">確認ダイアログ付き削除フォーム</span>
+        </div>
+        <div class="code-content">
+          <pre>&lt;form <span class="code-annotation">th:action</span>=<span class="code-string">"@{/todos/{id}/delete(id=${todo.id})}"</span>
+      method=<span class="code-string">"post"</span>
+      onsubmit=<span class="code-string">"return confirm('本当に削除しますか？')"</span>&gt;
+  &lt;button type=<span class="code-string">"submit"</span> class=<span class="code-string">"btn btn-danger"</span>&gt;削除&lt;/button&gt;
+&lt;/form&gt;</pre>
+        </div>
+      </div>
+
+      <div class="info-box" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: none; margin: 16px 0;">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> コード解説</div>
+        <div class="info-box-content">
+          <ul style="margin: 0; padding-left: 20px;">
+            <li><code>onsubmit="return confirm(...)"</code> - フォーム送信前に確認</li>
+            <li><code>confirm()</code>がfalseを返すと送信がキャンセルされる</li>
+            <li>ユーザーが「OK」を押した場合のみ削除処理が実行される</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 確認ダイアログフロー図解 -->
+      <div class="diagram-container">
+        <div class="diagram-title">
+          <span class="material-icons">help_outline</span>
+          確認ダイアログの動作フロー
+        </div>
+        <div class="diagram-content">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border: 2px solid #22c55e;">
+              <div style="font-weight: 700; color: #16a34a; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <span class="material-icons">check_circle</span> OKを押した場合
+              </div>
+              <div style="font-size: 0.85rem; color: #166534;">
+                confirm() → true → フォーム送信 → 削除実行
+              </div>
+            </div>
+            <div style="background: #fef2f2; padding: 16px; border-radius: 8px; border: 2px solid #ef4444;">
+              <div style="font-weight: 700; color: #dc2626; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <span class="material-icons">cancel</span> キャンセルを押した場合
+              </div>
+              <div style="font-size: 0.85rem; color: #991b1b;">
+                confirm() → false → 送信キャンセル → 何も起きない
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-3</span>
+        <h2 class="section-title">削除完了メッセージ</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>削除完了後に<strong>フラッシュメッセージ</strong>を表示して、ユーザーに結果を通知します。</p>
+      </div>
+
+      <div class="prompt-card">
+        <h4 style="color: white;"><span class="material-icons">smart_toy</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre>Spring Bootでフラッシュメッセージを実装してください。
+
+要件:
+- RedirectAttributesを使用
+- 削除成功時:「ToDoを削除しました」（成功メッセージ）
+- 削除失敗時:「削除に失敗しました」（エラーメッセージ）
+- Bootstrapのアラートコンポーネントで表示
+- 数秒後に自動で消える機能も追加
+
+Controller側とテンプレート側の両方を示してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <!-- フラッシュメッセージ テンプレートサンプル -->
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+          </div>
+          <span class="code-title">templates/todo/list.html（フラッシュメッセージ表示）</span>
+        </div>
+        <div class="code-content">
+          <pre><span class="code-comment">&lt;!-- フラッシュメッセージ表示 --&gt;</span>
+&lt;div <span class="code-annotation">th:if</span>=<span class="code-string">"${message}"</span>
+     <span class="code-annotation">th:classappend</span>=<span class="code-string">"'alert alert-' + ${messageType ?: 'info'}"</span>
+     class=<span class="code-string">"alert alert-dismissible fade show"</span>
+     role=<span class="code-string">"alert"</span>&gt;
+  &lt;span <span class="code-annotation">th:text</span>=<span class="code-string">"${message}"</span>&gt;&lt;/span&gt;
+  &lt;button type=<span class="code-string">"button"</span> class=<span class="code-string">"btn-close"</span> data-bs-dismiss=<span class="code-string">"alert"</span>&gt;&lt;/button&gt;
+&lt;/div&gt;
+
+<span class="code-comment">&lt;!-- 自動で消えるJavaScript --&gt;</span>
+&lt;script <span class="code-annotation">th:if</span>=<span class="code-string">"${message}"</span>&gt;
+  setTimeout(<span class="code-keyword">function</span>() {
+    <span class="code-keyword">const</span> alert = document.querySelector(<span class="code-string">'.alert'</span>);
+    <span class="code-keyword">if</span> (alert) {
+      alert.classList.remove(<span class="code-string">'show'</span>);
+      setTimeout(() =&gt; alert.remove(), 150);
+    }
+  }, 3000); <span class="code-comment">// 3秒後に消える</span>
+&lt;/script&gt;</pre>
+        </div>
+      </div>
+
+      <div class="info-box" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: none; margin: 16px 0;">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> コード解説</div>
+        <div class="info-box-content">
+          <ul style="margin: 0; padding-left: 20px;">
+            <li><code>RedirectAttributes.addFlashAttribute()</code> - リダイレクト先で1回だけ使えるデータ</li>
+            <li><code>th:if="${message}"</code> - メッセージがある場合のみ表示</li>
+            <li><code>messageType</code> - success/danger/info等でアラートの色を変更</li>
+            <li><code>setTimeout()</code> - 指定時間後にアラートを自動で非表示</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-title"><span class="material-icons">check_circle</span> 確認ポイント</div>
+        <div class="info-box-content">
+          <p>一覧画面から削除ボタンを押して、確認ダイアログが表示されることを確認してください。削除後、メッセージが表示され、データが削除されていることも確認しましょう。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="page-nav">
+    <a href="promptpg-6.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">Chapter 6: 一覧表示</div>
+    </a>
+    <a href="promptpg-8.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">Chapter 8: 編集機能</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトプログラミング - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第9章 コードのリファクタリング - プロンプトUIコーディング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <link rel="stylesheet" href="../../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-dark: #005A9E;
+      --primary-light: #E8F4FD;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+
+    /* 実行結果プレビュー */
+    .result-preview {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+    .result-preview-header {
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .result-preview-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .result-preview-title .material-icons {
+      font-size: 18px;
+      color: #28a745;
+    }
+    .result-preview-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .result-preview-tab {
+      padding: 6px 12px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .result-preview-tab:hover {
+      background: #f8f9fa;
+    }
+    .result-preview-tab.active {
+      background: #007ACC;
+      border-color: #007ACC;
+      color: #fff;
+    }
+    .result-preview-content {
+      padding: 24px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .result-preview-code {
+      display: none;
+      padding: 16px;
+      background: #1e1e1e;
+      overflow-x: auto;
+    }
+    .result-preview-code.active {
+      display: block;
+    }
+    .result-preview-code pre {
+      margin: 0;
+      color: #d4d4d4;
+      font-size: 13px;
+      line-height: 1.5;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* サンプルボタングループ */
+    .sample-btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .sample-btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+    }
+    .sample-btn--primary {
+      background: #007ACC;
+      color: white;
+    }
+    .sample-btn--secondary {
+      background: white;
+      color: #007ACC;
+      border: 1px solid #007ACC;
+    }
+    .sample-btn--danger {
+      background: #FF3B30;
+      color: white;
+    }
+    /* サンプル記事構造 */
+    .sample-article {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e5e5e5;
+      padding: 16px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .sample-article__title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 8px;
+    }
+    .sample-article__content {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-prompt-ui-coding.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">プロンプトUIコーディング</div>
+      <div class="chapter-number">9</div>
+      <h1 class="chapter-title">コードのリファクタリング</h1>
+      <p class="chapter-subtitle">既存コードをAIで改善・最適化する</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">9-1</span>リファクタリングとは</li>
+        <li class="toc-item"><span class="toc-number">9-2</span>HTML構造の改善</li>
+        <li class="toc-item"><span class="toc-number">9-3</span>CSSの最適化</li>
+        <li class="toc-item"><span class="toc-number">9-4</span>モダンな書き方への変換</li>
+      </ul>
+    </nav>
+
+    <!-- Section 9-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-1</span>
+        <h2 class="section-title">リファクタリングとは</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>リファクタリング</strong>とは、コードの外部的な動作を変えずに、内部構造を改善することです。AIを活用すると、既存コードの問題点を指摘してもらい、効率的に改善できます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>リファクタリングの目的</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007ACC;">
+              <span class="material-icons" style="color: white;">visibility</span>
+            </div>
+            <div class="feature-content">
+              <h4>可読性の向上</h4>
+              <p>他の人（将来の自分を含む）がコードを理解しやすくなる</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">build</span>
+            </div>
+            <div class="feature-content">
+              <h4>保守性の向上</h4>
+              <p>修正や機能追加がしやすくなる</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">speed</span>
+            </div>
+            <div class="feature-content">
+              <h4>パフォーマンス改善</h4>
+              <p>無駄なコードを削除し、読み込み速度を向上</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #AF52DE;">
+              <span class="material-icons" style="color: white;">accessibility</span>
+            </div>
+            <div class="feature-content">
+              <h4>アクセシビリティ対応</h4>
+              <p>セマンティックな構造に改善</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>AIにリファクタリングを依頼する方法</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🔧</span>
+            <span class="prompt-card-label">リファクタリング依頼</span>
+          </div>
+          <div class="prompt-card-content">以下のHTML/CSSコードをリファクタリングして完全なHTMLファイルとして出力してください。
+
+## 出力形式
+- 出力ファイル: puic-output/9-1-refactoring.html
+- &lt;!DOCTYPE html&gt;から始まる完全なHTMLファイル
+- CSSは&lt;style&gt;タグ内に記述（外部CSS禁止）
+- &lt;meta charset="UTF-8"&gt;を含めること
+
+## 共通デザインシステム
+- *: margin 0, padding 0, box-sizing border-box
+- body: background #F5F5F7, color #1D1D1F, line-height 1.7, padding 24px
+- font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif
+- .container: max-width 960px, margin 0 auto
+- ページヘッダー: linear-gradient(135deg, #007ACC, #5856D6), white文字, border-radius 16px, padding 40px, h1 24px/800
+- カード: background #FFF, border-radius 12px, shadow 0 2px 8px rgba(0,0,0,0.08), padding 32px
+- 基本色: primary #007ACC, hover #005A9E, light #E8F4FD
+- テキストサブ: #6E6E73, ボーダー: #D2D2D7
+
+## 改善してほしい点
+- セマンティックなHTMLに変更
+- BEM命名規則に統一
+- 重複したCSSを削減
+- モダンなレイアウト手法（Flexbox/Grid）に変換
+
+## 元のコード
+[ここにコードを貼り付け]
+
+## 注意
+- 見た目は変えないこと
+- 変更点を箇条書きで説明すること</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 9-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-2</span>
+        <h2 class="section-title">HTML構造の改善</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>非セマンティックからセマンティックへ</h3>
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #FF3B30; color: white;">Before</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>&lt;div class="header"&gt;
+  &lt;div class="logo"&gt;...&lt;/div&gt;
+  &lt;div class="nav"&gt;
+    &lt;div class="nav-item"&gt;...&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="main"&gt;
+  &lt;div class="article"&gt;
+    &lt;div class="title"&gt;記事タイトル&lt;/div&gt;
+    &lt;div class="content"&gt;...&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="footer"&gt;...&lt;/div&gt;</pre>
+              </div>
+            </div>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #34C759; color: white;">After</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>&lt;header class="header"&gt;
+  &lt;h1 class="header__logo"&gt;...&lt;/h1&gt;
+  &lt;nav class="header__nav"&gt;
+    &lt;ul class="header__nav-list"&gt;
+      &lt;li&gt;...&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;
+&lt;main class="main"&gt;
+  &lt;article class="article"&gt;
+    &lt;h2 class="article__title"&gt;記事タイトル&lt;/h2&gt;
+    &lt;div class="article__content"&gt;...&lt;/div&gt;
+  &lt;/article&gt;
+&lt;/main&gt;
+&lt;footer class="footer"&gt;...&lt;/footer&gt;</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル（リファクタリング後）
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <article class="sample-article">
+              <h2 class="sample-article__title">記事タイトル</h2>
+              <div class="sample-article__content">これはセマンティックなHTML構造でマークアップされた記事コンテンツです。見た目は同じですが、内部構造が改善されています。</div>
+            </article>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;article class="article"&gt;
+  &lt;h2 class="article__title"&gt;記事タイトル&lt;/h2&gt;
+  &lt;div class="article__content"&gt;
+    これはセマンティックなHTML構造でマークアップされた
+    記事コンテンツです。
+  &lt;/div&gt;
+&lt;/article&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>HTMLリファクタリングプロンプト</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">📝</span>
+            <span class="prompt-card-label">HTML構造改善</span>
+          </div>
+          <div class="prompt-card-content">以下のHTMLをリファクタリングして完全なHTMLファイルとして出力してください。
+
+## 出力形式
+- 出力ファイル: puic-output/9-2-html-semantic.html
+- &lt;!DOCTYPE html&gt;から始まる完全なHTMLファイル
+- CSSは&lt;style&gt;タグ内に記述（外部CSS禁止）
+- &lt;meta charset="UTF-8"&gt;を含めること
+
+## 共通デザインシステム
+- *: margin 0, padding 0, box-sizing border-box
+- body: background #F5F5F7, color #1D1D1F, line-height 1.7, padding 24px
+- font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif
+- .container: max-width 960px, margin 0 auto
+- ページヘッダー: linear-gradient(135deg, #007ACC, #5856D6), white文字, border-radius 16px, padding 40px, h1 24px/800
+- カード: background #FFF, border-radius 12px, shadow 0 2px 8px rgba(0,0,0,0.08), padding 32px
+- 基本色: primary #007ACC, hover #005A9E, light #E8F4FD
+- テキストサブ: #6E6E73, ボーダー: #D2D2D7
+
+## デザイン
+- ヘッダー: background #FFFFFF, border-bottom 1px solid #D2D2D7, padding 16px 24px
+- ロゴ: font-size 18px, font-weight 700, color #1D1D1F
+- ナビリンク: color #6E6E73, font-size 14px, text-decoration none
+- ナビリンクホバー: color #007ACC
+- 記事タイトル: font-size 18px, font-weight 700, color #1D1D1F
+- 記事本文: font-size 14px, color #6E6E73, line-height 1.6
+- BEM命名規則を使用
+
+## 要件
+1. divタグを適切なセマンティックタグに置き換え
+   - header, nav, main, section, article, aside, footer
+2. 見出しレベルを適切に設定（h1→h2→h3の順序）
+3. リスト構造を適切なul/ol/liに変更
+4. 画像に適切なalt属性を追加
+5. フォームにlabelを紐付け
+6. BEM命名規則でクラス名を整理
+
+## 元のコード
+[コードを貼り付け]</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 9-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-3</span>
+        <h2 class="section-title">CSSの最適化</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>重複コードの削減</h3>
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #FF3B30; color: white;">Before（重複あり）</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>.btn-primary {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  background: #007ACC;
+  color: white;
+}
+.btn-secondary {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  background: white;
+  color: #007ACC;
+  border: 1px solid #007ACC;
+}
+.btn-danger {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  background: #FF3B30;
+  color: white;
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #34C759; color: white;">After（共通化）</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.btn--primary {
+  background: #007ACC;
+  color: white;
+}
+.btn--secondary {
+  background: white;
+  color: #007ACC;
+  border: 1px solid #007ACC;
+}
+.btn--danger {
+  background: #FF3B30;
+  color: white;
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル（BEM命名・共通化）
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <div class="sample-btn-group">
+              <button class="sample-btn sample-btn--primary">Primary</button>
+              <button class="sample-btn sample-btn--secondary">Secondary</button>
+              <button class="sample-btn sample-btn--danger">Danger</button>
+            </div>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;div class="button-group"&gt;
+  &lt;button class="btn btn--primary"&gt;Primary&lt;/button&gt;
+  &lt;button class="btn btn--secondary"&gt;Secondary&lt;/button&gt;
+  &lt;button class="btn btn--danger"&gt;Danger&lt;/button&gt;
+&lt;/div&gt;
+
+/* 共通スタイル */
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* バリアント別スタイル */
+.btn--primary { background: #007ACC; color: white; }
+.btn--secondary { background: white; color: #007ACC; border: 1px solid #007ACC; }
+.btn--danger { background: #FF3B30; color: white; }</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>CSSリファクタリングプロンプト</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">プロンプト</span>
+          </div>
+          <div class="code-content">
+            <pre>以下のCSSをリファクタリングしてください。
+
+## 要件
+1. 重複したプロパティを共通クラスに抽出
+2. マジックナンバーをCSS変数に置き換え
+3. floatをFlexboxまたはGridに変換
+4. ベンダープレフィックスの整理（不要なものは削除）
+5. メディアクエリをモバイルファーストに統一
+6. セレクタの詳細度を下げる（!importantを排除）
+
+## 元のコード
+[コードを貼り付け]
+
+## 出力形式
+- 変更後のCSS
+- 変更点の説明（箇条書き）</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>CSS変数への置き換え</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">プロンプト</span>
+          </div>
+          <div class="code-content">
+            <pre>以下のCSSからカラーコードと数値を抽出し、
+CSS変数として定義してください。
+
+## 変数化する対象
+- カラー（同じ値が2回以上使われているもの）
+- フォントサイズ
+- 余白（8の倍数で統一）
+- 角丸
+- 影
+
+## 元のコード
+[コードを貼り付け]</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 9-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-4</span>
+        <h2 class="section-title">モダンな書き方への変換</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>floatからFlexbox/Gridへ</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">プロンプト</span>
+          </div>
+          <div class="code-content">
+            <pre>以下のfloatベースのレイアウトを
+Flexbox/CSS Gridに変換してください。
+
+## 要件
+- clearfixハックを削除
+- floatプロパティを完全に排除
+- 同等のレイアウトをFlexboxまたはGridで実現
+- IE11対応は不要（モダンブラウザのみ）
+
+## 元のコード
+[コードを貼り付け]</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>古いCSSから新しいCSSへ</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>古い書き方</th>
+                <th>新しい書き方</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>float: left</code></td>
+                <td><code>display: flex</code></td>
+              </tr>
+              <tr>
+                <td><code>margin: 0 auto</code>（中央寄せ）</td>
+                <td><code>margin-inline: auto</code></td>
+              </tr>
+              <tr>
+                <td><code>padding-left, padding-right</code></td>
+                <td><code>padding-inline</code></td>
+              </tr>
+              <tr>
+                <td><code>height: 100vh - 60px</code>（calc不使用）</td>
+                <td><code>height: calc(100vh - 60px)</code></td>
+              </tr>
+              <tr>
+                <td>ベンダープレフィックス多数</td>
+                <td>プレフィックスなし or 最小限</td>
+              </tr>
+              <tr>
+                <td><code>@media (max-width: ...)</code></td>
+                <td><code>@media (min-width: ...)</code>（モバイルファースト）</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Tailwind CSSへの変換</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">プロンプト</span>
+          </div>
+          <div class="code-content">
+            <pre>以下の通常のCSS/HTMLをTailwind CSSに変換してください。
+
+## 要件
+- カスタムCSSは使用しない
+- Tailwindのクラスのみで実装
+- レスポンシブ対応を維持
+- ホバー状態なども再現
+
+## 元のコード
+[HTML + CSSを貼り付け]
+
+## 出力
+- Tailwindクラスを適用したHTMLのみ</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-title">リファクタリング時の注意</div>
+        <div class="info-box-content">
+          <ul>
+            <li>必ず<strong>変更前後で見た目が同じ</strong>か確認する</li>
+            <li>一度に大きく変更せず、<strong>小さなステップ</strong>で進める</li>
+            <li>レスポンシブの<strong>各ブレイクポイント</strong>でも確認する</li>
+            <li><strong>ブラウザの開発者ツール</strong>で差異をチェック</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第9章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>リファクタリング</strong>は見た目を変えずに内部構造を改善すること</li>
+          <li>HTMLは<strong>セマンティックタグ</strong>と<strong>BEM命名規則</strong>に統一</li>
+          <li>CSSは<strong>重複削減</strong>と<strong>CSS変数化</strong>で整理</li>
+          <li>古い書き方は<strong>Flexbox/Grid</strong>などモダンな手法に変換</li>
+          <li>変更後は<strong>必ず動作確認</strong>を行う</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="8puic-landing-page.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">ランディングページ制作</div>
+    </a>
+    <a href="10puic-best-practices.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">ベストプラクティス</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトUIコーディング - 職業訓練校教材</p>
+  </footer>
+
+  <script>
+    // Result Preview Tab Functionality
+    document.querySelectorAll('.result-preview').forEach(preview => {
+      const tabs = preview.querySelectorAll('.result-preview-tab');
+      const content = preview.querySelector('.result-preview-content');
+      const code = preview.querySelector('.result-preview-code');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          if (tab.dataset.tab === 'preview') {
+            content.style.display = 'flex';
+            code.classList.remove('active');
+          } else {
+            content.style.display = 'none';
+            code.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

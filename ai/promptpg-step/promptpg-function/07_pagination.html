@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>機能07: ページネーション - WEB総合制作演習 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
+    }
+    .nav-category-links { display: none; }
+    .level-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-left: 12px; }
+    .level-beginner { background: #dcfce7; color: #166534; }
+    .level-intermediate { background: #fef9c3; color: #854d0e; }
+    .level-advanced { background: #ffedd5; color: #9a3412; }
+    .level-expert { background: #fee2e2; color: #991b1b; }
+    .prompt-card { background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #4285F4; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+    /* 図解コンテナ */
+    .diagram-container { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .diagram-container h4 { margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: white; }
+    /* コード解説 */
+    .code-explanation { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 20px; margin: 16px 0; }
+    .code-explanation h4 { margin: 0 0 16px 0; color: #92400e; display: flex; align-items: center; gap: 8px; }
+    .code-explanation ul { margin: 0; padding-left: 20px; color: #78350f; }
+    .code-explanation li { margin-bottom: 8px; line-height: 1.6; }
+    /* コードブロック（spring/style.css準拠） */
+    .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .code-dot.red { background: #ff5f56; }
+    .code-dot.yellow { background: #ffbd2e; }
+    .code-dot.green { background: #27ca40; }
+    .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .code-content { padding: 16px; overflow-x: auto; }
+    .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+    .code-keyword { color: #c084fc; }
+    .code-class { color: #67e8f9; }
+    .code-string { color: #86efac; }
+    .code-comment { color: #94a3b8; }
+    .code-annotation { color: #fbbf24; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../../shared/js/nav-exercises-3.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">機能</div>
+      <div class="chapter-number">07</div>
+      <h1 class="chapter-title">ページネーション<span class="level-badge level-intermediate">中級</span></h1>
+      <p class="chapter-subtitle">大量データをページ単位で分割表示</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この機能の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">07-1</span>工程概要</li>
+        <li class="toc-item"><span class="toc-number">07-2</span>成果物</li>
+        <li class="toc-item"><span class="toc-number">07-3</span>生成プロンプト</li>
+      </ul>
+    </nav>
+
+    <!-- Section 07-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 07-1</span>
+        <h2 class="section-title">工程概要</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>大量のToDoデータを<strong>ページ単位で分割表示</strong>し、ユーザビリティとパフォーマンスを向上させます。</p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: var(--primary); color: white;">学習テーマ</div>
+          <p>ページング処理</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #007AFF; color: white;">主な技術</div>
+          <p>Spring Data Pagination / LIMIT OFFSET</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #34C759; color: white;">関連レイヤー</div>
+          <p>Repository / Controller / View</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>この機能で行うこと</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: var(--primary);">
+              <span class="material-icons" style="color: white;">settings</span>
+            </div>
+            <div class="feature-content">
+              <h4>Pageableの導入</h4>
+              <p>ページング情報を受け取る仕組みを実装</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">storage</span>
+            </div>
+            <div class="feature-content">
+              <h4>Repositoryの対応</h4>
+              <p>LIMIT/OFFSETによるデータ取得</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">tune</span>
+            </div>
+            <div class="feature-content">
+              <h4>Controllerの修正</h4>
+              <p>ページ情報のモデル追加</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">navigate_before</span>
+            </div>
+            <div class="feature-content">
+              <h4>ページャーUI実装</h4>
+              <p>前へ/次へ、ページ番号リンク</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 07-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 07-2</span>
+        <h2 class="section-title">成果物</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この機能で作成・更新するファイルの一覧です。</p>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ファイル</th>
+              <th>変更内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>TodoController.java</code></td>
+              <td>Pageableパラメータ追加、Page返却</td>
+            </tr>
+            <tr>
+              <td><code>TodoMapper.xml</code></td>
+              <td>LIMIT/OFFSET付きSELECT、COUNT追加</td>
+            </tr>
+            <tr>
+              <td><code>TodoRepository.java</code></td>
+              <td>ページング対応メソッド追加</td>
+            </tr>
+            <tr>
+              <td><code>list.html</code></td>
+              <td>ページャーUIコンポーネント追加</td>
+            </tr>
+            <tr>
+              <td><code>style.css</code></td>
+              <td>ページネーションスタイル</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <h4>Pageオブジェクトの主要メソッド</h4>
+        <ul>
+          <li><strong>getContent()</strong> - 現在ページのデータリスト</li>
+          <li><strong>getTotalPages()</strong> - 総ページ数</li>
+          <li><strong>getTotalElements()</strong> - 総データ件数</li>
+          <li><strong>getNumber()</strong> - 現在のページ番号（0始まり）</li>
+          <li><strong>hasNext() / hasPrevious()</strong> - 次/前ページの有無</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 07-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 07-3</span>
+        <h2 class="section-title">生成プロンプト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、実装コードを生成できます。</p>
+      </div>
+
+      <!-- サンプルソースコード -->
+      <div class="subsection">
+        <h3>サンプルソースコード</h3>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">TodoController.java</span>
+          </div>
+          <div class="code-content">
+<pre><span class="code-annotation">@GetMapping</span>(<span class="code-string">"/todos"</span>)
+<span class="code-keyword">public</span> String <span class="code-class">list</span>(
+        <span class="code-annotation">@PageableDefault</span>(size = 10, sort = <span class="code-string">"createdAt"</span>,
+                         direction = Sort.Direction.DESC) Pageable pageable,
+        Model model) {
+
+    Page&lt;Todo&gt; todoPage = todoService.findAll(pageable);
+
+    model.addAttribute(<span class="code-string">"todos"</span>, todoPage.getContent());
+    model.addAttribute(<span class="code-string">"page"</span>, todoPage);
+    <span class="code-keyword">return</span> <span class="code-string">"todos/list"</span>;
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">TodoMapper.xml</span>
+          </div>
+          <div class="code-content">
+<pre><span class="code-keyword">&lt;select</span> id=<span class="code-string">"findAllWithPagination"</span> resultType=<span class="code-string">"Todo"</span><span class="code-keyword">&gt;</span>
+    SELECT * FROM todos
+    ORDER BY created_at DESC
+    LIMIT #{size} OFFSET #{offset}
+<span class="code-keyword">&lt;/select&gt;</span>
+
+<span class="code-keyword">&lt;select</span> id=<span class="code-string">"countAll"</span> resultType=<span class="code-string">"long"</span><span class="code-keyword">&gt;</span>
+    SELECT COUNT(*) FROM todos
+<span class="code-keyword">&lt;/select&gt;</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- コード解説 -->
+      <div class="code-explanation">
+        <h4><span class="material-icons" style="color: #92400e;">menu_book</span> コード解説</h4>
+        <ul>
+          <li><strong>@PageableDefault</strong>: ページサイズ、ソート条件のデフォルト値を設定</li>
+          <li><strong>Page&lt;Todo&gt;</strong>: データリスト + ページング情報を含むオブジェクト</li>
+          <li><strong>LIMIT #{size}</strong>: 1ページあたりの件数を指定</li>
+          <li><strong>OFFSET #{offset}</strong>: 取得開始位置（page × size）</li>
+        </ul>
+      </div>
+
+      <!-- 図解 -->
+      <div class="diagram-container">
+        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: white;">
+          <span class="material-icons" style="color: white;">psychology</span> ページネーションの仕組み
+        </h4>
+        <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+          <div style="text-align: center; margin-bottom: 12px; font-weight: 600;">全50件のデータ（10件/ページ）</div>
+          <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+            <div style="background: rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 6px; font-size: 0.85rem;">Page 1<br><span style="font-size: 0.75rem;">1-10件</span></div>
+            <div style="background: rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 6px; font-size: 0.85rem;">Page 2<br><span style="font-size: 0.75rem;">11-20件</span></div>
+            <div style="background: rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 6px; font-size: 0.85rem;">Page 3<br><span style="font-size: 0.75rem;">21-30件</span></div>
+            <div style="background: rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 6px; font-size: 0.85rem;">Page 4<br><span style="font-size: 0.75rem;">31-40件</span></div>
+            <div style="background: rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 6px; font-size: 0.85rem;">Page 5<br><span style="font-size: 0.75rem;">41-50件</span></div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 8px;">
+          <span style="background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 4px;">« 前へ</span>
+          <span style="background: white; color: #667eea; padding: 6px 12px; border-radius: 4px; font-weight: 600;">1</span>
+          <span style="background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 4px;">2</span>
+          <span style="background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 4px;">3</span>
+          <span style="background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 4px;">次へ »</span>
+        </div>
+      </div>
+
+      <div class="prompt-card">
+        <h4><span class="material-icons">auto_awesome</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre id="prompt-07">あなたはJavaプログラマーです。
+
+ToDoアプリにページネーション機能を追加してください。
+
+【要件】
+- 1ページあたり10件表示
+- 「前へ」「次へ」ボタンを配置
+- ページ番号リンクを表示（1, 2, 3...）
+- 現在のページをハイライト表示
+- 総件数と表示範囲を表示（例：全50件中 1-10件）
+
+【実装箇所】
+
+■ TodoController.java
+- @PageableDefault(size = 10, sort = "createdAt", direction = DESC)
+- Pageableパラメータを受け取る
+- Page&lt;Todo&gt;をモデルに追加
+
+■ TodoMapper.xml（MyBatis使用時）
+- SELECT文にLIMIT #{size} OFFSET #{offset} を追加
+- 総件数取得用のCOUNT(*)クエリを追加
+
+■ TodoRepository.java
+- Page&lt;Todo&gt; findAll(Pageable pageable) メソッド追加
+- 検索+ページングの複合メソッド追加
+
+■ list.html（Thymeleaf）
+- ページャーUI（前へ/次へ/ページ番号）
+- 現在ページにactiveクラスを付与
+- 件数表示「全{total}件中 {start}-{end}件を表示」
+
+【注意点】
+- Spring Dataのページ番号は0始まり（表示時は+1）
+- 検索条件がある場合はページングと併用できるように
+- 総ページ数が多い場合は省略表示を検討
+
+必要なコードを提示してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="copyPrompt('prompt-07')">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box success">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> ポイント</div>
+        <div class="info-box-content">
+          <p>検索条件とページネーションを組み合わせる場合、URLパラメータに検索条件を引き継ぐ実装が必要です。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="06_delete_dialog.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前の機能</div>
+      <div class="page-nav-title">06 削除確認ダイアログ</div>
+    </a>
+    <a href="08_priority.html" class="page-nav-btn next">
+      <div class="page-nav-label">次の機能</div>
+      <div class="page-nav-title">08 優先度設定</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 3 - Phase 2: 機能追加</p>
+  </footer>
+
+  <script>
+    function copyPrompt(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons">check</span> コピーしました';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

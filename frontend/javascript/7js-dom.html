@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第7章: DOM操作 - JavaScript入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-dark: #005A9E;
+      --primary-light: #E8F4FD;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-javascript.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">JavaScript超入門</div>
+      <div class="chapter-number">7</div>
+      <h1 class="chapter-title">DOM操作</h1>
+      <p class="chapter-subtitle">HTMLを自由に書き換える 〜HTMLを自由に操る魔法〜</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">1</span>DOM（ドム）とは？</li>
+        <li class="toc-item"><span class="toc-number">2</span>要素を取得する（探す）</li>
+        <li class="toc-item"><span class="toc-number">3</span>HTMLタグを変更・追加する</li>
+        <li class="toc-item"><span class="toc-number">4</span>スタイルを変える（CSSを操作）</li>
+        <li class="toc-item"><span class="toc-number">5</span>classListを使ってデザイン切り替え</li>
+        <li class="toc-item"><span class="toc-number">6</span>複数要素をまとめて操作する</li>
+        <li class="toc-item"><span class="toc-number">7</span>値の取得（入力フォームなど）</li>
+        <li class="toc-item"><span class="toc-number">8</span>要素を削除する</li>
+        <li class="toc-item"><span class="toc-number">9</span>DOM操作の基本パターンまとめ</li>
+        <li class="toc-item"><span class="toc-number">10</span>練習問題</li>
+      </ul>
+    </nav>
+
+    <!-- Section 1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 1</span>
+        <h2 class="section-title">DOM（ドム）とは？</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>意味：Document Object Model（ドキュメント・オブジェクト・モデル）</strong></p>
+        <p>ちょっと難しそうですが、簡単に言うと…<br><strong>JavaScriptからHTMLを見たり、変えたりできる"地図"のような仕組みです。</strong></p>
+      </div>
+
+      <div class="subsection">
+        <p>JavaScriptがなぜWebページに動きを与えられるのか。それは、Webページの構造であるHTMLをブラウザが読み込んだとき、ブラウザはJavaScriptが読込可能な<strong>documentというオブジェクト</strong>を生成します。そのdocumentオブジェクトの中から、HTMLのタグなどの要素を探して拾い、その要素に直接プログラミングとして、処理を実行しているからです。</p>
+
+        <p>たとえば、こんなHTMLがあったとしましょう。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1 id="title"&gt;DOMの説明&lt;/h1&gt;
+  &lt;ul&gt;
+    &lt;li class="list"&gt;HTMLとは&lt;/li&gt;
+    &lt;li class="list"&gt;JavaScriptとは&lt;/li&gt;
+    &lt;li class="list"&gt;DOMとは&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+        </div>
+
+        <p>このHTMLをブラウザが読み込んだとき、ブラウザは以下のようなdocumentオブジェクトを生成します。</p>
+
+        <div class="highlight-box">
+          <h4>DOMツリー構造</h4>
+          <pre>document
+ └ &lt;html&gt;
+     ├ &lt;head&gt;
+     └ &lt;body&gt;
+          ├ &lt;h1 id="title"&gt;DOMの説明&lt;/h1&gt;
+          └ &lt;ul&gt;
+               ├ &lt;li class="list"&gt;HTMLとは&lt;/li&gt;
+               ├ &lt;li class="list"&gt;JavaScriptとは&lt;/li&gt;
+               └ &lt;li class="list"&gt;DOMとは&lt;/li&gt;</pre>
+        </div>
+
+        <p>JavaScriptはこのdocumentオブジェクトを参照し、その下のbodyなどをツリー構造として把握します。様々なメソッドを介して、このツリーを伝って要素を探索し、いろんな操作をします。</p>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2</span>
+        <h2 class="section-title">要素を取得する（探す）</h2>
+      </div>
+
+      <div class="subsection">
+        <p>このdocumentオブジェクトからJavaScriptがHTMLの要素を探す（取得する）には以下のようなメソッドをします。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>メソッド</th>
+                <th>意味</th>
+                <th>使い方の例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>getElementById()</td>
+                <td>id名で探す</td>
+                <td>document.getElementById("title")</td>
+              </tr>
+              <tr>
+                <td>getElementsByClassName()</td>
+                <td>クラス名で探す（複数）</td>
+                <td>document.getElementsByClassName("item")</td>
+              </tr>
+              <tr>
+                <td>getElementsByTagName()</td>
+                <td>タグ名で探す（複数）</td>
+                <td>document.getElementsByTagName("p")</td>
+              </tr>
+              <tr>
+                <td>querySelector()</td>
+                <td>CSSセレクタで探す（最初1つ）</td>
+                <td>document.querySelector(".item")</td>
+              </tr>
+              <tr>
+                <td>querySelectorAll()</td>
+                <td>CSSセレクタで探す（全部）</td>
+                <td>document.querySelectorAll("p.item")</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">POINT</div>
+          <div class="info-box-content">
+            <p>要素を取得する場合、必ず最初は「document」を指定します。とても長いメソッド名ですが、一語一句覚えなくても大丈夫。IdやClassNameなど、まずは代表的な文言で、何をしたいかを把握していきましょう。</p>
+          </div>
+        </div>
+
+        <p><strong>ファイル：Chapter_7-2 \ index.html</strong></p>
+        <p><strong>例1：idで要素を取得する</strong></p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;DOM操作&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1 id="title"&gt;こんにちは！&lt;/h1&gt;
+
+  &lt;script&gt;
+    let element = document.getElementById("title")
+    console.log(element);
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+        </div>
+
+        <p><strong>コンソール結果：</strong>&lt;h1 id="title"&gt;こんにちは&lt;/h1&gt;</p>
+
+        <p>idで、変数elemnetの中に、h1タグの要素が取得出来ていることがわかります。</p>
+
+        <h4>例2：取得した要素のテキストを変更する</h4>
+        <p>こうして取得した要素に対して、状態を変化させるメソッドを使うことで、JavaScriptはWebページをいろいろ変化させることが可能です。</p>
+        <p><strong>.textContent を使う（タグのテキストを変更する）</strong></p>
+
+        <p>先ほどのコードの下に、以下を書いてみましょう。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">JavaScript</span>
+          </div>
+          <div class="code-content">
+            <pre>element.textContent = "こんばんは";</pre>
+          </div>
+        </div>
+
+        <p><strong>ブラウザ表示結果：</strong>こんばんは</p>
+
+        <p>HTMLタグの中の「テキスト部分」が変わりました。こんなふうに、JavaScriptはHTMLを特定して、その要素を直接変更することができます。</p>
+      </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3</span>
+        <h2 class="section-title">HTMLタグを変更・追加する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>ファイル：Chapter_7-2 \ index.htmlの内容に追記していこう。</strong></p>
+      </div>
+
+      <div class="subsection">
+        <h4>例3：HTMLごと変更（innerHTML）</h4>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;p id="msg"&gt;こんにちは！&lt;/p&gt;
+&lt;script&gt;
+  document.getElementById("msg").innerHTML = "&lt;strong&gt;こんにちは！&lt;/strong&gt; JavaScriptです。";
+&lt;/script&gt;</pre>
+          </div>
+        </div>
+
+        <p><code>innerHTML</code> は、追加したテキストにHTMLタグが含まれていると、HTMLのタグの機能を持った状態で変更できます。</p>
+
+        <div class="info-box">
+          <div class="info-box-title">POINT</div>
+          <div class="info-box-content">
+            <p>.textContentでは、HTMLではなく、単純な文章として解釈されてしまう。</p>
+            <p><code>document.getElementById("msg").textContent = "&lt;strong&gt;こんにちは！&lt;/strong&gt; JavaScriptです。";</code></p>
+            <p><strong>結果：</strong>&lt;strong&gt;こんにちは！&lt;/strong&gt; JavaScriptです。</p>
+          </div>
+        </div>
+
+        <h4>例4：要素を追加する（createElement, appendChild）</h4>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;ul id="list"&gt;&lt;/ul&gt;
+
+&lt;script&gt;
+  let list = document.getElementById("list");
+  let newItem = document.createElement("li");
+  newItem.textContent = "新しい項目";
+  list.appendChild(newItem);
+&lt;/script&gt;</pre>
+          </div>
+        </div>
+
+        <p><strong>ブラウザ表示結果：</strong>・新しい項目</p>
+        <p><strong>HTML結果：</strong></p>
+        <pre>&lt;ul&gt;
+  &lt;li&gt;新しい項目&lt;/li&gt;
+&lt;/ul&gt;</pre>
+
+        <p>index.htmlに記述されていない要素を、JavaScriptでファイルを変更することなく、リアルタイムで要素を作成して追加することができます。</p>
+
+        <ul>
+          <li><code>createElement()</code> → 新しいタグを作る</li>
+          <li><code>appendChild()</code> → 作ったタグを子要素として追加する</li>
+        </ul>
+
+        <div class="highlight-box">
+          <h4>処理の流れ</h4>
+          <ol>
+            <li><code>document.getElementById("list");</code> で、id="list"の要素を取得</li>
+            <li><code>document.createElement("li");</code> で、&lt;li&gt;タグを新規作成（まだ中身のテキストは何もない）して、newItemに入れる</li>
+            <li><code>newItem.textContent = "新しい項目";</code> で、&lt;li&gt;&lt;/li&gt;の間にテキストを挿入（これで&lt;li&gt;新しい項目&lt;/li&gt;の出来上がり）</li>
+            <li><code>list.appendChild(newItem);</code> で、&lt;ul&gt;の直下に&lt;li&gt;新しい項目&lt;/li&gt;を子要素として追加</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4</span>
+        <h2 class="section-title">スタイルを変える（CSSを操作）</h2>
+      </div>
+
+      <div class="subsection">
+        <p>JavaScriptではHTMLだけではなく、取得した要素のCSSを変更することもできます。</p>
+
+        <h4>例5：文字色や背景を変える</h4>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;p id="text"&gt;色が変わるよ！&lt;/p&gt;
+
+&lt;script&gt;
+  let text = document.getElementById("text");
+  text.style.color = "red";
+  text.style.backgroundColor = "yellow";
+&lt;/script&gt;</pre>
+          </div>
+        </div>
+
+        <p><strong>結果：</strong>赤文字＋黄色背景</p>
+
+        <p><code>.style</code>はCSSに変更を加えるメソッド。それ以降のメソッドは、具体的な変更内容を指定するメソッドが続きます。</p>
+
+        <p>※「.style.プロパティ名」のプロパティ名は、 CSS の 「-」部分を キャメルケース に変える必要があります。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>CSS の指定方法</th>
+                <th>JavaScriptの.styleでの指定方法</th>
+                <th>意味</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>background-color</td>
+                <td>backgroundColor</td>
+                <td>背景色を変える</td>
+              </tr>
+              <tr>
+                <td>font-size</td>
+                <td>fontSize</td>
+                <td>文字の大きさを変える</td>
+              </tr>
+              <tr>
+                <td>text-align</td>
+                <td>textAlign</td>
+                <td>文字の配置を変える</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5</span>
+        <h2 class="section-title">classListを使ってデザイン切り替え</h2>
+      </div>
+
+      <div class="subsection">
+        <p>HTMLのクラス（class="●●"）は、重複可能な識別名をタグに付与します。これによって、複数の要素にCSSを当てたり、JavaScriptで一括で要素を操作することができます。</p>
+
+        <p><strong>classList</strong>メソッドは、HTMLタグにクラスを付与したり、外したりできるメソッドです。</p>
+
+        <h4>例6：クリックでクラスを切り替え</h4>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;style&gt;
+  .active {
+    color: white;
+    background: red;
+  }
+&lt;/style&gt;
+
+&lt;button id="btn"&gt;クリックで変化&lt;/button&gt;
+
+&lt;script&gt;
+  let btn = document.getElementById("btn");
+  btn.addEventListener("click", () => {
+    btn.classList.toggle("active");
+  });
+&lt;/script&gt;</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ユーザー操作</th>
+                <th>ブラウザ表示</th>
+                <th>HTMLの中身</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1度目のクリック</td>
+                <td>ボタンが赤くなる</td>
+                <td>&lt;button id="btn" class="active"&gt;</td>
+              </tr>
+              <tr>
+                <td>2度目のクリック</td>
+                <td>ボタンが元の色に戻る</td>
+                <td>&lt;button id="btn"&gt;</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><code>classList.toggle("クラス名")</code><br>要素にイベントが発生するたびに、指定のクラスを付けたり外したりすることが可能<br>※イベントについては第8章でくわしく説明</p>
+      </div>
+    </section>
+
+    <!-- Section 6 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6</span>
+        <h2 class="section-title">複数要素をまとめて操作する</h2>
+      </div>
+
+      <div class="subsection">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;p class="item"&gt;りんご&lt;/p&gt;
+&lt;p class="item"&gt;みかん&lt;/p&gt;
+&lt;p class="item"&gt;ぶどう&lt;/p&gt;
+
+&lt;script&gt;
+  let items = document.querySelectorAll(".item");
+
+  items.forEach((i) => {
+    i.style.color = "blue";
+  });
+&lt;/script&gt;</pre>
+          </div>
+        </div>
+
+        <p><code>document.querySelectorAll()</code> で同じクラスの要素をまとめて取得できます。まとめて取得された各itemクラスには、配列で取得されます。それにforEach()を使用することで、取得した要素すべてに順番に変更を加えることができます。</p>
+
+        <p><strong>結果：</strong>3つの文字がすべて青色になります</p>
+      </div>
+    </section>
+
+    <!-- Section 7 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7</span>
+        <h2 class="section-title">値の取得（入力フォームなど）</h2>
+      </div>
+
+      <div class="subsection">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;input type="text" id="name"&gt;
+&lt;button id="showBtn"&gt;表示&lt;/button&gt;
+&lt;p id="output"&gt;&lt;/p&gt;
+
+&lt;script&gt;
+  document.getElementById("showBtn").addEventListener("click", showName);
+  function showName() {
+    let name = document.getElementById("name").value;
+    document.getElementById("output").textContent = "こんにちは、" + name + "さん！";
+  }
+&lt;/script&gt;</pre>
+          </div>
+        </div>
+
+        <p><code>.value</code>メソッドを使うと、入力フォームなどの入力した値などが取得できます。それをテキストが空っぽのpタグに、JavaScriptで追加する、という挙動になっています。</p>
+
+        <div class="highlight-box">
+          <h4>ちょっとした応用</h4>
+          <p>JavaScriptで関数を作っておくと、クリックイベントに引数として渡すことが出来ます。その結果、クリックイベントの記述が短くスッキリします。</p>
+          <p><code>document.getElementById("showBtn").addEventListener("click", showName);</code><br>この一行でOK！</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 8 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8</span>
+        <h2 class="section-title">要素を削除する</h2>
+      </div>
+
+      <div class="subsection">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;ul id="delList"&gt;
+  &lt;li&gt;消える予定の項目&lt;/li&gt;
+  &lt;li&gt;消える予定の項目&lt;/li&gt;
+  &lt;li&gt;消える予定の項目&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script&gt;
+  let list = document.getElementById("delList");
+  list.remove(); // その要素を削除
+&lt;/script&gt;</pre>
+          </div>
+        </div>
+
+        <p>&lt;ul id="delList"&gt;は消さずに残して、子要素（&lt;li&gt;）だけ消したい場合：</p>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">JavaScript</span>
+          </div>
+          <div class="code-content">
+            <pre>list.innerHTML = "";</pre>
+          </div>
+        </div>
+
+        <p>JavaScriptのコードをコメントアウトしてみて、動きを確認もしてみよう。</p>
+      </div>
+    </section>
+
+    <!-- Section 9 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9</span>
+        <h2 class="section-title">DOM操作の基本パターンまとめ</h2>
+      </div>
+
+      <div class="subsection">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>操作</th>
+                <th>コード</th>
+                <th>説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>要素を取得</td>
+                <td>document.getElementById("id")</td>
+                <td>特定の要素を取る</td>
+              </tr>
+              <tr>
+                <td>テキストを変える</td>
+                <td>.textContent = "文字"</td>
+                <td>テキストを変更</td>
+              </tr>
+              <tr>
+                <td>HTMLを変える</td>
+                <td>.innerHTML = "&lt;b&gt;HTML&lt;/b&gt;"</td>
+                <td>HTMLタグが機能するテキストに変換</td>
+              </tr>
+              <tr>
+                <td>スタイル変更</td>
+                <td>.style.color = "red"</td>
+                <td>CSS変更</td>
+              </tr>
+              <tr>
+                <td>クラス追加削除</td>
+                <td>.classList.add("a"), .remove(), .toggle()</td>
+                <td>クラスの付け外しによるスタイル切替</td>
+              </tr>
+              <tr>
+                <td>新しい要素を作る</td>
+                <td>document.createElement("p")</td>
+                <td>新しいタグを作る</td>
+              </tr>
+              <tr>
+                <td>要素を追加</td>
+                <td>.appendChild(要素)</td>
+                <td>既存タグにテキストや要素を追加</td>
+              </tr>
+              <tr>
+                <td>要素を削除</td>
+                <td>.remove()</td>
+                <td>消す</td>
+              </tr>
+              <tr>
+                <td>値を取得</td>
+                <td>.value</td>
+                <td>入力内容を読む</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 10 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 10</span>
+        <h2 class="section-title">練習問題</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>ファイル：Chapter_7-10 \ index.htmlに書いてみよう</strong></p>
+      </div>
+
+      <div class="subsection">
+        <h4>問1</h4>
+        <p>id="msg" の中身「ここが変わる」を、JavaScriptを使って「JavaScript 最高！」に書き換えよう。</p>
+
+        <h4>問2</h4>
+        <p>ボタンをクリックしたら背景色を「lightblue」に変える。</p>
+
+        <h4>問3</h4>
+        <p>入力欄に名前を入れ、「表示」ボタンで「こんにちは、○○さん！」と表示。</p>
+
+        <h4>問4</h4>
+        <p>リストに新しい &lt;li&gt; 要素を追加する。</p>
+
+        <h4>問5</h4>
+        <p>クリックするたびに文字の色を赤→黒→赤…と切り替える。</p>
+
+        <details class="demo-details">
+          <summary>解答例を見る</summary>
+          <div class="demo-content">
+            <h4>問1</h4>
+            <div class="code-block">
+              <pre>&lt;p id="msg"&gt;ここが変わる&lt;/p&gt;
+&lt;script&gt;
+  document.getElementById("msg").textContent = "JavaScript最高！";
+&lt;/script&gt;</pre>
+              </div>
+            </div>
+
+            <h4>問2</h4>
+            <div class="code-block">
+              <pre>&lt;button id="btn"&gt;色を変える&lt;/button&gt;
+&lt;script&gt;
+  document.getElementById("btn").addEventListener("click", () => {
+    document.body.style.backgroundColor = "lightblue";
+  });
+&lt;/script&gt;</pre>
+              </div>
+            </div>
+
+            <h4>問3</h4>
+            <div class="code-block">
+              <pre>&lt;input id="name"&gt;&lt;button id="showBtn"&gt;表示&lt;/button&gt;&lt;p id="out"&gt;&lt;/p&gt;
+&lt;script&gt;
+  document.getElementById("showBtn").addEventListener("click", show);
+  function show() {
+    let n = document.getElementById("name").value;
+    document.getElementById("out").textContent = "こんにちは、" + n + "さん！";
+  }
+&lt;/script&gt;</pre>
+              </div>
+            </div>
+
+            <h4>問4</h4>
+            <div class="code-block">
+              <pre>&lt;ul id="list"&gt;&lt;/ul&gt;
+&lt;script&gt;
+  let li = document.createElement("li");
+  li.textContent = "新しい項目";
+  document.getElementById("list").appendChild(li);
+&lt;/script&gt;</pre>
+              </div>
+            </div>
+
+            <h4>問5</h4>
+            <div class="code-block">
+              <pre>&lt;p id="txt"&gt;クリックで色変更&lt;/p&gt;
+&lt;script&gt;
+  document.getElementById("txt").addEventListener("click", toggleColor);
+  let red = false;
+  function toggleColor() {
+    red = !red;
+    document.getElementById("txt").style.color = red ? "red" : "black";
+  }
+&lt;/script&gt;</pre>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第7章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>DOM</strong>はHTMLをJavaScriptから操作するための仕組み</li>
+          <li><strong>getElementById()</strong>などで要素を取得</li>
+          <li><strong>textContent</strong>でテキスト変更、<strong>innerHTML</strong>でHTML変更</li>
+          <li><strong>.style</strong>でCSSを動的に変更</li>
+          <li><strong>classList</strong>でクラスの付け外し</li>
+          <li><strong>createElement</strong>と<strong>appendChild</strong>で要素を追加</li>
+          <li><strong>.value</strong>で入力フォームの値を取得</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="6js-arrays.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">配列</div>
+    </a>
+    <a href="8js-events.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">イベント制御</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>JavaScript入門 - 職業訓練校教材</p>
+  </footer>
+
+  <script src="../../shared/demo.js"></script>
+</body>
+</html>

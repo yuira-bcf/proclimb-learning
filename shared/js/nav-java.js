@@ -21,12 +21,12 @@ const navData = {
         { href: "7java-exception.html", num: "7", text: "例外処理" }
     ],
     categories: [
-        { href: "../index.html", text: "ダッシュボード" },
-        { href: "../index.html#frontend", text: "フロントエンド基礎" },
-        { href: "../index.html#backend", text: "バックエンド開発" },
-        { href: "../index.html#ai", text: "AI・自動化" },
-        { href: "../index.html#design", text: "デザイン・UX" },
-        { href: "../index.html#business", text: "ビジネススキル" }
+        { href: "../../index.html", text: "ダッシュボード" },
+        { href: "../../index.html#frontend", text: "フロントエンド基礎" },
+        { href: "../../index.html#backend", text: "バックエンド開発" },
+        { href: "../../index.html#ai", text: "AI・自動化" },
+        { href: "../../index.html#design", text: "デザイン・UX" },
+        { href: "../../index.html#business", text: "ビジネススキル" }
     ]
 };
 
@@ -72,7 +72,7 @@ function generateNavHTML() {
     return `
         <div class="nav-container">
             <a href="${navData.logo.href}" class="nav-logo${logoActive}">
-                <span class="nav-logo-icon" style="background: #34C759; color: white;">${logoIcon}</span>
+                <span class="nav-logo-icon" style="background: #0097A7; color: white;">${logoIcon}</span>
                 <span>${navData.logo.text}</span>
             </a>
             <div class="nav-category-links">

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第7章 APIテストツール - REST API & JSON入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #0097A7;
+        --primary-dark: #00838F;
+        --primary-light: #E0F7FA;
+        --primary-lighter: #B2EBF2;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0;
+        padding: 28px 20px;
+        background: linear-gradient(135deg, #f8fdfe 0%, #e6f7f9 100%);
+        border-radius: 16px;
+        border: 1px solid #b2ebf2;
+      }
+      .visual-diagram-title {
+        text-align: center;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #0097A7;
+        margin-bottom: 20px;
+        letter-spacing: 0.05em;
+      }
+      .tool-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+      @media (max-width: 600px) {
+        .tool-cards { grid-template-columns: 1fr; }
+      }
+      .tool-card {
+        background: white;
+        border: 2px solid #b2ebf2;
+        border-radius: 14px;
+        padding: 20px 14px;
+        text-align: center;
+        transition: border-color 0.2s;
+      }
+      .tool-card:hover { border-color: #0097A7; }
+      .tool-card .tool-icon { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+      .tool-card .tool-name { font-size: 0.85rem; font-weight: 700; color: #0097A7; display: block; }
+      .tool-card .tool-type { font-size: 0.68rem; color: #888; display: block; margin: 4px 0 8px; }
+      .tool-card .tool-desc { font-size: 0.72rem; color: #555; line-height: 1.5; }
+      .tool-card .tool-pros {
+        font-size: 0.68rem;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #e0e0e0;
+        text-align: left;
+        color: #666;
+        line-height: 1.6;
+      }
+      .workflow-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .workflow-box {
+        background: white;
+        border: 2px solid #b2ebf2;
+        border-radius: 12px;
+        padding: 14px 16px;
+        text-align: center;
+        min-width: 100px;
+      }
+      .workflow-box.highlight {
+        background: #0097A7;
+        color: white;
+        border-color: #0097A7;
+      }
+      .workflow-box .wf-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .workflow-box .wf-label { font-size: 0.75rem; font-weight: 700; display: block; }
+      .workflow-arrow { color: #0097A7; font-size: 1.2rem; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-rest-api.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">7</div>
+            <h1 class="chapter-title">APIテストツール</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">7-1</span><span>Postmanの導入と基本操作</span></li>
+                <li class="toc-item"><span class="toc-number">7-2</span><span>Postmanでリクエスト送信</span></li>
+                <li class="toc-item"><span class="toc-number">7-3</span><span>curlコマンド入門</span></li>
+                <li class="toc-item"><span class="toc-number">7-4</span><span>ブラウザ開発者ツール</span></li>
+                <li class="toc-item"><span class="toc-number">7-5</span><span>テスト自動化の概念</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 7-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-1</span>
+                <h2 class="section-title">Postmanの導入と基本操作</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Postmanは、APIの開発・テスト・ドキュメント作成に使われる定番ツールです。GUIでHTTPリクエストを送信でき、コードを書かずにAPIの動作を確認できます。</p>
+            </div>
+
+            <!-- 図解: 3つのAPIテストツール比較 -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">APIテストツール比較</div>
+                <div class="tool-cards">
+                    <div class="tool-card">
+                        <span class="tool-icon">&#128187;</span>
+                        <span class="tool-name">Postman</span>
+                        <span class="tool-type">GUIアプリ</span>
+                        <div class="tool-desc">画面上でクリック操作でAPIをテスト。初心者に最適</div>
+                        <div class="tool-pros">
+                            &#9989; 視覚的で分かりやすい<br>
+                            &#9989; 保存・共有が簡単<br>
+                            &#9989; テスト自動化機能
+                        </div>
+                    </div>
+                    <div class="tool-card">
+                        <span class="tool-icon">&#128421;</span>
+                        <span class="tool-name">curl</span>
+                        <span class="tool-type">コマンドライン</span>
+                        <div class="tool-desc">ターミナルから1行のコマンドでAPI通信。軽量で高速</div>
+                        <div class="tool-pros">
+                            &#9989; どこでも使える<br>
+                            &#9989; スクリプト化が容易<br>
+                            &#9989; CI/CD連携に最適
+                        </div>
+                    </div>
+                    <div class="tool-card">
+                        <span class="tool-icon">&#128295;</span>
+                        <span class="tool-name">DevTools</span>
+                        <span class="tool-type">ブラウザ内蔵</span>
+                        <div class="tool-desc">Networkタブでブラウザの通信をリアルタイム監視</div>
+                        <div class="tool-pros">
+                            &#9989; インストール不要<br>
+                            &#9989; 実際の通信を確認<br>
+                            &#9989; デバッグに最適
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 Postmanの特徴</h3>
+                <div class="content-block">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128187;</div>
+                            <div class="feature-content">
+                                <h4>直感的なGUI</h4>
+                                <p>コードを書かずに、メソッド選択・URL入力・ヘッダー設定・ボディ入力ができます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128193;</div>
+                            <div class="feature-content">
+                                <h4>コレクション管理</h4>
+                                <p>APIリクエストをフォルダ別に整理・保存でき、チームで共有できます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128295;</div>
+                            <div class="feature-content">
+                                <h4>環境変数</h4>
+                                <p>開発環境・本番環境など、環境ごとにURLやトークンを切り替えられます。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>インストール</h4>
+                                <p>公式サイト（postman.com）からデスクトップアプリをダウンロード・インストールします。Web版も利用可能です。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>アカウント作成</h4>
+                                <p>無料アカウントを作成してログインします（Googleアカウントでも可）。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>ワークスペースの作成</h4>
+                                <p>新しいワークスペースを作成し、APIリクエストを管理する準備をします。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 7-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-2</span>
+                <h2 class="section-title">Postmanでリクエスト送信</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Postmanを使って、実際にAPIリクエストを送信してみましょう。JSONPlaceholderを使って各メソッドを試します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 GETリクエストの実行</h3>
+                <div class="content-block">
+                    <div class="step-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>新しいリクエストを作成</h4>
+                                <p>「+」ボタンで新しいタブを開きます。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>メソッドとURLを設定</h4>
+                                <p>メソッドを「GET」に設定し、URLに <code>https://jsonplaceholder.typicode.com/users</code> を入力します。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Sendボタンをクリック</h4>
+                                <p>「Send」をクリックすると、下部にレスポンスが表示されます。ステータスコード（200 OK）、レスポンス時間、サイズも確認できます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 POSTリクエストの実行</h3>
+                <div class="content-block">
+                    <div class="step-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>メソッドを「POST」に変更</h4>
+                                <p>URLに <code>https://jsonplaceholder.typicode.com/posts</code> を入力します。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Headersタブでヘッダーを設定</h4>
+                                <p><code>Content-Type</code> に <code>application/json</code> を設定します。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Bodyタブでデータを入力</h4>
+                                <p>「Body」タブ → 「raw」 → 「JSON」を選択し、送信データを入力します。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Bodyに入力するJSON</span>
+                            <span class="code-lang">JSON</span>
+                        </div>
+                        <pre class="code-content"><code>{
+  "title": "Postmanで作成したテスト記事",
+  "body": "Postmanを使ってPOSTリクエストを送信しました。",
+  "userId": 1
+}</code></pre>
+                    </div>
+                    <p>Sendをクリックすると、201 Createdのレスポンスが返ります。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 7-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-3</span>
+                <h2 class="section-title">curlコマンド入門</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>curlは、コマンドライン（ターミナル）からHTTPリクエストを送信できるツールです。macOSとLinuxにはデフォルトでインストールされています。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 GETリクエスト</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">GETリクエスト</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># ユーザー一覧を取得
+curl https://jsonplaceholder.typicode.com/users
+
+# レスポンスヘッダーも表示（-v: verbose）
+curl -v https://jsonplaceholder.typicode.com/users/1
+
+# 整形して表示（jqコマンドと組み合わせ）
+curl -s https://jsonplaceholder.typicode.com/users/1 | jq .</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 POSTリクエスト</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">POSTリクエスト</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># データを送信して新規作成
+curl -X POST https://jsonplaceholder.typicode.com/posts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "curlで作成",
+    "body": "コマンドラインからAPIを呼び出しました",
+    "userId": 1
+  }'</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.3 よく使うcurlオプション</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>オプション</th>
+                                <th>説明</th>
+                                <th>例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>-X</code></td>
+                                <td>HTTPメソッドを指定</td>
+                                <td><code>-X POST</code>, <code>-X DELETE</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>-H</code></td>
+                                <td>ヘッダーを追加</td>
+                                <td><code>-H "Authorization: Bearer token"</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>-d</code></td>
+                                <td>リクエストボディ（データ）を送信</td>
+                                <td><code>-d '{"key": "value"}'</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>-v</code></td>
+                                <td>詳細出力（ヘッダー含む）</td>
+                                <td><code>-v</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>-s</code></td>
+                                <td>進捗表示を非表示</td>
+                                <td><code>-s</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>-o</code></td>
+                                <td>レスポンスをファイルに保存</td>
+                                <td><code>-o output.json</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">Postmanからcurlへの変換</span>
+                        </div>
+                        <p>Postmanで作成したリクエストは、「Code」ボタンをクリックすることでcurlコマンドに変換できます。CI/CDスクリプトやドキュメント作成に便利です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 7-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-4</span>
+                <h2 class="section-title">ブラウザ開発者ツール</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>ブラウザの開発者ツール（DevTools）は、WebページからのAPI通信をリアルタイムで確認・分析できる強力なツールです。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 Networkタブの活用</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>確認できる内容</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Name</strong></td>
+                                <td>リクエストURL（エンドポイント）</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status</strong></td>
+                                <td>ステータスコード（200, 404, 500など）</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Method</strong></td>
+                                <td>HTTPメソッド（GET, POSTなど）</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Headers</strong></td>
+                                <td>リクエスト・レスポンスのヘッダー情報</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Preview / Response</strong></td>
+                                <td>レスポンスの内容（JSON等）</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Timing</strong></td>
+                                <td>リクエストの所要時間の詳細</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 Consoleタブとの連携</h3>
+                <div class="content-block">
+                    <p>Consoleタブに直接fetchコマンドを入力して、即座にAPIをテストすることもできます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Consoleで直接APIを呼び出す</span>
+                            <span class="code-lang">JavaScript（Console）</span>
+                        </div>
+                        <pre class="code-content"><code>// Consoleタブに貼り付けて実行
+const res = await fetch('https://jsonplaceholder.typicode.com/users/1');
+const data = await res.json();
+console.table(data);  // テーブル形式で表示</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 7-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-5</span>
+                <h2 class="section-title">テスト自動化の概念</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>本格的なAPI開発では、手動テストだけでなく自動テストも重要です。ここでは概念を理解しましょう。</p>
+            </div>
+
+            <!-- 図解: テスト自動化ワークフロー -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">API テスト自動化のワークフロー</div>
+                <div class="workflow-row">
+                    <div class="workflow-box">
+                        <span class="wf-icon">&#128221;</span>
+                        <span class="wf-label">テスト作成</span>
+                    </div>
+                    <span class="workflow-arrow">→</span>
+                    <div class="workflow-box highlight">
+                        <span class="wf-icon">&#9889;</span>
+                        <span class="wf-label">自動実行</span>
+                    </div>
+                    <span class="workflow-arrow">→</span>
+                    <div class="workflow-box">
+                        <span class="wf-icon">&#128200;</span>
+                        <span class="wf-label">結果レポート</span>
+                    </div>
+                    <span class="workflow-arrow">→</span>
+                    <div class="workflow-box">
+                        <span class="wf-icon">&#128640;</span>
+                        <span class="wf-label">デプロイ判定</span>
+                    </div>
+                </div>
+                <p style="text-align:center;font-size:0.7rem;color:#666;margin-top:14px;">コード変更のたびにテストを自動実行 → 問題があればデプロイを中止</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 Postmanのテスト機能</h3>
+                <div class="content-block">
+                    <p>Postmanでは、レスポンスに対するテストスクリプトを書くことができます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Postmanテストスクリプトの例</span>
+                            <span class="code-lang">JavaScript</span>
+                        </div>
+                        <pre class="code-content"><code>// ステータスコードが200であることを確認
+pm.test("ステータスコードが200", function () {
+  pm.response.to.have.status(200);
+});
+
+// レスポンスがJSONであることを確認
+pm.test("レスポンスがJSON", function () {
+  pm.response.to.be.json;
+});
+
+// 特定のフィールドが存在することを確認
+pm.test("nameフィールドが存在する", function () {
+  const data = pm.response.json();
+  pm.expect(data).to.have.property('name');
+});</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 テスト自動化のメリット</h3>
+                <div class="content-block">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#9989;</div>
+                            <div class="feature-content">
+                                <h4>リグレッション防止</h4>
+                                <p>コード変更後に既存の機能が壊れていないかを自動で確認できます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#9889;</div>
+                            <div class="feature-content">
+                                <h4>迅速なフィードバック</h4>
+                                <p>手動テストより圧倒的に速く、開発サイクルを加速します。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128260;</div>
+                            <div class="feature-content">
+                                <h4>CI/CD統合</h4>
+                                <p>デプロイ前にAPIテストを自動実行し、問題があればデプロイを中止できます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">7章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>curlでPOSTリクエストを送信する際、HTTPメソッドを指定するオプションはどれですか？</p>
+                        <ol type="A">
+                            <li><code>-H</code></li>
+                            <li><code>-d</code></li>
+                            <li><code>-X</code></li>
+                            <li><code>-v</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>ブラウザ開発者ツールのNetworkタブで確認できないものはどれですか？</p>
+                        <ol type="A">
+                            <li>ステータスコード</li>
+                            <li>リクエストヘッダー</li>
+                            <li>サーバーのソースコード</li>
+                            <li>レスポンスボディ</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>Postmanの特徴として正しくないものはどれですか？</p>
+                        <ol type="A">
+                            <li>GUIでHTTPリクエストを送信できる</li>
+                            <li>レスポンスに対するテストスクリプトを書ける</li>
+                            <li>データベースを直接操作できる</li>
+                            <li>環境変数でURLやトークンを切り替えられる</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">7章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: C</div>
+                    <div class="answer-content">
+                        <p><code>-X</code>オプションはHTTPメソッドを指定します（例: <code>-X POST</code>, <code>-X DELETE</code>）。<code>-H</code>はヘッダー、<code>-d</code>はデータ送信、<code>-v</code>は詳細出力のオプションです。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: C</div>
+                    <div class="answer-content">
+                        <p>Networkタブではクライアント側で観測できる通信情報（ステータスコード、ヘッダー、レスポンスボディ等）を確認できますが、サーバーの内部ソースコードは確認できません。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: C</div>
+                    <div class="answer-content">
+                        <p>PostmanはHTTPリクエストの送信とレスポンスの確認に特化したツールであり、データベースを直接操作する機能はありません。データベース操作はAPIを通じて間接的に行います。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="6json-practice.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第6章 JSONデータの実践操作</div>
+            </div>
+        </a>
+        <a href="8api-security.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第8章 API認証とセキュリティ</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 3: Webアプリケーションとバックエンドの基礎 - システム開発概論</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #B2EBF2;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-system-dev.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Chapter</div>
+      <div class="chapter-number">3</div>
+      <h1 class="chapter-title">Webアプリケーションとバックエンドの基礎</h1>
+      <p class="chapter-subtitle">HTTP、API、データベース、トランザクションを理解する</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">3-1</span>この章のねらい</li>
+        <li class="toc-item"><span class="toc-number">3-2</span>Webアプリケーションの全体像</li>
+        <li class="toc-item"><span class="toc-number">3-3</span>HTTPの基本</li>
+        <li class="toc-item"><span class="toc-number">3-4</span>HTTPはステートレス：セッションとCookie</li>
+        <li class="toc-item"><span class="toc-number">3-5</span>同期通信と画面遷移型Webアプリ</li>
+        <li class="toc-item"><span class="toc-number">3-6</span>非同期通信とバックグラウンド処理</li>
+        <li class="toc-item"><span class="toc-number">3-7</span>API連携の考え方</li>
+        <li class="toc-item"><span class="toc-number">3-8</span>データベースの基礎：テーブルとレコード</li>
+        <li class="toc-item"><span class="toc-number">3-9</span>CRUDとSQLのイメージ</li>
+        <li class="toc-item"><span class="toc-number">3-10</span>トランザクションとACID</li>
+        <li class="toc-item"><span class="toc-number">3-11</span>同時実行とロックのイメージ</li>
+        <li class="toc-item"><span class="toc-number">3-12</span>性能の基本：レスポンスタイムとスループット</li>
+        <li class="toc-item"><span class="toc-number">3-13</span>スケーラビリティの基本</li>
+        <li class="toc-item"><span class="toc-number">3-14</span>キャッシュの基本的な考え方</li>
+        <li class="toc-item"><span class="toc-number">3-15</span>バックエンド設計・実装時のチェックポイント</li>
+        <li class="toc-item"><span class="toc-number">3-16</span>まとめ</li>
+      </ul>
+    </nav>
+
+    <!-- Section 3-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-1</span>
+        <h2 class="section-title">この章のねらい</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この章では、バックエンド開発の土台となる技術的な基礎知識を扱います。</p>
+        <ul class="custom-list">
+          <li>Webアプリケーションの全体像</li>
+          <li>HTTPというプロトコルの基本</li>
+          <li>同期通信と非同期通信の違い</li>
+          <li>API連携の考え方</li>
+          <li>データベースの基礎（テーブル・レコード・CRUD）</li>
+          <li>トランザクションと同時実行のイメージ</li>
+          <li>性能とスケーラビリティの基礎</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>この章が理解できると</h3>
+        <ul class="custom-list">
+          <li>「ブラウザでボタンを押してから、DBにデータが保存されるまで」の流れ</li>
+          <li>「同期・非同期連携ってなに？」</li>
+          <li>「CRUDって言葉はよく聞くけど、具体的に何を指すの？」</li>
+          <li>「トランザクションってどういう場面で必要？」</li>
+          <li>「性能が悪いとき、どこから疑えばいい？」</li>
+        </ul>
+        <p>といった疑問がクリアになるはずです。</p>
+      </div>
+    </section>
+
+    <!-- Section 3-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-2</span>
+        <h2 class="section-title">Webアプリケーションの全体像</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　クライアント／サーバ／データベース</h3>
+        <p>典型的なWebアプリケーションは、次の3つの要素から構成されます。</p>
+
+        <h4>(1) クライアント</h4>
+        <ul class="custom-list">
+          <li>Webブラウザ（Chrome、Edgeなど）やスマホアプリ</li>
+          <li>HTML/CSS/JavaScriptやアプリの画面で構成されるユーザーの「窓口」</li>
+        </ul>
+
+        <h4>(2) サーバ（アプリケーションサーバ）</h4>
+        <ul class="custom-list">
+          <li>クライアントからのリクエストを受け取り、処理を行うプログラム</li>
+          <li>バックエンドエンジニアが主に扱う領域</li>
+        </ul>
+
+        <h4>(3) データベース（DBサーバ）</h4>
+        <ul class="custom-list">
+          <li>データを永続的に保存するための仕組み</li>
+          <li>顧客情報、注文情報、商品情報などがここに保存される</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>通信の流れ（イメージ）</span>
+          </div>
+          <pre><code>ブラウザ
+　　↓ HTTPリクエスト
+アプリケーションサーバ（バックエンド）
+　　↓ SQL
+データベース</code></pre>
+        </div>
+
+        <p>クライアントとサーバの間は <strong>HTTP</strong> というプロトコルでやりとりし、サーバとDBの間は <strong>SQL</strong> などのデータベース用の言語でやりとりします。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　バックエンドの位置づけ</h3>
+        <p>バックエンドは、この中で</p>
+        <ol class="custom-list">
+          <li>HTTPリクエストを受け取る</li>
+          <li>パラメータを読み取る</li>
+          <li>バリデーションを行う</li>
+          <li>DBに問い合わせたり更新したりする</li>
+          <li>ビジネスルールに沿って処理する</li>
+          <li>HTTPレスポンスとして結果を返す</li>
+        </ol>
+        <p>という、一連の流れを担当します。</p>
+        <p>「ユーザーのクリック → DB更新」という一見シンプルな操作にも、実際には多くの処理とルールが隠れています。それをきちんと設計・実装していくのが、バックエンドエンジニアの仕事です。</p>
+      </div>
+    </section>
+
+    <!-- Section 3-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-3</span>
+        <h2 class="section-title">HTTPの基本</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　プロトコルとしてのHTTP</h3>
+        <p>HTTP（HyperText Transfer Protocol）は、クライアントとサーバが通信するための「約束事（プロトコル）」です。</p>
+        <p>とてもシンプルに言えば、</p>
+        <ul class="custom-list">
+          <li>クライアントが「こういうリクエスト」を送る</li>
+          <li>サーバが「こういうレスポンス」を返す</li>
+        </ul>
+        <p>というフォーマットとルールを決めたものです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　リクエストとレスポンス</h3>
+        <p>HTTP通信は、常に</p>
+        <ul class="custom-list">
+          <li><strong>リクエスト</strong>：クライアント → サーバへの要求</li>
+          <li><strong>レスポンス</strong>：サーバ → クライアントへの返答</li>
+        </ul>
+        <p>のペアで行われます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>3　HTTPリクエストの主な構成</h3>
+        <ul class="custom-list">
+          <li>メソッド（GET, POST, PUT, DELETEなど）</li>
+          <li>URL（どのリソースに対する操作か）</li>
+          <li>ヘッダ（追加情報：認証情報、言語設定など）</li>
+          <li>ボディ（必要に応じて送るデータ本体：JSONやフォームデータなど）</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　HTTPレスポンスの主な構成</h3>
+        <ul class="custom-list">
+          <li>ステータスライン（「200 OK」「404 Not Found」など）</li>
+          <li>ヘッダ（コンテンツタイプ、キャッシュ制御など）</li>
+          <li>ボディ（HTML、JSON、画像データなどの中身）</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>5　HTTPメソッド</h3>
+        <p>代表的なHTTPメソッドと、その役割を簡単にまとめると：</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>メソッド</th>
+                <th>用途</th>
+                <th>例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>GET</strong></td>
+                <td>情報を取得するときに使う</td>
+                <td>商品一覧の取得、ユーザー情報の参照など</td>
+              </tr>
+              <tr>
+                <td><strong>POST</strong></td>
+                <td>新規に何かを作る／処理を依頼するときに使う</td>
+                <td>ユーザー新規登録、注文確定など</td>
+              </tr>
+              <tr>
+                <td><strong>PUT / PATCH</strong></td>
+                <td>既存の情報を更新するときに使う</td>
+                <td>ユーザー情報の更新、設定の変更など</td>
+              </tr>
+              <tr>
+                <td><strong>DELETE</strong></td>
+                <td>情報を削除するときに使う</td>
+                <td>ユーザー削除、注文キャンセルなど</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>バックエンドでは、メソッドの意味とDBのCRUD（Create, Read, Update, Delete）を対応づけて設計することが多いです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>6　ステータスコード</h3>
+        <p>HTTPステータスコードは、「リクエストに対して、サーバがどう処理したか」を表す番号です。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>番号帯</th>
+                <th>意味</th>
+                <th>代表例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>200番台</strong></td>
+                <td>成功</td>
+                <td>200 OK、201 Createdなど</td>
+              </tr>
+              <tr>
+                <td><strong>300番台</strong></td>
+                <td>リダイレクト</td>
+                <td>301 Moved Permanently、302 Foundなど</td>
+              </tr>
+              <tr>
+                <td><strong>400番台</strong></td>
+                <td>クライアントエラー</td>
+                <td>400 Bad Request、401 Unauthorized、403 Forbidden、404 Not Foundなど</td>
+              </tr>
+              <tr>
+                <td><strong>500番台</strong></td>
+                <td>サーバエラー</td>
+                <td>500 Internal Server Error、503 Service Unavailableなど</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>バックエンドエンジニアは、単に「動けば良い」ではなく、状況に応じて適切なステータスコードを返すことが求められます。</p>
+      </div>
+    </section>
+
+    <!-- Section 3-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-4</span>
+        <h2 class="section-title">HTTPはステートレス：セッションとCookie</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　ステートレスとは</h3>
+        <p>HTTPは基本的に「ステートレス」です。これは、1回のリクエストがそれ以前・以後のリクエストと独立しているという意味です。</p>
+        <ul class="custom-list">
+          <li>「さっきログインした人」と「今リクエストを投げてきた人」が同一人物かどうか、HTTPだけでは分かりません。</li>
+          <li>「前の画面で選んだ値」を次のリクエストに自動で引き継ぐ仕組みもありません。</li>
+        </ul>
+        <p>このままではログイン状態の維持やカート機能が作れないため、アプリ側で「状態管理」の仕組みを上に乗せる必要があります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　Cookieとセッション</h3>
+        <p>そこで使われるのが <strong>Cookie</strong> と <strong>セッション</strong> です。</p>
+        <ul class="custom-list">
+          <li>サーバ側が「セッションID」を発行し、Cookieとしてブラウザに保存してもらう</li>
+          <li>ブラウザは次回以降のリクエスト時に、そのCookie（セッションID）を送る</li>
+          <li>サーバ側はセッションストア（メモリやDB）に保存された情報を参照して、「誰のリクエストか」「どんな情報を保持しているか」を判断する</li>
+        </ul>
+        <p>こうして、HTTPの上に「ログイン状態」や「カートの中身」といった継続的な状態を実現します。</p>
+
+        <div class="warning-box">
+          <div class="warning-box-title">セキュリティ上の注意</div>
+          <div class="warning-box-content">
+            <ul class="custom-list">
+              <li>セッションIDを推測されないランダム値にする</li>
+              <li>HTTPSを使って通信中に盗まれないようにする</li>
+              <li>CookieにHttpOnlyやSecureといった属性を付ける</li>
+            </ul>
+            <p>などの工夫が必要になります（セキュリティの章で詳しく扱います）。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-5</span>
+        <h2 class="section-title">同期通信と画面遷移型Webアプリ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　同期通信の基本イメージ</h3>
+        <p>同期通信とは、「リクエストを送り、レスポンスが返ってくるまで待つ」タイプの通信です。Webアプリケーションの基本も同期通信です。</p>
+        <ol class="custom-list">
+          <li>ユーザーがフォームに入力して「送信」ボタンを押す</li>
+          <li>ブラウザがサーバにHTTPリクエストを送る</li>
+          <li>サーバ側で処理（バリデーション、DB更新など）が行われる</li>
+          <li>サーバが結果（HTMLやリダイレクト）を返す</li>
+          <li>ブラウザが画面を描き直す（ページ遷移）</li>
+        </ol>
+        <p>この流れが「画面遷移型Webアプリ」の基本パターンです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　同期通信のメリットと注意点</h3>
+        <h4>メリット</h4>
+        <ul class="custom-list">
+          <li>実装が比較的シンプルで分かりやすい</li>
+          <li>処理の開始と結果の取得が1対1で対応する</li>
+          <li>サーバサイドのログと対応づけやすい</li>
+        </ul>
+
+        <h4>注意点</h4>
+        <ul class="custom-list">
+          <li>処理が重いと、ユーザーはレスポンスを待たされる（画面が固まったように見える）</li>
+          <li>「ボタンを連打される」と同じ処理が連続実行される可能性がある</li>
+          <li>長時間処理には向かない（タイムアウトやブラウザのエラーになりやすい）</li>
+        </ul>
+
+        <p>長時間かかる処理（大量の集計、ファイル変換、大量メール送信など）は、同期通信で直接実行するのではなく、非同期に回した方が良い場合が多いです。</p>
+      </div>
+    </section>
+
+    <!-- Section 3-6 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-6</span>
+        <h2 class="section-title">非同期通信とバックグラウンド処理</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　ブラウザ側の非同期通信（Ajax / Fetch）</h3>
+        <p>JavaScriptを使うと、ブラウザからサーバへ <strong>非同期に通信</strong> を行うことができます。</p>
+        <ul class="custom-list">
+          <li>画面全体はそのままに、必要な部分だけデータを取りに行く</li>
+          <li>ユーザーは画面を操作し続けながら、裏で通信できる</li>
+        </ul>
+        <p>このような通信は、古くから「Ajax」と呼ばれてきました。最近はfetch APIなどで実装するのが一般的です。</p>
+
+        <p><strong>例：</strong></p>
+        <ul class="custom-list">
+          <li>文字を打つたびに検索候補が出てくるオートコンプリート</li>
+          <li>ページ下部までスクロールしたときに、追加のデータを読み込む「無限スクロール」</li>
+          <li>「いいね」ボタンなど、押した瞬間に数字だけが更新されるUI</li>
+        </ul>
+
+        <p>バックエンドから見ると、「HTMLではなくJSONを返すAPI」として使われることが多くなります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　サーバ側の非同期処理（ジョブキュー・メッセージング）</h3>
+        <p>バックエンド側の非同期処理も重要です。代表的な例は次のようなものです。</p>
+        <ul class="custom-list">
+          <li>ユーザー操作をトリガーに、メール送信ジョブをキューに登録し、別のプロセスで順次送信する</li>
+          <li>注文が入ったら、在庫集計や売上集計をバッチジョブとして夜間に処理する</li>
+          <li>外部システムとの連携（API呼び出し）をメッセージキュー経由で非同期に行う</li>
+        </ul>
+
+        <p>同期通信との使い分けの考え方は、</p>
+        <ul class="custom-list">
+          <li>ユーザーがすぐに結果を見たい処理 → 同期</li>
+          <li>裏で実行しておけばよい処理 → 非同期</li>
+        </ul>
+        <p>です。ただし、非同期にした場合、「処理が完了したかどうか」をどうユーザーに伝えるか（ステータス画面、通知メールなど）も設計する必要があります。</p>
+      </div>
+    </section>
+
+    <!-- Section 3-7 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-7</span>
+        <h2 class="section-title">API連携の考え方</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　APIとは何か</h3>
+        <p>API（Application Programming Interface）は、「プログラム同士が会話するための窓口」です。</p>
+        <p>人間は画面やボタン、フォームを通じてシステムとやりとりしますが、システム同士はAPIを通じてデータをやり取りします。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　REST風APIの基本イメージ</h3>
+        <p>Webでよく使われるスタイルに「REST風API」があります。厳密な定義はさておき、基本的なイメージは次のようなものです。</p>
+
+        <h4>リソース（対象となるもの）をURLで表現する</h4>
+        <p>例：<code>/users</code>（ユーザー）、<code>/orders</code>（注文）など</p>
+
+        <h4>HTTPメソッドと組み合わせて操作を表現する</h4>
+        <ul class="custom-list">
+          <li><code>GET /users</code> : ユーザー一覧を取得する</li>
+          <li><code>GET /users/123</code> : ID=123のユーザー情報を取得する</li>
+          <li><code>POST /users</code> : 新しいユーザーを作成する</li>
+          <li><code>PUT /users/123</code> : ID=123のユーザー情報を更新する</li>
+          <li><code>DELETE /users/123</code> : ID=123のユーザーを削除する</li>
+        </ul>
+
+        <h4>データはJSON形式などで送受信することが多い</h4>
+      </div>
+
+      <div class="subsection">
+        <h3>3　API設計のポイント</h3>
+        <p>バックエンドエンジニアがAPIを設計するときは、次のような点を意識します。</p>
+        <ul class="custom-list">
+          <li>名前やURLが分かりやすいか（意味が推測できるか）</li>
+          <li>パラメータは必要最低限か、無理な詰め込みをしていないか</li>
+          <li>エラー時のレスポンス形式が一貫しているか</li>
+          <li>認証・認可（トークン、APIキー、セッションなど）をどう行うか</li>
+          <li>将来の拡張やバージョンアップをどう考えるか（<code>/v1/</code>など）</li>
+        </ul>
+
+        <div class="info-box">
+          <div class="info-box-title">重要なポイント</div>
+          <div class="info-box-content">
+            <p>APIは、フロントエンドや外部システムとの「契約書」のようなものです。一度公開すると簡単には変えられないので、設計段階でよく検討する必要があります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3-8 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-8</span>
+        <h2 class="section-title">データベースの基礎：テーブルとレコード</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>ここからは、バックエンド開発で欠かせない「データベース」の話に入ります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>1　RDBとテーブル</h3>
+        <p>RDB（リレーショナルデータベース）は、表（テーブル）同士の関係を使ってデータを管理するタイプのDBです。</p>
+        <ul class="custom-list">
+          <li><strong>テーブル</strong>：表。例：usersテーブル、ordersテーブルなど</li>
+          <li><strong>カラム（列）</strong>：属性。例：ユーザー名、メールアドレス、作成日など</li>
+          <li><strong>レコード（行）</strong>：1件分のデータ。例：「山田太郎さんの情報一式」</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>2　主キーと外部キー</h3>
+        <h4>主キー（Primary Key）</h4>
+        <p>各レコードを一意に識別するためのカラム。例：user_id、order_id、product_idなど。値が重複しないように制約をかけるのが普通です。</p>
+
+        <h4>外部キー（Foreign Key）</h4>
+        <p>別のテーブルの主キーを参照するカラム。例：ordersテーブルのuser_idがusersテーブルのuser_idを参照する</p>
+
+        <p>主キーと外部キーを通じて、「ユーザーと注文」「注文と明細」のような関係を表現します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>3　ER図のイメージ</h3>
+        <p>ER図（Entity-Relationship図）は、テーブル同士の関係を図で表したものです。</p>
+        <ul class="custom-list">
+          <li>エンティティ（四角）＝ テーブル</li>
+          <li>リレーションシップ（線）＝ 関係（1対多、多対多など）</li>
+        </ul>
+        <p>例えば、</p>
+        <ul class="custom-list">
+          <li>1人のユーザーが、複数の注文を持てる → 1対多</li>
+          <li>1つの注文が、複数の明細を持てる → 1対多</li>
+        </ul>
+        <p>といった関係をER図にまとめておくと、後の実装時に「どこからどのデータを取ってくるか」が見通しやすくなります。</p>
+      </div>
+    </section>
+
+    <!-- Section 3-9 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-9</span>
+        <h2 class="section-title">CRUDとSQLのイメージ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　CRUDとは</h3>
+        <p>CRUDとは、データ操作の基本パターンを表す略語です。</p>
+        <ul class="custom-list">
+          <li><strong>C</strong>：Create（作成）</li>
+          <li><strong>R</strong>：Read（参照）</li>
+          <li><strong>U</strong>：Update（更新）</li>
+          <li><strong>D</strong>：Delete（削除）</li>
+        </ul>
+
+        <p>Webシステムの多くの画面やAPIは、このCRUDの組み合わせで構成されています。</p>
+        <ul class="custom-list">
+          <li>「登録画面」 → Create</li>
+          <li>「一覧画面」 → Read</li>
+          <li>「編集画面」 → Read + Update</li>
+          <li>「削除ボタン」 → Delete</li>
+        </ul>
+        <p>というように捉えると、機能を整理しやすくなります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　SQLのざっくりとしたイメージ</h3>
+        <p>SQL（Structured Query Language）は、RDBを操作するための言語です。代表的な4種類の文は、CRUDと対応しています。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>SQL文</th>
+                <th>CRUD</th>
+                <th>用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>SELECT</code></td>
+                <td>Read</td>
+                <td>データの取得・参照</td>
+              </tr>
+              <tr>
+                <td><code>INSERT</code></td>
+                <td>Create</td>
+                <td>データの新規登録</td>
+              </tr>
+              <tr>
+                <td><code>UPDATE</code></td>
+                <td>Update</td>
+                <td>データの更新</td>
+              </tr>
+              <tr>
+                <td><code>DELETE</code></td>
+                <td>Delete</td>
+                <td>データの削除</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>ここで具体的な文法を細かく覚える必要はありませんが、バックエンドエンジニアとしては、</p>
+        <ul class="custom-list">
+          <li>「どのテーブルから」</li>
+          <li>「どんな条件で」</li>
+          <li>「どんなカラムを取り出すか／更新するか」</li>
+        </ul>
+        <p>を意識してSQLを使えるようになる必要があります。</p>
+      </div>
+    </section>
+
+    <!-- Section 3-10 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-10</span>
+        <h2 class="section-title">トランザクションとACID</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　トランザクションとは</h3>
+        <p>トランザクションとは、「一連の処理をひとまとめにして、全部成功するか、全部なかったことにするか」を保証する仕組みです。</p>
+
+        <p>典型的な例は銀行振込です。</p>
+        <ol class="custom-list">
+          <li>Aさんの口座残高から1万円を引く</li>
+          <li>Bさんの口座残高に1万円を足す</li>
+        </ol>
+        <p>この途中で障害が起き、「1だけ成功して2が実行されない」ようなことがあってはいけません。そこで、1と2を1つのトランザクションにまとめ、どちらかが失敗したら全体を取り消す（ロールバック）ようにします。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　ACID特性（簡略）</h3>
+        <p>トランザクションには、有名な「ACID特性」があります。</p>
+        <ul class="custom-list">
+          <li><strong>A：Atomicity（原子性）</strong>：「全部成功か全部失敗か」のどちらかしかない</li>
+          <li><strong>C：Consistency（一貫性）</strong>：トランザクションの前後で、DBのルール（制約）が守られている</li>
+          <li><strong>I：Isolation（独立性）</strong>：複数のトランザクションが同時に実行されても、お互いに悪影響を与えないように見える</li>
+          <li><strong>D：Durability（永続性）</strong>：コミットした結果は、障害が起きても失われない</li>
+        </ul>
+        <p>現段階では、「大事な処理はトランザクションでまとめる」「途中で失敗したらロールバックする」という感覚を持てていればOKです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>3　1リクエスト＝1トランザクションという考え方</h3>
+        <p>Webアプリケーションでは、「1回のHTTPリクエストの処理を1トランザクションとする」設計がよく使われます。</p>
+        <ul class="custom-list">
+          <li>画面の「登録」ボタンを押した → バリデーションがOK → 何テーブルか更新 → コミット → 正常終了</li>
+          <li>途中で例外が発生 → ロールバック → エラー画面を返す</li>
+        </ul>
+        <p>こうしておけば、「登録処理が途中の中途半端な状態でDBに残ってしまう」という事態を避けられます。</p>
+      </div>
+    </section>
+
+    <!-- Section 3-11 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-11</span>
+        <h2 class="section-title">同時実行とロックのイメージ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　同時更新の問題</h3>
+        <p>Webシステムでは、多くのユーザーが同時に利用します。例えば、同じ注文データを複数の担当者が同時に編集しようとすると、次のような問題が起きる可能性があります。</p>
+        <ul class="custom-list">
+          <li>Aさん：金額を5,000円に修正 → ちょうど同じタイミングで</li>
+          <li>Bさん：ステータスを「出荷済」に変更 → 両方が同じレコードを更新</li>
+        </ul>
+        <p>処理順序によっては、一方の変更が上書きされて消えてしまうかもしれません。こうした問題を防ぐために、DBは「ロック」という仕組みで同時更新を制御します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　ロックのイメージ</h3>
+        <p>ざっくりイメージすると、</p>
+        <ul class="custom-list">
+          <li>誰かがあるレコードを更新する処理を始めたら、そのレコードに鍵をかける</li>
+          <li>他の人が同じレコードを更新しようとしても、鍵が開くまで待たされる（またはエラーになる）</li>
+          <li>処理が終わってコミット／ロールバックしたら鍵が外れる</li>
+        </ul>
+        <p>という動きです。</p>
+
+        <div class="warning-box">
+          <div class="warning-box-title">注意点</div>
+          <div class="warning-box-content">
+            <p>ロックの範囲やタイミングを適切に設計しないと、逆に性能が下がったり、デッドロック（お互いが相手のロックを待って止まる状態）が発生したりします。</p>
+            <p>現段階では、「同時実行やロックがある」という感覚を持っておく程度で構いませんが、現場に出たときには必ずぶつかるテーマです。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3-12 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-12</span>
+        <h2 class="section-title">性能の基本：レスポンスタイムとスループット</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　性能指標のイメージ</h3>
+        <p>システムの性能を考えるとき、よく出てくる言葉が</p>
+        <ul class="custom-list">
+          <li><strong>レスポンスタイム</strong>：1つのリクエストに対して返答が返ってくるまでの時間</li>
+          <li><strong>スループット</strong>：単位時間あたりに処理できるリクエスト数</li>
+        </ul>
+        <p>です。例えば、</p>
+        <ul class="custom-list">
+          <li>レスポンスタイム平均 0.5秒、ピーク時最大 2秒以内</li>
+          <li>1秒あたり 100リクエストを捌ける</li>
+        </ul>
+        <p>といった形で性能要件が定められることがあります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　どこが遅くなる要因か</h3>
+        <p>レスポンスタイムが遅くなる要因はさまざまですが、よくあるのは次のようなものです。</p>
+        <ul class="custom-list">
+          <li>DBアクセス（重いSQL、インデックスなし、N+1問題など）</li>
+          <li>ネットワーク（外部APIとの連携が遅い）</li>
+          <li>サーバのCPU・メモリリソース不足</li>
+          <li>ファイルI/O（大きなファイルの読み書き）</li>
+        </ul>
+        <p>バックエンドエンジニアは、「この処理はどこで時間がかかっているのか」を推測／計測し、改善していく役割も担うことがあります。</p>
+      </div>
+    </section>
+
+    <!-- Section 3-13 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-13</span>
+        <h2 class="section-title">スケーラビリティの基本：スケールアップとスケールアウト</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　スケーラビリティとは</h3>
+        <p>スケーラビリティとは、「負荷が増えたときに、システムの処理能力をどれだけ柔軟に増やせるか」を指します。ユーザー数やデータ量が増えても、少しパワーを足してやれば性能を維持できるような設計が望ましいわけです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　スケールアップとスケールアウト</h3>
+        <p>性能を上げる方法は大きく2つに分かれます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>方式</th>
+                <th>内容</th>
+                <th>特徴</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>スケールアップ</strong></td>
+                <td>1台のサーバをより高性能なものにする（CPU、メモリ、ストレージを増強）</td>
+                <td>分かりやすく管理も比較的簡単だが、限界がある</td>
+              </tr>
+              <tr>
+                <td><strong>スケールアウト</strong></td>
+                <td>サーバ台数を増やして負荷を分散する（ロードバランサを使って振り分ける）</td>
+                <td>設計が少し複雑になるが、より大きな負荷に耐えやすい</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>3　ステートレス設計の重要性</h3>
+        <p>スケールアウトを行いやすくするためには、「アプリケーションサーバをステートレスに近づける」ことが重要です。</p>
+        <ul class="custom-list">
+          <li>セッション情報をサーバのローカルメモリに持たず、共有ストレージや専用のセッションストアに置く</li>
+          <li>ファイルをローカルに保存せず、オブジェクトストレージなど外部に置く</li>
+          <li>特定のサーバに依存した処理を減らす</li>
+        </ul>
+        <p>こうすることで、「サーバを1台から2台、3台と増やしても、どのサーバに当たっても同じように動く」状態を作りやすくなります。</p>
+      </div>
+    </section>
+
+    <!-- Section 3-14 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-14</span>
+        <h2 class="section-title">キャッシュの基本的な考え方</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>性能・スケーラビリティの文脈でよく出てくるのが <strong>キャッシュ</strong> です。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>1　キャッシュとは</h3>
+        <p>キャッシュとは、「よく使うデータを手元に保存しておき、毎回遅い処理をしなくて済むようにする」仕組みです。</p>
+        <p><strong>例：</strong></p>
+        <ul class="custom-list">
+          <li>商品一覧の結果をメモリに一時保存し、次のユーザーにはそこから返す</li>
+          <li>設定情報など、あまり変わらないデータをキャッシュしておく</li>
+          <li>画像やCSSなど静的ファイルにキャッシュヘッダを付けて、ブラウザやCDNに保存させる</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>2　キャッシュの注意点</h3>
+        <p>キャッシュは便利な反面、「更新との整合性」が難しくなります。</p>
+        <ul class="custom-list">
+          <li>データが更新されたらキャッシュをどうするか</li>
+          <li>「多少古くてもいい」データと「必ず最新でなければいけない」データを区別する</li>
+          <li>キャッシュの有効期限（TTL）をどう設定するか</li>
+        </ul>
+
+        <div class="warning-box">
+          <div class="warning-box-title">注意</div>
+          <div class="warning-box-content">
+            <p>キャッシュは、ほんの少し設計を間違えると「表示は変わっていないのに、DBは更新されている」といった状況を生みがちなので、慎重に使う必要があります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3-15 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-15</span>
+        <h2 class="section-title">バックエンド設計・実装時のチェックポイント</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この章で扱った内容を踏まえて、バックエンドエンジニアが設計・実装の際に意識したいポイントをまとめておきます。</p>
+      </div>
+
+      <div class="subsection">
+        <h4>HTTPリクエスト／レスポンスの構造を理解しているか</h4>
+        <ul class="custom-list">
+          <li>メソッド・URL・ヘッダ・ボディ</li>
+          <li>ステータスコードの使い分け</li>
+        </ul>
+
+        <h4>セッション管理とCookieの仕組みを理解しているか</h4>
+        <ul class="custom-list">
+          <li>ログイン状態の扱い</li>
+          <li>セッションIDの安全な取り扱い</li>
+        </ul>
+
+        <h4>同期／非同期連携の使い分けを考えているか</h4>
+        <ul class="custom-list">
+          <li>ユーザーが待つべき処理、待つべきでない処理</li>
+          <li>バックグラウンドジョブやバッチ処理の活用</li>
+        </ul>
+
+        <h4>データベース構造を意識しているか</h4>
+        <ul class="custom-list">
+          <li>テーブル・レコード・カラム・主キー・外部キー</li>
+          <li>CRUDの観点で画面やAPIを設計しているか</li>
+        </ul>
+
+        <h4>トランザクションを適切な単位でまとめているか</h4>
+        <ul class="custom-list">
+          <li>「中途半端な状態」が残らないように設計されているか</li>
+        </ul>
+
+        <h4>性能とスケーラビリティを意識しているか</h4>
+        <ul class="custom-list">
+          <li>どの部分がボトルネックになりそうか</li>
+          <li>スケールアップ／スケールアウトを見据えた設計か</li>
+          <li>キャッシュが使える部分はないか</li>
+        </ul>
+
+        <p>こうしたポイントを、最初は「なんとなく意識する」程度で構いません。実際にコードを書いたり、簡単なWebアプリを作ったりしながら、少しずつ体感と結びつけていくのが大切です。</p>
+      </div>
+    </section>
+
+    <!-- Section 3-16 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-16</span>
+        <h2 class="section-title">まとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul class="custom-list">
+          <li>Webアプリケーションは、クライアント（ブラウザ／アプリ）、サーバ（バックエンド）、データベースから構成される。</li>
+          <li>HTTPはリクエストとレスポンスのプロトコルであり、メソッド（GET/POST...）やステータスコード（200/404/500...）の使い分けが重要である。</li>
+          <li>HTTPはステートレスなので、ログイン状態などの「継続的な状態」はCookieとセッションで管理する。</li>
+          <li>同期通信は「リクエスト→レスポンスを待つ」方式、非同期通信は「裏で処理しつつ、ユーザーは別の操作を続けられる」方式であり、使い分けが必要である。</li>
+          <li>APIはシステム間・フロントとバックエンドの「会話の窓口」であり、REST風の設計がよく使われる。</li>
+          <li>RDBでは、テーブル・カラム・レコード・主キー・外部キーを理解し、CRUD（Create/Read/Update/Delete）を意識して設計する。</li>
+          <li>トランザクションは「一連の処理を全部成功か全部失敗か」にする仕組みであり、1リクエスト＝1トランザクションという考え方がよく使われる。</li>
+          <li>性能・スケーラビリティの観点から、レスポンスタイム・スループット・スケールアップ／スケールアウト・キャッシュなどの概念を押さえておくことが大事である。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ページナビゲーション -->
+    <nav class="page-nav">
+      <a href="2sd-requirements.html" class="page-nav-link prev">
+        <span class="page-nav-label">前の章</span>
+        <span class="page-nav-title">システム開発プロセスと要件定義・非機能要件</span>
+      </a>
+      <a href="4sd-waterfall-agile.html" class="page-nav-link next">
+        <span class="page-nav-label">次の章</span>
+        <span class="page-nav-title">開発手法：ウォーターフォールとアジャイル</span>
+      </a>
+    </nav>
+  </div>
+
+  <footer class="footer">
+    <p>システム開発概論 - 職業訓練校教材</p>
+  </footer>
+
+  <script src="../../shared/demo.js"></script>
+</body>
+</html>

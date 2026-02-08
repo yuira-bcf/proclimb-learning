@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>機能03: ステータス管理 - WEB総合制作演習 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../../shared/common.css">
+  <style>
+    :root {
+      --primary: #AF52DE;
+      --primary-dark: #9333EA;
+      --primary-light: #FAF5FF;
+      --primary-lighter: #E9D5FF;
+    }
+    .nav-category-links { display: none; }
+    .level-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-left: 12px; }
+    .level-beginner { background: #dcfce7; color: #166534; }
+    .level-intermediate { background: #fef9c3; color: #854d0e; }
+    .level-advanced { background: #ffedd5; color: #9a3412; }
+    .level-expert { background: #fee2e2; color: #991b1b; }
+    .prompt-card { background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .prompt-box { background: rgba(0,0,0,0.3); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; }
+    .copy-btn { background: white; color: #4285F4; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #f0f0f0; }
+    /* 図解コンテナ */
+    .diagram-container { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+    .diagram-container h4 { margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: white; }
+    /* コード解説 */
+    .code-explanation { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 20px; margin: 16px 0; }
+    .code-explanation h4 { margin: 0 0 16px 0; color: #92400e; display: flex; align-items: center; gap: 8px; }
+    .code-explanation ul { margin: 0; padding-left: 20px; color: #78350f; }
+    .code-explanation li { margin-bottom: 8px; line-height: 1.6; }
+    /* コードブロック（spring/style.css準拠） */
+    .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .code-dots { display: flex; gap: 6px; }
+    .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .code-dot.red { background: #ff5f56; }
+    .code-dot.yellow { background: #ffbd2e; }
+    .code-dot.green { background: #27ca40; }
+    .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .code-content { padding: 16px; overflow-x: auto; }
+    .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+    .code-keyword { color: #c084fc; }
+    .code-class { color: #67e8f9; }
+    .code-string { color: #86efac; }
+    .code-comment { color: #94a3b8; }
+    .code-annotation { color: #fbbf24; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../../shared/js/nav-exercises-3.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">機能</div>
+      <div class="chapter-number">03</div>
+      <h1 class="chapter-title">ステータス管理<span class="level-badge level-beginner">初級</span></h1>
+      <p class="chapter-subtitle">未着手・進行中・完了の3つの状態を管理</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この機能の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">03-1</span>工程概要</li>
+        <li class="toc-item"><span class="toc-number">03-2</span>成果物</li>
+        <li class="toc-item"><span class="toc-number">03-3</span>生成プロンプト</li>
+      </ul>
+    </nav>
+
+    <!-- Section 03-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 03-1</span>
+        <h2 class="section-title">工程概要</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>Java Enumを使用して<strong>未着手・進行中・完了</strong>の3つの状態を管理し、タスクの進捗を可視化します。</p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: var(--primary); color: white;">学習テーマ</div>
+          <p>Enum活用</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #007AFF; color: white;">主な技術</div>
+          <p>Java Enum / Thymeleaf</p>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label" style="background: #34C759; color: white;">関連レイヤー</div>
+          <p>Entity / View</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>この機能で行うこと</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: var(--primary);">
+              <span class="material-icons" style="color: white;">code</span>
+            </div>
+            <div class="feature-content">
+              <h4>Enum作成</h4>
+              <p>TodoStatus列挙型の定義（NOT_STARTED, IN_PROGRESS, COMPLETED）</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">data_object</span>
+            </div>
+            <div class="feature-content">
+              <h4>Entity修正</h4>
+              <p>completedフィールドからstatusフィールドへ変更</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">badge</span>
+            </div>
+            <div class="feature-content">
+              <h4>ステータス表示</h4>
+              <p>色分けしたバッジで状態を視覚的に表示</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">filter_alt</span>
+            </div>
+            <div class="feature-content">
+              <h4>フィルタ機能</h4>
+              <p>ステータス別の絞り込み表示を実装</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 03-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 03-2</span>
+        <h2 class="section-title">成果物</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この機能で作成・更新するファイルの一覧です。</p>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ファイル</th>
+              <th>変更内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>TodoStatus.java</code></td>
+              <td>ステータス列挙型（新規作成）</td>
+            </tr>
+            <tr>
+              <td><code>Todo.java</code></td>
+              <td>statusフィールドに変更</td>
+            </tr>
+            <tr>
+              <td><code>schema.sql</code></td>
+              <td>statusカラム追加</td>
+            </tr>
+            <tr>
+              <td><code>list.html</code></td>
+              <td>ステータスバッジ表示</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <h4>ステータス定義</h4>
+        <ul>
+          <li><strong>NOT_STARTED</strong> ("未着手") - グレーバッジ</li>
+          <li><strong>IN_PROGRESS</strong> ("進行中") - 青バッジ</li>
+          <li><strong>COMPLETED</strong> ("完了") - 緑バッジ</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 03-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 03-3</span>
+        <h2 class="section-title">生成プロンプト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、実装コードを生成できます。</p>
+      </div>
+
+      <!-- サンプルソースコード -->
+      <div class="subsection">
+        <h3>サンプルソースコード</h3>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">TodoStatus.java</span>
+          </div>
+          <div class="code-content">
+<pre><span class="code-keyword">public enum</span> <span class="code-class">TodoStatus</span> {
+    <span class="code-annotation">NOT_STARTED</span>(<span class="code-string">"未着手"</span>),
+    <span class="code-annotation">IN_PROGRESS</span>(<span class="code-string">"進行中"</span>),
+    <span class="code-annotation">COMPLETED</span>(<span class="code-string">"完了"</span>);
+
+    <span class="code-keyword">private final</span> String displayName;
+
+    <span class="code-class">TodoStatus</span>(String displayName) {
+        <span class="code-keyword">this</span>.displayName = displayName;
+    }
+
+    <span class="code-keyword">public</span> String <span class="code-class">getDisplayName</span>() {
+        <span class="code-keyword">return</span> displayName;
+    }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots">
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-title">Todo.java（Entity）</span>
+          </div>
+          <div class="code-content">
+<pre><span class="code-annotation">@Entity</span>
+<span class="code-keyword">public class</span> <span class="code-class">Todo</span> {
+    <span class="code-annotation">@Id</span>
+    <span class="code-annotation">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="code-keyword">private</span> Long id;
+
+    <span class="code-keyword">private</span> String title;
+
+    <span class="code-annotation">@Enumerated</span>(EnumType.STRING)
+    <span class="code-keyword">private</span> <span class="code-class">TodoStatus</span> status = TodoStatus.NOT_STARTED;
+
+    <span class="code-comment">// getter/setter省略</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- コード解説 -->
+      <div class="code-explanation">
+        <h4><span class="material-icons" style="color: #92400e;">menu_book</span> コード解説</h4>
+        <ul>
+          <li><strong>enum TodoStatus</strong>: Javaの列挙型で、定義された値のみを持つことを保証します</li>
+          <li><strong>displayName</strong>: 各ステータスに紐づく日本語表示名（ユーザー向け）</li>
+          <li><strong>@Enumerated(EnumType.STRING)</strong>: データベースに文字列として保存（NOT_STARTED等）</li>
+          <li><strong>デフォルト値</strong>: TodoStatus.NOT_STARTEDを初期値に設定</li>
+        </ul>
+      </div>
+
+      <!-- 図解 -->
+      <div class="diagram-container">
+        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: white;">
+          <span class="material-icons" style="color: white;">psychology</span> ステータス遷移の流れ
+        </h4>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+          <div style="background: rgba(255,255,255,0.2); padding: 16px 24px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 1.5rem; margin-bottom: 8px;">📝</div>
+            <div style="font-weight: 600;">NOT_STARTED</div>
+            <div style="font-size: 0.85rem; opacity: 0.9;">未着手</div>
+          </div>
+          <div style="font-size: 1.5rem;">→</div>
+          <div style="background: rgba(255,255,255,0.2); padding: 16px 24px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 1.5rem; margin-bottom: 8px;">🔄</div>
+            <div style="font-weight: 600;">IN_PROGRESS</div>
+            <div style="font-size: 0.85rem; opacity: 0.9;">進行中</div>
+          </div>
+          <div style="font-size: 1.5rem;">→</div>
+          <div style="background: rgba(255,255,255,0.2); padding: 16px 24px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 1.5rem; margin-bottom: 8px;">✅</div>
+            <div style="font-weight: 600;">COMPLETED</div>
+            <div style="font-size: 0.85rem; opacity: 0.9;">完了</div>
+          </div>
+        </div>
+        <div style="margin-top: 20px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+          <div style="font-size: 0.9rem; text-align: center;">
+            <strong>Enumの利点:</strong> 型安全性を確保し、不正な値の設定を防止
+          </div>
+        </div>
+      </div>
+
+      <div class="prompt-card">
+        <h4><span class="material-icons">auto_awesome</span> AIプロンプト</h4>
+        <div class="prompt-box">
+          <pre id="prompt-03">あなたはJavaプログラマーです。
+
+ToDoアプリにステータス管理機能を実装してください。
+
+【現状】
+- completed (Boolean) で完了/未完了を管理
+
+【変更後】
+- status (TodoStatus) で3段階の状態を管理
+
+【ステータス定義】
+1. NOT_STARTED (未着手) - デフォルト値
+2. IN_PROGRESS (進行中)
+3. COMPLETED (完了)
+
+【実装内容】
+1. TodoStatus.java（Enum）
+   - 各ステータスに表示名（日本語）を持たせる
+   - getDisplayName()メソッドを実装
+
+2. Todo.java
+   - completedフィールドをstatusフィールドに変更
+   - 型をTodoStatusに変更
+
+3. schema.sql
+   - statusカラム（VARCHAR）に変更
+
+4. TodoMapper.xml
+   - ステータスの永続化設定
+
+5. list.html
+   - ステータスをバッジで表示（色分け）
+   - 未着手: グレー、進行中: 青、完了: 緑
+   - ステータスで絞り込むドロップダウン追加
+
+6. form.html
+   - ステータス選択のラジオボタンまたはドロップダウン
+
+【要件】
+- MyBatisでEnumを扱うためのTypeHandler設定も含める
+- 一覧画面でステータスのフィルタリングができること
+
+必要なコードの変更点を提示してください。</pre>
+        </div>
+        <button class="copy-btn" onclick="copyPrompt('prompt-03')">
+          <span class="material-icons">content_copy</span> コピー
+        </button>
+      </div>
+
+      <div class="info-box success">
+        <div class="info-box-title"><span class="material-icons">lightbulb</span> ポイント</div>
+        <div class="info-box-content">
+          <p>MyBatisでEnumを扱う場合、EnumTypeHandlerを使用するか、文字列として保存する方法があります。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="02_validation.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前の機能</div>
+      <div class="page-nav-title">02 バリデーション</div>
+    </a>
+    <a href="04_search.html" class="page-nav-btn next">
+      <div class="page-nav-label">次の機能</div>
+      <div class="page-nav-title">04 検索機能</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 3 - Phase 2: 機能追加</p>
+  </footer>
+
+  <script>
+    function copyPrompt(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons">check</span> コピーしました';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

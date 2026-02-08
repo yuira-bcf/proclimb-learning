@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>実行結果サンプル - 第14章 チャットUIの実装</title>
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-hover: #005A9E;
+      --text: #1D1D1F;
+      --text-sub: #6E6E73;
+      --border: #D2D2D7;
+      --bg: #F5F5F7;
+      --white: #FFFFFF;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    .page-header {
+      background: linear-gradient(135deg, var(--primary), #5856D6);
+      color: white; border-radius: 16px; padding: 40px 32px;
+      margin-bottom: 32px; text-align: center;
+      box-shadow: 0 4px 16px rgba(0,122,204,0.3);
+    }
+    .page-header h1 { font-size: 24px; margin-bottom: 8px; }
+    .page-header p { opacity: 0.9; font-size: 14px; }
+    .card {
+      background: var(--white); border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 32px; margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 18px; font-weight: 700; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 2px solid var(--primary);
+    }
+    .card-description { font-size: 14px; color: var(--text-sub); margin-bottom: 20px; }
+
+    /* ========== LINE風チャット ========== */
+    .chat {
+      max-width: 420px; margin: 0 auto;
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column;
+      height: 520px;
+    }
+    .chat__header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px; background: var(--primary); color: white;
+    }
+    .chat__avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .chat__name { font-weight: 700; font-size: 15px; }
+    .chat__status {
+      font-size: 12px; opacity: 0.85;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .chat__status-dot {
+      width: 7px; height: 7px; background: #34C759;
+      border-radius: 50%;
+    }
+    .chat__messages {
+      flex: 1; padding: 16px; background: #e8e8e8;
+      overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+    }
+    .chat__date {
+      text-align: center; font-size: 11px; color: #999;
+      background: rgba(0,0,0,0.06); padding: 3px 12px;
+      border-radius: 12px; align-self: center;
+    }
+
+    /* メッセージバブル */
+    .msg { max-width: 80%; display: flex; flex-direction: column; }
+    .msg--received { align-self: flex-start; }
+    .msg--sent { align-self: flex-end; }
+    .msg__bubble {
+      padding: 10px 14px; border-radius: 18px;
+      font-size: 14px; line-height: 1.5;
+    }
+    .msg--received .msg__bubble {
+      background: white; border-bottom-left-radius: 4px;
+    }
+    .msg--sent .msg__bubble {
+      background: var(--primary); color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .msg__time {
+      font-size: 10px; color: #999; margin-top: 3px;
+      padding: 0 4px;
+    }
+    .msg--sent .msg__time { text-align: right; }
+    .msg__read { color: var(--primary); font-weight: 600; }
+
+    /* タイピングインジケーター */
+    .typing {
+      align-self: flex-start; background: white;
+      padding: 12px 18px; border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      display: flex; gap: 4px; align-items: center;
+    }
+    .typing__dot {
+      width: 6px; height: 6px; background: #999;
+      border-radius: 50%; animation: typingAnim 1.4s infinite;
+    }
+    .typing__dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing__dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingAnim {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* 入力エリア */
+    .chat__input {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 14px; background: white;
+      border-top: 1px solid #ddd;
+    }
+    .chat__input-field {
+      flex: 1; padding: 10px 14px; border: 1px solid var(--border);
+      border-radius: 20px; font-size: 14px; font-family: inherit;
+      outline: none;
+    }
+    .chat__input-field:focus { border-color: var(--primary); }
+    .chat__input-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--primary); color: white; border: none;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; font-size: 16px; flex-shrink: 0;
+    }
+    .chat__input-btn:hover { background: var(--primary-hover); }
+    .chat__input-icon {
+      width: 36px; height: 36px; display: flex;
+      align-items: center; justify-content: center;
+      border: none; background: transparent;
+      color: var(--text-sub); cursor: pointer; font-size: 18px;
+    }
+
+    /* ========== AI チャット ========== */
+    .ai-chat {
+      max-width: 600px; margin: 0 auto;
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column;
+      height: 560px;
+    }
+    .ai-chat__header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+    .ai-chat__avatar {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .ai-chat__title { font-weight: 700; font-size: 15px; }
+
+    .ai-chat__messages {
+      flex: 1; padding: 20px; background: #fafafa;
+      overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
+    }
+    .ai-msg {
+      display: flex; gap: 12px;
+    }
+    .ai-msg--user { flex-direction: row-reverse; }
+    .ai-msg__avatar {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .ai-msg--user .ai-msg__avatar {
+      background: var(--primary); color: white;
+    }
+    .ai-msg:not(.ai-msg--user) .ai-msg__avatar {
+      background: linear-gradient(135deg, #667eea, #764ba2); color: white;
+    }
+    .ai-msg__content {
+      max-width: 80%; padding: 14px 18px;
+      border-radius: 12px; font-size: 14px; line-height: 1.7;
+    }
+    .ai-msg--user .ai-msg__content {
+      background: var(--primary); color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .ai-msg:not(.ai-msg--user) .ai-msg__content {
+      background: white; border: 1px solid #e5e5e5;
+      border-bottom-left-radius: 4px;
+    }
+    .ai-msg__content p { margin-bottom: 8px; }
+    .ai-msg__content p:last-child { margin-bottom: 0; }
+    .ai-msg__content strong { font-weight: 700; }
+
+    /* コードブロック */
+    .ai-code {
+      background: #2d2d2d; color: #f8f8f2;
+      padding: 12px 16px; border-radius: 8px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px; line-height: 1.5;
+      margin: 8px 0; overflow-x: auto;
+      position: relative;
+    }
+    .ai-code__copy {
+      position: absolute; top: 6px; right: 6px;
+      background: rgba(255,255,255,0.1); color: #ccc;
+      border: none; border-radius: 4px; padding: 3px 8px;
+      font-size: 11px; cursor: pointer;
+    }
+    .ai-code__copy:hover { background: rgba(255,255,255,0.2); }
+
+    .ai-chat__input {
+      display: flex; align-items: flex-end; gap: 10px;
+      padding: 14px 18px; background: white;
+      border-top: 1px solid #eee;
+    }
+    .ai-chat__textarea {
+      flex: 1; padding: 10px 14px; border: 1px solid var(--border);
+      border-radius: 12px; font-size: 14px; font-family: inherit;
+      resize: none; min-height: 44px; max-height: 120px;
+      outline: none; line-height: 1.5;
+    }
+    .ai-chat__textarea:focus { border-color: var(--primary); }
+    .ai-chat__send {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--primary); color: white; border: none;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; font-size: 18px; flex-shrink: 0;
+    }
+    .ai-chat__send:hover { background: var(--primary-hover); }
+
+    .chats-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    }
+
+    @media (max-width: 767px) {
+      .chats-grid { grid-template-columns: 1fr; }
+      .chat, .ai-chat { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1>第14章 チャットUIの実装</h1>
+      <p>プロンプトUIコーディング - 実行結果サンプル</p>
+    </div>
+
+    <!-- LINE風チャットUI -->
+    <div class="card">
+      <div class="card-title">基本チャットUI（LINE風）</div>
+      <p class="card-description">メッセージバブル・タイムスタンプ・タイピングインジケーター・既読表示</p>
+
+      <div class="chat">
+        <div class="chat__header">
+          <div class="chat__avatar">&#128100;</div>
+          <div>
+            <div class="chat__name">田中 太郎</div>
+            <div class="chat__status">
+              <span class="chat__status-dot"></span>
+              オンライン
+            </div>
+          </div>
+        </div>
+
+        <div class="chat__messages">
+          <div class="chat__date">2026年2月8日</div>
+
+          <div class="msg msg--received">
+            <div class="msg__bubble">お疲れ様です！今日の会議の資料、共有いただけますか？</div>
+            <div class="msg__time">14:30</div>
+          </div>
+
+          <div class="msg msg--sent">
+            <div class="msg__bubble">もちろんです！今から送りますね。</div>
+            <div class="msg__time"><span class="msg__read">既読</span> 14:32</div>
+          </div>
+
+          <div class="msg msg--received">
+            <div class="msg__bubble">ありがとうございます！午後の打ち合わせまでに確認しておきます。</div>
+            <div class="msg__time">14:33</div>
+          </div>
+
+          <div class="msg msg--sent">
+            <div class="msg__bubble">資料をメールで送信しました。ご確認ください。何か不明点があればお気軽にどうぞ！</div>
+            <div class="msg__time"><span class="msg__read">既読</span> 14:35</div>
+          </div>
+
+          <div class="typing">
+            <span class="typing__dot"></span>
+            <span class="typing__dot"></span>
+            <span class="typing__dot"></span>
+          </div>
+        </div>
+
+        <div class="chat__input">
+          <button class="chat__input-icon">&#128206;</button>
+          <input class="chat__input-field" type="text" placeholder="メッセージを入力...">
+          <button class="chat__input-icon">&#128522;</button>
+          <button class="chat__input-btn">&#10148;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI チャットUI -->
+    <div class="card">
+      <div class="card-title">AIチャットUI（ChatGPT風）</div>
+      <p class="card-description">Markdown対応・コードハイライト・コピーボタン・ストリーミング表示</p>
+
+      <div class="ai-chat">
+        <div class="ai-chat__header">
+          <div class="ai-chat__avatar">&#129302;</div>
+          <div class="ai-chat__title">AI Assistant</div>
+        </div>
+
+        <div class="ai-chat__messages">
+          <div class="ai-msg ai-msg--user">
+            <div class="ai-msg__avatar">&#128100;</div>
+            <div class="ai-msg__content">
+              JavaScriptで配列の重複を削除する方法を教えてください。
+            </div>
+          </div>
+
+          <div class="ai-msg">
+            <div class="ai-msg__avatar">&#129302;</div>
+            <div class="ai-msg__content">
+              <p>JavaScriptで配列の重複を削除するには、<strong>Set</strong>を使う方法が最もシンプルです。</p>
+              <div class="ai-code">
+                <button class="ai-code__copy">Copy</button>
+<span style="color:#569cd6;">const</span> arr = [<span style="color:#b5cea8;">1</span>, <span style="color:#b5cea8;">2</span>, <span style="color:#b5cea8;">2</span>, <span style="color:#b5cea8;">3</span>, <span style="color:#b5cea8;">3</span>, <span style="color:#b5cea8;">4</span>];
+<span style="color:#569cd6;">const</span> unique = [...<span style="color:#569cd6;">new</span> <span style="color:#4ec9b0;">Set</span>(arr)];
+<span style="color:#6a9955;">// [1, 2, 3, 4]</span></div>
+              <p><strong>Set</strong>は重複を自動的に排除するデータ構造です。スプレッド構文 <code style="background:#f0f0f0; padding:1px 6px; border-radius:3px;">...</code> で配列に変換しています。</p>
+              <p>他にも <strong>filter</strong> を使う方法があります：</p>
+              <div class="ai-code">
+                <button class="ai-code__copy">Copy</button>
+<span style="color:#569cd6;">const</span> unique2 = arr.<span style="color:#dcdcaa;">filter</span>((<span style="color:#9cdcfe;">item</span>, <span style="color:#9cdcfe;">index</span>) =>
+  arr.<span style="color:#dcdcaa;">indexOf</span>(item) === index
+);</div>
+            </div>
+          </div>
+
+          <div class="ai-msg ai-msg--user">
+            <div class="ai-msg__avatar">&#128100;</div>
+            <div class="ai-msg__content">
+              パフォーマンスの違いはありますか？
+            </div>
+          </div>
+
+          <div class="ai-msg">
+            <div class="ai-msg__avatar">&#129302;</div>
+            <div class="ai-msg__content">
+              <p>はい、大きな違いがあります。</p>
+              <p><strong>Set</strong>: O(n) - 要素数に比例した高速な処理<br>
+              <strong>filter + indexOf</strong>: O(n&sup2;) - 要素数の2乗に比例</p>
+              <p>大きな配列では <strong>Set</strong> の使用を推奨します。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-chat__input">
+          <textarea class="ai-chat__textarea" rows="1" placeholder="メッセージを入力... (Shift+Enterで改行)"></textarea>
+          <button class="ai-chat__send">&#10148;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

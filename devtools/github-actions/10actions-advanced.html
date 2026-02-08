@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第10章 カスタムアクションとセキュリティ - GitHub Actions入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #F5A623;
+        --primary-dark: #D4891D;
+        --primary-light: #FEF7E8;
+        --primary-lighter: #FDE4A8;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef7e8 0%, #fef7e8 100%);
+        border-radius: 16px; border: 1px solid #fde4a8;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F5A623; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F5A623; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(245,166,35,0.08);
+      }
+      .vd-box.accent { background: #F5A623; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F5A623; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fef7e8; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F5A623; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-github-actions.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">10</div>
+            <h1 class="chapter-title">カスタムアクションとセキュリティ</h1>
+            <p class="chapter-lead">再利用可能なカスタムアクション（Composite Action）やReusable Workflowsの作成方法、そしてワークフローのセキュリティベストプラクティスを学びます。最後に、学んだ全てを統合したフルCI/CDパイプラインを構築しましょう。</p>
+        </header>
+
+        <!-- セクション1: Composite Action -->
+        <section class="section" id="composite-action">
+            <h2><span class="material-icons">widgets</span> Composite Action</h2>
+
+            <p>Composite Action（複合アクション）は、複数のステップを1つの再利用可能なアクションとしてまとめる仕組みです。よく使うステップの組み合わせをアクションとして共有できます。</p>
+
+            <h3>action.yml の構造</h3>
+            <pre><code># .github/actions/setup-and-build/action.yml
+name: 'Setup and Build'
+description: 'Node.jsのセットアップ、依存関係インストール、ビルドを行うアクション'
+
+inputs:
+  node-version:
+    description: 'Node.jsのバージョン'
+    required: false
+    default: '20'
+  build-command:
+    description: 'ビルドコマンド'
+    required: false
+    default: 'npm run build'
+
+outputs:
+  build-path:
+    description: 'ビルド出力ディレクトリ'
+    value: ${{ steps.build.outputs.path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+
+    - name: Build
+      id: build
+      shell: bash
+      run: |
+        ${{ inputs.build-command }}
+        echo "path=dist" >> $GITHUB_OUTPUT</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">Composite Action の構成要素</div>
+                <div class="vd-grid">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#x1F4E5;</span>
+                        <span class="vd-label">inputs</span>
+                        <span class="vd-sub">アクションへの入力パラメータ<br>required / default 設定可能</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#x1F4E4;</span>
+                        <span class="vd-label">outputs</span>
+                        <span class="vd-sub">アクションからの出力値<br>呼び出し元で参照可能</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#x2699;</span>
+                        <span class="vd-label">runs.steps</span>
+                        <span class="vd-sub">実行するステップの定義<br>shell の明示が必須</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">&#x1F3F7;</span>
+                        <span class="vd-label">using: composite</span>
+                        <span class="vd-sub">Composite Action の識別子<br>action.yml に必須</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Composite Action の使用例</h3>
+            <pre><code># ワークフローからの呼び出し
+name: CI
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ローカルのComposite Actionを使用
+      - name: Setup and Build
+        id: setup-build
+        uses: ./.github/actions/setup-and-build
+        with:
+          node-version: '20'
+          build-command: 'npm run build:prod'
+
+      - name: Deploy
+        run: |
+          echo "Build output: ${{ steps.setup-build.outputs.build-path }}"</code></pre>
+
+            <h3>実践的なComposite Action の例</h3>
+
+            <h4>Slack通知アクション</h4>
+            <pre><code># .github/actions/slack-notify/action.yml
+name: 'Slack Notification'
+description: 'ワークフロー結果をSlackに通知する'
+
+inputs:
+  webhook-url:
+    description: 'Slack Webhook URL'
+    required: true
+  status:
+    description: 'ジョブのステータス (success/failure)'
+    required: true
+  message:
+    description: '追加メッセージ'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Send notification
+      shell: bash
+      run: |
+        if [ "${{ inputs.status }}" = "success" ]; then
+          COLOR="#36a64f"
+          EMOJI=":white_check_mark:"
+        else
+          COLOR="#dc3545"
+          EMOJI=":x:"
+        fi
+
+        curl -X POST "${{ inputs.webhook-url }}" \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"attachments\": [{
+              \"color\": \"${COLOR}\",
+              \"title\": \"${EMOJI} ${{ github.repository }} - ${{ github.workflow }}\",
+              \"text\": \"Status: ${{ inputs.status }}\n${{ inputs.message }}\",
+              \"fields\": [
+                {\"title\": \"Branch\", \"value\": \"${{ github.ref_name }}\", \"short\": true},
+                {\"title\": \"Actor\", \"value\": \"${{ github.actor }}\", \"short\": true}
+              ]
+            }]
+          }"</code></pre>
+
+            <div class="tip">
+                <span class="material-icons">lightbulb</span>
+                <strong>重要:</strong> Composite Action の各 <code>run:</code> ステップには必ず <code>shell: bash</code>（または <code>shell: pwsh</code>）を明示的に指定する必要があります。通常のワークフローステップとは異なり、デフォルトシェルが設定されていません。
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習1: Composite Action の作成
+                </div>
+                <div class="exercise-body">
+                    <p>以下の機能を持つComposite Actionを作成してください。</p>
+                    <ol>
+                        <li>アクション名: <code>lint-and-test</code></li>
+                        <li>入力: <code>node-version</code>（デフォルト: 20）、<code>test-command</code>（デフォルト: npm test）</li>
+                        <li>ステップ: Node.jsセットアップ → npm ci → ESLint実行 → テスト実行</li>
+                        <li>出力: テスト結果のステータス（success/failure）</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション2: Reusable Workflows -->
+        <section class="section" id="reusable-workflows">
+            <h2><span class="material-icons">share</span> Reusable Workflows</h2>
+
+            <p>Reusable Workflows（再利用可能ワークフロー）は、ワークフロー全体を他のワークフローから呼び出せる仕組みです。組織全体でCI/CDパイプラインを標準化する際に特に有効です。</p>
+
+            <h3>Composite Action と Reusable Workflow の違い</h3>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">Composite Action vs Reusable Workflow</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="vd-card blue" style="text-align: left; padding: 20px;">
+                        <span class="vd-icon" style="text-align: center;">&#x1F9E9;</span>
+                        <span class="vd-label" style="text-align: center; font-size: 0.9rem; margin-bottom: 12px;">Composite Action</span>
+                        <ul style="font-size: 0.75rem; color: #333; margin: 0; padding-left: 16px;">
+                            <li>ステップレベルの再利用</li>
+                            <li>1つのジョブ内で実行</li>
+                            <li>action.yml で定義</li>
+                            <li>ローカル/リポジトリから参照</li>
+                            <li>シークレットに直接アクセス不可</li>
+                        </ul>
+                    </div>
+                    <div class="vd-card green" style="text-align: left; padding: 20px;">
+                        <span class="vd-icon" style="text-align: center;">&#x1F504;</span>
+                        <span class="vd-label" style="text-align: center; font-size: 0.9rem; margin-bottom: 12px;">Reusable Workflow</span>
+                        <ul style="font-size: 0.75rem; color: #333; margin: 0; padding-left: 16px;">
+                            <li>ワークフローレベルの再利用</li>
+                            <li>独立したジョブとして実行</li>
+                            <li>.yml ワークフローファイルで定義</li>
+                            <li>リポジトリから参照</li>
+                            <li>シークレットの受け渡しが可能</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Reusable Workflow の定義</h3>
+            <pre><code># .github/workflows/reusable-ci.yml
+name: Reusable CI Pipeline
+
+on:
+  workflow_call:    # 他のワークフローから呼び出し可能にする
+    inputs:
+      node-version:
+        description: 'Node.js version'
+        required: false
+        type: string
+        default: '20'
+      run-e2e:
+        description: 'E2Eテストを実行するか'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      npm-token:
+        description: 'NPM authentication token'
+        required: false
+    outputs:
+      coverage:
+        description: 'テストカバレッジの値'
+        value: ${{ jobs.test.outputs.coverage }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    outputs:
+      coverage: ${{ steps.cov.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Run tests with coverage
+        run: npm test -- --coverage --ci
+      - name: Extract coverage
+        id: cov
+        run: |
+          COV=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+          echo "value=$COV" >> $GITHUB_OUTPUT
+
+  e2e:
+    if: inputs.run-e2e
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npx cypress run</code></pre>
+
+            <h3>Reusable Workflow の呼び出し</h3>
+            <pre><code># .github/workflows/ci.yml
+name: CI
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/reusable-ci.yml
+    with:
+      node-version: '20'
+      run-e2e: true
+    secrets:
+      npm-token: ${{ secrets.NPM_TOKEN }}
+
+  report:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coverage report
+        run: echo "Coverage: ${{ needs.ci.outputs.coverage }}%"</code></pre>
+
+            <h3>別のリポジトリのワークフローを呼び出す</h3>
+            <pre><code># 組織の共有リポジトリから呼び出し
+jobs:
+  ci:
+    uses: my-org/shared-workflows/.github/workflows/node-ci.yml@main
+    with:
+      node-version: '20'
+    secrets: inherit    # 全シークレットを継承</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">組織全体でのワークフロー共有</div>
+                <div class="vd-flow">
+                    <div class="vd-box accent" style="min-width: 200px;">
+                        <span class="vd-icon">&#x1F3E2;</span>
+                        <span class="vd-label">shared-workflows リポジトリ</span>
+                        <span class="vd-sub">Reusable Workflow の定義</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="vd-box" style="min-width: 160px;">
+                            <span class="vd-icon">&#x1F4C1;</span>
+                            <span class="vd-label">Project A</span>
+                            <span class="vd-sub">uses: org/shared/...@main</span>
+                        </div>
+                        <div class="vd-box" style="min-width: 160px;">
+                            <span class="vd-icon">&#x1F4C1;</span>
+                            <span class="vd-label">Project B</span>
+                            <span class="vd-sub">uses: org/shared/...@main</span>
+                        </div>
+                        <div class="vd-box" style="min-width: 160px;">
+                            <span class="vd-icon">&#x1F4C1;</span>
+                            <span class="vd-label">Project C</span>
+                            <span class="vd-sub">uses: org/shared/...@main</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習2: Reusable Workflow の作成
+                </div>
+                <div class="exercise-body">
+                    <p>以下の機能を持つReusable Workflowを作成してください。</p>
+                    <ol>
+                        <li>入力: <code>python-version</code>（デフォルト: 3.12）、<code>test-path</code>（デフォルト: tests/）</li>
+                        <li>シークレット: <code>codecov-token</code>（任意）</li>
+                        <li>ジョブ: lint（flake8） → test（pytest + coverage）</li>
+                        <li>出力: テストカバレッジの値</li>
+                        <li>このReusable Workflowを呼び出すワークフローも作成してください</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション3: セキュリティベストプラクティス -->
+        <section class="section" id="security">
+            <h2><span class="material-icons">security</span> セキュリティベストプラクティス</h2>
+
+            <p>GitHub Actionsのワークフローはコードを実行するため、セキュリティへの配慮が不可欠です。ここでは、ワークフローを安全に運用するための重要なプラクティスを学びます。</p>
+
+            <h3>1. 最小権限の原則</h3>
+            <p>GITHUB_TOKENの権限は、必要最小限に設定しましょう。</p>
+
+            <pre><code># ワークフローレベルで全権限を無効化
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # ジョブレベルで必要な権限のみ付与
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm test
+
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/deploy-pages@v4</code></pre>
+
+            <h3>2. アクションのピン留め（SHA指定）</h3>
+            <p>サードパーティのアクションは、タグ名ではなく<strong>コミットSHA</strong>で指定します。タグは上書き可能なため、悪意のあるコードが注入されるリスクがあります。</p>
+
+            <pre><code># 悪い例: タグ指定（上書き可能）
+- uses: actions/checkout@v4
+
+# 良い例: SHA指定（不変）
+- uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+
+# Dependabotが自動的にSHAを更新してくれる</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">セキュリティリスクとその対策</div>
+                <div class="vd-grid">
+                    <div class="vd-card red">
+                        <span class="vd-icon">&#x26A0;</span>
+                        <span class="vd-label">スクリプトインジェクション</span>
+                        <span class="vd-sub">PR タイトルやコミットメッセージに<br>悪意のあるコードを埋め込む攻撃</span>
+                    </div>
+                    <div class="vd-card red">
+                        <span class="vd-icon">&#x1F510;</span>
+                        <span class="vd-label">シークレットの漏洩</span>
+                        <span class="vd-sub">ログ出力やfork PRからの<br>シークレットアクセス</span>
+                    </div>
+                    <div class="vd-card red">
+                        <span class="vd-icon">&#x1F4E6;</span>
+                        <span class="vd-label">サプライチェーン攻撃</span>
+                        <span class="vd-sub">サードパーティアクションへの<br>悪意あるコード注入</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#x1F6E1;</span>
+                        <span class="vd-label">対策: 中間環境変数</span>
+                        <span class="vd-sub">ユーザー入力を env 経由で<br>安全に利用する</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#x1F512;</span>
+                        <span class="vd-label">対策: 最小権限</span>
+                        <span class="vd-sub">permissions を厳格に設定<br>fork PRのシークレット制限</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#x1F4CC;</span>
+                        <span class="vd-label">対策: SHA ピン留め</span>
+                        <span class="vd-sub">アクションをコミットSHAで<br>固定して参照する</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>3. スクリプトインジェクション対策</h3>
+            <pre><code># 危険な例: ユーザー入力を直接式に埋め込む
+- name: Greet PR author
+  run: echo "Hello ${{ github.event.pull_request.title }}"
+  # PRタイトルに "; rm -rf /" が含まれると危険！
+
+# 安全な例: 中間環境変数を使用
+- name: Greet PR author
+  env:
+    PR_TITLE: ${{ github.event.pull_request.title }}
+  run: echo "Hello $PR_TITLE"
+  # 環境変数として渡すことでインジェクションを防止</code></pre>
+
+            <h3>4. サードパーティアクションの監査</h3>
+            <ul>
+                <li>使用前にアクションのソースコードを確認する</li>
+                <li>信頼できる発行者（GitHub公式、Verified Creator）のアクションを優先する</li>
+                <li>アクションの更新は <code>Dependabot</code> で自動管理する</li>
+                <li>アクションの<code>permissions</code>要求を確認する</li>
+            </ul>
+
+            <h3>5. Fork からのPR への対応</h3>
+            <pre><code># Fork PRではシークレットにアクセスできないことに注意
+on:
+  pull_request_target:    # Fork PRでもシークレットにアクセス可能（注意して使用）
+    types: [opened, synchronize]
+
+jobs:
+  # Fork PRの場合は信頼できるコードのみ実行
+  safe-check:
+    runs-on: ubuntu-latest
+    # Fork PRのコードをチェックアウトしない（安全）
+    steps:
+      - name: Check PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // PR の内容をAPIで確認のみ</code></pre>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習3: セキュリティ監査
+                </div>
+                <div class="exercise-body">
+                    <p>以下のワークフローのセキュリティ問題を特定し、修正してください。</p>
+                    <pre><code>name: Insecure Workflow
+on: pull_request
+
+permissions: write-all
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: some-unknown-org/risky-action@main
+      - name: Show PR info
+        run: |
+          echo "Title: ${{ github.event.pull_request.title }}"
+          echo "Body: ${{ github.event.pull_request.body }}"
+      - name: Deploy
+        run: |
+          echo "${{ secrets.DEPLOY_KEY }}" > key.pem
+          scp -i key.pem dist/* server:/app/</code></pre>
+                    <p><strong>ヒント:</strong> 少なくとも5つのセキュリティ問題があります。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション4: Dependabot連携 -->
+        <section class="section" id="dependabot">
+            <h2><span class="material-icons">smart_toy</span> Dependabot 連携</h2>
+
+            <p>Dependabotは、依存関係やGitHub Actionsのバージョンを自動的に更新するPRを作成するGitHubの組み込みツールです。セキュリティパッチの適用漏れを防ぎます。</p>
+
+            <h3>dependabot.yml の設定</h3>
+            <pre><code># .github/dependabot.yml
+version: 2
+updates:
+  # GitHub Actions のアクションを自動更新
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    # PRにラベルを付与
+    labels:
+      - "dependencies"
+      - "github-actions"
+    # レビュアーを自動設定
+    reviewers:
+      - "team-leads"
+    # PRの最大同時オープン数
+    open-pull-requests-limit: 10
+    # コミットメッセージのプレフィックス
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # npm パッケージの自動更新
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "npm"
+    # バージョン更新の対象
+    versioning-strategy: increase
+    # 特定パッケージの無視
+    ignore:
+      - dependency-name: "aws-sdk"
+        update-types: ["version-update:semver-major"]
+
+  # Docker イメージの自動更新
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # pip パッケージの自動更新
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"</code></pre>
+
+            <h3>Dependabot PRの自動マージ</h3>
+            <pre><code># .github/workflows/dependabot-auto-merge.yml
+name: Dependabot Auto-Merge
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # パッチとマイナーバージョンのみ自動マージ
+      - name: Auto-merge minor and patch updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">Dependabot 自動更新フロー</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#x1F50D;</span>
+                        <span class="vd-label">依存関係スキャン</span>
+                        <span class="vd-sub">定期的にチェック</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #FF9800;">
+                        <span class="vd-icon">&#x1F4DD;</span>
+                        <span class="vd-label">PR自動作成</span>
+                        <span class="vd-sub">更新内容を説明</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #4CAF50;">
+                        <span class="vd-icon">&#x2705;</span>
+                        <span class="vd-label">CI実行</span>
+                        <span class="vd-sub">テスト通過を確認</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#x1F500;</span>
+                        <span class="vd-label">自動マージ</span>
+                        <span class="vd-sub">patch/minor のみ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip">
+                <span class="material-icons">lightbulb</span>
+                <strong>ポイント:</strong> メジャーバージョンの更新は破壊的変更を含む可能性があるため、自動マージせず手動レビューすることを推奨します。パッチ・マイナー更新のみ自動マージするのが安全です。
+            </div>
+        </section>
+
+        <!-- セクション5: 総合演習 -->
+        <section class="section" id="comprehensive">
+            <h2><span class="material-icons">emoji_events</span> 総合演習: フルCI/CDパイプライン</h2>
+
+            <p>これまで学んだ全ての知識を統合し、実践的なフルCI/CDパイプラインを構築しましょう。Lint、テスト、ビルド、デプロイの全てを含む本格的なワークフローです。</p>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">フルCI/CDパイプラインの全体像</div>
+                <div class="vd-bar">
+                    <div class="vd-bar-seg" style="background: #43A047;">Lint</div>
+                    <div class="vd-bar-seg" style="background: #D4891D;">Unit Test</div>
+                    <div class="vd-bar-seg" style="background: #7B1FA2;">Coverage</div>
+                    <div class="vd-bar-seg" style="background: #F57C00;">Build</div>
+                    <div class="vd-bar-seg" style="background: #C62828;">Docker</div>
+                    <div class="vd-bar-seg" style="background: #00838F;">Deploy</div>
+                </div>
+            </div>
+
+            <h3>完全なCI/CDパイプライン</h3>
+            <pre><code>name: Full CI/CD Pipeline
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [main]
+
+# 最小権限の原則
+permissions: {}
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ====================================
+  # Stage 1: コード品質チェック
+  # ====================================
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: ESLint
+        run: npx eslint . --ext .ts,.tsx
+
+      - name: Prettier
+        run: npx prettier --check "src/**/*.{ts,tsx}"
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+  # ====================================
+  # Stage 2: テスト
+  # ====================================
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        node-version: [18, 20]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage --ci
+
+      - name: Upload coverage
+        if: matrix.node-version == 20
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+  # ====================================
+  # Stage 3: ビルド
+  # ====================================
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+          retention-days: 7
+
+  # ====================================
+  # Stage 4: Docker イメージビルド
+  # ====================================
+  docker:
+    name: Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ====================================
+  # Stage 5: ステージングデプロイ
+  # ====================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://staging.example.com
+    permissions:
+      contents: read
+    steps:
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+
+      - name: Deploy to staging
+        env:
+          DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
+        run: |
+          echo "Deploying to staging environment..."
+          # 実際のデプロイコマンドをここに記述
+
+  # ====================================
+  # Stage 6: 本番デプロイ（タグ時のみ）
+  # ====================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: docker
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://www.example.com
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+
+      - name: Deploy to production
+        env:
+          DEPLOY_KEY: ${{ secrets.PRODUCTION_DEPLOY_KEY }}
+        run: |
+          echo "Deploying to production environment..."
+          # 実際のデプロイコマンドをここに記述
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          gh release create "$TAG" \
+            --title "Release $TAG" \
+            --generate-notes
+
+  # ====================================
+  # 通知
+  # ====================================
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result != 'skipped' || needs.deploy-production.result != 'skipped')
+    steps:
+      - name: Send notification
+        run: |
+          echo "Pipeline completed!"
+          echo "Staging: ${{ needs.deploy-staging.result }}"
+          echo "Production: ${{ needs.deploy-production.result }}"</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">パイプラインのジョブ依存関係</div>
+                <div class="vd-flow">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="vd-box" style="border-color: #43A047; min-width: 100px;">
+                            <span class="vd-label">Lint</span>
+                        </div>
+                        <div class="vd-box" style="border-color: #D4891D; min-width: 100px;">
+                            <span class="vd-label">Test</span>
+                        </div>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #F57C00;">
+                        <span class="vd-label">Build</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #C62828;">
+                        <span class="vd-label">Docker</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="vd-box" style="border-color: #FF9800;">
+                            <span class="vd-label">Staging</span>
+                            <span class="vd-sub">main branch</span>
+                        </div>
+                        <div class="vd-box accent">
+                            <span class="vd-label">Production</span>
+                            <span class="vd-sub">v*.*.* tag</span>
+                        </div>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #9C27B0;">
+                        <span class="vd-label">Notify</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習4: フルパイプラインの構築
+                </div>
+                <div class="exercise-body">
+                    <p>上記のフルCI/CDパイプラインを参考に、以下のカスタマイズを加えたワークフローを自分で作成してください。</p>
+                    <ol>
+                        <li>Reusable Workflowを使って、Lint+Test部分を共通化する</li>
+                        <li>Composite Actionを使って、Slack通知を共通化する</li>
+                        <li>dependabot.yml を設定し、GitHub ActionsとnpmパッケージのSHA指定と自動更新を有効にする</li>
+                        <li>全てのサードパーティアクションをSHAでピン留めする</li>
+                        <li>GITHUB_TOKENの権限を最小限に設定する</li>
+                    </ol>
+                    <p><strong>追加課題:</strong> このパイプラインにE2Eテスト（Cypress）ジョブを追加し、ビルドジョブの成果物を使ってテストを実行する構成を設計してください。</p>
+                </div>
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習5: セキュリティチェックリスト
+                </div>
+                <div class="exercise-body">
+                    <p>以下のセキュリティチェックリストを使って、自分のワークフローを監査してください。全ての項目に対応できていますか？</p>
+                    <ul>
+                        <li><input type="checkbox"> <code>permissions</code> を最小限に設定しているか</li>
+                        <li><input type="checkbox"> サードパーティアクションをSHAでピン留めしているか</li>
+                        <li><input type="checkbox"> ユーザー入力（PRタイトル等）を中間環境変数で安全に扱っているか</li>
+                        <li><input type="checkbox"> <code>pull_request_target</code> を安全に使用しているか</li>
+                        <li><input type="checkbox"> シークレットが不必要に広いスコープで使われていないか</li>
+                        <li><input type="checkbox"> Dependabotでアクションの自動更新を設定しているか</li>
+                        <li><input type="checkbox"> Fork PRからのワークフロー実行を適切に制御しているか</li>
+                        <li><input type="checkbox"> OIDC認証を使用しているか（クラウドデプロイ時）</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ページナビゲーション -->
+        <nav class="chapter-nav">
+            <a href="9actions-cd-deploy.html" class="prev"><span class="material-icons">arrow_back</span> 前の章</a>
+            <a href="index.html" class="home"><span class="material-icons">home</span> 目次</a>
+            <a href="index.html" class="next">目次に戻る <span class="material-icons">arrow_forward</span></a>
+        </nav>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+</body>
+</html>

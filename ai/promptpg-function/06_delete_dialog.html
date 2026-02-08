@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>初級6 削除確認ダイアログ</title>
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="../promptpg-step/style.css" />
+        <style>
+  :root {
+    --primary: #AF52DE;
+    --primary-dark: #9333EA;
+    --primary-light: #FAF5FF;
+    --primary-lighter: #E9D5FF;
+  }
+  .nav-category-links { display: none; }
+</style>
+        <style>
+            .download-btn {
+                background: #22c55e;
+                color: white;
+                border: none;
+                padding: 6px 14px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                margin-left: auto;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+            .download-btn:hover {
+                background: #16a34a;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+            }
+            .code-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .level-badge {
+                display: inline-block;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                background: #dcfce7;
+                color: #166534;
+                margin-right: 8px;
+            }
+            .delete-btn {
+                background: #ef4444;
+                color: white;
+                border: none;
+                padding: 4px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.85rem;
+            }
+            .delete-btn:hover {
+                background: #dc2626;
+            }
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .modal-content {
+                background: white;
+                padding: 2rem;
+                border-radius: 8px;
+                text-align: center;
+                max-width: 400px;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- グローバルナビゲーション -->
+        <nav class="global-nav">
+            <div class="nav-container">
+                <a href="01_extends-todo.html" class="nav-logo"><span class="nav-logo-icon">🌱</span><span>機能追加</span></a>
+                <button class="nav-toggle" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+                <div class="nav-menu">
+                    <div class="nav-menu-title">📘 初級レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="01_extends-todo.html" class="nav-link"><span class="nav-chapter-num">1</span><span>機能追加提案</span></a></li>
+                        <li class="nav-item"><a href="02_validation.html" class="nav-link"><span class="nav-chapter-num">2</span><span>入力バリデーション</span></a></li>
+                        <li class="nav-item"><a href="03_status.html" class="nav-link"><span class="nav-chapter-num">3</span><span>完了/未完了ステータス</span></a></li>
+                        <li class="nav-item"><a href="04_search.html" class="nav-link"><span class="nav-chapter-num">4</span><span>検索機能</span></a></li>
+                        <li class="nav-item"><a href="05_sort.html" class="nav-link"><span class="nav-chapter-num">5</span><span>ソート機能</span></a></li>
+                        <li class="nav-item"><a href="06_delete_dialog.html" class="nav-link active"><span class="nav-chapter-num">6</span><span>削除確認ダイアログ</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;">📗 中級レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="07_pagination.html" class="nav-link"><span class="nav-chapter-num">7</span><span>ページネーション</span></a></li>
+                        <li class="nav-item"><a href="08_priority.html" class="nav-link"><span class="nav-chapter-num">8</span><span>優先度設定</span></a></li>
+                        <li class="nav-item"><a href="09_category.html" class="nav-link"><span class="nav-chapter-num">9</span><span>カテゴリ分類</span></a></li>
+                        <li class="nav-item"><a href="10_deadline.html" class="nav-link"><span class="nav-chapter-num">10</span><span>期限アラート</span></a></li>
+                        <li class="nav-item"><a href="11_bulk_delete.html" class="nav-link"><span class="nav-chapter-num">11</span><span>一括削除</span></a></li>
+                        <li class="nav-item"><a href="12_csv_export.html" class="nav-link"><span class="nav-chapter-num">12</span><span>CSV出力</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;">📕 上級レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="13_login.html" class="nav-link"><span class="nav-chapter-num">13</span><span>ログイン認証</span></a></li>
+                        <li class="nav-item"><a href="14_user_todo.html" class="nav-link"><span class="nav-chapter-num">14</span><span>ユーザー別ToDo</span></a></li>
+                        <li class="nav-item"><a href="15_role.html" class="nav-link"><span class="nav-chapter-num">15</span><span>ロール別権限</span></a></li>
+                        <li class="nav-item"><a href="16_rest_api.html" class="nav-link"><span class="nav-chapter-num">16</span><span>REST API</span></a></li>
+                        <li class="nav-item"><a href="17_exception.html" class="nav-link"><span class="nav-chapter-num">17</span><span>例外ハンドリング</span></a></li>
+                        <li class="nav-item"><a href="18_aop.html" class="nav-link"><span class="nav-chapter-num">18</span><span>AOP</span></a></li>
+                        <li class="nav-item"><a href="19_transaction.html" class="nav-link"><span class="nav-chapter-num">19</span><span>トランザクション</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;">📙 発展レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="20_file_upload.html" class="nav-link"><span class="nav-chapter-num">20</span><span>ファイル添付</span></a></li>
+                        <li class="nav-item"><a href="21_i18n.html" class="nav-link"><span class="nav-chapter-num">21</span><span>国際化</span></a></li>
+                        <li class="nav-item"><a href="22_unit_test.html" class="nav-link"><span class="nav-chapter-num">22</span><span>単体テスト</span></a></li>
+                        <li class="nav-item"><a href="23_async.html" class="nav-link"><span class="nav-chapter-num">23</span><span>非同期処理</span></a></li>
+                        <li class="nav-item"><a href="24_mail.html" class="nav-link"><span class="nav-chapter-num">24</span><span>メール通知</span></a></li>
+                        <li class="nav-item"><a href="25_audit_log.html" class="nav-link"><span class="nav-chapter-num">25</span><span>監査ログ</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;">🔗 関連教材</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="../../java_tutorials_unified/1java-overview.html" class="nav-link"><span>Java基礎</span></a></li>
+                        <li class="nav-item"><a href="../../spring_tutorials_unified/1spring-framework-tutorial.html" class="nav-link"><span>Spring入門</span></a></li>
+                        <li class="nav-item"><a href="../../ai/promptpg-all/index.html" class="nav-link"><span>プロンプトPG</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <!-- ヘッダー -->
+            <header class="chapter-header">
+                <div class="chapter-badge">
+                    <span class="level-badge">初級</span>
+                    📘 Beginner
+                </div>
+                <div class="chapter-number">5</div>
+                <h1 class="chapter-title">削除確認ダイアログ</h1>
+            </header>
+
+            <!-- 目次 -->
+            <nav class="toc">
+                <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+                <ul class="toc-list">
+                    <li class="toc-item">
+                        <span class="toc-number">5-1</span>
+                        <span>確認ダイアログの必要性</span>
+                    </li>
+                    <li class="toc-item">
+                        <span class="toc-number">5-2</span>
+                        <span>confirm()による実装</span>
+                    </li>
+                    <li class="toc-item">
+                        <span class="toc-number">5-3</span>
+                        <span>削除処理の実装</span>
+                    </li>
+                    <li class="toc-item">
+                        <span class="toc-number">5-4</span>
+                        <span>カスタムモーダルダイアログ</span>
+                    </li>
+                    <li class="toc-item">
+                        <span class="toc-number">5-5</span>
+                        <span>削除完了メッセージ</span>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- セクション 5-1 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 5-1</span>
+                    <h2 class="section-title">確認ダイアログの必要性</h2>
+                </div>
+
+                <div class="intro-text">
+                    <p>
+                        削除ボタンをクリックしたときに、<strong>確認ダイアログ</strong>を表示して誤操作を防ぎます。
+                    </p>
+                </div>
+
+                <h3>学習できるSpring技術</h3>
+                <div class="module-list">
+                    <div class="module-item">
+                        <div class="module-icon">💻</div>
+                        <div class="module-content">
+                            <h4>JavaScript連携</h4>
+                            <p>ThymeleafとJavaScriptを組み合わせた実装</p>
+                        </div>
+                    </div>
+                    <div class="module-item">
+                        <div class="module-icon">🖱️</div>
+                        <div class="module-content">
+                            <h4>th:onclick</h4>
+                            <p>クリックイベントにThymeleaf変数を渡す方法</p>
+                        </div>
+                    </div>
+                    <div class="module-item">
+                        <div class="module-icon">🗑️</div>
+                        <div class="module-content">
+                            <h4>DELETE操作</h4>
+                            <p>データベースからのレコード削除</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-header">
+                        <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                        <span class="warning-box-title">なぜ確認が必要？</span>
+                    </div>
+                    <p>削除は<strong>取り消しができない</strong>操作です。<br>
+                    誤クリックによるデータ消失を防ぐため、必ず確認ダイアログを表示しましょう。</p>
+                </div>
+            </section>
+
+            <!-- セクション 5-2 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 5-2</span>
+                    <h2 class="section-title">confirm()による実装</h2>
+                </div>
+
+                <div class="intro-text">
+                    <p>
+                        最もシンプルな方法は、JavaScriptの<code>confirm()</code>関数を使う方法です。
+                    </p>
+                </div>
+
+                <div class="code-block" id="confirm-basic">
+                    <div class="code-header">
+                        <span class="code-title">index.html（シンプル版）</span>
+                        <button class="download-btn" onclick="downloadCode('confirm-basic', 'index_confirm.html')">📥 ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>&lt;!-- 削除ボタン（シンプル版） --&gt;
+&lt;form th:action="@{/todo/{id}/delete(id=${todo.id})}" method="post"
+      onsubmit="return confirm('本当に削除しますか？');"&gt;
+    &lt;button type="submit" class="delete-btn"&gt;削除&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+                    </div>
+                </div>
+
+                <div class="code-block" id="confirm-with-title">
+                    <div class="code-header">
+                        <span class="code-title">index.html（タイトル表示版）</span>
+                        <button class="download-btn" onclick="downloadCode('confirm-with-title', 'index_confirm_title.html')">📥 ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>&lt;!-- 削除ボタン（タイトル表示版） --&gt;
+&lt;form th:action="@{/todo/{id}/delete(id=${todo.id})}" method="post"
+      th:data-title="${todo.title}"
+      onsubmit="return confirmDelete(this);"&gt;
+    &lt;button type="submit" class="delete-btn"&gt;削除&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;script&gt;
+function confirmDelete(form) {
+    const title = form.dataset.title;
+    return confirm('「' + title + '」を削除しますか？');
+}
+&lt;/script&gt;</code></pre>
+                    </div>
+                </div>
+
+                <h3>confirm()の動作</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>戻り値</th>
+                            <th>ユーザー操作</th>
+                            <th>結果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>true</code></td>
+                            <td>「OK」をクリック</td>
+                            <td>フォームが送信される（削除実行）</td>
+                        </tr>
+                        <tr>
+                            <td><code>false</code></td>
+                            <td>「キャンセル」をクリック</td>
+                            <td>フォーム送信がキャンセル</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- セクション 5-3 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 5-3</span>
+                    <h2 class="section-title">削除処理の実装</h2>
+                </div>
+
+                <div class="code-block" id="controller-delete">
+                    <div class="code-header">
+                        <span class="code-title">TodoController.java</span>
+                        <button class="download-btn" onclick="downloadCode('controller-delete', 'TodoController_delete.java')">📥 ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>/**
+ * 削除処理
+ */
+@PostMapping("/{id}/delete")
+public String delete(@PathVariable Integer id,
+                     RedirectAttributes redirectAttributes) {
+
+    todoService.delete(id);
+
+    // 削除完了メッセージをフラッシュ属性で渡す
+    redirectAttributes.addFlashAttribute("message", "ToDoを削除しました");
+
+    return "redirect:/todo";
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="code-block" id="service-delete">
+                    <div class="code-header">
+                        <span class="code-title">TodoService.java</span>
+                        <button class="download-btn" onclick="downloadCode('service-delete', 'TodoService_delete.java')">📥 ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>/**
+ * ToDoを削除
+ */
+public void delete(Integer id) {
+    todoRepository.deleteById(id);
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="code-block" id="mapper-delete">
+                    <div class="code-header">
+                        <span class="code-title">TodoMapper.xml</span>
+                        <button class="download-btn" onclick="downloadCode('mapper-delete', 'TodoMapper_delete.xml')">📥 ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>&lt;delete id="deleteById"&gt;
+    DELETE FROM todo WHERE id = #{id}
+&lt;/delete&gt;</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- セクション 5-4 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 5-4</span>
+                    <h2 class="section-title">カスタムモーダルダイアログ</h2>
+                </div>
+
+                <div class="intro-text">
+                    <p>
+                        ブラウザ標準のconfirm()ではなく、<strong>デザインをカスタマイズ</strong>できるモーダルダイアログを作成します。
+                    </p>
+                </div>
+
+                <div class="code-block" id="modal-html">
+                    <div class="code-header">
+                        <span class="code-title">index.html（カスタムモーダル）</span>
+                        <button class="download-btn" onclick="downloadCode('modal-html', 'index_modal.html')">📥 ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>&lt;!-- 削除ボタン --&gt;
+&lt;button type="button" class="delete-btn"
+        th:data-id="${todo.id}"
+        th:data-title="${todo.title}"
+        onclick="showDeleteModal(this)"&gt;
+    削除
+&lt;/button&gt;
+
+&lt;!-- 削除確認モーダル --&gt;
+&lt;div id="deleteModal" class="modal-overlay" style="display: none;"&gt;
+    &lt;div class="modal-content"&gt;
+        &lt;h3&gt;削除確認&lt;/h3&gt;
+        &lt;p&gt;「&lt;span id="deleteTitle"&gt;&lt;/span&gt;」を削除しますか？&lt;/p&gt;
+        &lt;p style="color: #dc2626; font-size: 0.9rem;"&gt;この操作は取り消せません。&lt;/p&gt;
+        &lt;div style="margin-top: 1.5rem;"&gt;
+            &lt;form id="deleteForm" method="post" style="display: inline;"&gt;
+                &lt;button type="submit" class="delete-btn"&gt;削除する&lt;/button&gt;
+            &lt;/form&gt;
+            &lt;button type="button" onclick="hideDeleteModal()"
+                    style="margin-left: 0.5rem; padding: 4px 12px;"&gt;
+                キャンセル
+            &lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script th:inline="javascript"&gt;
+function showDeleteModal(button) {
+    const id = button.dataset.id;
+    const title = button.dataset.title;
+
+    document.getElementById('deleteTitle').textContent = title;
+    document.getElementById('deleteForm').action = '/todo/' + id + '/delete';
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function hideDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+// モーダル外クリックで閉じる
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideDeleteModal();
+    }
+});
+&lt;/script&gt;
+
+&lt;style&gt;
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+.delete-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.delete-btn:hover {
+    background: #dc2626;
+}
+&lt;/style&gt;</code></pre>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-header">
+                        <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                        <span class="info-box-title">th:inline="javascript"</span>
+                    </div>
+                    <p>scriptタグに<code>th:inline="javascript"</code>を付けると、<br>
+                    JavaScript内でThymeleaf変数を<code>[[${変数名}]]</code>の形式で使用できます。</p>
+                </div>
+            </section>
+
+            <!-- セクション 5-5 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 5-5</span>
+                    <h2 class="section-title">削除完了メッセージ</h2>
+                </div>
+
+                <div class="intro-text">
+                    <p>
+                        削除が完了したら、一覧画面に<strong>成功メッセージ</strong>を表示します。
+                    </p>
+                </div>
+
+                <div class="code-block" id="message-html">
+                    <div class="code-header">
+                        <span class="code-title">index.html（メッセージ表示）</span>
+                        <button class="download-btn" onclick="downloadCode('message-html', 'index_message.html')">📥 ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>&lt;!-- 成功メッセージ --&gt;
+&lt;div th:if="${message}" class="success-message"&gt;
+    &lt;span&gt;✅&lt;/span&gt;
+    &lt;span th:text="${message}"&gt;&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+.success-message {
+    background: #dcfce7;
+    color: #166534;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+&lt;/style&gt;</code></pre>
+                    </div>
+                </div>
+
+                <h3>フラッシュ属性（RedirectAttributes）</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>メソッド</th>
+                            <th>説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>addFlashAttribute()</code></td>
+                            <td>リダイレクト先で1回だけ使えるデータを設定</td>
+                        </tr>
+                        <tr>
+                            <td><code>addAttribute()</code></td>
+                            <td>URLパラメータとしてデータを渡す</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="info-box">
+                    <div class="info-box-header">
+                        <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                        <span class="info-box-title">なぜフラッシュ属性？</span>
+                    </div>
+                    <p>削除後はリダイレクトするため、通常のModelではデータを渡せません。<br>
+                    フラッシュ属性を使うと、リダイレクト先で1回だけデータを受け取れます。<br>
+                    ブラウザを更新すると消えるため、メッセージ表示に最適です。</p>
+                </div>
+
+                <div class="column">
+                    <div class="column-header">
+                        <span class="column-badge">Column</span>
+                        <span class="column-title">初級レベル完了！</span>
+                    </div>
+                    <p>おめでとうございます！初級レベルの5つの機能をすべて学習しました。</p>
+                    <ol class="step-list">
+                        <li>入力バリデーション - フォームの入力チェック</li>
+                        <li>完了/未完了ステータス - 条件分岐表示</li>
+                        <li>検索機能 - @RequestParamと動的SQL</li>
+                        <li>ソート機能 - ORDER BYとリンクパラメータ</li>
+                        <li>削除確認ダイアログ - JavaScript連携</li>
+                    </ol>
+                    <p style="margin-top: 1rem;">
+                        次は<strong>中級レベル</strong>に挑戦しましょう！<br>
+                        ページネーション、優先度設定、CSVエクスポートなど、<br>
+                        より実践的な機能が待っています。
+                    </p>
+                </div>
+            </section>
+
+            <!-- AIプロンプト例 -->
+            <section class="section" style="background: #667eea; border-radius: 12px; color: white; margin-top: 2rem;">
+                <div class="section-header" style="border-color: rgba(255,255,255,0.3);">
+                    <span class="section-number" style="background: rgba(0,0,0,0.2); color: white;">🤖 AI</span>
+                    <h2 class="section-title" style="color: white;">AIペアプログラミング</h2>
+                </div>
+
+                <div class="intro-text">
+                    <p style="color: rgba(0,0,0,0.9);">
+                        以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、この機能を実装できます。
+                    </p>
+                </div>
+
+                <div class="code-block" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);">
+                    <div class="code-header">
+                        <span class="code-title" style="color: #a5f3fc;">📝 基本プロンプト</span>
+                    </div>
+                    <div class="code-content">
+                        <pre style="color: #e2e8f0; background: transparent;"><code>Spring Boot 3.xのToDoアプリに削除確認ダイアログを追加してください。
+
+【要件】
+- 削除ボタンクリック時にJavaScriptで確認ダイアログを表示
+- 「本当に削除しますか？」というメッセージを表示
+- OKで削除実行、キャンセルで何もしない
+- 可能であればモーダルダイアログで実装
+
+【技術スタック】
+- JavaScript (confirm() または カスタムモーダル)
+- Thymeleaf
+- Spring Boot 3.x (DELETE処理)</code></pre>
+                    </div>
+                </div>
+
+                <div class="code-block" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); margin-top: 1rem;">
+                    <div class="code-header">
+                        <span class="code-title" style="color: #a5f3fc;">🎯 ステップ別プロンプト</span>
+                    </div>
+                    <div class="code-content">
+                        <pre style="color: #e2e8f0; background: transparent;"><code># Step 1: 簡易版（confirm使用）
+削除ボタンにonclick="return confirm('本当に削除しますか？')"を追加してください。
+
+# Step 2: モーダル版
+カスタムモーダルダイアログを作成してください。削除対象のタイトルを表示し、確認・キャンセルボタンを配置してください。
+
+# Step 3: 削除処理
+TodoControllerにDELETE /{id}エンドポイントを追加し、削除後は一覧画面にリダイレクトしてください。</code></pre>
+                    </div>
+                </div>
+
+                <div class="info-box" style="background: rgba(0,0,0,0.1); border-color: rgba(255,255,255,0.3);">
+                    <div class="info-box-header">
+                        <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                        <span class="info-box-title" style="color: white;">プロンプトのコツ</span>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.9);">
+                        「アクセシビリティを考慮し、ESCキーでモーダルを閉じられるようにしてください」のように、<br>
+                        UX要件を追加すると、より使いやすい実装が得られます。
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer">
+            <p>Spring Framework 入門チュートリアル - 初級レベル</p>
+        </footer>
+
+        <div class="page-nav">
+            <a href="05_sort.html" class="page-nav-btn prev">
+                <span>←</span>
+                <div>
+                    <div class="page-nav-label">前の機能</div>
+                    <div class="page-nav-title">ソート機能</div>
+                </div>
+            </a>
+            <a href="07_pagination.html" class="page-nav-btn next">
+                <div>
+                    <div class="page-nav-label">中級レベルへ</div>
+                    <div class="page-nav-title">ページネーション</div>
+                </div>
+                <span>→</span>
+            </a>
+        </div>
+
+        <script>
+            function toggleMenu() {
+                const toggle = document.querySelector(".nav-toggle");
+                const menu = document.querySelector(".nav-menu");
+                toggle.classList.toggle("active");
+                menu.classList.toggle("active");
+            }
+
+            document.addEventListener("click", function (e) {
+                const nav = document.querySelector(".global-nav");
+                const toggle = document.querySelector(".nav-toggle");
+                const menu = document.querySelector(".nav-menu");
+
+                if (!nav.contains(e.target) && menu.classList.contains("active")) {
+                    toggle.classList.remove("active");
+                    menu.classList.remove("active");
+                }
+            });
+
+            function downloadCode(elementId, filename) {
+                const element = document.getElementById(elementId);
+                const preElement = element.querySelector('pre');
+                const codeElement = preElement.querySelector('code') || preElement;
+                const text = codeElement.textContent;
+
+                const blob = new Blob([text], { type: 'text/plain; charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        </script>
+    </body>
+</html>

@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第7章 Tailwind CSSとの連携 - プロンプトUIコーディング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <link rel="stylesheet" href="../../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-dark: #005A9E;
+      --primary-light: #E8F4FD;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+
+    /* 実行結果プレビュー */
+    .result-preview {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+    .result-preview-header {
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .result-preview-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .result-preview-title .material-icons {
+      font-size: 18px;
+      color: #28a745;
+    }
+    .result-preview-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .result-preview-tab {
+      padding: 6px 12px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .result-preview-tab:hover {
+      background: #f8f9fa;
+    }
+    .result-preview-tab.active {
+      background: #007ACC;
+      border-color: #007ACC;
+      color: #fff;
+    }
+    .result-preview-content {
+      padding: 24px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .result-preview-code {
+      display: none;
+      padding: 16px;
+      background: #1e1e1e;
+      overflow-x: auto;
+    }
+    .result-preview-code.active {
+      display: block;
+    }
+    .result-preview-code pre {
+      margin: 0;
+      color: #d4d4d4;
+      font-size: 13px;
+      line-height: 1.5;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Tailwind風サンプルボタン */
+    .sample-tw-btn {
+      background-color: #3B82F6;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .sample-tw-btn:hover {
+      background-color: #2563EB;
+    }
+    /* Tailwind風サンプルグリッド */
+    .sample-tw-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 600px;
+    }
+    .sample-tw-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 16px;
+      text-align: center;
+    }
+    .sample-tw-card-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #1F2937;
+    }
+    /* Tailwind風ヒーロー */
+    .sample-tw-hero {
+      background: linear-gradient(to bottom, #E8F4FD, white);
+      padding: 48px 24px;
+      text-align: center;
+      width: 100%;
+      border-radius: 8px;
+    }
+    .sample-tw-hero-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    .sample-tw-hero-subtitle {
+      font-size: 14px;
+      color: #4B5563;
+      margin-bottom: 20px;
+    }
+    .sample-tw-hero-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .sample-tw-hero-btn-primary {
+      background: #3B82F6;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .sample-tw-hero-btn-primary:hover {
+      background: #2563EB;
+    }
+    .sample-tw-hero-btn-secondary {
+      background: white;
+      color: #374151;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      border: 1px solid #D1D5DB;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .sample-tw-hero-btn-secondary:hover {
+      background: #F9FAFB;
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-prompt-ui-coding.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">プロンプトUIコーディング</div>
+      <div class="chapter-number">7</div>
+      <h1 class="chapter-title">Tailwind CSSとの連携</h1>
+      <p class="chapter-subtitle">ユーティリティファーストで高速UI開発</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">7-1</span>Tailwind CSSの特徴</li>
+        <li class="toc-item"><span class="toc-number">7-2</span>Tailwindでの生成指示</li>
+        <li class="toc-item"><span class="toc-number">7-3</span>よく使うクラスパターン</li>
+        <li class="toc-item"><span class="toc-number">7-4</span>実践的なコンポーネント生成</li>
+      </ul>
+    </nav>
+
+    <!-- Section 7-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-1</span>
+        <h2 class="section-title">Tailwind CSSの特徴</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>Tailwind CSS</strong>は「ユーティリティファースト」のCSSフレームワークです。あらかじめ定義された小さなクラスを組み合わせてスタイリングします。AIとの相性が非常に良いフレームワークです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>通常のCSS vs Tailwind CSS</h3>
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #6B7280; color: white;">通常のCSS</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>&lt;button class="btn"&gt;送信&lt;/button&gt;
+
+.btn {
+  background-color: #3B82F6;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.btn:hover {
+  background-color: #2563EB;
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #06B6D4; color: white;">Tailwind CSS</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>&lt;button class="bg-blue-500 text-white
+  px-4 py-2 rounded-lg font-semibold
+  hover:bg-blue-600"&gt;
+  送信
+&lt;/button&gt;
+
+/* 別途CSSを書く必要なし */</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>AI生成との相性が良い理由</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #06B6D4;">
+              <span class="material-icons" style="color: white;">speed</span>
+            </div>
+            <div class="feature-content">
+              <h4>即座に適用可能</h4>
+              <p>CSSファイルへの追記不要。HTMLだけで完結</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #8B5CF6;">
+              <span class="material-icons" style="color: white;">rule</span>
+            </div>
+            <div class="feature-content">
+              <h4>命名の悩みがない</h4>
+              <p>クラス名を考える必要がなく、一貫性を保ちやすい</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #10B981;">
+              <span class="material-icons" style="color: white;">visibility</span>
+            </div>
+            <div class="feature-content">
+              <h4>視認性が高い</h4>
+              <p>HTMLを見れば、スタイルがすぐに分かる</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-2</span>
+        <h2 class="section-title">Tailwindでの生成指示</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>基本的なプロンプト構成</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🎨</span>
+            <span class="prompt-card-label">Tailwindボタン生成</span>
+          </div>
+          <div class="prompt-card-content">Tailwind CSSを使ってボタンの完全なHTMLファイルを作成してください。
+
+## 出力形式
+- 出力ファイル: puic-output/7-2-tailwind-button.html
+- &lt;!DOCTYPE html&gt;から始まる完全なHTMLファイル
+- Tailwind CSSはCDNで読み込み
+- &lt;meta charset="UTF-8"&gt;を含めること
+
+## 共通Tailwindスタイル
+- body: bg-gray-100
+- container: max-w-5xl mx-auto px-4
+- ページヘッダー: bg-gradient-to-r from-blue-600 to-purple-600, text-white, rounded-2xl, p-10
+- カード: bg-white, rounded-xl, shadow-md, p-8
+- 基本色: blue-500(primary), blue-600(hover), red-500(danger), green-500(success)
+- テキスト: text-gray-900(メイン), text-gray-600(サブ), text-gray-400(プレースホルダー)
+- フォント: font-sans（Tailwindデフォルト）
+
+## 仕様
+- 背景: 青（blue-500）
+- 文字: 白
+- 角丸: rounded-lg
+- 余白: px-6 py-3
+- フォント: font-semibold
+- ホバー: 背景を少し暗く（blue-600）
+- トランジション: transition-colors
+
+## 注意
+- インラインスタイルは使用しない
+- Tailwindのクラスのみで実装
+- カスタムCSSは書かない</div>
+        </div>
+
+        <h4>生成結果</h4>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;button class="bg-blue-500 text-white px-6 py-3 rounded-lg
+  font-semibold hover:bg-blue-600 transition-colors"&gt;
+  送信する
+&lt;/button&gt;</pre>
+          </div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <button class="sample-tw-btn">送信する</button>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;button class="bg-blue-500 text-white px-6 py-3 rounded-lg
+  font-semibold hover:bg-blue-600 transition-colors"&gt;
+  送信する
+&lt;/button&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>レスポンシブの指定</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">📱</span>
+            <span class="prompt-card-label">レスポンシブグリッド</span>
+          </div>
+          <div class="prompt-card-content">Tailwindでレスポンシブなグリッドの完全なHTMLファイルを作成してください。
+
+## 出力形式
+- 出力ファイル: puic-output/7-2-tailwind-grid.html
+- &lt;!DOCTYPE html&gt;から始まる完全なHTMLファイル
+- Tailwind CSSはCDNで読み込み
+- &lt;meta charset="UTF-8"&gt;を含めること
+
+## 共通Tailwindスタイル
+- body: bg-gray-100
+- container: max-w-5xl mx-auto px-4
+- ページヘッダー: bg-gradient-to-r from-blue-600 to-purple-600, text-white, rounded-2xl, p-10
+- カード: bg-white, rounded-xl, shadow-md, p-8
+- 基本色: blue-500(primary), blue-600(hover), red-500(danger), green-500(success)
+- テキスト: text-gray-900(メイン), text-gray-600(サブ)
+
+## デザイン
+- カード: bg-white rounded-lg shadow p-6
+- カードタイトル: font-semibold text-sm text-gray-800
+- カード内テキスト中央寄せ: text-center
+
+## レイアウト
+- モバイル: 1カラム
+- タブレット（md:）: 2カラム
+- PC（lg:）: 3カラム
+
+## 余白
+- gap: 4（モバイル）→ 6（md:）→ 8（lg:）
+
+## コンテナ
+- 最大幅: max-w-6xl
+- 中央寄せ: mx-auto
+- 左右余白: px-4</div>
+        </div>
+
+        <h4>生成結果</h4>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;div class="max-w-6xl mx-auto px-4"&gt;
+  &lt;div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+              gap-4 md:gap-6 lg:gap-8"&gt;
+    &lt;!-- カード1 --&gt;
+    &lt;div class="bg-white rounded-lg shadow p-6"&gt;...&lt;/div&gt;
+    &lt;!-- カード2 --&gt;
+    &lt;div class="bg-white rounded-lg shadow p-6"&gt;...&lt;/div&gt;
+    &lt;!-- カード3 --&gt;
+    &lt;div class="bg-white rounded-lg shadow p-6"&gt;...&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <div class="sample-tw-grid">
+              <div class="sample-tw-card">
+                <div class="sample-tw-card-title">カード 1</div>
+              </div>
+              <div class="sample-tw-card">
+                <div class="sample-tw-card-title">カード 2</div>
+              </div>
+              <div class="sample-tw-card">
+                <div class="sample-tw-card-title">カード 3</div>
+              </div>
+            </div>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;div class="max-w-6xl mx-auto px-4"&gt;
+  &lt;div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8"&gt;
+    &lt;div class="bg-white rounded-lg shadow p-6"&gt;カード 1&lt;/div&gt;
+    &lt;div class="bg-white rounded-lg shadow p-6"&gt;カード 2&lt;/div&gt;
+    &lt;div class="bg-white rounded-lg shadow p-6"&gt;カード 3&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-3</span>
+        <h2 class="section-title">よく使うクラスパターン</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>Flexboxレイアウト</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>用途</th>
+                <th>Tailwindクラス</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>横並び中央揃え</td>
+                <td><code>flex items-center</code></td>
+              </tr>
+              <tr>
+                <td>両端揃え</td>
+                <td><code>flex justify-between</code></td>
+              </tr>
+              <tr>
+                <td>中央配置</td>
+                <td><code>flex items-center justify-center</code></td>
+              </tr>
+              <tr>
+                <td>縦並び</td>
+                <td><code>flex flex-col</code></td>
+              </tr>
+              <tr>
+                <td>要素間の余白</td>
+                <td><code>flex gap-4</code></td>
+              </tr>
+              <tr>
+                <td>折り返し</td>
+                <td><code>flex flex-wrap</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>サイズ・余白</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>用途</th>
+                <th>Tailwindクラス</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>幅100%</td>
+                <td><code>w-full</code></td>
+              </tr>
+              <tr>
+                <td>最大幅1280px</td>
+                <td><code>max-w-7xl</code></td>
+              </tr>
+              <tr>
+                <td>padding全方向16px</td>
+                <td><code>p-4</code></td>
+              </tr>
+              <tr>
+                <td>padding左右24px</td>
+                <td><code>px-6</code></td>
+              </tr>
+              <tr>
+                <td>margin上32px</td>
+                <td><code>mt-8</code></td>
+              </tr>
+              <tr>
+                <td>中央寄せ</td>
+                <td><code>mx-auto</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>タイポグラフィ・装飾</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>用途</th>
+                <th>Tailwindクラス</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>大見出し</td>
+                <td><code>text-3xl font-bold</code></td>
+              </tr>
+              <tr>
+                <td>本文</td>
+                <td><code>text-base text-gray-700</code></td>
+              </tr>
+              <tr>
+                <td>補足テキスト</td>
+                <td><code>text-sm text-gray-500</code></td>
+              </tr>
+              <tr>
+                <td>角丸</td>
+                <td><code>rounded-lg</code>（8px相当）</td>
+              </tr>
+              <tr>
+                <td>影</td>
+                <td><code>shadow-md</code></td>
+              </tr>
+              <tr>
+                <td>ボーダー</td>
+                <td><code>border border-gray-200</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-4</span>
+        <h2 class="section-title">実践的なコンポーネント生成</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>ヒーローセクション</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🚀</span>
+            <span class="prompt-card-label">ヒーローセクション生成</span>
+          </div>
+          <div class="prompt-card-content">Tailwindでヒーローセクションの完全なHTMLファイルを作成してください。
+
+## 出力形式
+- 出力ファイル: puic-output/7-4-tailwind-hero.html
+- &lt;!DOCTYPE html&gt;から始まる完全なHTMLファイル
+- Tailwind CSSはCDNで読み込み
+- &lt;meta charset="UTF-8"&gt;を含めること
+
+## 共通Tailwindスタイル
+- body: bg-gray-100
+- container: max-w-5xl mx-auto px-4
+- 基本色: blue-500(primary), blue-600(hover)
+- テキスト: text-gray-900(メイン), text-gray-600(サブ)
+
+## デザイン
+- 背景グラデーション: bg-gradient-to-b from-blue-50 to-white
+- キャッチコピー: text-gray-900, font-bold
+- サブタイトル: text-gray-600
+- CTAボタン(プライマリ): bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors
+- CTAボタン(セカンダリ): border border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50
+
+## レイアウト
+- 中央揃え、縦並び
+- 最大幅: max-w-4xl
+- 上下余白: py-20（モバイル）→ py-32（lg:）
+
+## コンテンツ
+- キャッチコピー: text-4xl（モバイル）→ text-6xl（lg:）、font-bold
+- サブタイトル: text-lg、text-gray-600
+- CTAボタン2つ: 横並び、gap-4
+
+## 背景
+- グラデーション: from-blue-50 to-white</div>
+        </div>
+
+        <h4>生成結果</h4>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;section class="bg-gradient-to-b from-blue-50 to-white"&gt;
+  &lt;div class="max-w-4xl mx-auto px-4 py-20 lg:py-32 text-center"&gt;
+    &lt;h1 class="text-4xl lg:text-6xl font-bold text-gray-900 mb-6"&gt;
+      ビジネスを加速させる&lt;br&gt;最高のソリューション
+    &lt;/h1&gt;
+    &lt;p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto"&gt;
+      私たちのサービスで、あなたのビジネスを次のレベルへ。
+      今すぐ始めましょう。
+    &lt;/p&gt;
+    &lt;div class="flex flex-col sm:flex-row gap-4 justify-center"&gt;
+      &lt;a href="#" class="bg-blue-500 text-white px-8 py-3 rounded-lg
+                        font-semibold hover:bg-blue-600 transition-colors"&gt;
+        無料で始める
+      &lt;/a&gt;
+      &lt;a href="#" class="border border-gray-300 text-gray-700 px-8 py-3
+                        rounded-lg font-semibold hover:bg-gray-50 transition-colors"&gt;
+        詳しく見る
+      &lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</pre>
+          </div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <div class="sample-tw-hero">
+              <div class="sample-tw-hero-title">ビジネスを加速させる<br>最高のソリューション</div>
+              <div class="sample-tw-hero-subtitle">私たちのサービスで、あなたのビジネスを次のレベルへ。</div>
+              <div class="sample-tw-hero-btns">
+                <button class="sample-tw-hero-btn-primary">無料で始める</button>
+                <button class="sample-tw-hero-btn-secondary">詳しく見る</button>
+              </div>
+            </div>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;section class="bg-gradient-to-b from-blue-50 to-white"&gt;
+  &lt;div class="max-w-4xl mx-auto px-4 py-20 lg:py-32 text-center"&gt;
+    &lt;h1 class="text-4xl lg:text-6xl font-bold text-gray-900 mb-6"&gt;
+      ビジネスを加速させる&lt;br&gt;最高のソリューション
+    &lt;/h1&gt;
+    &lt;p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto"&gt;
+      私たちのサービスで、あなたのビジネスを次のレベルへ。
+    &lt;/p&gt;
+    &lt;div class="flex flex-col sm:flex-row gap-4 justify-center"&gt;
+      &lt;a href="#" class="bg-blue-500 text-white px-8 py-3 rounded-lg
+                        font-semibold hover:bg-blue-600"&gt;無料で始める&lt;/a&gt;
+      &lt;a href="#" class="border border-gray-300 text-gray-700 px-8 py-3
+                        rounded-lg font-semibold hover:bg-gray-50"&gt;詳しく見る&lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>カード</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">生成結果</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;article class="bg-white rounded-xl shadow-md overflow-hidden
+                hover:shadow-lg transition-shadow"&gt;
+  &lt;img src="image.jpg" alt="" class="w-full h-48 object-cover"&gt;
+  &lt;div class="p-6"&gt;
+    &lt;span class="text-xs font-semibold text-blue-500 uppercase tracking-wide"&gt;
+      カテゴリー
+    &lt;/span&gt;
+    &lt;h3 class="mt-2 text-xl font-bold text-gray-900 line-clamp-2"&gt;
+      カードのタイトルがここに入ります
+    &lt;/h3&gt;
+    &lt;p class="mt-2 text-gray-600 text-sm line-clamp-3"&gt;
+      カードの説明文がここに入ります。3行まで表示されます。
+    &lt;/p&gt;
+    &lt;div class="mt-4 flex items-center justify-between"&gt;
+      &lt;span class="text-sm text-gray-500"&gt;2024年1月15日&lt;/span&gt;
+      &lt;a href="#" class="text-blue-500 text-sm font-semibold hover:underline"&gt;
+        続きを読む →
+      &lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/article&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-title">line-clampについて</div>
+        <div class="info-box-content">
+          <p><code>line-clamp-2</code>、<code>line-clamp-3</code>はTailwind CSS v3.3以降で使用できます。テキストを指定行数で切り詰め、超過部分を「...」で表示します。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第7章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>Tailwind CSS</strong>はユーティリティクラスでスタイリング</li>
+          <li>AIとの相性が良く、<strong>高速なUI生成</strong>が可能</li>
+          <li>レスポンシブは<strong>md:、lg:</strong>などのプレフィックスで指定</li>
+          <li>よく使う<strong>クラスパターン</strong>を覚えるとプロンプトが書きやすい</li>
+          <li>プロンプトには<strong>Tailwindのクラス名</strong>を直接指定すると精度が上がる</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="6puic-responsive.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">レスポンシブデザイン生成</div>
+    </a>
+    <a href="8puic-landing-page.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">ランディングページ制作</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトUIコーディング - 職業訓練校教材</p>
+  </footer>
+
+  <script>
+    // Result Preview Tab Functionality
+    document.querySelectorAll('.result-preview').forEach(preview => {
+      const tabs = preview.querySelectorAll('.result-preview-tab');
+      const content = preview.querySelector('.result-preview-content');
+      const code = preview.querySelector('.result-preview-code');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          if (tab.dataset.tab === 'preview') {
+            content.style.display = 'flex';
+            code.classList.remove('active');
+          } else {
+            content.style.display = 'none';
+            code.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

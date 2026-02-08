@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第1章 バージョン管理入門 - Git & GitHub完全ガイド</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #F5A623;
+        --primary-dark: #D4891D;
+        --primary-light: #FEF7E8;
+        --primary-lighter: #FDE4A8;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef7e8 0%, #fef7e8 100%);
+        border-radius: 16px; border: 1px solid #fde4a8;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F5A623; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F5A623; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(245,166,35,0.08);
+      }
+      .vd-box.accent { background: #F5A623; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F5A623; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fef7e8; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F5A623; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-git.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">1</div>
+            <h1 class="chapter-title">バージョン管理入門</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">1-1</span><span>バージョン管理とは</span></li>
+                <li class="toc-item"><span class="toc-number">1-2</span><span>バージョン管理の歴史</span></li>
+                <li class="toc-item"><span class="toc-number">1-3</span><span>集中型と分散型</span></li>
+                <li class="toc-item"><span class="toc-number">1-4</span><span>Gitが選ばれる理由</span></li>
+                <li class="toc-item"><span class="toc-number">1-5</span><span>バージョン管理の基本用語</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 1-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-1</span>
+                <h2 class="section-title">バージョン管理とは</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>バージョン管理（Version Control）とは、ファイルの変更履歴を記録し、必要に応じて過去の状態に戻したり、変更内容を比較したりできる仕組みのことです。ソフトウェア開発において最も重要なツールの一つです。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 なぜバージョン管理が必要なのか</h3>
+                <div class="content-block">
+                    <p>プログラミングをしていると、次のような経験をしたことはありませんか？</p>
+                    <ul class="bullet-list">
+                        <li>動いていたコードを修正したら動かなくなった。元に戻したいが、どこを変えたか覚えていない</li>
+                        <li>ファイルを「最終版」「最終版2」「最終版_本当の最終」と増やしてしまった</li>
+                        <li>チームで同じファイルを編集して、誰かの変更を上書きしてしまった</li>
+                        <li>いつ、誰が、なぜその変更をしたのか分からなくなった</li>
+                    </ul>
+                    <p>バージョン管理システム（VCS: Version Control System）を使えば、これらの問題をすべて解決できます。</p>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">バージョン管理は「タイムマシン」</span>
+                        </div>
+                        <p>バージョン管理を使えば、プロジェクトの任意の時点の状態に戻ることができます。まるでタイムマシンのように、過去のどの時点にも自由に移動できるのです。ゲームの「セーブポイント」をイメージすると分かりやすいでしょう。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.2 バージョン管理でできること</h3>
+                <div class="content-block">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128197;</div>
+                            <div class="feature-content">
+                                <h4>変更履歴の記録</h4>
+                                <p>いつ、誰が、何を変更したかを自動的に記録します。コードレビューやバグ追跡に欠かせません。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#9194;</div>
+                            <div class="feature-content">
+                                <h4>過去の状態への復元</h4>
+                                <p>間違った変更をしてしまっても、いつでも過去の正しい状態に戻すことができます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128101;</div>
+                            <div class="feature-content">
+                                <h4>チームでの共同作業</h4>
+                                <p>複数の開発者が同時に同じプロジェクトで作業でき、変更の衝突も安全に解決できます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128268;</div>
+                            <div class="feature-content">
+                                <h4>並行開発（ブランチ）</h4>
+                                <p>本番環境に影響を与えず、新機能の開発やバグ修正を並行して進められます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 1-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-2</span>
+                <h2 class="section-title">バージョン管理の歴史</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>バージョン管理の概念は、ソフトウェア開発の歴史とともに進化してきました。その変遷を知ることで、現在のGitがなぜこのような設計になっているかが理解できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 ローカル型バージョン管理</h3>
+                <div class="content-block">
+                    <p>初期のバージョン管理は、個人のコンピュータ内でファイルのコピーを管理する方式でした。代表的なシステムにRCS（Revision Control System、1982年）があります。</p>
+                    <ul class="bullet-list">
+                        <li>ファイルの差分をローカルに保存</li>
+                        <li>1人での開発には十分だが、チーム開発には不向き</li>
+                        <li>コンピュータが壊れたらデータを失う危険性</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 集中型バージョン管理</h3>
+                <div class="content-block">
+                    <p>チーム開発の需要から、中央サーバーでバージョンを一元管理する方式が登場しました。CVS（1990年）やSubversion（SVN、2000年）が代表例です。</p>
+                    <ul class="bullet-list">
+                        <li>中央サーバーに全ての履歴を集中管理</li>
+                        <li>チームメンバーはサーバーからファイルを取得して作業</li>
+                        <li>サーバーがダウンすると全員が作業不能になる弱点</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.3 分散型バージョン管理</h3>
+                <div class="content-block">
+                    <p>2005年、Linuxカーネルの開発者リーナス・トーバルズがGitを開発しました。各開発者がリポジトリの完全なコピーを持つ「分散型」の仕組みです。</p>
+                    <ul class="bullet-list">
+                        <li>各開発者が履歴を含む完全なリポジトリのコピーを保持</li>
+                        <li>オフラインでも作業可能</li>
+                        <li>サーバーが壊れても、各開発者のコピーから復元可能</li>
+                        <li>高速な操作（ほとんどの操作がローカルで完結）</li>
+                    </ul>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">Gitの誕生秘話</span>
+                        </div>
+                        <p>Gitは、Linuxカーネルの開発で使っていた商用ツール（BitKeeper）が無料で使えなくなったことをきっかけに、リーナス・トーバルズがわずか2週間で基本部分を開発しました。「速度」「シンプルな設計」「大規模プロジェクトへの対応」を重視して設計されています。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 1-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-3</span>
+                <h2 class="section-title">集中型と分散型</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>バージョン管理システムの2大方式である「集中型」と「分散型」の違いを詳しく見ていきましょう。これを理解することがGitの仕組みを理解する第一歩です。</p>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128202; 集中型 vs 分散型 バージョン管理</div>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                    <!-- 集中型 -->
+                    <div style="flex: 1; min-width: 240px;">
+                        <div style="text-align: center; font-weight: 700; font-size: 0.82rem; color: #F5A623; margin-bottom: 12px;">集中型（SVNなど）</div>
+                        <div class="vd-flow" style="flex-direction: column;">
+                            <div class="vd-box accent">
+                                <span class="vd-icon">&#128421;</span>
+                                <span class="vd-label">中央サーバー</span>
+                                <span class="vd-sub">全履歴を一元管理</span>
+                            </div>
+                            <div class="vd-arrow">&#8595;</div>
+                            <div style="display: flex; gap: 10px;">
+                                <div class="vd-box">
+                                    <span class="vd-icon">&#128187;</span>
+                                    <span class="vd-label">開発者A</span>
+                                    <span class="vd-sub">最新版のみ</span>
+                                </div>
+                                <div class="vd-box">
+                                    <span class="vd-icon">&#128187;</span>
+                                    <span class="vd-label">開発者B</span>
+                                    <span class="vd-sub">最新版のみ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 分散型 -->
+                    <div style="flex: 1; min-width: 240px;">
+                        <div style="text-align: center; font-weight: 700; font-size: 0.82rem; color: #F5A623; margin-bottom: 12px;">分散型（Gitなど）</div>
+                        <div class="vd-flow" style="flex-direction: column;">
+                            <div class="vd-box accent">
+                                <span class="vd-icon">&#128421;</span>
+                                <span class="vd-label">リモートリポジトリ</span>
+                                <span class="vd-sub">共有用リポジトリ</span>
+                            </div>
+                            <div class="vd-arrow">&#8597;</div>
+                            <div style="display: flex; gap: 10px;">
+                                <div class="vd-box">
+                                    <span class="vd-icon">&#128187;</span>
+                                    <span class="vd-label">開発者A</span>
+                                    <span class="vd-sub">完全な履歴</span>
+                                </div>
+                                <div class="vd-box">
+                                    <span class="vd-icon">&#128187;</span>
+                                    <span class="vd-label">開発者B</span>
+                                    <span class="vd-sub">完全な履歴</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 集中型の特徴</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>集中型（SVN等）</th>
+                                <th>分散型（Git等）</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>リポジトリ</strong></td>
+                                <td>サーバーに1つだけ</td>
+                                <td>各開発者が完全なコピーを所有</td>
+                            </tr>
+                            <tr>
+                                <td><strong>オフライン作業</strong></td>
+                                <td>不可（サーバー接続が必須）</td>
+                                <td>可能（ローカルで完結）</td>
+                            </tr>
+                            <tr>
+                                <td><strong>速度</strong></td>
+                                <td>ネットワーク速度に依存</td>
+                                <td>高速（ほとんどローカル処理）</td>
+                            </tr>
+                            <tr>
+                                <td><strong>障害耐性</strong></td>
+                                <td>サーバー故障で全停止</td>
+                                <td>各コピーから復元可能</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ブランチ</strong></td>
+                                <td>コストが高い</td>
+                                <td>高速・軽量</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">集中型の落とし穴</span>
+                        </div>
+                        <p>集中型バージョン管理では、中央サーバーがダウンすると全ての開発者が作業できなくなります。また、サーバーのハードディスクが壊れた場合、バックアップがなければ全ての履歴が失われます。分散型のGitではこのリスクが大幅に軽減されます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 1-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-4</span>
+                <h2 class="section-title">Gitが選ばれる理由</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>現在、ソフトウェア開発の現場ではGitがバージョン管理のデファクトスタンダード（事実上の標準）です。なぜGitがここまで広く普及したのでしょうか。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 Gitの主な利点</h3>
+                <div class="content-block">
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#9889;</div>
+                            <div class="feature-content">
+                                <h4>圧倒的な速度</h4>
+                                <p>ほとんどの操作がローカルで完結するため、ネットワーク遅延の影響を受けません。ブランチの作成やコミットは一瞬で完了します。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128274;</div>
+                            <div class="feature-content">
+                                <h4>データの完全性</h4>
+                                <p>Gitは全てのデータにSHA-1ハッシュを使用しており、データの改ざんや破損を検出できます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128268;</div>
+                            <div class="feature-content">
+                                <h4>強力なブランチ機能</h4>
+                                <p>軽量なブランチの作成・マージが可能で、並行開発やフィーチャーブランチ戦略を簡単に実現できます。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#127760;</div>
+                            <div class="feature-content">
+                                <h4>GitHubとの連携</h4>
+                                <p>GitHub、GitLab、Bitbucketなどのホスティングサービスとシームレスに連携し、チーム開発を強力にサポートします。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 Gitの普及状況</h3>
+                <div class="content-block">
+                    <p>Stack Overflowの開発者調査によると、プロの開発者の90%以上がGitを使用しています。Web開発、モバイル開発、データサイエンスなど、あらゆる分野でGitは必須スキルとなっています。</p>
+
+                    <div class="vd-bar">
+                        <div class="vd-bar-seg" style="background: #F5A623; flex: 9.3;">Git 93%</div>
+                        <div class="vd-bar-seg" style="background: #999; flex: 0.7;">その他 7%</div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">Gitはプログラマーだけのものではない</span>
+                        </div>
+                        <p>最近ではデザイナー、ライター、研究者など、プログラマー以外の人もGitを活用しています。ドキュメントの変更管理や、データ分析のコード管理など、バージョン管理が必要なあらゆる場面でGitが使われています。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 1-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-5</span>
+                <h2 class="section-title">バージョン管理の基本用語</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Gitを学ぶ前に、バージョン管理で頻繁に使われる基本用語を押さえておきましょう。これらの用語は今後の章で繰り返し登場します。</p>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128218; Gitの基本用語マップ</div>
+                <div class="vd-grid">
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#128193;</span>
+                        <span class="vd-label">リポジトリ</span>
+                        <span class="vd-sub">プロジェクトの保管庫。変更履歴を全て記録する</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#128248;</span>
+                        <span class="vd-label">コミット</span>
+                        <span class="vd-sub">変更のスナップショットを記録する操作</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#128268;</span>
+                        <span class="vd-label">ブランチ</span>
+                        <span class="vd-sub">作業を分岐させて並行開発する仕組み</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">&#128256;</span>
+                        <span class="vd-label">マージ</span>
+                        <span class="vd-sub">分岐した作業を統合する操作</span>
+                    </div>
+                    <div class="vd-card red">
+                        <span class="vd-icon">&#128229;</span>
+                        <span class="vd-label">クローン</span>
+                        <span class="vd-sub">リモートリポジトリの完全なコピーを作成</span>
+                    </div>
+                    <div class="vd-card">
+                        <span class="vd-icon">&#128228;</span>
+                        <span class="vd-label">プッシュ / プル</span>
+                        <span class="vd-sub">リモートとローカルの同期操作</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 用語の詳細解説</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>用語</th>
+                                <th>英語</th>
+                                <th>説明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>リポジトリ</strong></td>
+                                <td>Repository</td>
+                                <td>プロジェクトのファイルと変更履歴を保存する場所。「リポ」や「レポ」と略すことも</td>
+                            </tr>
+                            <tr>
+                                <td><strong>コミット</strong></td>
+                                <td>Commit</td>
+                                <td>変更内容を記録するスナップショット。メッセージ付きで履歴に保存される</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ブランチ</strong></td>
+                                <td>Branch</td>
+                                <td>メインの開発ラインから分岐した独立した作業ライン</td>
+                            </tr>
+                            <tr>
+                                <td><strong>マージ</strong></td>
+                                <td>Merge</td>
+                                <td>別のブランチの変更を現在のブランチに統合する操作</td>
+                            </tr>
+                            <tr>
+                                <td><strong>クローン</strong></td>
+                                <td>Clone</td>
+                                <td>リモートリポジトリの完全なコピーをローカルに作成する操作</td>
+                            </tr>
+                            <tr>
+                                <td><strong>プッシュ</strong></td>
+                                <td>Push</td>
+                                <td>ローカルの変更をリモートリポジトリに送信する操作</td>
+                            </tr>
+                            <tr>
+                                <td><strong>プル</strong></td>
+                                <td>Pull</td>
+                                <td>リモートリポジトリの変更をローカルに取り込む操作</td>
+                            </tr>
+                            <tr>
+                                <td><strong>コンフリクト</strong></td>
+                                <td>Conflict</td>
+                                <td>同じ箇所を複数人が変更した場合に発生する衝突</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">用語の覚え方</span>
+                        </div>
+                        <p>最初は用語が多くて圧倒されるかもしれませんが、心配ありません。実際にGitを使いながら自然に覚えていきましょう。特に<strong>リポジトリ</strong>、<strong>コミット</strong>、<strong>ブランチ</strong>の3つは最も重要な概念なので、まずこの3つをしっかり理解することを目指しましょう。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">1章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>バージョン管理システムの主な目的として、最も適切でないものはどれですか？</p>
+                        <ol type="A">
+                            <li>ファイルの変更履歴を記録する</li>
+                            <li>過去の状態に戻すことができる</li>
+                            <li>ファイルを自動的にバックアップサーバーに保存する</li>
+                            <li>チームでの共同作業を支援する</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>分散型バージョン管理（Git）の特徴として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>中央サーバーに接続しないと一切の作業ができない</li>
+                            <li>各開発者がリポジトリの完全なコピーを持つ</li>
+                            <li>ブランチの作成にはサーバー管理者の承認が必要</li>
+                            <li>ファイルの最新版のみをローカルに保存する</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>Gitにおいて、変更内容をスナップショットとして履歴に記録する操作を何と呼びますか？</p>
+                        <ol type="A">
+                            <li>プッシュ（Push）</li>
+                            <li>マージ（Merge）</li>
+                            <li>コミット（Commit）</li>
+                            <li>クローン（Clone）</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">1章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: C</div>
+                    <div class="answer-content">
+                        <p>バージョン管理システムの主な目的は「変更履歴の記録」「過去の状態への復元」「チームでの共同作業の支援」です。自動バックアップは副次的な効果であり、VCSの主な目的ではありません。バックアップはあくまでリモートリポジトリにプッシュした場合の結果です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p>分散型バージョン管理では、各開発者がリポジトリの完全なコピー（全履歴を含む）をローカルに保持します。そのためオフラインでもコミットやブランチ作成が可能です。Aは集中型の特徴、Cは誤り（Gitではローカルで自由にブランチ作成可能）、Dも集中型の特徴です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: C</div>
+                    <div class="answer-content">
+                        <p>コミット（Commit）は、変更内容をスナップショットとしてリポジトリの履歴に記録する操作です。プッシュはリモートへの送信、マージはブランチの統合、クローンはリポジトリのコピー作成です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="index.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">コース目次</div>
+                <div class="page-nav-title">Git & GitHub完全ガイド</div>
+            </div>
+        </a>
+        <a href="2git-setup.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第2章 Gitの導入と初期設定</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

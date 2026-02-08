@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>実行結果サンプル - 第12章 テーブルUIの実装</title>
+  <style>
+    :root {
+      --primary: #007ACC;
+      --success: #34C759;
+      --danger: #FF3B30;
+      --warning: #FF9F0A;
+      --text: #1D1D1F;
+      --text-sub: #6E6E73;
+      --border: #D2D2D7;
+      --bg: #F5F5F7;
+      --white: #FFFFFF;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 24px;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .page-header {
+      background: linear-gradient(135deg, var(--primary), #5856D6);
+      color: white; border-radius: 16px; padding: 40px 32px;
+      margin-bottom: 32px; text-align: center;
+      box-shadow: 0 4px 16px rgba(0,122,204,0.3);
+    }
+    .page-header h1 { font-size: 24px; margin-bottom: 8px; }
+    .page-header p { opacity: 0.9; font-size: 14px; }
+    .card {
+      background: var(--white); border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 32px; margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 18px; font-weight: 700; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 2px solid var(--primary);
+    }
+    .card-description { font-size: 14px; color: var(--text-sub); margin-bottom: 20px; }
+
+    /* テーブルツールバー */
+    .table-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+    }
+    .table-toolbar__left {
+      display: flex; align-items: center; gap: 8px; font-size: 14px;
+    }
+    .table-toolbar__select {
+      padding: 6px 12px; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 14px; font-family: inherit;
+    }
+    .table-toolbar__search {
+      padding: 8px 14px; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 14px; width: 240px;
+      font-family: inherit;
+    }
+    .table-toolbar__search:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0,122,204,0.12);
+    }
+
+    /* テーブル */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .data-table thead { background: var(--bg); }
+    .data-table th {
+      padding: 12px 16px; text-align: left; font-weight: 600;
+      color: var(--text-sub); font-size: 13px; border-bottom: 2px solid var(--border);
+      cursor: pointer; white-space: nowrap; user-select: none;
+    }
+    .data-table th:hover { color: var(--primary); }
+    .data-table th .sort-icon { font-size: 10px; margin-left: 4px; }
+    .data-table td {
+      padding: 12px 16px; border-bottom: 1px solid #f0f0f0;
+    }
+    .data-table tbody tr { transition: background 0.15s; }
+    .data-table tbody tr:hover { background: rgba(0,122,204,0.03); }
+
+    /* ステータスバッジ */
+    .badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 20px; font-size: 12px; font-weight: 600;
+    }
+    .badge--active { background: #dcf5e7; color: #1b7a3d; }
+    .badge--inactive { background: #fde8e8; color: #c53030; }
+    .badge--pending { background: #fff3cd; color: #856404; }
+
+    /* アクションボタン */
+    .action-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border: none; border-radius: 6px;
+      cursor: pointer; transition: background 0.15s; font-size: 14px;
+      background: transparent;
+    }
+    .action-btn--edit:hover { background: #e8f4fd; color: var(--primary); }
+    .action-btn--delete:hover { background: #fde8e8; color: var(--danger); }
+
+    /* ページネーション */
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 16px; font-size: 13px; color: var(--text-sub);
+    }
+    .pagination__pages {
+      display: flex; gap: 4px;
+    }
+    .pagination__btn {
+      display: flex; align-items: center; justify-content: center;
+      min-width: 36px; height: 36px; padding: 0 8px;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: white; cursor: pointer; font-size: 13px;
+      transition: all 0.15s; font-family: inherit;
+    }
+    .pagination__btn:hover { border-color: var(--primary); color: var(--primary); }
+    .pagination__btn--active {
+      background: var(--primary); color: white; border-color: var(--primary);
+    }
+    .pagination__btn:disabled {
+      opacity: 0.4; cursor: not-allowed;
+    }
+
+    .table-responsive { overflow-x: auto; }
+
+    @media (max-width: 767px) {
+      .table-toolbar { flex-direction: column; align-items: stretch; }
+      .table-toolbar__search { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1>第12章 テーブルUIの実装</h1>
+      <p>プロンプトUIコーディング - 実行結果サンプル</p>
+    </div>
+
+    <!-- 顧客一覧テーブル -->
+    <div class="card">
+      <div class="card-title">顧客一覧テーブル（DataTables風）</div>
+      <p class="card-description">ソート・検索・ページネーション付きデータテーブル</p>
+
+      <div class="table-toolbar">
+        <div class="table-toolbar__left">
+          <select class="table-toolbar__select">
+            <option>10件表示</option>
+            <option>25件表示</option>
+            <option>50件表示</option>
+          </select>
+          <span>件を表示</span>
+        </div>
+        <input class="table-toolbar__search" type="text" placeholder="検索...">
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID <span class="sort-icon">&#9660;</span></th>
+              <th>顧客名 <span class="sort-icon">&#9650;&#9660;</span></th>
+              <th>メールアドレス</th>
+              <th>電話番号</th>
+              <th>登録日 <span class="sort-icon">&#9660;</span></th>
+              <th>ステータス</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>001</td>
+              <td><strong>山田 太郎</strong></td>
+              <td>yamada@example.com</td>
+              <td>03-1234-5678</td>
+              <td>2026-01-15</td>
+              <td><span class="badge badge--active">有効</span></td>
+              <td>
+                <button class="action-btn action-btn--edit" title="編集">&#9998;</button>
+                <button class="action-btn action-btn--delete" title="削除">&#10005;</button>
+              </td>
+            </tr>
+            <tr>
+              <td>002</td>
+              <td><strong>佐藤 花子</strong></td>
+              <td>sato@example.com</td>
+              <td>06-9876-5432</td>
+              <td>2026-01-12</td>
+              <td><span class="badge badge--active">有効</span></td>
+              <td>
+                <button class="action-btn action-btn--edit" title="編集">&#9998;</button>
+                <button class="action-btn action-btn--delete" title="削除">&#10005;</button>
+              </td>
+            </tr>
+            <tr>
+              <td>003</td>
+              <td><strong>鈴木 一郎</strong></td>
+              <td>suzuki@example.com</td>
+              <td>045-111-2222</td>
+              <td>2026-01-10</td>
+              <td><span class="badge badge--inactive">無効</span></td>
+              <td>
+                <button class="action-btn action-btn--edit" title="編集">&#9998;</button>
+                <button class="action-btn action-btn--delete" title="削除">&#10005;</button>
+              </td>
+            </tr>
+            <tr>
+              <td>004</td>
+              <td><strong>田中 美咲</strong></td>
+              <td>tanaka@example.com</td>
+              <td>03-3333-4444</td>
+              <td>2026-01-08</td>
+              <td><span class="badge badge--active">有効</span></td>
+              <td>
+                <button class="action-btn action-btn--edit" title="編集">&#9998;</button>
+                <button class="action-btn action-btn--delete" title="削除">&#10005;</button>
+              </td>
+            </tr>
+            <tr>
+              <td>005</td>
+              <td><strong>高橋 健太</strong></td>
+              <td>takahashi@example.com</td>
+              <td>080-5555-6666</td>
+              <td>2026-01-05</td>
+              <td><span class="badge badge--pending">保留</span></td>
+              <td>
+                <button class="action-btn action-btn--edit" title="編集">&#9998;</button>
+                <button class="action-btn action-btn--delete" title="削除">&#10005;</button>
+              </td>
+            </tr>
+            <tr>
+              <td>006</td>
+              <td><strong>伊藤 直子</strong></td>
+              <td>ito@example.com</td>
+              <td>03-7777-8888</td>
+              <td>2026-01-03</td>
+              <td><span class="badge badge--active">有効</span></td>
+              <td>
+                <button class="action-btn action-btn--edit" title="編集">&#9998;</button>
+                <button class="action-btn action-btn--delete" title="削除">&#10005;</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <span>全 32 件中 1〜6 件を表示</span>
+        <div class="pagination__pages">
+          <button class="pagination__btn" disabled>&lt;</button>
+          <button class="pagination__btn pagination__btn--active">1</button>
+          <button class="pagination__btn">2</button>
+          <button class="pagination__btn">3</button>
+          <button class="pagination__btn">4</button>
+          <button class="pagination__btn">&gt;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 商品管理テーブル（インライン編集） -->
+    <div class="card">
+      <div class="card-title">商品管理テーブル（jsGrid風・インライン編集）</div>
+      <p class="card-description">CRUD操作対応・インライン編集・フィルタリング</p>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>商品名</th>
+              <th>カテゴリ</th>
+              <th>価格</th>
+              <th>在庫数</th>
+              <th>操作</th>
+            </tr>
+            <tr style="background: #f8f9fa;">
+              <td style="padding: 8px;"><input style="width:50px; padding:4px 8px; border:1px solid #ddd; border-radius:4px; font-size:13px;" placeholder="ID"></td>
+              <td style="padding: 8px;"><input style="width:100%; padding:4px 8px; border:1px solid #ddd; border-radius:4px; font-size:13px;" placeholder="商品名で検索"></td>
+              <td style="padding: 8px;">
+                <select style="width:100%; padding:4px 8px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                  <option value="">全て</option>
+                  <option>食品</option>
+                  <option>飲料</option>
+                  <option>日用品</option>
+                  <option>その他</option>
+                </select>
+              </td>
+              <td style="padding: 8px;"></td>
+              <td style="padding: 8px;"></td>
+              <td style="padding: 8px;"></td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>有機野菜セット</td>
+              <td>食品</td>
+              <td style="text-align: right;">&#165;2,480</td>
+              <td style="text-align: right;">45</td>
+              <td>
+                <button class="action-btn action-btn--edit" title="編集">&#9998;</button>
+                <button class="action-btn action-btn--delete" title="削除">&#10005;</button>
+              </td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>天然水 500ml</td>
+              <td>飲料</td>
+              <td style="text-align: right;">&#165;98</td>
+              <td style="text-align: right;">200</td>
+              <td>
+                <button class="action-btn action-btn--edit" title="編集">&#9998;</button>
+                <button class="action-btn action-btn--delete" title="削除">&#10005;</button>
+              </td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>洗濯洗剤 詰替用</td>
+              <td>日用品</td>
+              <td style="text-align: right;">&#165;398</td>
+              <td style="text-align: right;">120</td>
+              <td>
+                <button class="action-btn action-btn--edit" title="編集">&#9998;</button>
+                <button class="action-btn action-btn--delete" title="削除">&#10005;</button>
+              </td>
+            </tr>
+            <tr style="background: #e8f4fd;">
+              <td style="color: #999;">自動</td>
+              <td><input style="width:100%; padding:6px 8px; border:1px solid var(--primary); border-radius:4px; font-size:13px;" placeholder="新規商品名"></td>
+              <td>
+                <select style="width:100%; padding:6px 8px; border:1px solid var(--primary); border-radius:4px; font-size:13px;">
+                  <option>食品</option>
+                  <option>飲料</option>
+                  <option>日用品</option>
+                  <option>その他</option>
+                </select>
+              </td>
+              <td><input style="width:80px; padding:6px 8px; border:1px solid var(--primary); border-radius:4px; font-size:13px; text-align:right;" placeholder="0"></td>
+              <td><input style="width:60px; padding:6px 8px; border:1px solid var(--primary); border-radius:4px; font-size:13px; text-align:right;" placeholder="0"></td>
+              <td>
+                <button style="background: var(--success); color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">追加</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

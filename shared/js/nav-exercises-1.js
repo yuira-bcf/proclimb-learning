@@ -19,12 +19,12 @@ const navData = {
         { href: "5-portfolio.html", num: "5", text: "プロジェクトアーカイブ構築" }
     ],
     categories: [
-        { href: "../index.html", text: "ダッシュボード" },
-        { href: "../index.html#frontend", text: "フロントエンド" },
-        { href: "../index.html#backend", text: "バックエンド" },
-        { href: "../index.html#ai", text: "AI・自動化" },
-        { href: "../index.html#design", text: "デザイン" },
-        { href: "../index.html#exercises", text: "総合演習" }
+        { href: "../../index.html", text: "ダッシュボード" },
+        { href: "../../index.html#frontend", text: "フロントエンド" },
+        { href: "../../index.html#backend", text: "バックエンド" },
+        { href: "../../index.html#ai", text: "AI・自動化" },
+        { href: "../../index.html#design", text: "デザイン" },
+        { href: "../../index.html#exercises", text: "総合演習" }
     ]
 };
 

@@ -22,12 +22,12 @@ const navData = {
         { href: "8css-reset.html", num: "8", text: "リセットCSS" }
     ],
     categories: [
-        { href: "../index.html", text: "ダッシュボード" },
-        { href: "../index.html#frontend", text: "フロントエンド基礎" },
-        { href: "../index.html#backend", text: "バックエンド開発" },
-        { href: "../index.html#ai", text: "AI・自動化" },
-        { href: "../index.html#design", text: "デザイン・UX" },
-        { href: "../index.html#business", text: "ビジネススキル" }
+        { href: "../../index.html", text: "ダッシュボード" },
+        { href: "../../index.html#frontend", text: "フロントエンド基礎" },
+        { href: "../../index.html#backend", text: "バックエンド開発" },
+        { href: "../../index.html#ai", text: "AI・自動化" },
+        { href: "../../index.html#design", text: "デザイン・UX" },
+        { href: "../../index.html#business", text: "ビジネススキル" }
     ]
 };
 
@@ -73,7 +73,7 @@ function generateNavHTML() {
     return `
         <div class="nav-container">
             <a href="${navData.logo.href}" class="nav-logo${logoActive}">
-                <span class="nav-logo-icon" style="background: #264de4; color: white;">${logoIcon}</span>
+                <span class="nav-logo-icon" style="background: #007ACC; color: white;">${logoIcon}</span>
                 <span>${navData.logo.text}</span>
             </a>
             <div class="nav-category-links">

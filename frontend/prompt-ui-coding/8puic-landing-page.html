@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第8章 ランディングページ制作 - プロンプトUIコーディング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <link rel="stylesheet" href="../../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-dark: #005A9E;
+      --primary-light: #E8F4FD;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+
+    /* 実行結果プレビュー */
+    .result-preview {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+    .result-preview-header {
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .result-preview-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .result-preview-title .material-icons {
+      font-size: 18px;
+      color: #28a745;
+    }
+    .result-preview-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .result-preview-tab {
+      padding: 6px 12px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .result-preview-tab:hover {
+      background: #f8f9fa;
+    }
+    .result-preview-tab.active {
+      background: #007ACC;
+      border-color: #007ACC;
+      color: #fff;
+    }
+    .result-preview-content {
+      padding: 24px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .result-preview-code {
+      display: none;
+      padding: 16px;
+      background: #1e1e1e;
+      overflow-x: auto;
+    }
+    .result-preview-code.active {
+      display: block;
+    }
+    .result-preview-code pre {
+      margin: 0;
+      color: #d4d4d4;
+      font-size: 13px;
+      line-height: 1.5;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* サンプルヒーロー */
+    .sample-lp-hero {
+      background: linear-gradient(to bottom, #E8F4FD, white);
+      padding: 32px 24px;
+      width: 100%;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .sample-lp-hero-text {
+      flex: 1;
+    }
+    .sample-lp-hero-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+    .sample-lp-hero-subtitle {
+      font-size: 13px;
+      color: #4B5563;
+      margin-bottom: 16px;
+    }
+    .sample-lp-hero-cta {
+      background: #3B82F6;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+    }
+    .sample-lp-hero-cta:hover {
+      background: #2563EB;
+    }
+    .sample-lp-hero-note {
+      font-size: 11px;
+      color: #6B7280;
+      margin-top: 8px;
+    }
+    .sample-lp-hero-image {
+      width: 180px;
+      height: 120px;
+      background: #E5E7EB;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9CA3AF;
+      font-size: 12px;
+    }
+    /* サンプル特徴 */
+    .sample-lp-features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+    .sample-lp-feature-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 16px;
+      text-align: center;
+    }
+    .sample-lp-feature-icon {
+      width: 40px;
+      height: 40px;
+      background: #E8F4FD;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      font-size: 18px;
+    }
+    .sample-lp-feature-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+    .sample-lp-feature-desc {
+      font-size: 12px;
+      color: #6B7280;
+    }
+    /* サンプルテスティモニアル */
+    .sample-lp-testimonials {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+      background: #F9FAFB;
+      padding: 16px;
+      border-radius: 8px;
+    }
+    .sample-lp-testimonial-card {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .sample-lp-testimonial-quote {
+      font-size: 18px;
+      color: #3B82F6;
+      margin-bottom: 8px;
+    }
+    .sample-lp-testimonial-text {
+      font-size: 12px;
+      color: #374151;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .sample-lp-testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sample-lp-testimonial-avatar {
+      width: 32px;
+      height: 32px;
+      background: #E5E7EB;
+      border-radius: 50%;
+    }
+    .sample-lp-testimonial-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .sample-lp-testimonial-role {
+      font-size: 11px;
+      color: #6B7280;
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-prompt-ui-coding.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">プロンプトUIコーディング</div>
+      <div class="chapter-number">8</div>
+      <h1 class="chapter-title">ランディングページ制作</h1>
+      <p class="chapter-subtitle">LP全体をプロンプトで効率的に制作する</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">8-1</span>LPの基本構成</li>
+        <li class="toc-item"><span class="toc-number">8-2</span>各セクションの生成</li>
+        <li class="toc-item"><span class="toc-number">8-3</span>LP全体の生成実践</li>
+        <li class="toc-item"><span class="toc-number">8-4</span>調整と最適化</li>
+      </ul>
+    </nav>
+
+    <!-- Section 8-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-1</span>
+        <h2 class="section-title">LPの基本構成</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>ランディングページ（LP）は、ユーザーを特定のアクション（購入、登録、問い合わせ等）に導くための1ページ完結型のWebページです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>標準的なLP構成</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF6B6B;">
+              <span class="material-icons" style="color: white;">flag</span>
+            </div>
+            <div class="feature-content">
+              <h4>1. ヒーローセクション</h4>
+              <p>キャッチコピー、サブタイトル、CTAボタン、メインビジュアル</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #4ECDC4;">
+              <span class="material-icons" style="color: white;">report_problem</span>
+            </div>
+            <div class="feature-content">
+              <h4>2. 課題提起</h4>
+              <p>ユーザーの悩み・課題を提示し、共感を得る</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #45B7D1;">
+              <span class="material-icons" style="color: white;">lightbulb</span>
+            </div>
+            <div class="feature-content">
+              <h4>3. 解決策・特徴</h4>
+              <p>サービス/製品の特徴を3〜4つ紹介</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #96CEB4;">
+              <span class="material-icons" style="color: white;">how_to_reg</span>
+            </div>
+            <div class="feature-content">
+              <h4>4. 使い方・ステップ</h4>
+              <p>導入や利用の流れを3ステップ程度で説明</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FFEAA7;">
+              <span class="material-icons" style="color: #333;">format_quote</span>
+            </div>
+            <div class="feature-content">
+              <h4>5. お客様の声</h4>
+              <p>実際の利用者の声や導入事例</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #DDA0DD;">
+              <span class="material-icons" style="color: white;">sell</span>
+            </div>
+            <div class="feature-content">
+              <h4>6. 料金プラン</h4>
+              <p>価格表、比較表</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #87CEEB;">
+              <span class="material-icons" style="color: white;">help</span>
+            </div>
+            <div class="feature-content">
+              <h4>7. FAQ</h4>
+              <p>よくある質問と回答</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF7F50;">
+              <span class="material-icons" style="color: white;">rocket_launch</span>
+            </div>
+            <div class="feature-content">
+              <h4>8. CTA（最終）</h4>
+              <p>最後のアクション誘導、フォーム</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 8-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-2</span>
+        <h2 class="section-title">各セクションの生成</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>ヒーローセクション生成</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🚀</span>
+            <span class="prompt-card-label">LPヒーロー生成</span>
+          </div>
+          <div class="prompt-card-content">SaaSサービスのLPヒーローセクションの完全なHTMLファイルを作成してください。
+
+## 出力形式
+- 出力ファイル: puic-output/8-1-lp-hero.html
+- &lt;!DOCTYPE html&gt;から始まる完全なHTMLファイル
+- Tailwind CSSはCDNで読み込み
+- &lt;meta charset="UTF-8"&gt;を含めること
+
+## 共通Tailwindスタイル
+- body: bg-white
+- container: max-w-6xl mx-auto px-4
+- 基本色: blue-500(primary), blue-600(hover)
+- テキスト: text-gray-900(メイン), text-gray-600(サブ), text-gray-500(補助)
+
+## デザイン
+- ヒーロー背景: bg-gradient-to-b from-blue-50 to-white
+- キャッチコピー: text-4xl lg:text-5xl font-bold text-gray-900
+- サブタイトル: text-lg text-gray-600
+- CTAボタン: bg-blue-500 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-600 transition-colors
+- 補助テキスト: text-sm text-gray-500
+- イメージプレースホルダー: bg-gray-200 rounded-lg
+
+## コンテンツ
+- キャッチコピー: 「チームの生産性を3倍に」
+- サブタイトル: 「AIが自動でタスクを整理。もう締め切りを忘れない。」
+- CTAボタン: 「無料トライアルを始める」（青、大きめ）
+- 補助テキスト: 「クレジットカード不要・14日間無料」
+- 右側にダッシュボード画面のイメージ（プレースホルダー）
+
+## デザイン
+- 2カラムレイアウト（左:テキスト、右:画像）
+- モバイルでは縦並び
+- 背景: 薄い青からのグラデーション
+- Tailwind CSSを使用</div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <div class="sample-lp-hero">
+              <div class="sample-lp-hero-text">
+                <div class="sample-lp-hero-title">チームの生産性を3倍に</div>
+                <div class="sample-lp-hero-subtitle">AIが自動でタスクを整理。もう締め切りを忘れない。</div>
+                <button class="sample-lp-hero-cta">無料トライアルを始める</button>
+                <div class="sample-lp-hero-note">クレジットカード不要・14日間無料</div>
+              </div>
+              <div class="sample-lp-hero-image">Dashboard Image</div>
+            </div>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;section class="bg-gradient-to-b from-blue-50 to-white"&gt;
+  &lt;div class="max-w-6xl mx-auto px-4 py-20 flex flex-col lg:flex-row items-center gap-12"&gt;
+    &lt;div class="flex-1"&gt;
+      &lt;h1 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4"&gt;
+        チームの生産性を3倍に
+      &lt;/h1&gt;
+      &lt;p class="text-lg text-gray-600 mb-8"&gt;
+        AIが自動でタスクを整理。もう締め切りを忘れない。
+      &lt;/p&gt;
+      &lt;button class="bg-blue-500 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-600"&gt;
+        無料トライアルを始める
+      &lt;/button&gt;
+      &lt;p class="text-sm text-gray-500 mt-4"&gt;クレジットカード不要・14日間無料&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="flex-1 bg-gray-200 rounded-lg h-64 flex items-center justify-center"&gt;
+      Dashboard Image
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>特徴セクション生成</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">✨</span>
+            <span class="prompt-card-label">特徴セクション生成</span>
+          </div>
+          <div class="prompt-card-content">3つの特徴を紹介するセクションの完全なHTMLファイルを作成してください。
+
+## 出力形式
+- 出力ファイル: puic-output/8-1-lp-features.html
+- &lt;!DOCTYPE html&gt;から始まる完全なHTMLファイル
+- Tailwind CSSはCDNで読み込み
+- &lt;meta charset="UTF-8"&gt;を含めること
+
+## 共通Tailwindスタイル
+- body: bg-white
+- container: max-w-6xl mx-auto px-4
+- 基本色: blue-500(primary), blue-600(hover)
+- テキスト: text-gray-900(メイン), text-gray-600(サブ)
+
+## デザイン
+- セクション背景: bg-white, py-20
+- カード: bg-white rounded-xl shadow-md p-6 text-center
+- アイコン背景: w-12 h-12 bg-blue-100 rounded-lg, 中央配置
+- タイトル: font-bold text-lg text-gray-900
+- 説明文: text-gray-600 text-sm
+
+## 特徴
+1. AIタスク整理
+   - アイコン: スパークル
+   - 説明: AIがタスクの優先度を自動判定
+
+2. リアルタイム同期
+   - アイコン: 同期
+   - 説明: チーム全員の進捗がリアルタイムで共有
+
+3. スマート通知
+   - アイコン: ベル
+   - 説明: 重要なタスクだけ通知。集中を妨げない
+
+## デザイン
+- 3カラムグリッド（モバイルは1カラム）
+- 各特徴: アイコン + タイトル + 説明文
+- 背景: 白
+- カード風（影付き）
+- Tailwind CSSを使用</div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <div class="sample-lp-features">
+              <div class="sample-lp-feature-card">
+                <div class="sample-lp-feature-icon">✨</div>
+                <div class="sample-lp-feature-title">AIタスク整理</div>
+                <div class="sample-lp-feature-desc">AIがタスクの優先度を自動判定</div>
+              </div>
+              <div class="sample-lp-feature-card">
+                <div class="sample-lp-feature-icon">🔄</div>
+                <div class="sample-lp-feature-title">リアルタイム同期</div>
+                <div class="sample-lp-feature-desc">チーム全員の進捗がリアルタイムで共有</div>
+              </div>
+              <div class="sample-lp-feature-card">
+                <div class="sample-lp-feature-icon">🔔</div>
+                <div class="sample-lp-feature-title">スマート通知</div>
+                <div class="sample-lp-feature-desc">重要なタスクだけ通知。集中を妨げない</div>
+              </div>
+            </div>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;section class="py-20 bg-white"&gt;
+  &lt;div class="max-w-6xl mx-auto px-4"&gt;
+    &lt;div class="grid grid-cols-1 md:grid-cols-3 gap-8"&gt;
+      &lt;div class="bg-white rounded-xl shadow-md p-6 text-center"&gt;
+        &lt;div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4"&gt;
+          ✨
+        &lt;/div&gt;
+        &lt;h3 class="font-bold text-lg mb-2"&gt;AIタスク整理&lt;/h3&gt;
+        &lt;p class="text-gray-600 text-sm"&gt;AIがタスクの優先度を自動判定&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;!-- 他のカードも同様 --&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>お客様の声セクション</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">💬</span>
+            <span class="prompt-card-label">テスティモニアル生成</span>
+          </div>
+          <div class="prompt-card-content">お客様の声（テスティモニアル）セクションの完全なHTMLファイルを作成してください。
+
+## 出力形式
+- 出力ファイル: puic-output/8-1-lp-testimonial.html
+- &lt;!DOCTYPE html&gt;から始まる完全なHTMLファイル
+- Tailwind CSSはCDNで読み込み
+- &lt;meta charset="UTF-8"&gt;を含めること
+
+## 共通Tailwindスタイル
+- body: bg-white
+- container: max-w-6xl mx-auto px-4
+- 基本色: blue-500(primary), blue-600(hover)
+- テキスト: text-gray-900(メイン), text-gray-600(サブ), text-gray-500(補助)
+
+## デザイン
+- セクション背景: bg-gray-50, py-20
+- カード: bg-white rounded-xl p-6 shadow-sm
+- 引用符: text-2xl text-blue-500
+- コメント: text-gray-700 text-sm
+- アバター: w-10 h-10 bg-gray-200 rounded-full
+- 名前: font-semibold text-sm text-gray-900
+- 役職: text-xs text-gray-500
+
+## レビュー3件
+1. 名前: 田中 太郎、役職: マーケティング部長
+   コメント: 「チームの作業効率が劇的に改善しました」
+
+2. 名前: 鈴木 花子、役職: プロジェクトマネージャー
+   コメント: 「もうExcelでの管理には戻れません」
+
+3. 名前: 佐藤 一郎、役職: エンジニアリングマネージャー
+   コメント: 「導入後、会議時間が半分になりました」
+
+## デザイン
+- 横スクロールカルーセル風（モバイル）
+- 3カラムグリッド（PC）
+- カード: 引用符アイコン + コメント + 顔写真(プレースホルダー) + 名前 + 役職
+- 背景: 薄いグレー</div>
+        </div>
+
+        <!-- 実行結果サンプル -->
+        <div class="result-preview">
+          <div class="result-preview-header">
+            <div class="result-preview-title">
+              <span class="material-icons">check_circle</span>
+              実行結果サンプル
+            </div>
+            <div class="result-preview-tabs">
+              <button class="result-preview-tab active" data-tab="preview">プレビュー</button>
+              <button class="result-preview-tab" data-tab="code">コード</button>
+            </div>
+          </div>
+          <div class="result-preview-content">
+            <div class="sample-lp-testimonials">
+              <div class="sample-lp-testimonial-card">
+                <div class="sample-lp-testimonial-quote">"</div>
+                <div class="sample-lp-testimonial-text">チームの作業効率が劇的に改善しました</div>
+                <div class="sample-lp-testimonial-author">
+                  <div class="sample-lp-testimonial-avatar"></div>
+                  <div>
+                    <div class="sample-lp-testimonial-name">田中 太郎</div>
+                    <div class="sample-lp-testimonial-role">マーケティング部長</div>
+                  </div>
+                </div>
+              </div>
+              <div class="sample-lp-testimonial-card">
+                <div class="sample-lp-testimonial-quote">"</div>
+                <div class="sample-lp-testimonial-text">もうExcelでの管理には戻れません</div>
+                <div class="sample-lp-testimonial-author">
+                  <div class="sample-lp-testimonial-avatar"></div>
+                  <div>
+                    <div class="sample-lp-testimonial-name">鈴木 花子</div>
+                    <div class="sample-lp-testimonial-role">プロジェクトマネージャー</div>
+                  </div>
+                </div>
+              </div>
+              <div class="sample-lp-testimonial-card">
+                <div class="sample-lp-testimonial-quote">"</div>
+                <div class="sample-lp-testimonial-text">導入後、会議時間が半分になりました</div>
+                <div class="sample-lp-testimonial-author">
+                  <div class="sample-lp-testimonial-avatar"></div>
+                  <div>
+                    <div class="sample-lp-testimonial-name">佐藤 一郎</div>
+                    <div class="sample-lp-testimonial-role">エンジニアリングマネージャー</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="result-preview-code">
+            <pre>&lt;section class="py-20 bg-gray-50"&gt;
+  &lt;div class="max-w-6xl mx-auto px-4"&gt;
+    &lt;div class="grid grid-cols-1 md:grid-cols-3 gap-6"&gt;
+      &lt;div class="bg-white rounded-xl p-6 shadow-sm"&gt;
+        &lt;span class="text-2xl text-blue-500"&gt;"&lt;/span&gt;
+        &lt;p class="text-gray-700 my-4"&gt;チームの作業効率が劇的に改善しました&lt;/p&gt;
+        &lt;div class="flex items-center gap-3"&gt;
+          &lt;div class="w-10 h-10 bg-gray-200 rounded-full"&gt;&lt;/div&gt;
+          &lt;div&gt;
+            &lt;div class="font-semibold text-sm"&gt;田中 太郎&lt;/div&gt;
+            &lt;div class="text-xs text-gray-500"&gt;マーケティング部長&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;!-- 他のカードも同様 --&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 8-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-3</span>
+        <h2 class="section-title">LP全体の生成実践</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>一括生成プロンプト</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">📄</span>
+            <span class="prompt-card-label">LP一括生成</span>
+          </div>
+          <div class="prompt-card-content">タスク管理SaaSのランディングページの完全なHTMLファイルを作成してください。
+
+## 出力形式
+- 出力ファイル: puic-output/8-2-lp-full.html
+- &lt;!DOCTYPE html&gt;から始まる完全なHTMLファイル
+- Tailwind CSSはCDNで読み込み
+- &lt;meta charset="UTF-8"&gt;を含めること
+
+## 共通Tailwindスタイル
+- body: bg-white
+- container: max-w-6xl mx-auto px-4
+- 基本色: blue-500(primary), blue-600(hover)
+- テキスト: text-gray-900(メイン), text-gray-600(サブ), text-gray-500(補助)
+- ヘッダー: bg-white border-b border-gray-200
+- フッター: bg-gray-900 text-white
+- CTA: bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600
+
+## ページ構成
+1. ヘッダー（ロゴ + ナビ + CTAボタン）
+2. ヒーロー（キャッチコピー + CTA + イメージ）
+3. 特徴（3つ、アイコン付き）
+4. 使い方（3ステップ）
+5. 料金プラン（3プラン）
+6. FAQ（5問）
+7. 最終CTA
+8. フッター
+
+## 技術要件
+- Tailwind CSS使用
+- レスポンシブ対応（モバイルファースト）
+- セマンティックHTML
+
+## デザイントーン
+- プライマリカラー: blue-500
+- クリーンでモダンな印象
+- 余白を十分に取る
+
+## ダミーコンテンツ
+- テキストは日本語で、具体的な内容を入れる
+- 画像はプレースホルダー（bg-gray-200など）で代用</div>
+        </div>
+
+        <div class="info-box warning">
+          <div class="info-box-title">注意</div>
+          <div class="info-box-content">
+            <p>一括生成は便利ですが、出力が長くなりすぎると途中で切れることがあります。<strong>セクションごとに分けて生成</strong>するか、長い場合は「続きを出力して」と依頼しましょう。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>段階的な生成アプローチ</h3>
+        <div class="highlight-box">
+          <h4>推奨ステップ</h4>
+          <ol>
+            <li><strong>構成を確認</strong> - AIにLP構成を提案させる</li>
+            <li><strong>ヘッダー+ヒーロー</strong>を最初に生成</li>
+            <li><strong>特徴セクション</strong>を生成</li>
+            <li><strong>残りのセクション</strong>を順次生成</li>
+            <li><strong>フッター</strong>を生成</li>
+            <li><strong>全体を結合</strong>して調整</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 8-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-4</span>
+        <h2 class="section-title">調整と最適化</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>生成後のチェックリスト</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>確認内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>レスポンシブ</td>
+                <td>モバイル、タブレット、PCで崩れていないか</td>
+              </tr>
+              <tr>
+                <td>CTAボタン</td>
+                <td>目立つ位置にあり、クリックしやすいサイズか</td>
+              </tr>
+              <tr>
+                <td>読みやすさ</td>
+                <td>フォントサイズ、行間、コントラストは適切か</td>
+              </tr>
+              <tr>
+                <td>余白</td>
+                <td>セクション間の余白は十分か、詰まりすぎていないか</td>
+              </tr>
+              <tr>
+                <td>一貫性</td>
+                <td>色、フォント、ボタンスタイルが統一されているか</td>
+              </tr>
+              <tr>
+                <td>アクセシビリティ</td>
+                <td>alt属性、見出し順序、コントラスト比は適切か</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>よくある修正指示</h3>
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🔧</span>
+            <span class="prompt-card-label">LP修正指示</span>
+          </div>
+          <div class="prompt-card-content">## 修正依頼
+
+1. ヒーローセクションのCTAボタンをもっと目立たせて
+   - サイズを大きく（py-4 px-8）
+   - 影を追加（shadow-lg）
+   - アニメーション追加（hover:scale-105）
+
+2. 特徴セクションのカード間の余白を広げて
+   - 現状: gap-4
+   - 変更: gap-8
+
+3. フッターの背景色を変更
+   - 現状: bg-gray-100
+   - 変更: bg-gray-900 + テキストを白に
+
+4. モバイルでヒーローの画像を非表示に
+   - hidden md:block を追加</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第8章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li>LPは<strong>8つの基本セクション</strong>で構成される</li>
+          <li>一括生成より<strong>セクションごとの生成</strong>が精度が高い</li>
+          <li>プロンプトには<strong>具体的なコンテンツ</strong>を含める</li>
+          <li>生成後は<strong>チェックリスト</strong>で品質確認</li>
+          <li>修正指示は<strong>具体的な数値や変更内容</strong>で伝える</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="7puic-tailwind.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">Tailwind CSSとの連携</div>
+    </a>
+    <a href="9puic-refactoring.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">コードのリファクタリング</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>プロンプトUIコーディング - 職業訓練校教材</p>
+  </footer>
+
+  <script>
+    // Result Preview Tab Functionality
+    document.querySelectorAll('.result-preview').forEach(preview => {
+      const tabs = preview.querySelectorAll('.result-preview-tab');
+      const content = preview.querySelector('.result-preview-content');
+      const code = preview.querySelector('.result-preview-code');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          if (tab.dataset.tab === 'preview') {
+            content.style.display = 'flex';
+            code.classList.remove('active');
+          } else {
+            content.style.display = 'none';
+            code.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

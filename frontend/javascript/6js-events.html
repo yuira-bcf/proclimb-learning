@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 6: イベント処理 - JavaScript入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-dark: #005A9E;
+      --primary-light: #E8F4FD;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-javascript.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Chapter</div>
+      <div class="chapter-number">6</div>
+      <h1 class="chapter-title">イベント処理</h1>
+      <p class="chapter-subtitle">ユーザーの操作に反応するWebページを作ろう</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">6-1</span>addEventListener</li>
+        <li class="toc-item"><span class="toc-number">6-2</span>イベントの種類</li>
+        <li class="toc-item"><span class="toc-number">6-3</span>イベントオブジェクト</li>
+        <li class="toc-item"><span class="toc-number">6-4</span>イベントの伝播</li>
+        <li class="toc-item"><span class="toc-number">6-5</span>イベント委譲</li>
+        <li class="toc-item"><span class="toc-number">6-6</span>実習：ダークモード切替</li>
+        <li class="toc-item"><span class="toc-number">練習</span>練習問題</li>
+      </ul>
+    </nav>
+
+    <!-- 構文説明ボックス -->
+    <div class="syntax-box">
+      <div class="syntax-box-header">
+        <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
+        <span class="syntax-box-title">構文説明</span>
+      </div>
+      <div class="syntax-box-content">
+        <div class="syntax-item">
+          <h4>addEventListener()</h4>
+          <div class="syntax-pattern"><span class="variable">element</span>.<span class="method">addEventListener</span>(<span class="string">'イベント名'</span>, <span class="variable">コールバック関数</span>);
+<span class="variable">element</span>.<span class="method">addEventListener</span>(<span class="string">'イベント名'</span>, (<span class="variable">e</span>) => {
+  <span class="comment">// イベント発生時の処理</span>
+});
+<span class="variable">element</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, <span class="variable">handleClick</span>, { <span class="variable">once</span>: <span class="keyword">true</span> }); <span class="comment">// 1回だけ実行</span></div>
+          <p>要素にイベントリスナーを登録します。同じ要素に複数のリスナーを登録でき、登録順に実行されます。第3引数のオプションで<code>once: true</code>を指定すると1回だけ実行されます。</p>
+        </div>
+        <div class="syntax-item">
+          <h4>イベントオブジェクト（e.target, e.preventDefault()）</h4>
+          <div class="syntax-pattern"><span class="variable">element</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, (<span class="variable">e</span>) => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="variable">e</span>.<span class="variable">target</span>);        <span class="comment">// イベントが発生した要素</span>
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="variable">e</span>.<span class="variable">currentTarget</span>);  <span class="comment">// リスナーが登録された要素</span>
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="variable">e</span>.<span class="variable">type</span>);           <span class="comment">// イベントの種類（'click'など）</span>
+  <span class="variable">e</span>.<span class="method">preventDefault</span>();           <span class="comment">// デフォルト動作を防止</span>
+  <span class="variable">e</span>.<span class="method">stopPropagation</span>();          <span class="comment">// イベントの伝播を停止</span>
+});</div>
+          <p>イベントハンドラの引数<code>e</code>にはイベントの詳細情報が含まれます。<code>target</code>で発生元要素を取得、<code>preventDefault()</code>でフォーム送信やリンク遷移を防止できます。</p>
+        </div>
+        <div class="syntax-item">
+          <h4>イベント委譲（親要素でのイベント処理）</h4>
+          <div class="syntax-pattern"><span class="comment">// 親要素にリスナーを1つ登録し、子要素のイベントを処理</span>
+<span class="variable">parentElement</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, (<span class="variable">e</span>) => {
+  <span class="comment">// e.targetで実際にクリックされた要素を特定</span>
+  <span class="keyword">if</span> (<span class="variable">e</span>.<span class="variable">target</span>.<span class="method">matches</span>(<span class="string">'.button'</span>)) {
+    <span class="comment">// .button要素がクリックされた場合の処理</span>
+  }
+  <span class="comment">// closest()で最も近い祖先要素を取得</span>
+  <span class="keyword">const</span> <span class="variable">item</span> = <span class="variable">e</span>.<span class="variable">target</span>.<span class="method">closest</span>(<span class="string">'.item'</span>);
+});</div>
+          <p>動的に追加される要素にも対応するため、親要素にイベントリスナーを登録する手法です。<code>e.target</code>で実際にクリックされた要素を特定し、<code>matches()</code>や<code>closest()</code>で判定します。</p>
+        </div>
+        <div class="syntax-item">
+          <h4>localStorage.setItem() / getItem()</h4>
+          <div class="syntax-pattern"><span class="comment">// データの保存</span>
+<span class="variable">localStorage</span>.<span class="method">setItem</span>(<span class="string">'key'</span>, <span class="string">'value'</span>);
+<span class="variable">localStorage</span>.<span class="method">setItem</span>(<span class="string">'user'</span>, <span class="variable">JSON</span>.<span class="method">stringify</span>(<span class="variable">userObject</span>));
+
+<span class="comment">// データの取得</span>
+<span class="keyword">const</span> <span class="variable">value</span> = <span class="variable">localStorage</span>.<span class="method">getItem</span>(<span class="string">'key'</span>);
+<span class="keyword">const</span> <span class="variable">user</span> = <span class="variable">JSON</span>.<span class="method">parse</span>(<span class="variable">localStorage</span>.<span class="method">getItem</span>(<span class="string">'user'</span>));
+
+<span class="comment">// データの削除</span>
+<span class="variable">localStorage</span>.<span class="method">removeItem</span>(<span class="string">'key'</span>);
+<span class="variable">localStorage</span>.<span class="method">clear</span>();  <span class="comment">// 全て削除</span></div>
+          <p>ブラウザにデータを永続的に保存するWeb Storage APIです。文字列のみ保存可能なため、オブジェクトは<code>JSON.stringify()</code>で変換してから保存し、取得時は<code>JSON.parse()</code>で復元します。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 6-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-1</span>
+        <h2 class="section-title">addEventListener</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>イベントリスナーは、ユーザーの操作（クリック、入力、スクロールなど）を検知して処理を実行する仕組みです。<code>addEventListener()</code>メソッドを使って登録します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>基本的な使い方</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+ボタンへのクリックイベント登録
+
+## 実装要件
+- `addEventListener()`でクリックイベントを登録
+- 無名関数での書き方
+- アロー関数での書き方
+- 名前付き関数での書き方
+
+## 使用するAPI
+- EventTarget.addEventListener()
+- click イベント</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">addEventListener の構文</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="comment">// 構文: element.addEventListener(イベント名, コールバック関数)</span>
+
+<span class="keyword">const</span> <span class="variable">button</span> = <span class="variable">document</span>.<span class="method">querySelector</span>(<span class="string">'#myButton'</span>);
+
+<span class="comment">// クリックイベントを登録</span>
+<span class="variable">button</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, <span class="keyword">function</span>() {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'ボタンがクリックされました！'</span>);
+});
+
+<span class="comment">// アロー関数でも書ける</span>
+<span class="variable">button</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, () => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'クリック！'</span>);
+});
+
+<span class="comment">// 名前付き関数を使う（後で削除可能）</span>
+<span class="keyword">function</span> <span class="method">handleClick</span>() {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'クリック処理'</span>);
+}
+<span class="variable">button</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, <span class="variable">handleClick</span>);</pre>
+              </div>
+            </div>
+            <div class="demo-preview-section">
+              <div class="demo-preview-header">
+                <span class="demo-preview-label">プレビュー</span>
+              </div>
+              <div class="demo-preview-content" style="text-align: center;">
+                <button id="demo-btn-1" style="padding: 12px 24px; font-size: 16px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">クリックしてみよう</button>
+                <p id="demo-output-1" style="margin-top: 12px; color: #64748b;">ここに結果が表示されます</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          document.getElementById('demo-btn-1').addEventListener('click', function() {
+            document.getElementById('demo-output-1').textContent = 'クリックされました！ ' + new Date().toLocaleTimeString();
+          });
+        </script>
+      </div>
+
+      <div class="subsection">
+        <h3>イベントリスナーの削除</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+イベントリスナーの削除
+
+## 実装要件
+- `removeEventListener()`でリスナーを削除
+- 名前付き関数で登録して削除する例
+- `{ once: true }`オプションで1回だけ実行するリスナー
+
+## 使用するAPI
+- EventTarget.addEventListener()
+- EventTarget.removeEventListener()
+- AddEventListenerOptions.once</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">removeEventListener</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">button</span> = <span class="variable">document</span>.<span class="method">querySelector</span>(<span class="string">'#myButton'</span>);
+
+<span class="comment">// 名前付き関数を定義</span>
+<span class="keyword">function</span> <span class="method">handleClick</span>() {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'クリック！'</span>);
+}
+
+<span class="comment">// リスナーを登録</span>
+<span class="variable">button</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, <span class="variable">handleClick</span>);
+
+<span class="comment">// リスナーを削除（同じ関数参照が必要）</span>
+<span class="variable">button</span>.<span class="method">removeEventListener</span>(<span class="string">'click'</span>, <span class="variable">handleClick</span>);
+
+<span class="comment">// 1回だけ実行（{ once: true }オプション）</span>
+<span class="variable">button</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, () => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'1回だけ実行'</span>);
+}, { <span class="variable">once</span>: <span class="keyword">true</span> });</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box warning">
+          <div class="info-box-title"><span class="material-icons">warning</span> removeEventListenerの注意点</div>
+          <div class="info-box-content">
+            <p>匿名関数やアロー関数で登録したリスナーは削除できません。削除が必要な場合は、必ず名前付き関数を使用してください。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>複数のリスナー登録</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+同一要素への複数イベントリスナー登録
+
+## 実装要件
+- 1つのボタンに2つのクリックイベントを登録
+- 両方のリスナーが登録順に実行されることを示す
+
+## 使用するAPI
+- EventTarget.addEventListener()
+- click イベント</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">同じ要素に複数のリスナー</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">button</span> = <span class="variable">document</span>.<span class="method">querySelector</span>(<span class="string">'#myButton'</span>);
+
+<span class="comment">// 複数のリスナーを登録可能</span>
+<span class="variable">button</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, () => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'処理1'</span>);
+});
+
+<span class="variable">button</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, () => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'処理2'</span>);
+});
+
+<span class="comment">// 両方とも実行される</span>
+<span class="comment">// → "処理1"</span>
+<span class="comment">// → "処理2"</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-2</span>
+        <h2 class="section-title">イベントの種類</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>JavaScriptでは様々なイベントを扱うことができます。主要なイベントを種類別に見ていきましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>マウスイベント</h3>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>イベント</th>
+                <th>発生タイミング</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>click</code></td>
+                <td>クリック時</td>
+              </tr>
+              <tr>
+                <td><code>dblclick</code></td>
+                <td>ダブルクリック時</td>
+              </tr>
+              <tr>
+                <td><code>mousedown</code></td>
+                <td>マウスボタンを押した時</td>
+              </tr>
+              <tr>
+                <td><code>mouseup</code></td>
+                <td>マウスボタンを離した時</td>
+              </tr>
+              <tr>
+                <td><code>mouseenter</code></td>
+                <td>要素にマウスが入った時</td>
+              </tr>
+              <tr>
+                <td><code>mouseleave</code></td>
+                <td>要素からマウスが出た時</td>
+              </tr>
+              <tr>
+                <td><code>mousemove</code></td>
+                <td>マウスが動いた時</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+マウスホバー時のスタイル変更
+
+## 実装要件
+- `mouseenter`イベントでマウスが要素に入った時を検出
+- `mouseleave`イベントでマウスが要素から出た時を検出
+- ホバー時に要素の背景色を変更
+
+## 使用するAPI
+- EventTarget.addEventListener()
+- mouseenter イベント
+- mouseleave イベント
+- HTMLElement.style</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">マウスイベントの例</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">box</span> = <span class="variable">document</span>.<span class="method">querySelector</span>(<span class="string">'.box'</span>);
+
+<span class="variable">box</span>.<span class="method">addEventListener</span>(<span class="string">'mouseenter'</span>, () => {
+  <span class="variable">box</span>.<span class="variable">style</span>.<span class="variable">backgroundColor</span> = <span class="string">'#3b82f6'</span>;
+});
+
+<span class="variable">box</span>.<span class="method">addEventListener</span>(<span class="string">'mouseleave'</span>, () => {
+  <span class="variable">box</span>.<span class="variable">style</span>.<span class="variable">backgroundColor</span> = <span class="string">'#e2e8f0'</span>;
+});</pre>
+              </div>
+            </div>
+            <div class="demo-preview-section">
+              <div class="demo-preview-header">
+                <span class="demo-preview-label">プレビュー</span>
+              </div>
+              <div class="demo-preview-content" style="text-align: center;">
+                <div id="mouse-box" style="width: 150px; height: 150px; background: #e2e8f0; margin: 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 12px; transition: all 0.3s; cursor: pointer;">
+                  ホバーしてね
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          const mouseBox = document.getElementById('mouse-box');
+          mouseBox.addEventListener('mouseenter', () => {
+            mouseBox.style.backgroundColor = '#3b82f6';
+            mouseBox.style.color = 'white';
+          });
+          mouseBox.addEventListener('mouseleave', () => {
+            mouseBox.style.backgroundColor = '#e2e8f0';
+            mouseBox.style.color = '#1e293b';
+          });
+        </script>
+      </div>
+
+      <div class="subsection">
+        <h3>キーボードイベント</h3>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>イベント</th>
+                <th>発生タイミング</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>keydown</code></td>
+                <td>キーを押した時</td>
+              </tr>
+              <tr>
+                <td><code>keyup</code></td>
+                <td>キーを離した時</td>
+              </tr>
+              <tr>
+                <td><code>keypress</code></td>
+                <td>文字キーを押した時（非推奨）</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+キーボード入力の検出
+
+## 実装要件
+- `keydown`イベントでキー入力を検出
+- 押されたキー名を`e.key`で取得
+- ESCキーの検出
+- Ctrl+Sのショートカット検出
+- `preventDefault()`でデフォルト動作を防止
+
+## 使用するAPI
+- EventTarget.addEventListener()
+- keydown イベント
+- KeyboardEvent.key
+- KeyboardEvent.ctrlKey
+- Event.preventDefault()</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">キーボードイベントの例</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="variable">document</span>.<span class="method">addEventListener</span>(<span class="string">'keydown'</span>, (<span class="variable">e</span>) => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'押されたキー:'</span>, <span class="variable">e</span>.<span class="variable">key</span>);
+
+  <span class="comment">// 特定のキーに反応</span>
+  <span class="keyword">if</span> (<span class="variable">e</span>.<span class="variable">key</span> === <span class="string">'Escape'</span>) {
+    <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'ESCキーが押されました'</span>);
+  }
+
+  <span class="comment">// 修飾キーの判定</span>
+  <span class="keyword">if</span> (<span class="variable">e</span>.<span class="variable">ctrlKey</span> && <span class="variable">e</span>.<span class="variable">key</span> === <span class="string">'s'</span>) {
+    <span class="variable">e</span>.<span class="method">preventDefault</span>();  <span class="comment">// デフォルト動作を防止</span>
+    <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'保存のショートカット！'</span>);
+  }
+});</pre>
+              </div>
+            </div>
+            <div class="demo-preview-section">
+              <div class="demo-preview-header">
+                <span class="demo-preview-label">試してみよう</span>
+              </div>
+              <div class="demo-preview-content">
+                <input type="text" id="key-input" placeholder="ここに入力してキーを確認" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px;">
+                <p id="key-output" style="margin-top: 12px; font-family: 'JetBrains Mono', monospace; color: #64748b;">押されたキー: -</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          document.getElementById('key-input').addEventListener('keydown', (e) => {
+            document.getElementById('key-output').textContent = `押されたキー: ${e.key} (keyCode: ${e.keyCode})`;
+          });
+        </script>
+      </div>
+
+      <div class="subsection">
+        <h3>フォームイベント</h3>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>イベント</th>
+                <th>発生タイミング</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>submit</code></td>
+                <td>フォーム送信時</td>
+              </tr>
+              <tr>
+                <td><code>input</code></td>
+                <td>入力値が変わるたび</td>
+              </tr>
+              <tr>
+                <td><code>change</code></td>
+                <td>値が確定した時（フォーカスが外れた時）</td>
+              </tr>
+              <tr>
+                <td><code>focus</code></td>
+                <td>要素がフォーカスされた時</td>
+              </tr>
+              <tr>
+                <td><code>blur</code></td>
+                <td>フォーカスが外れた時</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ウィンドウイベント</h3>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>イベント</th>
+                <th>発生タイミング</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>load</code></td>
+                <td>ページ読み込み完了時</td>
+              </tr>
+              <tr>
+                <td><code>DOMContentLoaded</code></td>
+                <td>HTML解析完了時（画像等の読み込み前）</td>
+              </tr>
+              <tr>
+                <td><code>resize</code></td>
+                <td>ウィンドウサイズ変更時</td>
+              </tr>
+              <tr>
+                <td><code>scroll</code></td>
+                <td>スクロール時</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+ページ読み込みイベントの違い
+
+## 実装要件
+- `DOMContentLoaded`: HTML解析完了時に発火
+- `load`: 全リソース（画像、CSS等）読み込み完了時に発火
+- 両イベントの発火タイミングの違いを示す
+
+## 使用するAPI
+- document.addEventListener()
+- window.addEventListener()
+- DOMContentLoaded イベント
+- load イベント</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">DOMContentLoaded</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="comment">// HTML解析完了後に実行（推奨）</span>
+<span class="variable">document</span>.<span class="method">addEventListener</span>(<span class="string">'DOMContentLoaded'</span>, () => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'DOMの準備完了！'</span>);
+  <span class="comment">// ここで要素を取得・操作できる</span>
+});
+
+<span class="comment">// 画像等も含め全て読み込み完了後</span>
+<span class="variable">window</span>.<span class="method">addEventListener</span>(<span class="string">'load'</span>, () => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'全てのリソース読み込み完了！'</span>);
+});</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-3</span>
+        <h2 class="section-title">イベントオブジェクト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>イベントが発生すると、詳細な情報を含む<strong>イベントオブジェクト</strong>がコールバック関数に渡されます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>主要なプロパティ</h3>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>プロパティ</th>
+                <th>説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>target</code></td>
+                <td>イベントが発生した要素</td>
+              </tr>
+              <tr>
+                <td><code>currentTarget</code></td>
+                <td>リスナーが登録された要素</td>
+              </tr>
+              <tr>
+                <td><code>type</code></td>
+                <td>イベントの種類</td>
+              </tr>
+              <tr>
+                <td><code>clientX / clientY</code></td>
+                <td>ビューポート内のマウス座標</td>
+              </tr>
+              <tr>
+                <td><code>pageX / pageY</code></td>
+                <td>ページ全体でのマウス座標</td>
+              </tr>
+              <tr>
+                <td><code>key</code></td>
+                <td>押されたキー</td>
+              </tr>
+              <tr>
+                <td><code>ctrlKey / shiftKey / altKey</code></td>
+                <td>修飾キーが押されているか</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+イベントオブジェクトのプロパティ取得
+
+## 実装要件
+- `e.target`: クリックされた要素を取得
+- `e.type`: イベントの種類を取得
+- `e.clientX` / `e.clientY`: クリック位置を取得
+- 取得した情報を出力
+
+## 使用するAPI
+- Event.target
+- Event.type
+- MouseEvent.clientX
+- MouseEvent.clientY</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">イベントオブジェクトの使用例</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">box</span> = <span class="variable">document</span>.<span class="method">querySelector</span>(<span class="string">'.box'</span>);
+
+<span class="variable">box</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, (<span class="variable">e</span>) => {
+  <span class="comment">// イベントが発生した要素</span>
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'target:'</span>, <span class="variable">e</span>.<span class="variable">target</span>);
+
+  <span class="comment">// イベントの種類</span>
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'type:'</span>, <span class="variable">e</span>.<span class="variable">type</span>);  <span class="comment">// "click"</span>
+
+  <span class="comment">// クリック位置</span>
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'X:'</span>, <span class="variable">e</span>.<span class="variable">clientX</span>, <span class="string">'Y:'</span>, <span class="variable">e</span>.<span class="variable">clientY</span>);
+});</pre>
+              </div>
+            </div>
+            <div class="demo-preview-section">
+              <div class="demo-preview-header">
+                <span class="demo-preview-label">プレビュー</span>
+              </div>
+              <div class="demo-preview-content">
+                <div id="event-box" style="width: 100%; height: 120px; background: #667eea; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; cursor: crosshair;">
+                  クリックして座標を確認
+                </div>
+                <p id="event-info" style="margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #64748b;">クリック位置: -</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          document.getElementById('event-box').addEventListener('click', (e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = Math.round(e.clientX - rect.left);
+            const y = Math.round(e.clientY - rect.top);
+            document.getElementById('event-info').textContent =
+              `クリック位置: clientX=${e.clientX}, clientY=${e.clientY} (ボックス内: x=${x}, y=${y})`;
+          });
+        </script>
+      </div>
+
+      <div class="subsection">
+        <h3>preventDefault() - デフォルト動作の防止</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+ブラウザのデフォルト動作の防止
+
+## 実装要件
+- `preventDefault()`でデフォルト動作を防止
+- フォーム送信時のページ遷移を防止
+- リンククリック時の遷移を防止
+
+## 使用するAPI
+- Event.preventDefault()
+- submit イベント
+- click イベント</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">preventDefault の使用例</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="comment">// フォーム送信を防止</span>
+<span class="keyword">const</span> <span class="variable">form</span> = <span class="variable">document</span>.<span class="method">querySelector</span>(<span class="string">'form'</span>);
+<span class="variable">form</span>.<span class="method">addEventListener</span>(<span class="string">'submit'</span>, (<span class="variable">e</span>) => {
+  <span class="variable">e</span>.<span class="method">preventDefault</span>();  <span class="comment">// ページ遷移を防止</span>
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'フォームデータを処理...'</span>);
+});
+
+<span class="comment">// リンクのデフォルト動作を防止</span>
+<span class="keyword">const</span> <span class="variable">link</span> = <span class="variable">document</span>.<span class="method">querySelector</span>(<span class="string">'a'</span>);
+<span class="variable">link</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, (<span class="variable">e</span>) => {
+  <span class="variable">e</span>.<span class="method">preventDefault</span>();  <span class="comment">// ページ遷移を防止</span>
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'カスタム処理を実行'</span>);
+});</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>stopPropagation() - 伝播の停止</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+イベント伝播の停止
+
+## 実装要件
+- `stopPropagation()`で親要素への伝播を停止
+- 外側と内側の要素にクリックイベントを設定
+- 内側のクリック時に外側へ伝播しないようにする
+
+## 使用するAPI
+- Event.stopPropagation()
+- EventTarget.addEventListener()
+- click イベント</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">stopPropagation の使用例</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">outer</span> = <span class="variable">document</span>.<span class="method">querySelector</span>(<span class="string">'.outer'</span>);
+<span class="keyword">const</span> <span class="variable">inner</span> = <span class="variable">document</span>.<span class="method">querySelector</span>(<span class="string">'.inner'</span>);
+
+<span class="variable">outer</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, () => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'外側がクリックされた'</span>);
+});
+
+<span class="variable">inner</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, (<span class="variable">e</span>) => {
+  <span class="variable">e</span>.<span class="method">stopPropagation</span>();  <span class="comment">// 親への伝播を停止</span>
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'内側がクリックされた'</span>);
+});</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-4</span>
+        <h2 class="section-title">イベントの伝播</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>イベントは要素間を伝播します。この仕組みを理解することで、効率的なイベント処理が可能になります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>バブリングとキャプチャリング</h3>
+
+        <!-- SVG図解 -->
+        <div class="demo-area" style="padding: 20px; overflow-x: auto;">
+          <svg viewBox="0 0 700 280" style="min-width: 600px; width: 100%; height: auto;">
+            <!-- キャプチャリングフェーズ -->
+            <text x="150" y="30" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">キャプチャリング（下へ）</text>
+
+            <!-- 要素 -->
+            <rect x="50" y="50" width="200" height="200" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="150" y="75" text-anchor="middle" font-size="12" fill="#1e40af">document</text>
+
+            <rect x="75" y="90" width="150" height="140" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="150" y="115" text-anchor="middle" font-size="12" fill="#166534">親要素</text>
+
+            <rect x="100" y="130" width="100" height="80" rx="8" fill="#fef9c3" stroke="#eab308" stroke-width="2"/>
+            <text x="150" y="155" text-anchor="middle" font-size="12" fill="#854d0e">子要素</text>
+            <text x="150" y="175" text-anchor="middle" font-size="11" fill="#a16207">（クリック）</text>
+
+            <!-- 矢印（キャプチャリング） -->
+            <path d="M 270 70 Q 290 120 270 170" stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#arrowBlue)"/>
+            <text x="295" y="120" font-size="11" fill="#3b82f6">①②③</text>
+
+            <!-- バブリングフェーズ -->
+            <text x="550" y="30" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">バブリング（上へ）</text>
+
+            <!-- 要素 -->
+            <rect x="450" y="50" width="200" height="200" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="550" y="75" text-anchor="middle" font-size="12" fill="#1e40af">document</text>
+
+            <rect x="475" y="90" width="150" height="140" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="550" y="115" text-anchor="middle" font-size="12" fill="#166534">親要素</text>
+
+            <rect x="500" y="130" width="100" height="80" rx="8" fill="#fef9c3" stroke="#eab308" stroke-width="2"/>
+            <text x="550" y="155" text-anchor="middle" font-size="12" fill="#854d0e">子要素</text>
+            <text x="550" y="175" text-anchor="middle" font-size="11" fill="#a16207">（クリック）</text>
+
+            <!-- 矢印（バブリング） -->
+            <path d="M 430 170 Q 410 120 430 70" stroke="#ef4444" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
+            <text x="390" y="120" font-size="11" fill="#ef4444">③②①</text>
+
+            <!-- 説明 -->
+            <text x="350" y="270" text-anchor="middle" font-size="12" fill="#64748b">※ 通常はバブリング（上へ）でイベントが伝播します</text>
+
+            <!-- 矢印マーカー -->
+            <defs>
+              <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#3b82f6"/>
+              </marker>
+              <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#ef4444"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+イベントバブリングの確認
+
+## 実装要件
+- ネストされた要素（外側・内側）にクリックイベントを設定
+- 内側をクリックした際の発火順序を確認
+- バブリング（子→親への伝播）を示す
+
+## 使用するAPI
+- EventTarget.addEventListener()
+- click イベント
+- Event.target
+- Event.currentTarget</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">バブリングの確認</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="comment">// 外側の要素</span>
+<span class="variable">outer</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, () => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'外側'</span>);
+});
+
+<span class="comment">// 内側の要素</span>
+<span class="variable">inner</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, () => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'内側'</span>);
+});
+
+<span class="comment">// 内側をクリックすると：</span>
+<span class="comment">// → "内側"</span>
+<span class="comment">// → "外側"  （バブリングで伝播）</span></pre>
+              </div>
+            </div>
+            <div class="demo-preview-section">
+              <div class="demo-preview-header">
+                <span class="demo-preview-label">プレビュー</span>
+              </div>
+              <div class="demo-preview-content">
+                <div id="bubble-outer" style="padding: 30px; background: #dbeafe; border-radius: 12px; cursor: pointer;">
+                  <span style="color: #1e40af;">外側（クリック可）</span>
+                  <div id="bubble-inner" style="padding: 20px; background: #fef9c3; border-radius: 8px; margin-top: 10px; text-align: center;">
+                    <span style="color: #854d0e;">内側（クリック可）</span>
+                  </div>
+                </div>
+                <p id="bubble-log" style="margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #64748b;">ログ: -</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          let bubbleLog = [];
+          document.getElementById('bubble-outer').addEventListener('click', () => {
+            bubbleLog.push('外側');
+            document.getElementById('bubble-log').textContent = 'ログ: ' + bubbleLog.join(' → ');
+          });
+          document.getElementById('bubble-inner').addEventListener('click', (e) => {
+            bubbleLog = ['内側'];
+            document.getElementById('bubble-log').textContent = 'ログ: ' + bubbleLog.join(' → ');
+          });
+        </script>
+      </div>
+    </section>
+
+    <!-- Section 6-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-5</span>
+        <h2 class="section-title">イベント委譲</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>イベント委譲は、親要素にリスナーを設定して子要素のイベントを処理する手法です。動的に追加される要素にも対応でき、パフォーマンスも向上します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>イベント委譲のメリット</h3>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">🚀</div>
+            <div class="feature-content">
+              <h4>パフォーマンス向上</h4>
+              <p>多数の要素に個別にリスナーを登録する代わりに、親に1つだけ登録すれば済みます。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">➕</div>
+            <div class="feature-content">
+              <h4>動的要素への対応</h4>
+              <p>後から追加された要素にも自動的にイベントが適用されます。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🧹</div>
+            <div class="feature-content">
+              <h4>コードの簡潔化</h4>
+              <p>リスナーの登録・削除の管理が簡単になります。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>実装例</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+イベント委譲によるリスト操作
+
+## 実装要件
+- 親要素（ul）に1つのイベントリスナーを登録
+- `e.target`でクリックされたli要素や削除ボタンを判定
+- 動的に追加された要素にも対応
+
+## 使用するAPI
+- EventTarget.addEventListener()
+- Event.target
+- Element.matches()
+- Element.closest()</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">イベント委譲の実装</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="comment">// 親要素（ul）にリスナーを登録</span>
+<span class="keyword">const</span> <span class="variable">list</span> = <span class="variable">document</span>.<span class="method">querySelector</span>(<span class="string">'ul'</span>);
+
+<span class="variable">list</span>.<span class="method">addEventListener</span>(<span class="string">'click'</span>, (<span class="variable">e</span>) => {
+  <span class="comment">// クリックされた要素がliかチェック</span>
+  <span class="keyword">if</span> (<span class="variable">e</span>.<span class="variable">target</span>.<span class="variable">tagName</span> === <span class="string">'LI'</span>) {
+    <span class="variable">console</span>.<span class="method">log</span>(<span class="string">'クリック:'</span>, <span class="variable">e</span>.<span class="variable">target</span>.<span class="variable">textContent</span>);
+  }
+
+  <span class="comment">// 削除ボタンがクリックされた場合</span>
+  <span class="keyword">if</span> (<span class="variable">e</span>.<span class="variable">target</span>.<span class="method">classList</span>.<span class="method">contains</span>(<span class="string">'delete-btn'</span>)) {
+    <span class="variable">e</span>.<span class="variable">target</span>.<span class="method">closest</span>(<span class="string">'li'</span>).<span class="method">remove</span>();
+  }
+});
+
+<span class="comment">// 新しい項目を追加しても動作する！</span>
+<span class="keyword">const</span> <span class="variable">newItem</span> = <span class="variable">document</span>.<span class="method">createElement</span>(<span class="string">'li'</span>);
+<span class="variable">newItem</span>.<span class="variable">textContent</span> = <span class="string">'新しい項目'</span>;
+<span class="variable">list</span>.<span class="method">appendChild</span>(<span class="variable">newItem</span>);</pre>
+              </div>
+            </div>
+            <div class="demo-preview-section">
+              <div class="demo-preview-header">
+                <span class="demo-preview-label">プレビュー</span>
+              </div>
+              <div class="demo-preview-content">
+                <ul id="delegation-list" style="list-style: none; padding: 0;">
+                  <li style="padding: 10px; background: #f1f5f9; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                    項目1 <button class="del-btn" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">削除</button>
+                  </li>
+                  <li style="padding: 10px; background: #f1f5f9; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                    項目2 <button class="del-btn" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">削除</button>
+                  </li>
+                  <li style="padding: 10px; background: #f1f5f9; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                    項目3 <button class="del-btn" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">削除</button>
+                  </li>
+                </ul>
+                <button id="add-item-btn" style="padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; cursor: pointer;">+ 項目を追加</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          const delegationList = document.getElementById('delegation-list');
+          let itemCount = 3;
+
+          delegationList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('del-btn')) {
+              e.target.closest('li').remove();
+            }
+          });
+
+          document.getElementById('add-item-btn').addEventListener('click', () => {
+            itemCount++;
+            const li = document.createElement('li');
+            li.style.cssText = 'padding: 10px; background: #f1f5f9; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;';
+            li.innerHTML = `項目${itemCount} <button class="del-btn" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">削除</button>`;
+            delegationList.appendChild(li);
+          });
+        </script>
+      </div>
+    </section>
+
+    <!-- Section 6-6 実習 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-6</span>
+        <h2 class="section-title">実習：ダークモード切替</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この章で学んだイベント処理を活用して、ダークモード切替機能を実装します。LocalStorageで設定を保存し、システム設定も検出します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>完成イメージ</h3>
+        <div class="demo-area" style="padding: 20px;">
+          <div id="dark-demo" style="padding: 30px; border-radius: 16px; background: white; color: #1e293b; transition: all 0.3s;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h3 style="margin: 0;">ダークモードデモ</h3>
+              <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <span id="theme-label">ライト</span>
+                <div style="position: relative; width: 50px; height: 26px;">
+                  <input type="checkbox" id="theme-toggle" style="opacity: 0; width: 0; height: 0;">
+                  <span id="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #e2e8f0; border-radius: 26px; transition: 0.3s;"></span>
+                  <span id="toggle-circle" style="position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
+                </div>
+              </label>
+            </div>
+            <p style="margin: 0;">このエリアのテーマが切り替わります。LocalStorageに設定が保存されます。</p>
+          </div>
+        </div>
+
+        <script>
+          const darkDemo = document.getElementById('dark-demo');
+          const themeToggle = document.getElementById('theme-toggle');
+          const themeLabel = document.getElementById('theme-label');
+          const toggleSlider = document.getElementById('toggle-slider');
+          const toggleCircle = document.getElementById('toggle-circle');
+
+          function updateDemoTheme(isDark) {
+            if (isDark) {
+              darkDemo.style.background = '#1e293b';
+              darkDemo.style.color = '#f1f5f9';
+              toggleSlider.style.background = '#3b82f6';
+              toggleCircle.style.transform = 'translateX(24px)';
+              themeLabel.textContent = 'ダーク';
+            } else {
+              darkDemo.style.background = 'white';
+              darkDemo.style.color = '#1e293b';
+              toggleSlider.style.background = '#e2e8f0';
+              toggleCircle.style.transform = 'translateX(0)';
+              themeLabel.textContent = 'ライト';
+            }
+          }
+
+          themeToggle.addEventListener('change', () => {
+            updateDemoTheme(themeToggle.checked);
+          });
+        </script>
+      </div>
+
+      <div class="subsection">
+        <h3>実装コード</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+ダークモード切替機能
+
+## 実装要件
+- トグルスイッチの`change`イベントでテーマを切り替え
+- CSS変数（`data-theme`属性）でテーマを管理
+- `localStorage`でユーザー設定を保存・復元
+- `matchMedia`でシステムのダークモード設定を検出
+- `DOMContentLoaded`で初期化
+
+## 使用するAPI
+- EventTarget.addEventListener()
+- change イベント
+- DOMContentLoaded イベント
+- Element.dataset
+- localStorage.setItem() / getItem()
+- window.matchMedia()</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">dark-mode.html</span>
+          </div>
+          <div class="demo-body vertical">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">HTML + CSS + JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="tag">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;html</span> <span class="attr">lang</span>=<span class="value">"ja"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;head&gt;</span>
+  <span class="tag">&lt;meta</span> <span class="attr">charset</span>=<span class="value">"UTF-8"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;meta</span> <span class="attr">name</span>=<span class="value">"viewport"</span> <span class="attr">content</span>=<span class="value">"width=device-width, initial-scale=1.0"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;title&gt;</span>ダークモード切替<span class="tag">&lt;/title&gt;</span>
+  <span class="tag">&lt;style&gt;</span>
+    <span class="comment">/* CSS変数でテーマを管理 */</span>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #1e293b;
+      --card-bg: #f8fafc;
+      --border-color: #e2e8f0;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #1e293b;
+      --text-color: #f1f5f9;
+      --card-bg: #334155;
+      --border-color: #475569;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    <span class="comment">/* トグルスイッチ */</span>
+    .toggle-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 60px;
+      height: 32px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #cbd5e1;
+      border-radius: 32px;
+      transition: 0.3s;
+    }
+
+    .toggle-slider::before {
+      content: "";
+      position: absolute;
+      height: 24px;
+      width: 24px;
+      left: 4px;
+      bottom: 4px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .toggle input:checked + .toggle-slider {
+      background: #3b82f6;
+    }
+
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(28px);
+    }
+
+    .theme-icon {
+      font-size: 24px;
+    }
+  <span class="tag">&lt;/style&gt;</span>
+<span class="tag">&lt;/head&gt;</span>
+<span class="tag">&lt;body&gt;</span>
+  <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="value">"container"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="value">"header"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;h1&gt;</span>ダークモード<span class="tag">&lt;/h1&gt;</span>
+      <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="value">"toggle-wrapper"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;span</span> <span class="attr">class</span>=<span class="value">"theme-icon"</span> <span class="attr">id</span>=<span class="value">"themeIcon"</span><span class="tag">&gt;</span>☀️<span class="tag">&lt;/span&gt;</span>
+        <span class="tag">&lt;label</span> <span class="attr">class</span>=<span class="value">"toggle"</span><span class="tag">&gt;</span>
+          <span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="value">"checkbox"</span> <span class="attr">id</span>=<span class="value">"themeToggle"</span><span class="tag">&gt;</span>
+          <span class="tag">&lt;span</span> <span class="attr">class</span>=<span class="value">"toggle-slider"</span><span class="tag">&gt;&lt;/span&gt;</span>
+        <span class="tag">&lt;/label&gt;</span>
+      <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+
+    <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="value">"card"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;h2&gt;</span>カードコンポーネント<span class="tag">&lt;/h2&gt;</span>
+      <span class="tag">&lt;p&gt;</span>テーマが切り替わると、このカードの見た目も変わります。<span class="tag">&lt;/p&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+
+    <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="value">"card"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;h3&gt;</span>LocalStorage保存<span class="tag">&lt;/h3&gt;</span>
+      <span class="tag">&lt;p&gt;</span>設定はLocalStorageに保存され、次回アクセス時に復元されます。<span class="tag">&lt;/p&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  <span class="tag">&lt;/div&gt;</span>
+
+  <span class="tag">&lt;script&gt;</span>
+    <span class="keyword">const</span> <span class="variable">themeToggle</span> = <span class="variable">document</span>.<span class="method">getElementById</span>(<span class="string">'themeToggle'</span>);
+    <span class="keyword">const</span> <span class="variable">themeIcon</span> = <span class="variable">document</span>.<span class="method">getElementById</span>(<span class="string">'themeIcon'</span>);
+    <span class="keyword">const</span> <span class="variable">STORAGE_KEY</span> = <span class="string">'theme-preference'</span>;
+
+    <span class="comment">// テーマを適用する関数</span>
+    <span class="keyword">function</span> <span class="method">setTheme</span>(<span class="variable">isDark</span>) {
+      <span class="variable">document</span>.<span class="variable">documentElement</span>.<span class="method">setAttribute</span>(
+        <span class="string">'data-theme'</span>,
+        <span class="variable">isDark</span> ? <span class="string">'dark'</span> : <span class="string">'light'</span>
+      );
+      <span class="variable">themeIcon</span>.<span class="variable">textContent</span> = <span class="variable">isDark</span> ? <span class="string">'🌙'</span> : <span class="string">'☀️'</span>;
+      <span class="variable">themeToggle</span>.<span class="variable">checked</span> = <span class="variable">isDark</span>;
+
+      <span class="comment">// LocalStorageに保存</span>
+      <span class="variable">localStorage</span>.<span class="method">setItem</span>(<span class="variable">STORAGE_KEY</span>, <span class="variable">isDark</span> ? <span class="string">'dark'</span> : <span class="string">'light'</span>);
+    }
+
+    <span class="comment">// 保存された設定またはシステム設定を取得</span>
+    <span class="keyword">function</span> <span class="method">getPreferredTheme</span>() {
+      <span class="keyword">const</span> <span class="variable">saved</span> = <span class="variable">localStorage</span>.<span class="method">getItem</span>(<span class="variable">STORAGE_KEY</span>);
+      <span class="keyword">if</span> (<span class="variable">saved</span>) {
+        <span class="keyword">return</span> <span class="variable">saved</span> === <span class="string">'dark'</span>;
+      }
+      <span class="comment">// システム設定を検出</span>
+      <span class="keyword">return</span> <span class="variable">window</span>.<span class="method">matchMedia</span>(<span class="string">'(prefers-color-scheme: dark)'</span>).<span class="variable">matches</span>;
+    }
+
+    <span class="comment">// トグル変更時</span>
+    <span class="variable">themeToggle</span>.<span class="method">addEventListener</span>(<span class="string">'change'</span>, () => {
+      <span class="method">setTheme</span>(<span class="variable">themeToggle</span>.<span class="variable">checked</span>);
+    });
+
+    <span class="comment">// システム設定変更を監視</span>
+    <span class="variable">window</span>.<span class="method">matchMedia</span>(<span class="string">'(prefers-color-scheme: dark)'</span>)
+      .<span class="method">addEventListener</span>(<span class="string">'change'</span>, (<span class="variable">e</span>) => {
+        <span class="comment">// 保存された設定がなければシステムに追従</span>
+        <span class="keyword">if</span> (!<span class="variable">localStorage</span>.<span class="method">getItem</span>(<span class="variable">STORAGE_KEY</span>)) {
+          <span class="method">setTheme</span>(<span class="variable">e</span>.<span class="variable">matches</span>);
+        }
+      });
+
+    <span class="comment">// 初期化</span>
+    <span class="variable">document</span>.<span class="method">addEventListener</span>(<span class="string">'DOMContentLoaded'</span>, () => {
+      <span class="method">setTheme</span>(<span class="method">getPreferredTheme</span>());
+    });
+  <span class="tag">&lt;/script&gt;</span>
+<span class="tag">&lt;/body&gt;</span>
+<span class="tag">&lt;/html&gt;</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title"><span class="material-icons">lightbulb</span> 学習ポイント</div>
+          <div class="info-box-content">
+            <ul>
+              <li><strong>changeイベント</strong>：チェックボックスの状態変化を検出</li>
+              <li><strong>DOMContentLoaded</strong>：ページ読み込み時に設定を復元</li>
+              <li><strong>LocalStorage API</strong>：ユーザー設定を永続化</li>
+              <li><strong>CSS Custom Properties</strong>：テーマ切替を効率的に実装</li>
+              <li><strong>matchMedia()</strong>：システムのダークモード設定を検出</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習問題 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">練習問題</span>
+        <h2 class="section-title">Chapter 6 練習問題</h2>
+      </div>
+
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <div class="exercise-number">Q1</div>
+          <div class="exercise-content">
+            <p><code>addEventListener</code>と<code>onclick</code>属性の違いを説明してください。</p>
+          </div>
+        </div>
+
+        <div class="exercise-item">
+          <div class="exercise-number">Q2</div>
+          <div class="exercise-content">
+            <p>ボタンをクリックするとカウントアップし、数値を表示するプログラムを作成してください。</p>
+          </div>
+        </div>
+
+        <div class="exercise-item">
+          <div class="exercise-number">Q3</div>
+          <div class="exercise-content">
+            <p>イベント委譲を使って、動的に追加されるリスト項目をクリックしたときにアラートを表示するプログラムを作成してください。</p>
+          </div>
+        </div>
+
+        <div class="exercise-item">
+          <div class="exercise-number">Q4</div>
+          <div class="exercise-content">
+            <p><code>preventDefault()</code>と<code>stopPropagation()</code>の違いを説明してください。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解答 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">解答</span>
+        <h2 class="section-title">練習問題の解答</h2>
+      </div>
+
+      <div class="answer-list">
+        <div class="answer-item">
+          <div class="answer-header">Q1の解答</div>
+          <div class="answer-content">
+            <p><strong>addEventListener</strong>：</p>
+            <ul>
+              <li>複数のリスナーを登録できる</li>
+              <li>リスナーの削除が可能</li>
+              <li>オプションを指定できる（once, captureなど）</li>
+            </ul>
+            <p><strong>onclick属性</strong>：</p>
+            <ul>
+              <li>1つしか登録できない（上書きされる）</li>
+              <li>HTMLに直接書くため、関心の分離ができない</li>
+            </ul>
+            <p><strong>結論</strong>：addEventListenerを使うのが推奨されます。</p>
+          </div>
+        </div>
+
+        <div class="answer-item">
+          <div class="answer-header">Q2の解答</div>
+          <div class="answer-content">
+            <div class="code-block">
+              <div class="code-content">
+<pre>let count = 0;
+const button = document.querySelector('#countBtn');
+const display = document.querySelector('#countDisplay');
+
+button.addEventListener('click', () => {
+  count++;
+  display.textContent = count;
+});</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer-item">
+          <div class="answer-header">Q3の解答</div>
+          <div class="answer-content">
+            <div class="code-block">
+              <div class="code-content">
+<pre>const list = document.querySelector('ul');
+
+// 親要素にリスナーを1つだけ登録
+list.addEventListener('click', (e) => {
+  if (e.target.tagName === 'LI') {
+    alert('クリック: ' + e.target.textContent);
+  }
+});
+
+// 新しい項目を追加してもイベントが動作する
+const newItem = document.createElement('li');
+newItem.textContent = '新しい項目';
+list.appendChild(newItem);</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer-item">
+          <div class="answer-header">Q4の解答</div>
+          <div class="answer-content">
+            <p><strong>preventDefault()</strong>：ブラウザのデフォルト動作を防止します。例：フォーム送信時のページ遷移、リンククリック時の遷移など。</p>
+            <p><strong>stopPropagation()</strong>：イベントの親要素への伝播（バブリング）を停止します。親要素に登録されたリスナーが実行されなくなります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="5js-dom.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">DOM操作</div>
+    </a>
+    <a href="7js-objects-arrays.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">オブジェクトと配列の応用</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>JavaScript入門 - 職業訓練校教材</p>
+  </footer>
+
+  <script src="../../shared/demo.js"></script>
+</body>
+</html>

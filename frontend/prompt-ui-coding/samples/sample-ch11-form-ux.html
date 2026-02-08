@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>実行結果サンプル - 第11章 フォームUX改善</title>
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-hover: #005A9E;
+      --danger: #FF3B30;
+      --success: #34C759;
+      --text: #1D1D1F;
+      --text-sub: #6E6E73;
+      --border: #D2D2D7;
+      --bg: #F5F5F7;
+      --white: #FFFFFF;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 24px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    .page-header {
+      background: linear-gradient(135deg, var(--primary), #5856D6);
+      color: white; border-radius: 16px; padding: 40px 32px;
+      margin-bottom: 32px; text-align: center;
+      box-shadow: 0 4px 16px rgba(0,122,204,0.3);
+    }
+    .page-header h1 { font-size: 24px; margin-bottom: 8px; }
+    .page-header p { opacity: 0.9; font-size: 14px; }
+    .card {
+      background: var(--white); border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 32px; margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 18px; font-weight: 700; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 2px solid var(--primary);
+    }
+    .card-description { font-size: 14px; color: var(--text-sub); margin-bottom: 20px; }
+
+    /* フォームスタイル */
+    .ux-form { max-width: 560px; margin: 0 auto; }
+    .ux-form__group { margin-bottom: 28px; }
+    .ux-form__label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600; color: var(--text);
+      margin-bottom: 8px;
+    }
+    .ux-form__badge {
+      font-size: 11px; font-weight: 600; padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .ux-form__badge--required {
+      background: #fde8e8; color: var(--danger);
+    }
+    .ux-form__badge--optional {
+      background: #f0f0f0; color: var(--text-sub);
+    }
+    .ux-form__hint {
+      font-size: 12px; color: var(--text-sub); margin-bottom: 6px;
+    }
+    .ux-form__input,
+    .ux-form__textarea {
+      width: 100%; padding: 14px 16px;
+      font-size: 16px; border: 2px solid var(--border);
+      border-radius: 8px; font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: var(--white);
+    }
+    .ux-form__input:focus,
+    .ux-form__textarea:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(0,122,204,0.12);
+    }
+    .ux-form__input::placeholder,
+    .ux-form__textarea::placeholder {
+      color: #c7c7cc;
+    }
+    .ux-form__textarea { min-height: 140px; resize: vertical; }
+
+    /* エラー状態 */
+    .ux-form__input--error { border-color: var(--danger); }
+    .ux-form__input--error:focus {
+      box-shadow: 0 0 0 4px rgba(255,59,48,0.12);
+    }
+    .ux-form__error {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--danger); margin-top: 6px;
+    }
+    .ux-form__error::before { content: "!"; font-weight: 700; }
+
+    /* 成功状態 */
+    .ux-form__input--success { border-color: var(--success); }
+    .ux-form__success {
+      font-size: 12px; color: var(--success); margin-top: 4px;
+    }
+
+    /* ラジオボタングループ */
+    .ux-form__radio-group {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .ux-form__radio {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border: 2px solid var(--border);
+      border-radius: 8px; cursor: pointer; transition: all 0.2s;
+      font-size: 14px;
+    }
+    .ux-form__radio:hover { border-color: var(--primary); background: rgba(0,122,204,0.02); }
+    .ux-form__radio input[type="radio"] { display: none; }
+    .ux-form__radio-indicator {
+      width: 20px; height: 20px; border: 2px solid var(--border);
+      border-radius: 50%; flex-shrink: 0; position: relative;
+      transition: all 0.2s;
+    }
+    .ux-form__radio input:checked ~ .ux-form__radio-indicator {
+      border-color: var(--primary);
+    }
+    .ux-form__radio input:checked ~ .ux-form__radio-indicator::after {
+      content: ""; position: absolute; top: 3px; left: 3px;
+      width: 10px; height: 10px; background: var(--primary);
+      border-radius: 50%;
+    }
+    .ux-form__radio input:checked ~ span:last-child { font-weight: 600; }
+
+    /* 送信ボタン */
+    .ux-form__submit {
+      width: 100%; height: 56px; background: var(--primary);
+      color: white; font-size: 16px; font-weight: 700;
+      border: none; border-radius: 8px; cursor: pointer;
+      transition: background 0.2s; font-family: inherit;
+    }
+    .ux-form__submit:hover { background: var(--primary-hover); }
+    .ux-form__submit:active { transform: translateY(1px); }
+    .ux-form__privacy {
+      font-size: 12px; color: var(--text-sub); text-align: center;
+      margin-top: 12px;
+    }
+    .ux-form__privacy a { color: var(--primary); }
+
+    /* UXポイント注釈 */
+    .ux-point {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: #e8f4fd; border-radius: 8px;
+      padding: 12px 16px; margin-top: 8px; font-size: 12px;
+      color: var(--primary);
+    }
+    .ux-point::before {
+      content: "UX"; font-weight: 700; background: var(--primary);
+      color: white; padding: 1px 6px; border-radius: 3px;
+      font-size: 10px; flex-shrink: 0; margin-top: 1px;
+    }
+
+    /* セパレーター */
+    .form-separator {
+      height: 1px; background: var(--border); margin: 32px 0;
+    }
+
+    @media (max-width: 767px) {
+      .card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1>第11章 フォームUX改善の20ポイント</h1>
+      <p>プロンプトUIコーディング - 実行結果サンプル</p>
+    </div>
+
+    <!-- フォームUXサンプル -->
+    <div class="card">
+      <div class="card-title">お問い合わせフォーム（UX20ポイント適用済み）</div>
+      <p class="card-description">離脱させない入力フォームの設計原則に基づいたフォーム</p>
+
+      <form class="ux-form" novalidate>
+        <!-- お名前 -->
+        <div class="ux-form__group">
+          <label class="ux-form__label" for="ux-name">
+            お名前
+            <span class="ux-form__badge ux-form__badge--required">必須</span>
+          </label>
+          <input class="ux-form__input" type="text" id="ux-name" name="name"
+            placeholder="例: 山田 太郎" required autocomplete="name">
+          <div class="ux-point">ラベルは入力欄の上に配置（横並び禁止）。placeholderは入力例のみ。</div>
+        </div>
+
+        <!-- メールアドレス（成功状態） -->
+        <div class="ux-form__group">
+          <label class="ux-form__label" for="ux-email">
+            メールアドレス
+            <span class="ux-form__badge ux-form__badge--required">必須</span>
+          </label>
+          <input class="ux-form__input ux-form__input--success" type="email" id="ux-email" name="email"
+            value="taro@example.com" required autocomplete="email">
+          <div class="ux-form__success">&#10003; 正しい形式です</div>
+          <div class="ux-point">フォーカス時は枠線を青色（#007ACC）で強調。blurで検証。</div>
+        </div>
+
+        <!-- メールアドレス（エラー状態） -->
+        <div class="ux-form__group">
+          <label class="ux-form__label" for="ux-email-err">
+            メールアドレス（エラー表示例）
+            <span class="ux-form__badge ux-form__badge--required">必須</span>
+          </label>
+          <input class="ux-form__input ux-form__input--error" type="email" id="ux-email-err"
+            value="invalid-email">
+          <div class="ux-form__error">正しいメールアドレスを入力してください（例: taro@example.com）</div>
+          <div class="ux-point">エラーメッセージは具体的に（例付き）。入力欄のすぐ下に赤文字で表示。</div>
+        </div>
+
+        <!-- 電話番号 -->
+        <div class="ux-form__group">
+          <label class="ux-form__label" for="ux-tel">
+            電話番号
+            <span class="ux-form__badge ux-form__badge--optional">任意</span>
+          </label>
+          <div class="ux-form__hint">ハイフンありで入力してください</div>
+          <input class="ux-form__input" type="tel" id="ux-tel" name="tel"
+            placeholder="例: 03-1234-5678" autocomplete="tel">
+          <div class="ux-point">必須・任意を一目で分かるように表示。ヒントを事前に表示。</div>
+        </div>
+
+        <div class="form-separator"></div>
+
+        <!-- お問い合わせ種別（ラジオボタン） -->
+        <div class="ux-form__group">
+          <label class="ux-form__label">
+            お問い合わせ種別
+            <span class="ux-form__badge ux-form__badge--required">必須</span>
+          </label>
+          <div class="ux-form__radio-group">
+            <label class="ux-form__radio">
+              <input type="radio" name="type" value="product" checked>
+              <span class="ux-form__radio-indicator"></span>
+              <span>製品・サービスについて</span>
+            </label>
+            <label class="ux-form__radio">
+              <input type="radio" name="type" value="support">
+              <span class="ux-form__radio-indicator"></span>
+              <span>技術的なサポート</span>
+            </label>
+            <label class="ux-form__radio">
+              <input type="radio" name="type" value="other">
+              <span class="ux-form__radio-indicator"></span>
+              <span>その他</span>
+            </label>
+          </div>
+          <div class="ux-point">選択肢が少ない（5つ以下）ならラジオボタン。選択肢には「その他」の逃げ道を用意。</div>
+        </div>
+
+        <div class="form-separator"></div>
+
+        <!-- お問い合わせ内容 -->
+        <div class="ux-form__group">
+          <label class="ux-form__label" for="ux-message">
+            お問い合わせ内容
+            <span class="ux-form__badge ux-form__badge--required">必須</span>
+          </label>
+          <textarea class="ux-form__textarea" id="ux-message" name="message"
+            placeholder="お気軽にご記入ください" required></textarea>
+        </div>
+
+        <!-- 送信ボタン -->
+        <div class="ux-form__group">
+          <button class="ux-form__submit" type="submit">無料で相談する</button>
+          <p class="ux-form__privacy">
+            送信いただいた情報は<a href="#" target="_blank" rel="noopener noreferrer">プライバシーポリシー</a>に基づき管理します
+          </p>
+          <div class="ux-point">送信ボタンのラベルは具体的に（「送信」ではなく「無料で相談する」）。リンクは別タブで開く。</div>
+        </div>
+      </form>
+    </div>
+
+    <!-- UX20ポイントサマリー -->
+    <div class="card">
+      <div class="card-title">適用したUXポイント一覧</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">1. 入力項目は縦に並べる</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">2. 自然な順序で配置</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">3. ラベルは項目の上</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">4. グループごとに余白</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">5. placeholderは入力例のみ</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">6. 必須・任意を明示</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">7. フォーカスを目立たせる</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">8. リンクは別タブで開く</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">9. 選択式UIを優先</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">10. 逃げ道を用意（その他）</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">11. 少数はラジオボタン</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">12. 多数はドロップダウン</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">13. チェックボックスは縦並び</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">14. 対応形式を明記</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">15. ボタンラベルは具体的に</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">16. エラーは赤で一目瞭然</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">17. エラーは項目の近くに</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">18. エラー文は具体的に</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">19. 入力途中でエラー出さない</div>
+        <div style="background: var(--bg); padding: 10px 14px; border-radius: 6px;">20. ヒントを事前に表示</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

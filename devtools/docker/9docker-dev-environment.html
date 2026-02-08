@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第9章 開発環境の構築 - Docker構築入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #F5A623;
+        --primary-dark: #D4891D;
+        --primary-light: #FEF7E8;
+        --primary-lighter: #FDE4A8;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef7e8 0%, #fef7e8 100%);
+        border-radius: 16px; border: 1px solid #fde4a8;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F5A623; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F5A623; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(245,166,35,0.08);
+      }
+      .vd-box.accent { background: #F5A623; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F5A623; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fef7e8; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F5A623; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-docker.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">9</div>
+            <h1 class="chapter-title">開発環境の構築</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">9-1</span><span>開発環境のDocker化メリット</span></li>
+                <li class="toc-item"><span class="toc-number">9-2</span><span>Java/Spring Boot開発環境</span></li>
+                <li class="toc-item"><span class="toc-number">9-3</span><span>データベース連携（MySQL/PostgreSQL）</span></li>
+                <li class="toc-item"><span class="toc-number">9-4</span><span>ホットリロードの設定</span></li>
+                <li class="toc-item"><span class="toc-number">9-5</span><span>VSCode Dev Containersの活用</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 9-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-1</span>
+                <h2 class="section-title">開発環境のDocker化メリット</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>「自分のPCでは動くのに...」という問題は、開発チームでよく発生します。Docker化された開発環境を共有することで、全メンバーが同じ環境で開発でき、環境構築にかかる時間を大幅に削減できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 従来の開発環境の課題</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>課題</th>
+                                <th>従来の方法</th>
+                                <th>Docker化後</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>環境の差異</strong></td>
+                                <td>各自でJDK、DB等をインストール</td>
+                                <td>docker compose upで統一環境</td>
+                            </tr>
+                            <tr>
+                                <td><strong>バージョン管理</strong></td>
+                                <td>Java 17と21が混在</td>
+                                <td>Dockerfileでバージョン固定</td>
+                            </tr>
+                            <tr>
+                                <td><strong>新メンバー参加</strong></td>
+                                <td>環境構築に半日〜1日</td>
+                                <td>5分でセットアップ完了</td>
+                            </tr>
+                            <tr>
+                                <td><strong>複数プロジェクト</strong></td>
+                                <td>DBやランタイムが競合</td>
+                                <td>プロジェクトごとに独立</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.2 Docker開発環境に含めるもの</h3>
+                <div class="content-block">
+                    <ul>
+                        <li><strong>アプリケーションサーバー</strong>: Java/Spring Boot, Node.js等</li>
+                        <li><strong>データベース</strong>: MySQL, PostgreSQL, Redis等</li>
+                        <li><strong>DB管理ツール</strong>: Adminer, phpMyAdmin等</li>
+                        <li><strong>メールサーバー</strong>: MailHog等（メール送信テスト用）</li>
+                        <li><strong>初期データ</strong>: SQLファイルによるシードデータ投入</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 9-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-2</span>
+                <h2 class="section-title">Java/Spring Boot開発環境</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Java/Spring Bootアプリケーションの開発環境をDocker Composeで構築します。ソースコードはバインドマウントで共有し、Gradleのキャッシュもボリュームで保持します。</p>
+            </div>
+
+            <!-- 図解: 開発環境アーキテクチャ -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">Spring Boot + MySQL + Adminer 開発環境構成</div>
+                <div class="vd-flow">
+                    <div class="vd-box" style="border-color:#43a047;">
+                        <span class="vd-icon">&#9749;</span>
+                        <span class="vd-label" style="color:#43a047;">Spring Boot</span>
+                        <span class="vd-sub">Java 21</span>
+                        <span class="vd-sub">:8080</span>
+                    </div>
+                    <span class="vd-arrow">&#8596;</span>
+                    <div class="vd-box" style="border-color:#e65100;">
+                        <span class="vd-icon">&#128451;</span>
+                        <span class="vd-label" style="color:#e65100;">MySQL 8.0</span>
+                        <span class="vd-sub">データベース</span>
+                        <span class="vd-sub">:3306</span>
+                    </div>
+                    <span class="vd-arrow">&#8596;</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#128200;</span>
+                        <span class="vd-label">Adminer</span>
+                        <span class="vd-sub">DB管理画面</span>
+                        <span class="vd-sub">:8081</span>
+                    </div>
+                </div>
+                <p style="text-align:center;font-size:0.7rem;color:#666;margin-top:14px;">ブラウザから <strong>:8080</strong>でAPI、<strong>:8081</strong>でDB管理画面にアクセス可能</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 Spring Boot用Dockerfile</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Dockerfile（開発用）</span>
+                            <span class="code-lang">Dockerfile</span>
+                        </div>
+                        <pre class="code-content"><code># 開発用Dockerfile
+FROM eclipse-temurin:21-jdk
+
+WORKDIR /app
+
+# Gradle Wrapperをコピー
+COPY gradlew .
+COPY gradle gradle
+RUN chmod +x ./gradlew
+
+# 依存関係を先にダウンロード（キャッシュ活用）
+COPY build.gradle settings.gradle ./
+RUN ./gradlew dependencies --no-daemon || true
+
+# ソースコードをコピー
+COPY src src
+
+EXPOSE 8080
+
+# Spring Boot DevToolsによるホットリロード
+CMD ["./gradlew", "bootRun", "--no-daemon"]</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 docker-compose.ymlの作成</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">docker-compose.yml（Spring Boot開発環境）</span>
+                            <span class="code-lang">YAML</span>
+                        </div>
+                        <pre class="code-content"><code>services:
+  # Spring Boot アプリケーション
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+      - "5005:5005"   # デバッグポート
+    volumes:
+      - ./src:/app/src               # ソースコード
+      - gradle-cache:/root/.gradle   # Gradleキャッシュ
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/myapp
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: secret
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # MySQL データベース
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: myapp
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Adminer（DB管理ツール）
+  adminer:
+    image: adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+
+volumes:
+  mysql-data:
+  gradle-cache:</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">リモートデバッグ</span>
+                        </div>
+                        <p><code>JAVA_TOOL_OPTIONS</code>にJDWPの設定を入れることで、IDEからDockerコンテナ内のJavaアプリケーションにリモートデバッグ接続できます。ポート5005でデバッガーを待ち受けています。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 9-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-3</span>
+                <h2 class="section-title">データベース連携（MySQL/PostgreSQL）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>開発環境でよく使用されるMySQL、PostgreSQLのDocker設定と、初期データの投入方法を学びます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 MySQLの設定</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">db/init.sql（初期化SQL）</span>
+                            <span class="code-lang">SQL</span>
+                        </div>
+                        <pre class="code-content"><code>-- テーブル作成
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- テストデータ投入
+INSERT INTO users (name, email) VALUES
+('田中太郎', 'tanaka@example.com'),
+('鈴木花子', 'suzuki@example.com'),
+('佐藤一郎', 'sato@example.com');</code></pre>
+                    </div>
+                    <p><code>/docker-entrypoint-initdb.d/</code>にSQLファイルをマウントすると、コンテナ初回起動時に自動実行されます。データベースの初期スキーマやテストデータの投入に便利です。</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 PostgreSQLの設定</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">PostgreSQLのDocker Compose設定</span>
+                            <span class="code-lang">YAML</span>
+                        </div>
+                        <pre class="code-content"><code>services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d myapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg-data:</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">初期化SQLの実行タイミング</span>
+                        </div>
+                        <p><code>docker-entrypoint-initdb.d</code>のスクリプトは、データボリュームが空の場合（初回起動時）のみ実行されます。テーブル定義を変更した場合は、ボリュームを削除してから再起動するか、マイグレーションツール（Flyway等）を使用してください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.3 データベースのリセット</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">データベースの初期化方法</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># コンテナとボリュームを削除して初期化
+docker compose down -v
+
+# 再起動（init.sqlが再実行される）
+docker compose up -d
+
+# DBに直接接続して確認
+docker compose exec db mysql -uroot -psecret myapp</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 9-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-4</span>
+                <h2 class="section-title">ホットリロードの設定</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>ソースコードを変更するたびにコンテナを再ビルドしていては、開発効率が大幅に低下します。ホットリロード（ファイル変更の自動検知と反映）を設定して、快適な開発体験を実現します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 Spring Boot DevToolsによるホットリロード</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">build.gradle にDevToolsを追加</span>
+                            <span class="code-lang">Groovy</span>
+                        </div>
+                        <pre class="code-content"><code>dependencies {
+    // Spring Boot DevTools（開発時のみ有効）
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">application.properties（DevTools設定）</span>
+                            <span class="code-lang">Properties</span>
+                        </div>
+                        <pre class="code-content"><code># DevToolsのリモートリスタートを有効化
+spring.devtools.remote.restart.enabled=true
+spring.devtools.restart.poll-interval=2s
+spring.devtools.restart.quiet-period=1s</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 Node.jsのホットリロード</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Node.js用docker-compose.yml（ホットリロード対応）</span>
+                            <span class="code-lang">YAML</span>
+                        </div>
+                        <pre class="code-content"><code>services:
+  webapp:
+    image: node:20-alpine
+    working_dir: /app
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src:/app/src               # ソースコードをマウント
+      - ./package.json:/app/package.json
+      - node_modules:/app/node_modules
+    environment:
+      CHOKIDAR_USEPOLLING: "true"    # Dockerでのファイル監視対応
+      WATCHPACK_POLLING: "true"
+
+volumes:
+  node_modules:</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">ファイル監視のポーリング</span>
+                        </div>
+                        <p>DockerのバインドマウントではOSのファイル変更通知（inotify）が正常に動作しない場合があります。<code>CHOKIDAR_USEPOLLING=true</code>を設定することで、ポーリングによるファイル監視に切り替え、確実にホットリロードが動作するようになります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 9-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-5</span>
+                <h2 class="section-title">VSCode Dev Containersの活用</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>VSCode Dev Containers（旧Remote - Containers）は、Dockerコンテナをフル機能の開発環境として利用できるVSCodeの拡張機能です。コンテナの中でコーディング、デバッグ、ターミナル操作がすべて完結します。</p>
+            </div>
+
+            <!-- 図解: Dev Containersワークフロー -->
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">VSCode Dev Containers のワークフロー</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128187;</span>
+                        <span class="vd-label">VSCode</span>
+                        <span class="vd-sub">ローカルPC</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#128268;</span>
+                        <span class="vd-label">Dev Container</span>
+                        <span class="vd-sub">接続</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box" style="border-color:#43a047; min-width:160px;">
+                        <span class="vd-icon">&#128230;</span>
+                        <span class="vd-label" style="color:#43a047;">開発コンテナ</span>
+                        <span class="vd-sub">JDK + ツール + 拡張機能</span>
+                        <span class="vd-sub">完全な開発環境</span>
+                    </div>
+                </div>
+                <p style="text-align:center;font-size:0.7rem;color:#666;margin-top:14px;">VSCodeからコンテナ内に<strong>フル接続</strong>。エディタ・ターミナル・デバッガーがすべてコンテナ内で動作</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 Dev Container設定の作成</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">.devcontainer/devcontainer.json</span>
+                            <span class="code-lang">JSON</span>
+                        </div>
+                        <pre class="code-content"><code>{
+  "name": "Spring Boot Dev",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/app",
+
+  // コンテナ内にインストールする拡張機能
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-spring-boot",
+        "vscjava.vscode-spring-initializr",
+        "humao.rest-client"
+      ],
+      "settings": {
+        "java.home": "/opt/java/openjdk",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+
+  // コンテナ作成後に実行するコマンド
+  "postCreateCommand": "./gradlew dependencies --no-daemon",
+
+  // 転送するポート
+  "forwardPorts": [8080, 5005, 3306, 8081],
+
+  // 環境変数
+  "remoteEnv": {
+    "SPRING_PROFILES_ACTIVE": "dev"
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 Dev Containerの使い方</h3>
+                <div class="content-block">
+                    <div class="step-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>拡張機能のインストール</h4>
+                                <p>VSCode Marketplaceから「Dev Containers」拡張機能（ms-vscode-remote.remote-containers）をインストールします。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>コンテナで開く</h4>
+                                <p>コマンドパレット（Ctrl+Shift+P）から「Dev Containers: Reopen in Container」を選択します。</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>開発を開始</h4>
+                                <p>コンテナが起動し、VSCodeがコンテナ内に接続されます。ターミナル、デバッガー、拡張機能がすべてコンテナ内で動作します。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">チーム開発での利点</span>
+                        </div>
+                        <p><code>.devcontainer/</code>フォルダをGitリポジトリにコミットすれば、チーム全員が同じ開発環境・拡張機能・設定を共有できます。新メンバーは「Reopen in Container」を実行するだけで、すぐに開発を始められます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">9章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Docker Composeで<code>docker-entrypoint-initdb.d</code>にSQLファイルをマウントした場合、そのSQLが実行されるタイミングはどれですか？</p>
+                        <ol type="A">
+                            <li>コンテナが起動するたびに毎回実行される</li>
+                            <li>データボリュームが空の場合（初回起動時）のみ実行される</li>
+                            <li>docker compose upコマンドを実行するたびに実行される</li>
+                            <li>手動でdocker compose execで実行する必要がある</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>Docker環境でNode.jsのホットリロードが動作しない場合の対処として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>コンテナのメモリを増やす</li>
+                            <li>Docker Desktopを再インストールする</li>
+                            <li><code>CHOKIDAR_USEPOLLING=true</code>を環境変数に設定してポーリングモードに切り替える</li>
+                            <li>ホットリロードはDockerでは使用できない</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>VSCode Dev Containersの主な特徴として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>VSCodeの代わりにコンテナ内のエディタを使用する</li>
+                            <li>VSCodeからコンテナ内に接続し、エディタ・ターミナル・デバッガーがコンテナ内で動作する</li>
+                            <li>コンテナのログをVSCodeで表示するだけの機能</li>
+                            <li>Dockerfileを自動生成する機能</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">9章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>docker-entrypoint-initdb.d</code>にマウントされたSQLファイルは、データボリュームが空の場合（データベースの初回初期化時）のみ実行されます。既にデータが存在する場合はスキップされます。テーブル定義を変更した場合は<code>docker compose down -v</code>でボリュームを削除してから再起動する必要があります。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: C</div>
+                    <div class="answer-content">
+                        <p>Dockerのバインドマウントでは、ホストOSのファイル変更通知（inotify）がコンテナに正確に伝わらない場合があります。<code>CHOKIDAR_USEPOLLING=true</code>を設定すると、ファイルシステムのポーリング（定期的なチェック）でファイル変更を検知するモードに切り替わり、確実にホットリロードが動作します。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: B</div>
+                    <div class="answer-content">
+                        <p>VSCode Dev Containersは、ローカルのVSCodeからDockerコンテナ内にフル接続する機能です。ファイル編集、ターミナル操作、デバッグ、拡張機能の実行がすべてコンテナ内で行われます。<code>.devcontainer/devcontainer.json</code>で環境を定義し、チーム全員が同じ開発環境を共有できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="8docker-hub.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第8章 Docker Hubとイメージ管理</div>
+            </div>
+        </a>
+        <a href="10docker-ai-mcp.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第10章 Docker × AI・MCP活用</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

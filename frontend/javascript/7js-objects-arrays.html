@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 7: オブジェクトと配列の応用 - JavaScript入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #007ACC;
+      --primary-dark: #005A9E;
+      --primary-light: #E8F4FD;
+      --primary-lighter: #B3D7FF;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-javascript.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Chapter</div>
+      <div class="chapter-number">7</div>
+      <h1 class="chapter-title">オブジェクトと配列の応用</h1>
+      <p class="chapter-subtitle">データを効率的に操作するテクニック</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">7-1</span>オブジェクトリテラル</li>
+        <li class="toc-item"><span class="toc-number">7-2</span>配列メソッド</li>
+        <li class="toc-item"><span class="toc-number">7-3</span>分割代入</li>
+        <li class="toc-item"><span class="toc-number">7-4</span>スプレッド構文</li>
+        <li class="toc-item"><span class="toc-number">7-5</span>JSON</li>
+        <li class="toc-item"><span class="toc-number">7-6</span>実習：商品リスト</li>
+        <li class="toc-item"><span class="toc-number">練習</span>練習問題</li>
+      </ul>
+    </nav>
+
+    <!-- 構文説明ボックス -->
+    <div class="syntax-box">
+      <div class="syntax-box-header">
+        <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
+        <span class="syntax-box-title">構文説明</span>
+      </div>
+      <div class="syntax-box-content">
+        <div class="syntax-item">
+          <h4>オブジェクトリテラル（{}）</h4>
+          <div class="syntax-pattern"><span class="keyword">const</span> <span class="variable">user</span> = {
+  <span class="variable">name</span>: <span class="string">'田中'</span>,           <span class="comment">// プロパティ</span>
+  <span class="variable">age</span>: <span class="number">25</span>,
+  <span class="method">greet</span>() {                <span class="comment">// メソッド（ES6省略記法）</span>
+    <span class="keyword">return</span> <span class="string">`こんにちは、${<span class="keyword">this</span>.<span class="variable">name</span>}です`</span>;
+  }
+};</div>
+          <p>波括弧<code>{}</code>で囲み、<code>キー: 値</code>の形式でプロパティを定義します。関数を値として持つプロパティをメソッドと呼びます。</p>
+        </div>
+        <div class="syntax-item">
+          <h4>プロパティアクセス（dot notation, bracket notation）</h4>
+          <div class="syntax-pattern"><span class="comment">// ドット記法（推奨）</span>
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">user</span>.<span class="variable">name</span>);        <span class="comment">// '田中'</span>
+<span class="variable">user</span>.<span class="variable">age</span> = <span class="number">26</span>;                 <span class="comment">// 値を変更</span>
+
+<span class="comment">// ブラケット記法（動的なキーに使用）</span>
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">user</span>[<span class="string">'name'</span>]);     <span class="comment">// '田中'</span>
+<span class="keyword">const</span> <span class="variable">key</span> = <span class="string">'age'</span>;
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">user</span>[<span class="variable">key</span>]);        <span class="comment">// 25（変数でキーを指定）</span></div>
+          <p>ドット記法は直接プロパティ名を指定、ブラケット記法は文字列や変数でキーを指定できます。動的なキーアクセスにはブラケット記法を使用します。</p>
+        </div>
+        <div class="syntax-item">
+          <h4>配列メソッド（map, filter, reduce, forEach, find）</h4>
+          <div class="syntax-pattern"><span class="keyword">const</span> <span class="variable">numbers</span> = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];
+
+<span class="comment">// forEach: 各要素に処理を実行（戻り値なし）</span>
+<span class="variable">numbers</span>.<span class="method">forEach</span>(<span class="variable">n</span> => <span class="variable">console</span>.<span class="method">log</span>(<span class="variable">n</span>));
+
+<span class="comment">// map: 各要素を変換した新しい配列を返す</span>
+<span class="keyword">const</span> <span class="variable">doubled</span> = <span class="variable">numbers</span>.<span class="method">map</span>(<span class="variable">n</span> => <span class="variable">n</span> * <span class="number">2</span>);  <span class="comment">// [2, 4, 6, 8, 10]</span>
+
+<span class="comment">// filter: 条件を満たす要素だけの新しい配列を返す</span>
+<span class="keyword">const</span> <span class="variable">evens</span> = <span class="variable">numbers</span>.<span class="method">filter</span>(<span class="variable">n</span> => <span class="variable">n</span> % <span class="number">2</span> === <span class="number">0</span>);  <span class="comment">// [2, 4]</span>
+
+<span class="comment">// find: 条件を満たす最初の要素を返す</span>
+<span class="keyword">const</span> <span class="variable">found</span> = <span class="variable">numbers</span>.<span class="method">find</span>(<span class="variable">n</span> => <span class="variable">n</span> > <span class="number">3</span>);  <span class="comment">// 4</span>
+
+<span class="comment">// reduce: 配列を1つの値に集約</span>
+<span class="keyword">const</span> <span class="variable">sum</span> = <span class="variable">numbers</span>.<span class="method">reduce</span>((<span class="variable">acc</span>, <span class="variable">n</span>) => <span class="variable">acc</span> + <span class="variable">n</span>, <span class="number">0</span>);  <span class="comment">// 15</span></div>
+          <p>元の配列を変更せず、新しい配列や値を返すメソッドです。<code>map</code>は変換、<code>filter</code>は抽出、<code>reduce</code>は集約に使用します。</p>
+        </div>
+        <div class="syntax-item">
+          <h4>分割代入（destructuring）</h4>
+          <div class="syntax-pattern"><span class="comment">// オブジェクトの分割代入</span>
+<span class="keyword">const</span> { <span class="variable">name</span>, <span class="variable">age</span> } = <span class="variable">user</span>;
+<span class="keyword">const</span> { <span class="variable">name</span>: <span class="variable">userName</span> } = <span class="variable">user</span>;  <span class="comment">// 別名で受け取る</span>
+<span class="keyword">const</span> { <span class="variable">city</span> = <span class="string">'東京'</span> } = <span class="variable">user</span>;   <span class="comment">// デフォルト値</span>
+
+<span class="comment">// 配列の分割代入</span>
+<span class="keyword">const</span> [<span class="variable">first</span>, <span class="variable">second</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];  <span class="comment">// first=1, second=2</span>
+<span class="keyword">const</span> [<span class="variable">a</span>, , <span class="variable">c</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];         <span class="comment">// 要素をスキップ</span>
+
+<span class="comment">// 関数の引数で分割代入</span>
+<span class="keyword">function</span> <span class="method">greet</span>({ <span class="variable">name</span>, <span class="variable">age</span> }) {
+  <span class="keyword">return</span> <span class="string">`${<span class="variable">name</span>}さん（${<span class="variable">age</span>}歳）`</span>;
+}</div>
+          <p>オブジェクトや配列から値を取り出して個別の変数に代入する構文です。関数の引数でも使用でき、コードを簡潔に書けます。</p>
+        </div>
+        <div class="syntax-item">
+          <h4>スプレッド構文（...）</h4>
+          <div class="syntax-pattern"><span class="comment">// 配列の展開・コピー</span>
+<span class="keyword">const</span> <span class="variable">arr1</span> = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
+<span class="keyword">const</span> <span class="variable">arr2</span> = [...<span class="variable">arr1</span>, <span class="number">4</span>, <span class="number">5</span>];      <span class="comment">// [1, 2, 3, 4, 5]</span>
+<span class="keyword">const</span> <span class="variable">copy</span> = [...<span class="variable">arr1</span>];            <span class="comment">// 配列をコピー</span>
+
+<span class="comment">// オブジェクトの展開・マージ</span>
+<span class="keyword">const</span> <span class="variable">obj1</span> = { <span class="variable">a</span>: <span class="number">1</span>, <span class="variable">b</span>: <span class="number">2</span> };
+<span class="keyword">const</span> <span class="variable">obj2</span> = { ...<span class="variable">obj1</span>, <span class="variable">c</span>: <span class="number">3</span> };    <span class="comment">// { a: 1, b: 2, c: 3 }</span>
+<span class="keyword">const</span> <span class="variable">updated</span> = { ...<span class="variable">obj1</span>, <span class="variable">b</span>: <span class="number">10</span> }; <span class="comment">// プロパティを上書き</span>
+
+<span class="comment">// 関数の引数に展開</span>
+<span class="variable">Math</span>.<span class="method">max</span>(...<span class="variable">arr1</span>);                 <span class="comment">// 3</span></div>
+          <p>配列やオブジェクトを展開する構文です。コピー、マージ、関数呼び出し時の引数展開に使用します。元のデータを変更せずに新しいデータを作成できます。</p>
+        </div>
+        <div class="syntax-item">
+          <h4>JSON.parse() / JSON.stringify()</h4>
+          <div class="syntax-pattern"><span class="comment">// オブジェクト → JSON文字列</span>
+<span class="keyword">const</span> <span class="variable">obj</span> = { <span class="variable">name</span>: <span class="string">'田中'</span>, <span class="variable">age</span>: <span class="number">25</span> };
+<span class="keyword">const</span> <span class="variable">jsonString</span> = <span class="variable">JSON</span>.<span class="method">stringify</span>(<span class="variable">obj</span>);
+<span class="comment">// '{"name":"田中","age":25}'</span>
+
+<span class="comment">// JSON文字列 → オブジェクト</span>
+<span class="keyword">const</span> <span class="variable">parsed</span> = <span class="variable">JSON</span>.<span class="method">parse</span>(<span class="variable">jsonString</span>);
+<span class="comment">// { name: '田中', age: 25 }</span>
+
+<span class="comment">// 整形して出力（デバッグ用）</span>
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">JSON</span>.<span class="method">stringify</span>(<span class="variable">obj</span>, <span class="keyword">null</span>, <span class="number">2</span>));</div>
+          <p><code>stringify</code>はオブジェクトをJSON文字列に変換、<code>parse</code>はJSON文字列をオブジェクトに変換します。APIとのデータ通信やlocalStorageでのデータ保存に必須です。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 7-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-1</span>
+        <h2 class="section-title">オブジェクトリテラル</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>オブジェクトは、関連するデータと機能をまとめて管理するための重要なデータ構造です。プロパティ（データ）とメソッド（機能）を持つことができます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>オブジェクトの基本</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+ユーザー情報を持つオブジェクトの作成と操作
+
+## 実装要件
+- 名前、年齢、メールアドレス、アクティブ状態のプロパティを持つオブジェクトを作成
+- ドット記法でプロパティにアクセス
+- ブラケット記法でプロパティにアクセス
+- プロパティの追加・変更・削除を実装
+
+## 使用するAPI
+- オブジェクトリテラル `{}`
+- ドット記法 `object.property`
+- ブラケット記法 `object["property"]`
+- `delete` 演算子</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">オブジェクトの作成</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="comment">// オブジェクトリテラル記法</span>
+<span class="keyword">const</span> <span class="variable">user</span> = {
+  <span class="variable">name</span>: <span class="string">"田中太郎"</span>,
+  <span class="variable">age</span>: <span class="number">25</span>,
+  <span class="variable">email</span>: <span class="string">"tanaka@example.com"</span>,
+  <span class="variable">isActive</span>: <span class="keyword">true</span>
+};
+
+<span class="comment">// プロパティへのアクセス</span>
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">user</span>.<span class="variable">name</span>);      <span class="comment">// "田中太郎" (ドット記法)</span>
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">user</span>[<span class="string">"age"</span>]);   <span class="comment">// 25 (ブラケット記法)</span>
+
+<span class="comment">// 動的なプロパティ名</span>
+<span class="keyword">const</span> <span class="variable">key</span> = <span class="string">"email"</span>;
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">user</span>[<span class="variable">key</span>]);      <span class="comment">// "tanaka@example.com"</span>
+
+<span class="comment">// プロパティの追加・変更</span>
+<span class="variable">user</span>.<span class="variable">phone</span> = <span class="string">"090-1234-5678"</span>;
+<span class="variable">user</span>.<span class="variable">age</span> = <span class="number">26</span>;
+
+<span class="comment">// プロパティの削除</span>
+<span class="keyword">delete</span> <span class="variable">user</span>.<span class="variable">isActive</span>;</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>メソッドとthis</h3>
+        <p>オブジェクト内に関数を定義すると「メソッド」と呼びます。メソッド内で<code>this</code>を使うと、そのオブジェクト自身を参照できます。</p>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+メソッドチェーン対応の計算機オブジェクト
+
+## 実装要件
+- `add()` メソッドで加算
+- `subtract()` メソッドで減算
+- `reset()` メソッドで値をリセット
+- `getResult()` メソッドで結果を取得
+- `this` で内部の値を操作
+- 各メソッドから `this` を返してメソッドチェーン対応
+
+## 使用するAPI
+- オブジェクトメソッド
+- `this` キーワード
+- メソッドチェーンパターン</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">メソッドの定義</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">calculator</span> = {
+  <span class="variable">value</span>: <span class="number">0</span>,
+
+  <span class="comment">// メソッド定義（省略記法）</span>
+  <span class="method">add</span>(<span class="variable">num</span>) {
+    <span class="keyword">this</span>.<span class="variable">value</span> += <span class="variable">num</span>;
+    <span class="keyword">return</span> <span class="keyword">this</span>;  <span class="comment">// メソッドチェーン用</span>
+  },
+
+  <span class="method">subtract</span>(<span class="variable">num</span>) {
+    <span class="keyword">this</span>.<span class="variable">value</span> -= <span class="variable">num</span>;
+    <span class="keyword">return</span> <span class="keyword">this</span>;
+  },
+
+  <span class="method">reset</span>() {
+    <span class="keyword">this</span>.<span class="variable">value</span> = <span class="number">0</span>;
+    <span class="keyword">return</span> <span class="keyword">this</span>;
+  },
+
+  <span class="method">getResult</span>() {
+    <span class="keyword">return</span> <span class="keyword">this</span>.<span class="variable">value</span>;
+  }
+};
+
+<span class="comment">// メソッドチェーン</span>
+<span class="variable">calculator</span>.<span class="method">add</span>(<span class="number">10</span>).<span class="method">add</span>(<span class="number">5</span>).<span class="method">subtract</span>(<span class="number">3</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">calculator</span>.<span class="method">getResult</span>()); <span class="comment">// 12</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box warning">
+          <div class="info-box-title">アロー関数とthis</div>
+          <div class="info-box-content">
+            <p>アロー関数は独自の<code>this</code>を持たないため、メソッド定義には通常の関数を使いましょう。アロー関数を使うと<code>this</code>が期待通りに動作しません。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>プロパティの省略記法</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+ES6のオブジェクト省略記法と動的プロパティ
+
+## 実装要件
+- 変数名とプロパティ名が同じ場合の省略記法を使用
+- 計算されたプロパティ名（動的なキー）を使用
+- メソッド省略記法を使用
+
+## 使用するAPI
+- プロパティ省略記法 `{ name }` (= `{ name: name }`)
+- 計算されたプロパティ名 `{ [key]: value }`
+- メソッド省略記法 `{ method() {} }`</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">ES6の省略記法</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">name</span> = <span class="string">"山田花子"</span>;
+<span class="keyword">const</span> <span class="variable">age</span> = <span class="number">30</span>;
+<span class="keyword">const</span> <span class="variable">city</span> = <span class="string">"東京"</span>;
+
+<span class="comment">// 従来の書き方</span>
+<span class="keyword">const</span> <span class="variable">user1</span> = {
+  <span class="variable">name</span>: <span class="variable">name</span>,
+  <span class="variable">age</span>: <span class="variable">age</span>,
+  <span class="variable">city</span>: <span class="variable">city</span>
+};
+
+<span class="comment">// 省略記法（変数名とプロパティ名が同じ場合）</span>
+<span class="keyword">const</span> <span class="variable">user2</span> = { <span class="variable">name</span>, <span class="variable">age</span>, <span class="variable">city</span> };
+
+<span class="comment">// 計算されたプロパティ名</span>
+<span class="keyword">const</span> <span class="variable">propName</span> = <span class="string">"score"</span>;
+<span class="keyword">const</span> <span class="variable">student</span> = {
+  <span class="variable">name</span>: <span class="string">"佐藤"</span>,
+  [<span class="variable">propName</span>]: <span class="number">85</span>,           <span class="comment">// score: 85</span>
+  [<span class="variable">propName</span> + <span class="string">"2"</span>]: <span class="number">90</span>      <span class="comment">// score2: 90</span>
+};</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-2</span>
+        <h2 class="section-title">配列メソッド</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>モダンなJavaScriptでは、forループよりも配列メソッドを使った方がコードが簡潔で読みやすくなります。主要なメソッドをマスターしましょう。</p>
+      </div>
+
+      <!-- SVGフローチャート図解 -->
+      <div class="demo-area" style="padding: 20px; overflow-x: auto;">
+        <svg viewBox="0 0 800 400" style="min-width: 700px; width: 100%; height: auto;">
+          <!-- タイトル -->
+          <text x="400" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#1e293b">配列メソッドの処理フロー</text>
+
+          <!-- 元配列 -->
+          <text x="80" y="70" text-anchor="middle" font-size="12" fill="#64748b">元配列</text>
+          <rect x="20" y="80" width="120" height="35" rx="6" fill="#e0f2fe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="80" y="103" text-anchor="middle" font-size="12" fill="#1e293b">[1, 2, 3, 4, 5]</text>
+
+          <!-- forEach -->
+          <line x1="140" y1="97" x2="180" y2="97" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <rect x="180" y="75" width="100" height="45" rx="8" fill="#8b5cf6"/>
+          <text x="230" y="95" text-anchor="middle" font-size="11" fill="white" font-weight="bold">forEach</text>
+          <text x="230" y="110" text-anchor="middle" font-size="9" fill="white">各要素に処理</text>
+          <text x="330" y="100" font-size="10" fill="#64748b">undefined</text>
+
+          <!-- map -->
+          <line x1="140" y1="97" x2="180" y2="160" stroke="#64748b" stroke-width="2"/>
+          <rect x="180" y="140" width="100" height="45" rx="8" fill="#22c55e"/>
+          <text x="230" y="160" text-anchor="middle" font-size="11" fill="white" font-weight="bold">map</text>
+          <text x="230" y="175" text-anchor="middle" font-size="9" fill="white">変換して新配列</text>
+          <line x1="280" y1="162" x2="320" y2="162" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <rect x="320" y="145" width="100" height="35" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+          <text x="370" y="168" text-anchor="middle" font-size="10" fill="#1e293b">[2, 4, 6, 8, 10]</text>
+
+          <!-- filter -->
+          <line x1="140" y1="97" x2="180" y2="225" stroke="#64748b" stroke-width="2"/>
+          <rect x="180" y="205" width="100" height="45" rx="8" fill="#f97316"/>
+          <text x="230" y="225" text-anchor="middle" font-size="11" fill="white" font-weight="bold">filter</text>
+          <text x="230" y="240" text-anchor="middle" font-size="9" fill="white">条件で絞り込み</text>
+          <line x1="280" y1="227" x2="320" y2="227" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <rect x="320" y="210" width="80" height="35" rx="6" fill="#ffedd5" stroke="#f97316" stroke-width="2"/>
+          <text x="360" y="233" text-anchor="middle" font-size="10" fill="#1e293b">[2, 4]</text>
+
+          <!-- find -->
+          <line x1="140" y1="97" x2="180" y2="290" stroke="#64748b" stroke-width="2"/>
+          <rect x="180" y="270" width="100" height="45" rx="8" fill="#ef4444"/>
+          <text x="230" y="290" text-anchor="middle" font-size="11" fill="white" font-weight="bold">find</text>
+          <text x="230" y="305" text-anchor="middle" font-size="9" fill="white">最初の一致要素</text>
+          <line x1="280" y1="292" x2="320" y2="292" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <rect x="320" y="277" width="50" height="35" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+          <text x="345" y="300" text-anchor="middle" font-size="12" fill="#1e293b">3</text>
+
+          <!-- reduce -->
+          <line x1="140" y1="97" x2="180" y2="355" stroke="#64748b" stroke-width="2"/>
+          <rect x="180" y="335" width="100" height="45" rx="8" fill="#3b82f6"/>
+          <text x="230" y="355" text-anchor="middle" font-size="11" fill="white" font-weight="bold">reduce</text>
+          <text x="230" y="370" text-anchor="middle" font-size="9" fill="white">集約して単一値</text>
+          <line x1="280" y1="357" x2="320" y2="357" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <rect x="320" y="342" width="50" height="35" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+          <text x="345" y="365" text-anchor="middle" font-size="12" fill="#1e293b">15</text>
+
+          <!-- 説明 -->
+          <text x="500" y="163" font-size="10" fill="#64748b">x => x * 2</text>
+          <text x="430" y="233" font-size="10" fill="#64748b">x => x % 2 === 0</text>
+          <text x="400" y="300" font-size="10" fill="#64748b">x => x > 2</text>
+          <text x="400" y="365" font-size="10" fill="#64748b">(sum, x) => sum + x</text>
+
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <div class="subsection">
+        <h3>forEach - 各要素に処理を実行</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+配列の各要素に対して処理を実行
+
+## 実装要件
+- 果物の配列を用意
+- `forEach()` で各要素をループ
+- インデックス付きでコンソールに出力
+- `forEach()` は新しい配列を返さないことを確認
+
+## 使用するAPI
+- `Array.prototype.forEach()`
+- コールバック関数 `(element, index) => {}`
+- `console.log()`</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">forEachの基本</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">fruits</span> = [<span class="string">"りんご"</span>, <span class="string">"バナナ"</span>, <span class="string">"オレンジ"</span>];
+
+<span class="comment">// forEachで各要素を処理</span>
+<span class="variable">fruits</span>.<span class="method">forEach</span>((<span class="variable">fruit</span>, <span class="variable">index</span>) => {
+  <span class="variable">console</span>.<span class="method">log</span>(<span class="string">`${<span class="variable">index</span>}: ${<span class="variable">fruit</span>}`</span>);
+});
+<span class="comment">// 0: りんご</span>
+<span class="comment">// 1: バナナ</span>
+<span class="comment">// 2: オレンジ</span>
+
+<span class="comment">// 戻り値はundefined（新しい配列を作らない）</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>map - 配列を変換</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+配列の各要素を変換して新しい配列を作成
+
+## 実装要件
+- 数値配列の各要素を2倍に変換
+- オブジェクト配列から名前だけを抽出
+- ユーザー配列からHTMLのリスト要素を生成
+
+## 使用するAPI
+- `Array.prototype.map()`
+- アロー関数
+- テンプレートリテラル</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">mapの活用</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">numbers</span> = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];
+
+<span class="comment">// 各要素を2倍にした新配列を作成</span>
+<span class="keyword">const</span> <span class="variable">doubled</span> = <span class="variable">numbers</span>.<span class="method">map</span>(<span class="variable">num</span> => <span class="variable">num</span> * <span class="number">2</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">doubled</span>);  <span class="comment">// [2, 4, 6, 8, 10]</span>
+
+<span class="comment">// オブジェクト配列から特定の値を抽出</span>
+<span class="keyword">const</span> <span class="variable">users</span> = [
+  { <span class="variable">name</span>: <span class="string">"田中"</span>, <span class="variable">age</span>: <span class="number">25</span> },
+  { <span class="variable">name</span>: <span class="string">"山田"</span>, <span class="variable">age</span>: <span class="number">30</span> },
+  { <span class="variable">name</span>: <span class="string">"佐藤"</span>, <span class="variable">age</span>: <span class="number">28</span> }
+];
+
+<span class="keyword">const</span> <span class="variable">names</span> = <span class="variable">users</span>.<span class="method">map</span>(<span class="variable">user</span> => <span class="variable">user</span>.<span class="variable">name</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">names</span>);  <span class="comment">// ["田中", "山田", "佐藤"]</span>
+
+<span class="comment">// HTML要素の生成にも便利</span>
+<span class="keyword">const</span> <span class="variable">listItems</span> = <span class="variable">users</span>.<span class="method">map</span>(<span class="variable">user</span> =>
+  <span class="string">`&lt;li&gt;${<span class="variable">user</span>.<span class="variable">name</span>} (${<span class="variable">user</span>.<span class="variable">age</span>}歳)&lt;/li&gt;`</span>
+).<span class="method">join</span>(<span class="string">""</span>);</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>filter - 条件で絞り込み</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+条件に合う要素だけを抽出して新しい配列を作成
+
+## 実装要件
+- 数値配列から偶数のみを抽出
+- 商品配列から特定カテゴリの商品を絞り込み
+- 価格帯で商品をフィルタリング
+
+## 使用するAPI
+- `Array.prototype.filter()`
+- アロー関数
+- 比較演算子・論理演算子</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">filterの活用</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">numbers</span> = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>, <span class="number">10</span>];
+
+<span class="comment">// 偶数のみ抽出</span>
+<span class="keyword">const</span> <span class="variable">evens</span> = <span class="variable">numbers</span>.<span class="method">filter</span>(<span class="variable">num</span> => <span class="variable">num</span> % <span class="number">2</span> === <span class="number">0</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">evens</span>);  <span class="comment">// [2, 4, 6, 8, 10]</span>
+
+<span class="comment">// 商品データの絞り込み</span>
+<span class="keyword">const</span> <span class="variable">products</span> = [
+  { <span class="variable">name</span>: <span class="string">"商品A"</span>, <span class="variable">price</span>: <span class="number">1000</span>, <span class="variable">category</span>: <span class="string">"電子機器"</span> },
+  { <span class="variable">name</span>: <span class="string">"商品B"</span>, <span class="variable">price</span>: <span class="number">500</span>, <span class="variable">category</span>: <span class="string">"食品"</span> },
+  { <span class="variable">name</span>: <span class="string">"商品C"</span>, <span class="variable">price</span>: <span class="number">2000</span>, <span class="variable">category</span>: <span class="string">"電子機器"</span> },
+  { <span class="variable">name</span>: <span class="string">"商品D"</span>, <span class="variable">price</span>: <span class="number">800</span>, <span class="variable">category</span>: <span class="string">"食品"</span> }
+];
+
+<span class="comment">// 電子機器カテゴリのみ</span>
+<span class="keyword">const</span> <span class="variable">electronics</span> = <span class="variable">products</span>.<span class="method">filter</span>(<span class="variable">p</span> => <span class="variable">p</span>.<span class="variable">category</span> === <span class="string">"電子機器"</span>);
+
+<span class="comment">// 1000円以上の商品</span>
+<span class="keyword">const</span> <span class="variable">expensive</span> = <span class="variable">products</span>.<span class="method">filter</span>(<span class="variable">p</span> => <span class="variable">p</span>.<span class="variable">price</span> >= <span class="number">1000</span>);</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>find / some / every</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+配列内の要素を検索・判定
+
+## 実装要件
+- `find()` でIDからユーザーを検索
+- `findIndex()` で要素のインデックスを取得
+- `some()` で未成年がいるかチェック
+- `every()` で全員が成人かチェック
+
+## 使用するAPI
+- `Array.prototype.find()`
+- `Array.prototype.findIndex()`
+- `Array.prototype.some()`
+- `Array.prototype.every()`</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">検索と判定</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">users</span> = [
+  { <span class="variable">id</span>: <span class="number">1</span>, <span class="variable">name</span>: <span class="string">"田中"</span>, <span class="variable">age</span>: <span class="number">25</span> },
+  { <span class="variable">id</span>: <span class="number">2</span>, <span class="variable">name</span>: <span class="string">"山田"</span>, <span class="variable">age</span>: <span class="number">30</span> },
+  { <span class="variable">id</span>: <span class="number">3</span>, <span class="variable">name</span>: <span class="string">"佐藤"</span>, <span class="variable">age</span>: <span class="number">17</span> }
+];
+
+<span class="comment">// find: 条件に一致する最初の要素を返す</span>
+<span class="keyword">const</span> <span class="variable">user</span> = <span class="variable">users</span>.<span class="method">find</span>(<span class="variable">u</span> => <span class="variable">u</span>.<span class="variable">id</span> === <span class="number">2</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">user</span>);  <span class="comment">// { id: 2, name: "山田", age: 30 }</span>
+
+<span class="comment">// findIndex: 条件に一致する最初の要素のインデックス</span>
+<span class="keyword">const</span> <span class="variable">index</span> = <span class="variable">users</span>.<span class="method">findIndex</span>(<span class="variable">u</span> => <span class="variable">u</span>.<span class="variable">name</span> === <span class="string">"山田"</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">index</span>);  <span class="comment">// 1</span>
+
+<span class="comment">// some: いずれかが条件を満たすか（true/false）</span>
+<span class="keyword">const</span> <span class="variable">hasMinor</span> = <span class="variable">users</span>.<span class="method">some</span>(<span class="variable">u</span> => <span class="variable">u</span>.<span class="variable">age</span> < <span class="number">18</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">hasMinor</span>);  <span class="comment">// true</span>
+
+<span class="comment">// every: すべてが条件を満たすか（true/false）</span>
+<span class="keyword">const</span> <span class="variable">allAdults</span> = <span class="variable">users</span>.<span class="method">every</span>(<span class="variable">u</span> => <span class="variable">u</span>.<span class="variable">age</span> >= <span class="number">18</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">allAdults</span>);  <span class="comment">// false</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>reduce - 集約処理</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+配列を単一の値に集約
+
+## 実装要件
+- 合計値を計算
+- 最大値を求める
+- 配列をオブジェクトに変換
+- 要素の出現回数をカウントしてグルーピング
+
+## 使用するAPI
+- `Array.prototype.reduce()`
+- アキュムレータと現在値 `(acc, curr) => {}`
+- 初期値の指定</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">reduceの活用</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">numbers</span> = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];
+
+<span class="comment">// 合計値を計算</span>
+<span class="keyword">const</span> <span class="variable">sum</span> = <span class="variable">numbers</span>.<span class="method">reduce</span>((<span class="variable">acc</span>, <span class="variable">num</span>) => <span class="variable">acc</span> + <span class="variable">num</span>, <span class="number">0</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">sum</span>);  <span class="comment">// 15</span>
+
+<span class="comment">// 最大値を求める</span>
+<span class="keyword">const</span> <span class="variable">max</span> = <span class="variable">numbers</span>.<span class="method">reduce</span>((<span class="variable">a</span>, <span class="variable">b</span>) => <span class="variable">a</span> > <span class="variable">b</span> ? <span class="variable">a</span> : <span class="variable">b</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">max</span>);  <span class="comment">// 5</span>
+
+<span class="comment">// オブジェクトに変換</span>
+<span class="keyword">const</span> <span class="variable">users</span> = [
+  { <span class="variable">id</span>: <span class="number">1</span>, <span class="variable">name</span>: <span class="string">"田中"</span> },
+  { <span class="variable">id</span>: <span class="number">2</span>, <span class="variable">name</span>: <span class="string">"山田"</span> }
+];
+
+<span class="keyword">const</span> <span class="variable">userMap</span> = <span class="variable">users</span>.<span class="method">reduce</span>((<span class="variable">obj</span>, <span class="variable">user</span>) => {
+  <span class="variable">obj</span>[<span class="variable">user</span>.<span class="variable">id</span>] = <span class="variable">user</span>.<span class="variable">name</span>;
+  <span class="keyword">return</span> <span class="variable">obj</span>;
+}, {});
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">userMap</span>);  <span class="comment">// { 1: "田中", 2: "山田" }</span>
+
+<span class="comment">// グルーピング</span>
+<span class="keyword">const</span> <span class="variable">items</span> = [<span class="string">"りんご"</span>, <span class="string">"バナナ"</span>, <span class="string">"りんご"</span>, <span class="string">"オレンジ"</span>, <span class="string">"バナナ"</span>];
+<span class="keyword">const</span> <span class="variable">count</span> = <span class="variable">items</span>.<span class="method">reduce</span>((<span class="variable">acc</span>, <span class="variable">item</span>) => {
+  <span class="variable">acc</span>[<span class="variable">item</span>] = (<span class="variable">acc</span>[<span class="variable">item</span>] || <span class="number">0</span>) + <span class="number">1</span>;
+  <span class="keyword">return</span> <span class="variable">acc</span>;
+}, {});
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">count</span>);  <span class="comment">// { りんご: 2, バナナ: 2, オレンジ: 1 }</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>sort - 配列のソート</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+配列の要素をソート
+
+## 実装要件
+- 数値の昇順・降順ソート
+- オブジェクト配列を価格順でソート
+- オブジェクト配列を名前順でソート
+- スプレッド構文でコピーしてから元の配列を変更しないようにソート
+
+## 使用するAPI
+- `Array.prototype.sort()`
+- 比較関数 `(a, b) => a - b`
+- `String.prototype.localeCompare()`
+- スプレッド構文 `[...array]`</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">sortの活用</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="comment">// 数値のソート（注意: デフォルトは文字列比較）</span>
+<span class="keyword">const</span> <span class="variable">numbers</span> = [<span class="number">10</span>, <span class="number">5</span>, <span class="number">40</span>, <span class="number">25</span>, <span class="number">1</span>];
+
+<span class="comment">// 昇順ソート</span>
+<span class="keyword">const</span> <span class="variable">ascending</span> = [...<span class="variable">numbers</span>].<span class="method">sort</span>((<span class="variable">a</span>, <span class="variable">b</span>) => <span class="variable">a</span> - <span class="variable">b</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">ascending</span>);  <span class="comment">// [1, 5, 10, 25, 40]</span>
+
+<span class="comment">// 降順ソート</span>
+<span class="keyword">const</span> <span class="variable">descending</span> = [...<span class="variable">numbers</span>].<span class="method">sort</span>((<span class="variable">a</span>, <span class="variable">b</span>) => <span class="variable">b</span> - <span class="variable">a</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">descending</span>);  <span class="comment">// [40, 25, 10, 5, 1]</span>
+
+<span class="comment">// オブジェクト配列のソート</span>
+<span class="keyword">const</span> <span class="variable">products</span> = [
+  { <span class="variable">name</span>: <span class="string">"商品A"</span>, <span class="variable">price</span>: <span class="number">1500</span> },
+  { <span class="variable">name</span>: <span class="string">"商品B"</span>, <span class="variable">price</span>: <span class="number">800</span> },
+  { <span class="variable">name</span>: <span class="string">"商品C"</span>, <span class="variable">price</span>: <span class="number">2000</span> }
+];
+
+<span class="comment">// 価格の安い順</span>
+<span class="keyword">const</span> <span class="variable">byPrice</span> = [...<span class="variable">products</span>].<span class="method">sort</span>((<span class="variable">a</span>, <span class="variable">b</span>) => <span class="variable">a</span>.<span class="variable">price</span> - <span class="variable">b</span>.<span class="variable">price</span>);
+
+<span class="comment">// 名前順（文字列）</span>
+<span class="keyword">const</span> <span class="variable">byName</span> = [...<span class="variable">products</span>].<span class="method">sort</span>((<span class="variable">a</span>, <span class="variable">b</span>) =>
+  <span class="variable">a</span>.<span class="variable">name</span>.<span class="method">localeCompare</span>(<span class="variable">b</span>.<span class="variable">name</span>, <span class="string">'ja'</span>)
+);</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box warning">
+          <div class="info-box-title">sortは元配列を変更します</div>
+          <div class="info-box-content">
+            <p><code>sort()</code>は元の配列を直接変更します。元の配列を保持したい場合は、先にスプレッド構文<code>[...array]</code>でコピーを作成してからソートしましょう。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>メソッドチェーン</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+配列メソッドをチェーンして複合処理
+
+## 実装要件
+- `filter()` で在庫ありの商品だけを絞り込み
+- `sort()` で価格順にソート
+- `map()` で名前だけを抽出
+- `reduce()` と組み合わせて合計金額を計算
+
+## 使用するAPI
+- `Array.prototype.filter()`
+- `Array.prototype.sort()`
+- `Array.prototype.map()`
+- `Array.prototype.reduce()`
+- メソッドチェーン</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">メソッドを連結して使う</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">products</span> = [
+  { <span class="variable">name</span>: <span class="string">"商品A"</span>, <span class="variable">price</span>: <span class="number">1500</span>, <span class="variable">stock</span>: <span class="number">10</span> },
+  { <span class="variable">name</span>: <span class="string">"商品B"</span>, <span class="variable">price</span>: <span class="number">800</span>, <span class="variable">stock</span>: <span class="number">0</span> },
+  { <span class="variable">name</span>: <span class="string">"商品C"</span>, <span class="variable">price</span>: <span class="number">2000</span>, <span class="variable">stock</span>: <span class="number">5</span> },
+  { <span class="variable">name</span>: <span class="string">"商品D"</span>, <span class="variable">price</span>: <span class="number">500</span>, <span class="variable">stock</span>: <span class="number">20</span> }
+];
+
+<span class="comment">// 在庫あり商品を価格の安い順で、名前だけ取得</span>
+<span class="keyword">const</span> <span class="variable">result</span> = <span class="variable">products</span>
+  .<span class="method">filter</span>(<span class="variable">p</span> => <span class="variable">p</span>.<span class="variable">stock</span> > <span class="number">0</span>)           <span class="comment">// 在庫あり</span>
+  .<span class="method">sort</span>((<span class="variable">a</span>, <span class="variable">b</span>) => <span class="variable">a</span>.<span class="variable">price</span> - <span class="variable">b</span>.<span class="variable">price</span>)  <span class="comment">// 価格の安い順</span>
+  .<span class="method">map</span>(<span class="variable">p</span> => <span class="variable">p</span>.<span class="variable">name</span>);                   <span class="comment">// 名前だけ抽出</span>
+
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">result</span>);  <span class="comment">// ["商品D", "商品A", "商品C"]</span>
+
+<span class="comment">// 在庫あり商品の合計金額</span>
+<span class="keyword">const</span> <span class="variable">totalPrice</span> = <span class="variable">products</span>
+  .<span class="method">filter</span>(<span class="variable">p</span> => <span class="variable">p</span>.<span class="variable">stock</span> > <span class="number">0</span>)
+  .<span class="method">reduce</span>((<span class="variable">sum</span>, <span class="variable">p</span>) => <span class="variable">sum</span> + <span class="variable">p</span>.<span class="variable">price</span>, <span class="number">0</span>);
+
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">totalPrice</span>);  <span class="comment">// 4000</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-3</span>
+        <h2 class="section-title">分割代入</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>分割代入（Destructuring）を使うと、配列やオブジェクトから値を取り出して変数に代入する処理を簡潔に書けます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>配列の分割代入</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+配列の分割代入で値を取り出す
+
+## 実装要件
+- 基本的な分割代入
+- 要素のスキップ（カンマで飛ばす）
+- レスト構文 `...rest` で残りを配列で受け取る
+- デフォルト値の設定
+- 変数の入れ替え `[a, b] = [b, a]`
+
+## 使用するAPI
+- 配列の分割代入 `const [a, b] = array`
+- レスト構文 `...`
+- デフォルト値 `= defaultValue`</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">配列の分割代入</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">colors</span> = [<span class="string">"赤"</span>, <span class="string">"青"</span>, <span class="string">"緑"</span>];
+
+<span class="comment">// 従来の書き方</span>
+<span class="keyword">const</span> <span class="variable">first</span> = <span class="variable">colors</span>[<span class="number">0</span>];
+<span class="keyword">const</span> <span class="variable">second</span> = <span class="variable">colors</span>[<span class="number">1</span>];
+
+<span class="comment">// 分割代入</span>
+<span class="keyword">const</span> [<span class="variable">red</span>, <span class="variable">blue</span>, <span class="variable">green</span>] = <span class="variable">colors</span>;
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">red</span>);  <span class="comment">// "赤"</span>
+
+<span class="comment">// 一部をスキップ</span>
+<span class="keyword">const</span> [<span class="variable">a</span>, , <span class="variable">c</span>] = <span class="variable">colors</span>;
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">c</span>);  <span class="comment">// "緑"</span>
+
+<span class="comment">// 残りを配列で受け取る（レスト構文）</span>
+<span class="keyword">const</span> <span class="variable">numbers</span> = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];
+<span class="keyword">const</span> [<span class="variable">head</span>, ...<span class="variable">tail</span>] = <span class="variable">numbers</span>;
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">head</span>);  <span class="comment">// 1</span>
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">tail</span>);  <span class="comment">// [2, 3, 4, 5]</span>
+
+<span class="comment">// デフォルト値</span>
+<span class="keyword">const</span> [<span class="variable">x</span>, <span class="variable">y</span>, <span class="variable">z</span> = <span class="string">"なし"</span>] = [<span class="string">"A"</span>, <span class="string">"B"</span>];
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">z</span>);  <span class="comment">// "なし"</span>
+
+<span class="comment">// 変数の入れ替え</span>
+<span class="keyword">let</span> <span class="variable">p</span> = <span class="number">1</span>, <span class="variable">q</span> = <span class="number">2</span>;
+[<span class="variable">p</span>, <span class="variable">q</span>] = [<span class="variable">q</span>, <span class="variable">p</span>];
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">p</span>, <span class="variable">q</span>);  <span class="comment">// 2, 1</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>オブジェクトの分割代入</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+オブジェクトの分割代入でプロパティを取り出す
+
+## 実装要件
+- 基本的な分割代入
+- プロパティに別名を付ける `{ name: userName }`
+- デフォルト値の設定
+- ネストしたオブジェクトの分割代入
+- 残りのプロパティをまとめて受け取る `...rest`
+
+## 使用するAPI
+- オブジェクトの分割代入 `const { a, b } = object`
+- 別名 `: newName`
+- レスト構文 `...`</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">オブジェクトの分割代入</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">user</span> = {
+  <span class="variable">name</span>: <span class="string">"田中太郎"</span>,
+  <span class="variable">age</span>: <span class="number">25</span>,
+  <span class="variable">email</span>: <span class="string">"tanaka@example.com"</span>,
+  <span class="variable">address</span>: {
+    <span class="variable">city</span>: <span class="string">"東京"</span>,
+    <span class="variable">zip</span>: <span class="string">"100-0001"</span>
+  }
+};
+
+<span class="comment">// 基本の分割代入</span>
+<span class="keyword">const</span> { <span class="variable">name</span>, <span class="variable">age</span> } = <span class="variable">user</span>;
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">name</span>);  <span class="comment">// "田中太郎"</span>
+
+<span class="comment">// 別名を付ける</span>
+<span class="keyword">const</span> { <span class="variable">name</span>: <span class="variable">userName</span>, <span class="variable">age</span>: <span class="variable">userAge</span> } = <span class="variable">user</span>;
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">userName</span>);  <span class="comment">// "田中太郎"</span>
+
+<span class="comment">// デフォルト値</span>
+<span class="keyword">const</span> { <span class="variable">name</span>, <span class="variable">phone</span> = <span class="string">"未登録"</span> } = <span class="variable">user</span>;
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">phone</span>);  <span class="comment">// "未登録"</span>
+
+<span class="comment">// ネストしたオブジェクト</span>
+<span class="keyword">const</span> { <span class="variable">address</span>: { <span class="variable">city</span> } } = <span class="variable">user</span>;
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">city</span>);  <span class="comment">// "東京"</span>
+
+<span class="comment">// 残りを受け取る</span>
+<span class="keyword">const</span> { <span class="variable">name</span>, ...<span class="variable">rest</span> } = <span class="variable">user</span>;
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">rest</span>);
+<span class="comment">// { age: 25, email: "tanaka@...", address: {...} }</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>関数の引数での分割代入</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+関数の引数と戻り値で分割代入を活用
+
+## 実装要件
+- 関数の引数でオブジェクトを分割代入
+- 必要なプロパティだけを取り出す
+- デフォルト値付きの分割代入
+- 配列を返す関数の戻り値を分割代入で受け取る
+
+## 使用するAPI
+- 引数での分割代入 `function({ name, age }) {}`
+- デフォルト値 `{ name = "Guest" }`
+- 戻り値の分割代入 `const [a, b] = func()`</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">関数パラメータでの活用</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="comment">// オブジェクトを引数に取る関数</span>
+<span class="keyword">function</span> <span class="method">greet</span>({ <span class="variable">name</span>, <span class="variable">age</span> }) {
+  <span class="keyword">return</span> <span class="string">`${<span class="variable">name</span>}さん（${<span class="variable">age</span>}歳）、こんにちは！`</span>;
+}
+
+<span class="keyword">const</span> <span class="variable">user</span> = { <span class="variable">name</span>: <span class="string">"山田"</span>, <span class="variable">age</span>: <span class="number">30</span>, <span class="variable">email</span>: <span class="string">"yamada@test.com"</span> };
+<span class="variable">console</span>.<span class="method">log</span>(<span class="method">greet</span>(<span class="variable">user</span>));  <span class="comment">// "山田さん（30歳）、こんにちは！"</span>
+
+<span class="comment">// デフォルト値付き</span>
+<span class="keyword">function</span> <span class="method">createUser</span>({ <span class="variable">name</span>, <span class="variable">age</span> = <span class="number">20</span>, <span class="variable">role</span> = <span class="string">"user"</span> }) {
+  <span class="keyword">return</span> { <span class="variable">name</span>, <span class="variable">age</span>, <span class="variable">role</span> };
+}
+
+<span class="variable">console</span>.<span class="method">log</span>(<span class="method">createUser</span>({ <span class="variable">name</span>: <span class="string">"佐藤"</span> }));
+<span class="comment">// { name: "佐藤", age: 20, role: "user" }</span>
+
+<span class="comment">// 配列を返す関数での活用</span>
+<span class="keyword">function</span> <span class="method">getMinMax</span>(<span class="variable">arr</span>) {
+  <span class="keyword">return</span> [<span class="variable">Math</span>.<span class="method">min</span>(...<span class="variable">arr</span>), <span class="variable">Math</span>.<span class="method">max</span>(...<span class="variable">arr</span>)];
+}
+
+<span class="keyword">const</span> [<span class="variable">min</span>, <span class="variable">max</span>] = <span class="method">getMinMax</span>([<span class="number">3</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">1</span>, <span class="number">5</span>, <span class="number">9</span>]);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">min</span>, <span class="variable">max</span>);  <span class="comment">// 1, 9</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-4</span>
+        <h2 class="section-title">スプレッド構文</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>スプレッド構文（<code>...</code>）を使うと、配列やオブジェクトを展開したり、コピーを作成したりできます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>配列のスプレッド</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+スプレッド構文で配列を展開・操作
+
+## 実装要件
+- 配列のコピー `[...array]`
+- 複数配列の結合
+- 先頭・末尾への要素追加
+- 関数の引数への展開（`Math.max()` など）
+- 文字列を配列に展開
+
+## 使用するAPI
+- スプレッド構文 `...`
+- `Math.max()`
+- 配列リテラル `[]`</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">配列での活用</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="comment">// 配列のコピー（シャローコピー）</span>
+<span class="keyword">const</span> <span class="variable">original</span> = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
+<span class="keyword">const</span> <span class="variable">copy</span> = [...<span class="variable">original</span>];
+
+<span class="comment">// 配列の結合</span>
+<span class="keyword">const</span> <span class="variable">arr1</span> = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
+<span class="keyword">const</span> <span class="variable">arr2</span> = [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>];
+<span class="keyword">const</span> <span class="variable">combined</span> = [...<span class="variable">arr1</span>, ...<span class="variable">arr2</span>];
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">combined</span>);  <span class="comment">// [1, 2, 3, 4, 5, 6]</span>
+
+<span class="comment">// 要素の追加</span>
+<span class="keyword">const</span> <span class="variable">numbers</span> = [<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>];
+<span class="keyword">const</span> <span class="variable">withFirst</span> = [<span class="number">1</span>, ...<span class="variable">numbers</span>];       <span class="comment">// [1, 2, 3, 4]</span>
+<span class="keyword">const</span> <span class="variable">withLast</span> = [...<span class="variable">numbers</span>, <span class="number">5</span>];        <span class="comment">// [2, 3, 4, 5]</span>
+<span class="keyword">const</span> <span class="variable">withBoth</span> = [<span class="number">1</span>, ...<span class="variable">numbers</span>, <span class="number">5</span>];    <span class="comment">// [1, 2, 3, 4, 5]</span>
+
+<span class="comment">// 関数の引数に展開</span>
+<span class="keyword">const</span> <span class="variable">nums</span> = [<span class="number">5</span>, <span class="number">2</span>, <span class="number">8</span>, <span class="number">1</span>, <span class="number">9</span>];
+<span class="keyword">const</span> <span class="variable">maxNum</span> = <span class="variable">Math</span>.<span class="method">max</span>(...<span class="variable">nums</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">maxNum</span>);  <span class="comment">// 9</span>
+
+<span class="comment">// 文字列を配列に展開</span>
+<span class="keyword">const</span> <span class="variable">chars</span> = [...<span class="string">"Hello"</span>];
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">chars</span>);  <span class="comment">// ["H", "e", "l", "l", "o"]</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>オブジェクトのスプレッド</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+スプレッド構文でオブジェクトを展開・操作
+
+## 実装要件
+- オブジェクトのコピー `{...object}`
+- プロパティの追加・上書き
+- 複数オブジェクトのマージ
+- 条件付きでプロパティを追加
+
+## 使用するAPI
+- スプレッド構文 `...`
+- 条件付きプロパティ `...(condition && { prop: value })`
+- オブジェクトリテラル `{}`</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">オブジェクトでの活用</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="comment">// オブジェクトのコピー</span>
+<span class="keyword">const</span> <span class="variable">user</span> = { <span class="variable">name</span>: <span class="string">"田中"</span>, <span class="variable">age</span>: <span class="number">25</span> };
+<span class="keyword">const</span> <span class="variable">userCopy</span> = { ...<span class="variable">user</span> };
+
+<span class="comment">// プロパティの追加・上書き</span>
+<span class="keyword">const</span> <span class="variable">userWithEmail</span> = {
+  ...<span class="variable">user</span>,
+  <span class="variable">email</span>: <span class="string">"tanaka@test.com"</span>
+};
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">userWithEmail</span>);
+<span class="comment">// { name: "田中", age: 25, email: "tanaka@test.com" }</span>
+
+<span class="comment">// プロパティの上書き</span>
+<span class="keyword">const</span> <span class="variable">updatedUser</span> = {
+  ...<span class="variable">user</span>,
+  <span class="variable">age</span>: <span class="number">26</span>  <span class="comment">// ageを上書き</span>
+};
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">updatedUser</span>);  <span class="comment">// { name: "田中", age: 26 }</span>
+
+<span class="comment">// オブジェクトの結合</span>
+<span class="keyword">const</span> <span class="variable">defaults</span> = { <span class="variable">theme</span>: <span class="string">"light"</span>, <span class="variable">lang</span>: <span class="string">"ja"</span> };
+<span class="keyword">const</span> <span class="variable">settings</span> = { <span class="variable">theme</span>: <span class="string">"dark"</span> };
+<span class="keyword">const</span> <span class="variable">merged</span> = { ...<span class="variable">defaults</span>, ...<span class="variable">settings</span> };
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">merged</span>);  <span class="comment">// { theme: "dark", lang: "ja" }</span>
+
+<span class="comment">// 条件付きプロパティ</span>
+<span class="keyword">const</span> <span class="variable">isAdmin</span> = <span class="keyword">true</span>;
+<span class="keyword">const</span> <span class="variable">userObj</span> = {
+  <span class="variable">name</span>: <span class="string">"山田"</span>,
+  ...(<span class="variable">isAdmin</span> && { <span class="variable">role</span>: <span class="string">"admin"</span> })
+};
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">userObj</span>);  <span class="comment">// { name: "山田", role: "admin" }</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-5</span>
+        <h2 class="section-title">JSON</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>JSON（JavaScript Object Notation）は、データ交換のための軽量なフォーマットです。APIとの通信やデータの保存によく使われます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>JSON.stringify / JSON.parse</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+JSONとオブジェクトの相互変換
+
+## 実装要件
+- オブジェクトをJSON文字列に変換
+- インデント付きで整形出力
+- JSON文字列をオブジェクトに戻す
+- ネストしたオブジェクト・配列の変換
+
+## 使用するAPI
+- `JSON.stringify()`
+- `JSON.stringify(obj, null, 2)` （整形出力）
+- `JSON.parse()`</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">JSONの変換</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="keyword">const</span> <span class="variable">user</span> = {
+  <span class="variable">name</span>: <span class="string">"田中太郎"</span>,
+  <span class="variable">age</span>: <span class="number">25</span>,
+  <span class="variable">hobbies</span>: [<span class="string">"読書"</span>, <span class="string">"映画"</span>]
+};
+
+<span class="comment">// オブジェクト → JSON文字列</span>
+<span class="keyword">const</span> <span class="variable">jsonString</span> = <span class="variable">JSON</span>.<span class="method">stringify</span>(<span class="variable">user</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">jsonString</span>);
+<span class="comment">// '{"name":"田中太郎","age":25,"hobbies":["読書","映画"]}'</span>
+
+<span class="comment">// 整形して出力（インデント付き）</span>
+<span class="keyword">const</span> <span class="variable">prettyJson</span> = <span class="variable">JSON</span>.<span class="method">stringify</span>(<span class="variable">user</span>, <span class="keyword">null</span>, <span class="number">2</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">prettyJson</span>);
+<span class="comment">/*
+{
+  "name": "田中太郎",
+  "age": 25,
+  "hobbies": [
+    "読書",
+    "映画"
+  ]
+}
+*/</span>
+
+<span class="comment">// JSON文字列 → オブジェクト</span>
+<span class="keyword">const</span> <span class="variable">jsonData</span> = <span class="string">'{"name":"山田","age":30}'</span>;
+<span class="keyword">const</span> <span class="variable">parsed</span> = <span class="variable">JSON</span>.<span class="method">parse</span>(<span class="variable">jsonData</span>);
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">parsed</span>.<span class="variable">name</span>);  <span class="comment">// "山田"</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>LocalStorageとの連携</h3>
+        <p>LocalStorageは文字列しか保存できないため、JSONを使ってオブジェクトを保存・取得します。</p>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+LocalStorageでオブジェクト・配列を永続化
+
+## 実装要件
+- `JSON.stringify()` で保存
+- `JSON.parse()` で取得
+- `try-catch` でエラーハンドリング
+- データの削除
+
+## 使用するAPI
+- `localStorage.setItem()`
+- `localStorage.getItem()`
+- `localStorage.removeItem()`
+- `JSON.stringify()` / `JSON.parse()`</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">LocalStorageの使い方</span>
+          </div>
+          <div class="demo-body">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="comment">// データを保存</span>
+<span class="keyword">const</span> <span class="variable">settings</span> = {
+  <span class="variable">theme</span>: <span class="string">"dark"</span>,
+  <span class="variable">fontSize</span>: <span class="number">16</span>,
+  <span class="variable">notifications</span>: <span class="keyword">true</span>
+};
+<span class="variable">localStorage</span>.<span class="method">setItem</span>(<span class="string">"settings"</span>, <span class="variable">JSON</span>.<span class="method">stringify</span>(<span class="variable">settings</span>));
+
+<span class="comment">// データを取得</span>
+<span class="keyword">const</span> <span class="variable">saved</span> = <span class="variable">localStorage</span>.<span class="method">getItem</span>(<span class="string">"settings"</span>);
+<span class="keyword">const</span> <span class="variable">loadedSettings</span> = <span class="variable">saved</span> ? <span class="variable">JSON</span>.<span class="method">parse</span>(<span class="variable">saved</span>) : {};
+<span class="variable">console</span>.<span class="method">log</span>(<span class="variable">loadedSettings</span>.<span class="variable">theme</span>);  <span class="comment">// "dark"</span>
+
+<span class="comment">// 配列の保存と取得</span>
+<span class="keyword">const</span> <span class="variable">todos</span> = [
+  { <span class="variable">id</span>: <span class="number">1</span>, <span class="variable">text</span>: <span class="string">"買い物"</span>, <span class="variable">done</span>: <span class="keyword">false</span> },
+  { <span class="variable">id</span>: <span class="number">2</span>, <span class="variable">text</span>: <span class="string">"掃除"</span>, <span class="variable">done</span>: <span class="keyword">true</span> }
+];
+<span class="variable">localStorage</span>.<span class="method">setItem</span>(<span class="string">"todos"</span>, <span class="variable">JSON</span>.<span class="method">stringify</span>(<span class="variable">todos</span>));
+
+<span class="comment">// 取得時のエラーハンドリング</span>
+<span class="keyword">function</span> <span class="method">loadFromStorage</span>(<span class="variable">key</span>, <span class="variable">defaultValue</span> = <span class="keyword">null</span>) {
+  <span class="keyword">try</span> {
+    <span class="keyword">const</span> <span class="variable">item</span> = <span class="variable">localStorage</span>.<span class="method">getItem</span>(<span class="variable">key</span>);
+    <span class="keyword">return</span> <span class="variable">item</span> ? <span class="variable">JSON</span>.<span class="method">parse</span>(<span class="variable">item</span>) : <span class="variable">defaultValue</span>;
+  } <span class="keyword">catch</span> (<span class="variable">error</span>) {
+    <span class="variable">console</span>.<span class="method">error</span>(<span class="string">"JSON parse error:"</span>, <span class="variable">error</span>);
+    <span class="keyword">return</span> <span class="variable">defaultValue</span>;
+  }
+}
+
+<span class="comment">// データの削除</span>
+<span class="variable">localStorage</span>.<span class="method">removeItem</span>(<span class="string">"settings"</span>);  <span class="comment">// 特定のキー削除</span>
+<span class="variable">localStorage</span>.<span class="method">clear</span>();                  <span class="comment">// 全削除</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">LocalStorageの注意点</div>
+          <div class="info-box-content">
+            <ul>
+              <li>容量制限：約5MB程度</li>
+              <li>文字列のみ保存可能（JSON変換が必要）</li>
+              <li>同期処理：大量データは避ける</li>
+              <li>セキュリティ：機密情報は保存しない</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-6 実習 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-6</span>
+        <h2 class="section-title">実習：商品リスト</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この章で学んだ配列メソッド、オブジェクト操作、LocalStorageを使って、カテゴリフィルター、価格ソート、検索、合計計算機能を持つ商品リストアプリを作成しましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>完成イメージ</h3>
+        <div class="demo-area" style="padding: 20px;">
+          <div id="product-demo" style="max-width: 600px; margin: 0 auto; font-family: sans-serif;">
+            <div style="background: #f8fafc; padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+              <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+                <input type="text" id="demo-search" placeholder="商品を検索..." style="flex: 1; min-width: 150px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                <select id="demo-category" style="padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                  <option value="all">すべて</option>
+                  <option value="電子機器">電子機器</option>
+                  <option value="食品">食品</option>
+                  <option value="衣類">衣類</option>
+                </select>
+                <select id="demo-sort" style="padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                  <option value="default">並び順</option>
+                  <option value="price-asc">価格の安い順</option>
+                  <option value="price-desc">価格の高い順</option>
+                </select>
+              </div>
+            </div>
+            <div id="demo-product-list" style="display: grid; gap: 12px;">
+            </div>
+            <div style="background: #3b82f6; color: white; padding: 16px; border-radius: 12px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+              <span>合計金額:</span>
+              <span id="demo-total" style="font-size: 24px; font-weight: bold;">0円</span>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          (function() {
+            const demoProducts = [
+              { id: 1, name: "ノートPC", price: 89000, category: "電子機器" },
+              { id: 2, name: "ワイヤレスイヤホン", price: 12000, category: "電子機器" },
+              { id: 3, name: "コーヒー豆", price: 1500, category: "食品" },
+              { id: 4, name: "Tシャツ", price: 2500, category: "衣類" },
+              { id: 5, name: "スマートウォッチ", price: 35000, category: "電子機器" },
+              { id: 6, name: "オリーブオイル", price: 800, category: "食品" }
+            ];
+
+            function renderDemo() {
+              const search = document.getElementById('demo-search').value.toLowerCase();
+              const category = document.getElementById('demo-category').value;
+              const sort = document.getElementById('demo-sort').value;
+
+              let filtered = demoProducts.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(search);
+                const matchCategory = category === 'all' || p.category === category;
+                return matchSearch && matchCategory;
+              });
+
+              if (sort === 'price-asc') {
+                filtered.sort((a, b) => a.price - b.price);
+              } else if (sort === 'price-desc') {
+                filtered.sort((a, b) => b.price - a.price);
+              }
+
+              const list = document.getElementById('demo-product-list');
+              list.innerHTML = filtered.map(p => `
+                <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-weight: 600;">${p.name}</div>
+                    <div style="font-size: 12px; color: #64748b;">${p.category}</div>
+                  </div>
+                  <div style="font-size: 18px; font-weight: bold; color: #3b82f6;">${p.price.toLocaleString()}円</div>
+                </div>
+              `).join('');
+
+              const total = filtered.reduce((sum, p) => sum + p.price, 0);
+              document.getElementById('demo-total').textContent = total.toLocaleString() + '円';
+            }
+
+            document.getElementById('demo-search').addEventListener('input', renderDemo);
+            document.getElementById('demo-category').addEventListener('change', renderDemo);
+            document.getElementById('demo-sort').addEventListener('change', renderDemo);
+            renderDemo();
+          })();
+        </script>
+      </div>
+
+      <div class="subsection">
+        <h3>実装コード</h3>
+
+        <div class="prompt-box">
+          <div class="prompt-box-header">
+            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+            <span class="prompt-box-title">プロンプト</span>
+            <button class="prompt-copy-btn">コピー</button>
+          </div>
+          <div class="prompt-box-content">
+            <pre>## 機能
+商品リストの絞り込み・ソート・表示アプリ
+
+## 実装要件
+- 商品配列からカテゴリ別・価格別に `filter()` で絞り込み
+- `sort()` で価格順や名前順にソート
+- `map()` で商品カードのHTMLを生成
+- `reduce()` で合計金額を計算
+- LocalStorageでフィルター状態を保存・復元
+- 検索ボックスとセレクトボックスでリアルタイム絞り込み
+
+## 使用するAPI
+- `Array.prototype.filter()` / `map()` / `sort()` / `reduce()`
+- `localStorage.setItem()` / `getItem()`
+- `JSON.stringify()` / `JSON.parse()`
+- イベントリスナー（`input`, `change`）</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">product-list.html</span>
+          </div>
+          <div class="demo-body vertical">
+            <div class="demo-code-section">
+              <div class="demo-code-header">
+                <span class="demo-code-lang">HTML + JavaScript</span>
+                <button class="demo-copy-btn">コピー</button>
+              </div>
+              <pre class="demo-code-content"><code><span class="tag">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;html</span> <span class="attr">lang</span>=<span class="value">"ja"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;head&gt;</span>
+  <span class="tag">&lt;meta</span> <span class="attr">charset</span>=<span class="value">"UTF-8"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;meta</span> <span class="attr">name</span>=<span class="value">"viewport"</span> <span class="attr">content</span>=<span class="value">"width=device-width, initial-scale=1.0"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;title&gt;</span>商品リスト<span class="tag">&lt;/title&gt;</span>
+  <span class="tag">&lt;style&gt;</span>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: sans-serif;
+      background: #f1f5f9;
+      padding: 20px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { margin-bottom: 20px; color: #1e293b; }
+    .controls {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+    select {
+      padding: 10px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .product-list { display: grid; gap: 12px; }
+    .product-item {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .product-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .product-name { font-weight: 600; font-size: 16px; }
+    .product-category {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .product-price {
+      font-size: 20px;
+      font-weight: bold;
+      color: #3b82f6;
+    }
+    .total-bar {
+      background: #3b82f6;
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .total-label { font-size: 16px; }
+    .total-amount { font-size: 28px; font-weight: bold; }
+    .no-results {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+  <span class="tag">&lt;/style&gt;</span>
+<span class="tag">&lt;/head&gt;</span>
+<span class="tag">&lt;body&gt;</span>
+  <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="value">"container"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;h1&gt;</span>商品リスト<span class="tag">&lt;/h1&gt;</span>
+
+    <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="value">"controls"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="value">"text"</span> <span class="attr">id</span>=<span class="value">"search"</span> <span class="attr">class</span>=<span class="value">"search-input"</span>
+             <span class="attr">placeholder</span>=<span class="value">"商品名で検索..."</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;select</span> <span class="attr">id</span>=<span class="value">"category"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="value">"all"</span><span class="tag">&gt;</span>すべてのカテゴリ<span class="tag">&lt;/option&gt;</span>
+      <span class="tag">&lt;/select&gt;</span>
+      <span class="tag">&lt;select</span> <span class="attr">id</span>=<span class="value">"sort"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="value">"default"</span><span class="tag">&gt;</span>並び順<span class="tag">&lt;/option&gt;</span>
+        <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="value">"price-asc"</span><span class="tag">&gt;</span>価格の安い順<span class="tag">&lt;/option&gt;</span>
+        <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="value">"price-desc"</span><span class="tag">&gt;</span>価格の高い順<span class="tag">&lt;/option&gt;</span>
+        <span class="tag">&lt;option</span> <span class="attr">value</span>=<span class="value">"name"</span><span class="tag">&gt;</span>名前順<span class="tag">&lt;/option&gt;</span>
+      <span class="tag">&lt;/select&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+
+    <span class="tag">&lt;div</span> <span class="attr">id</span>=<span class="value">"product-list"</span> <span class="attr">class</span>=<span class="value">"product-list"</span><span class="tag">&gt;&lt;/div&gt;</span>
+
+    <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="value">"total-bar"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;span</span> <span class="attr">class</span>=<span class="value">"total-label"</span><span class="tag">&gt;</span>表示商品の合計金額<span class="tag">&lt;/span&gt;</span>
+      <span class="tag">&lt;span</span> <span class="attr">id</span>=<span class="value">"total"</span> <span class="attr">class</span>=<span class="value">"total-amount"</span><span class="tag">&gt;</span>0円<span class="tag">&lt;/span&gt;</span>
+    <span class="tag">&lt;/div&gt;</span>
+  <span class="tag">&lt;/div&gt;</span>
+
+  <span class="tag">&lt;script&gt;</span>
+    <span class="comment">// 商品データ</span>
+    <span class="keyword">const</span> <span class="variable">products</span> = [
+      { <span class="variable">id</span>: <span class="number">1</span>, <span class="variable">name</span>: <span class="string">"ノートPC"</span>, <span class="variable">price</span>: <span class="number">89000</span>, <span class="variable">category</span>: <span class="string">"電子機器"</span> },
+      { <span class="variable">id</span>: <span class="number">2</span>, <span class="variable">name</span>: <span class="string">"ワイヤレスイヤホン"</span>, <span class="variable">price</span>: <span class="number">12000</span>, <span class="variable">category</span>: <span class="string">"電子機器"</span> },
+      { <span class="variable">id</span>: <span class="number">3</span>, <span class="variable">name</span>: <span class="string">"コーヒー豆"</span>, <span class="variable">price</span>: <span class="number">1500</span>, <span class="variable">category</span>: <span class="string">"食品"</span> },
+      { <span class="variable">id</span>: <span class="number">4</span>, <span class="variable">name</span>: <span class="string">"Tシャツ"</span>, <span class="variable">price</span>: <span class="number">2500</span>, <span class="variable">category</span>: <span class="string">"衣類"</span> },
+      { <span class="variable">id</span>: <span class="number">5</span>, <span class="variable">name</span>: <span class="string">"スマートウォッチ"</span>, <span class="variable">price</span>: <span class="number">35000</span>, <span class="variable">category</span>: <span class="string">"電子機器"</span> },
+      { <span class="variable">id</span>: <span class="number">6</span>, <span class="variable">name</span>: <span class="string">"オリーブオイル"</span>, <span class="variable">price</span>: <span class="number">800</span>, <span class="variable">category</span>: <span class="string">"食品"</span> },
+      { <span class="variable">id</span>: <span class="number">7</span>, <span class="variable">name</span>: <span class="string">"ジーンズ"</span>, <span class="variable">price</span>: <span class="number">6800</span>, <span class="variable">category</span>: <span class="string">"衣類"</span> },
+      { <span class="variable">id</span>: <span class="number">8</span>, <span class="variable">name</span>: <span class="string">"USBメモリ"</span>, <span class="variable">price</span>: <span class="number">1200</span>, <span class="variable">category</span>: <span class="string">"電子機器"</span> }
+    ];
+
+    <span class="comment">// DOM要素</span>
+    <span class="keyword">const</span> <span class="variable">searchInput</span> = <span class="variable">document</span>.<span class="method">getElementById</span>(<span class="string">'search'</span>);
+    <span class="keyword">const</span> <span class="variable">categorySelect</span> = <span class="variable">document</span>.<span class="method">getElementById</span>(<span class="string">'category'</span>);
+    <span class="keyword">const</span> <span class="variable">sortSelect</span> = <span class="variable">document</span>.<span class="method">getElementById</span>(<span class="string">'sort'</span>);
+    <span class="keyword">const</span> <span class="variable">productList</span> = <span class="variable">document</span>.<span class="method">getElementById</span>(<span class="string">'product-list'</span>);
+    <span class="keyword">const</span> <span class="variable">totalElement</span> = <span class="variable">document</span>.<span class="method">getElementById</span>(<span class="string">'total'</span>);
+
+    <span class="comment">// カテゴリ一覧を生成</span>
+    <span class="keyword">function</span> <span class="method">initCategories</span>() {
+      <span class="keyword">const</span> <span class="variable">categories</span> = [...<span class="keyword">new</span> <span class="method">Set</span>(<span class="variable">products</span>.<span class="method">map</span>(<span class="variable">p</span> => <span class="variable">p</span>.<span class="variable">category</span>))];
+      <span class="variable">categories</span>.<span class="method">forEach</span>(<span class="variable">cat</span> => {
+        <span class="keyword">const</span> <span class="variable">option</span> = <span class="variable">document</span>.<span class="method">createElement</span>(<span class="string">'option'</span>);
+        <span class="variable">option</span>.<span class="variable">value</span> = <span class="variable">cat</span>;
+        <span class="variable">option</span>.<span class="variable">textContent</span> = <span class="variable">cat</span>;
+        <span class="variable">categorySelect</span>.<span class="method">appendChild</span>(<span class="variable">option</span>);
+      });
+    }
+
+    <span class="comment">// 商品をフィルタリング・ソート</span>
+    <span class="keyword">function</span> <span class="method">getFilteredProducts</span>() {
+      <span class="keyword">const</span> <span class="variable">searchTerm</span> = <span class="variable">searchInput</span>.<span class="variable">value</span>.<span class="method">toLowerCase</span>();
+      <span class="keyword">const</span> <span class="variable">category</span> = <span class="variable">categorySelect</span>.<span class="variable">value</span>;
+      <span class="keyword">const</span> <span class="variable">sortType</span> = <span class="variable">sortSelect</span>.<span class="variable">value</span>;
+
+      <span class="comment">// フィルタリング</span>
+      <span class="keyword">let</span> <span class="variable">filtered</span> = <span class="variable">products</span>.<span class="method">filter</span>(<span class="variable">product</span> => {
+        <span class="keyword">const</span> <span class="variable">matchSearch</span> = <span class="variable">product</span>.<span class="variable">name</span>.<span class="method">toLowerCase</span>().<span class="method">includes</span>(<span class="variable">searchTerm</span>);
+        <span class="keyword">const</span> <span class="variable">matchCategory</span> = <span class="variable">category</span> === <span class="string">'all'</span> || <span class="variable">product</span>.<span class="variable">category</span> === <span class="variable">category</span>;
+        <span class="keyword">return</span> <span class="variable">matchSearch</span> && <span class="variable">matchCategory</span>;
+      });
+
+      <span class="comment">// ソート</span>
+      <span class="keyword">switch</span> (<span class="variable">sortType</span>) {
+        <span class="keyword">case</span> <span class="string">'price-asc'</span>:
+          <span class="variable">filtered</span>.<span class="method">sort</span>((<span class="variable">a</span>, <span class="variable">b</span>) => <span class="variable">a</span>.<span class="variable">price</span> - <span class="variable">b</span>.<span class="variable">price</span>);
+          <span class="keyword">break</span>;
+        <span class="keyword">case</span> <span class="string">'price-desc'</span>:
+          <span class="variable">filtered</span>.<span class="method">sort</span>((<span class="variable">a</span>, <span class="variable">b</span>) => <span class="variable">b</span>.<span class="variable">price</span> - <span class="variable">a</span>.<span class="variable">price</span>);
+          <span class="keyword">break</span>;
+        <span class="keyword">case</span> <span class="string">'name'</span>:
+          <span class="variable">filtered</span>.<span class="method">sort</span>((<span class="variable">a</span>, <span class="variable">b</span>) => <span class="variable">a</span>.<span class="variable">name</span>.<span class="method">localeCompare</span>(<span class="variable">b</span>.<span class="variable">name</span>, <span class="string">'ja'</span>));
+          <span class="keyword">break</span>;
+      }
+
+      <span class="keyword">return</span> <span class="variable">filtered</span>;
+    }
+
+    <span class="comment">// 商品リストを描画</span>
+    <span class="keyword">function</span> <span class="method">renderProducts</span>() {
+      <span class="keyword">const</span> <span class="variable">filtered</span> = <span class="method">getFilteredProducts</span>();
+
+      <span class="keyword">if</span> (<span class="variable">filtered</span>.<span class="variable">length</span> === <span class="number">0</span>) {
+        <span class="variable">productList</span>.<span class="variable">innerHTML</span> = <span class="string">'&lt;div class="no-results"&gt;該当する商品がありません&lt;/div&gt;'</span>;
+      } <span class="keyword">else</span> {
+        <span class="variable">productList</span>.<span class="variable">innerHTML</span> = <span class="variable">filtered</span>.<span class="method">map</span>(<span class="variable">product</span> => <span class="string">`
+          &lt;div class="product-item"&gt;
+            &lt;div&gt;
+              &lt;div class="product-name"&gt;${<span class="variable">product</span>.<span class="variable">name</span>}&lt;/div&gt;
+              &lt;div class="product-category"&gt;${<span class="variable">product</span>.<span class="variable">category</span>}&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class="product-price"&gt;${<span class="variable">product</span>.<span class="variable">price</span>.<span class="method">toLocaleString</span>()}円&lt;/div&gt;
+          &lt;/div&gt;
+        `</span>).<span class="method">join</span>(<span class="string">''</span>);
+      }
+
+      <span class="comment">// 合計金額を計算</span>
+      <span class="keyword">const</span> <span class="variable">total</span> = <span class="variable">filtered</span>.<span class="method">reduce</span>((<span class="variable">sum</span>, <span class="variable">p</span>) => <span class="variable">sum</span> + <span class="variable">p</span>.<span class="variable">price</span>, <span class="number">0</span>);
+      <span class="variable">totalElement</span>.<span class="variable">textContent</span> = <span class="variable">total</span>.<span class="method">toLocaleString</span>() + <span class="string">'円'</span>;
+
+      <span class="comment">// フィルター状態をLocalStorageに保存</span>
+      <span class="method">saveFilters</span>();
+    }
+
+    <span class="comment">// フィルター状態を保存</span>
+    <span class="keyword">function</span> <span class="method">saveFilters</span>() {
+      <span class="keyword">const</span> <span class="variable">filters</span> = {
+        <span class="variable">search</span>: <span class="variable">searchInput</span>.<span class="variable">value</span>,
+        <span class="variable">category</span>: <span class="variable">categorySelect</span>.<span class="variable">value</span>,
+        <span class="variable">sort</span>: <span class="variable">sortSelect</span>.<span class="variable">value</span>
+      };
+      <span class="variable">localStorage</span>.<span class="method">setItem</span>(<span class="string">'productFilters'</span>, <span class="variable">JSON</span>.<span class="method">stringify</span>(<span class="variable">filters</span>));
+    }
+
+    <span class="comment">// フィルター状態を復元</span>
+    <span class="keyword">function</span> <span class="method">loadFilters</span>() {
+      <span class="keyword">const</span> <span class="variable">saved</span> = <span class="variable">localStorage</span>.<span class="method">getItem</span>(<span class="string">'productFilters'</span>);
+      <span class="keyword">if</span> (<span class="variable">saved</span>) {
+        <span class="keyword">const</span> <span class="variable">filters</span> = <span class="variable">JSON</span>.<span class="method">parse</span>(<span class="variable">saved</span>);
+        <span class="variable">searchInput</span>.<span class="variable">value</span> = <span class="variable">filters</span>.<span class="variable">search</span> || <span class="string">''</span>;
+        <span class="variable">categorySelect</span>.<span class="variable">value</span> = <span class="variable">filters</span>.<span class="variable">category</span> || <span class="string">'all'</span>;
+        <span class="variable">sortSelect</span>.<span class="variable">value</span> = <span class="variable">filters</span>.<span class="variable">sort</span> || <span class="string">'default'</span>;
+      }
+    }
+
+    <span class="comment">// イベントリスナー</span>
+    <span class="variable">searchInput</span>.<span class="method">addEventListener</span>(<span class="string">'input'</span>, <span class="variable">renderProducts</span>);
+    <span class="variable">categorySelect</span>.<span class="method">addEventListener</span>(<span class="string">'change'</span>, <span class="variable">renderProducts</span>);
+    <span class="variable">sortSelect</span>.<span class="method">addEventListener</span>(<span class="string">'change'</span>, <span class="variable">renderProducts</span>);
+
+    <span class="comment">// 初期化</span>
+    <span class="method">initCategories</span>();
+    <span class="method">loadFilters</span>();
+    <span class="method">renderProducts</span>();
+  <span class="tag">&lt;/script&gt;</span>
+<span class="tag">&lt;/body&gt;</span>
+<span class="tag">&lt;/html&gt;</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">学習ポイント</div>
+          <div class="info-box-content">
+            <ul>
+              <li><strong>filter()</strong>: 検索とカテゴリで商品を絞り込み</li>
+              <li><strong>sort()</strong>: 価格や名前でソート</li>
+              <li><strong>map()</strong>: 商品データをHTML文字列に変換</li>
+              <li><strong>reduce()</strong>: 合計金額を計算</li>
+              <li><strong>Set</strong>: 重複のないカテゴリ一覧を作成</li>
+              <li><strong>LocalStorage</strong>: フィルター状態を保存・復元</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習問題 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">練習問題</span>
+        <h2 class="section-title">Chapter 7 練習問題</h2>
+      </div>
+
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <div class="exercise-number">Q1</div>
+          <div class="exercise-content">
+            <p>次の配列から、20歳以上のユーザーの名前だけを取得してください。</p>
+            <pre>const users = [
+  { name: "田中", age: 25 },
+  { name: "山田", age: 17 },
+  { name: "佐藤", age: 32 },
+  { name: "鈴木", age: 19 }
+];</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="exercise-item">
+          <div class="exercise-number">Q2</div>
+          <div class="exercise-content">
+            <p>次の配列の合計値と平均値を<code>reduce</code>を使って計算してください。</p>
+            <pre>const scores = [85, 92, 78, 90, 88];</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="exercise-item">
+          <div class="exercise-number">Q3</div>
+          <div class="exercise-content">
+            <p>分割代入を使って、次の配列から最初の2つを個別の変数に、残りを別の配列に代入してください。</p>
+            <pre>const colors = ["赤", "青", "緑", "黄", "紫"];</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="exercise-item">
+          <div class="exercise-number">Q4</div>
+          <div class="exercise-content">
+            <p>スプレッド構文を使って、2つのオブジェクトをマージし、さらに新しいプロパティを追加した新しいオブジェクトを作成してください。</p>
+            <pre>const defaults = { theme: "light", lang: "en" };
+const userPrefs = { theme: "dark" };</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解答 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">解答</span>
+        <h2 class="section-title">練習問題の解答</h2>
+      </div>
+
+      <div class="answer-list">
+        <div class="answer-item">
+          <div class="answer-header">Q1の解答</div>
+          <div class="answer-content">
+            <div class="code-block">
+              <div class="code-content">
+<pre>const users = [
+  { name: "田中", age: 25 },
+  { name: "山田", age: 17 },
+  { name: "佐藤", age: 32 },
+  { name: "鈴木", age: 19 }
+];
+
+const adultNames = users
+  .filter(user => user.age >= 20)
+  .map(user => user.name);
+
+console.log(adultNames); // ["田中", "佐藤"]</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer-item">
+          <div class="answer-header">Q2の解答</div>
+          <div class="answer-content">
+            <div class="code-block">
+              <div class="code-content">
+<pre>const scores = [85, 92, 78, 90, 88];
+
+const sum = scores.reduce((acc, score) => acc + score, 0);
+const average = sum / scores.length;
+
+console.log("合計:", sum);      // 433
+console.log("平均:", average);  // 86.6</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer-item">
+          <div class="answer-header">Q3の解答</div>
+          <div class="answer-content">
+            <div class="code-block">
+              <div class="code-content">
+<pre>const colors = ["赤", "青", "緑", "黄", "紫"];
+
+const [first, second, ...rest] = colors;
+
+console.log(first);  // "赤"
+console.log(second); // "青"
+console.log(rest);   // ["緑", "黄", "紫"]</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="answer-item">
+          <div class="answer-header">Q4の解答</div>
+          <div class="answer-content">
+            <div class="code-block">
+              <div class="code-content">
+<pre>const defaults = { theme: "light", lang: "en" };
+const userPrefs = { theme: "dark" };
+
+const settings = {
+  ...defaults,
+  ...userPrefs,
+  fontSize: 16
+};
+
+console.log(settings);
+// { theme: "dark", lang: "en", fontSize: 16 }</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="6js-events.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">イベント処理</div>
+    </a>
+    <a href="8js-forms.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">フォーム処理</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>JavaScript入門 - 職業訓練校教材</p>
+  </footer>
+
+  <script src="../../shared/demo.js"></script>
+</body>
+</html>

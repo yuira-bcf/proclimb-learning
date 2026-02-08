@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 5: 開発ライフサイクルについて - システム開発概論</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #B2EBF2;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-system-dev.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Chapter</div>
+      <div class="chapter-number">5</div>
+      <h1 class="chapter-title">開発ライフサイクルについて</h1>
+      <p class="chapter-subtitle">要件定義から運用・保守までの全体像を理解する</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">5-1</span>この章のねらい</li>
+        <li class="toc-item"><span class="toc-number">5-2</span>開発ライフサイクルの全体像</li>
+        <li class="toc-item"><span class="toc-number">5-3</span>要件定義フェーズ</li>
+        <li class="toc-item"><span class="toc-number">5-4</span>基本設計フェーズ（外部設計）</li>
+        <li class="toc-item"><span class="toc-number">5-5</span>詳細設計フェーズ（内部設計）</li>
+        <li class="toc-item"><span class="toc-number">5-6</span>実装（コーディング）・単体テストフェーズ</li>
+        <li class="toc-item"><span class="toc-number">5-7</span>結合テストフェーズ</li>
+        <li class="toc-item"><span class="toc-number">5-8</span>システムテストフェーズ</li>
+        <li class="toc-item"><span class="toc-number">5-9</span>受入テスト（UAT）フェーズ</li>
+        <li class="toc-item"><span class="toc-number">5-10</span>リリース・本番移行フェーズ</li>
+        <li class="toc-item"><span class="toc-number">5-11</span>運用・保守フェーズ</li>
+        <li class="toc-item"><span class="toc-number">5-12</span>ライフサイクル全体で大事な「トレーサビリティ」と「変更管理」</li>
+        <li class="toc-item"><span class="toc-number">5-13</span>まとめ</li>
+      </ul>
+    </nav>
+
+    <!-- Section 5-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-1</span>
+        <h2 class="section-title">この章のねらい</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この章では、システム開発の各フェーズ（工程）について、その目的、主な作業、成果物、バックエンドエンジニアの関わり方を学びます。開発ライフサイクルの全体像を理解することで、自分が今どのフェーズにいて、何のために作業しているのかを把握できるようになることを目標とします。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>この章を読み終わる頃の目標</h3>
+        <ul class="custom-list">
+          <li>開発ライフサイクルの各フェーズの目的を説明できる</li>
+          <li>各フェーズで作成される主な成果物を理解している</li>
+          <li>バックエンドエンジニアとして、各フェーズでどのような作業に関わるかイメージできる</li>
+          <li>トレーサビリティと変更管理の重要性を理解している</li>
+        </ul>
+      </div>
+
+      <div class="warning-box">
+        <div class="warning-box-title">重要なポイント</div>
+        <div class="warning-box-content">
+          <p>フェーズの名称や区切り方は、会社やプロジェクトによって異なることがあります。ここでは一般的な分類を紹介しますが、実際の現場では「うちではこう呼んでいる」という違いがあることを念頭に置いておいてください。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-2</span>
+        <h2 class="section-title">開発ライフサイクルの全体像</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　開発ライフサイクルとは</h3>
+        <p>開発ライフサイクル（SDLC: Software Development Life Cycle）とは、システムの企画から運用・廃棄までの一連の流れを指します。一般的には、以下のようなフェーズに分かれます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>開発ライフサイクルの全体像</span>
+          </div>
+          <pre><code>1. 要件定義
+       ↓
+2. 基本設計（外部設計）
+       ↓
+3. 詳細設計（内部設計）
+       ↓
+4. 実装（コーディング）・単体テスト
+       ↓
+5. 結合テスト
+       ↓
+6. システムテスト
+       ↓
+7. 受入テスト（UAT）
+       ↓
+8. リリース・本番移行
+       ↓
+9. 運用・保守</code></pre>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>2　V字モデル</h3>
+        <p>開発ライフサイクルを視覚的に表現する方法として、<strong>V字モデル</strong>がよく使われます。左側が開発工程（上流から下流へ）、右側がテスト工程（下流から上流へ）で、対応するフェーズが横に並びます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>V字モデルのイメージ</span>
+          </div>
+          <pre><code>要件定義 ←――――――――――――→ 受入テスト
+    ↘                         ↗
+   基本設計 ←―――――――→ システムテスト
+       ↘                 ↗
+      詳細設計 ←―――→ 結合テスト
+          ↘         ↗
+         実装・単体テスト</code></pre>
+        </div>
+
+        <p>このモデルでは、</p>
+        <ul class="custom-list">
+          <li>要件定義の内容は、受入テストで検証される</li>
+          <li>基本設計の内容は、システムテストで検証される</li>
+          <li>詳細設計の内容は、結合テストで検証される</li>
+          <li>実装の内容は、単体テストで検証される</li>
+        </ul>
+        <p>という対応関係があることを示しています。</p>
+      </div>
+    </section>
+
+    <!-- Section 5-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-3</span>
+        <h2 class="section-title">要件定義フェーズ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　目的</h3>
+        <p>要件定義フェーズは、「このシステムで何を実現するのか」を明確にするフェーズです。業務担当者やステークホルダーからヒアリングを行い、機能要件・非機能要件を整理します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　主な作業</h3>
+        <ul class="custom-list">
+          <li>現状業務（As-Is）の把握</li>
+          <li>あるべき姿（To-Be）の検討</li>
+          <li>機能要件の洗い出し</li>
+          <li>非機能要件の定義</li>
+          <li>スコープの決定</li>
+          <li>優先順位の決定</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　主な成果物</h3>
+        <ul class="custom-list">
+          <li>要件定義書</li>
+          <li>業務フロー図</li>
+          <li>機能一覧</li>
+          <li>画面一覧（概要レベル）</li>
+          <li>ユースケース図・ユースケース記述</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　バックエンドエンジニアの関わり方</h3>
+        <ul class="custom-list">
+          <li>技術的な実現可能性の確認</li>
+          <li>非機能要件（性能、セキュリティなど）に関する助言</li>
+          <li>データ量や処理量の見積もり</li>
+          <li>外部システム連携の調査</li>
+        </ul>
+
+        <div class="info-box">
+          <div class="info-box-title">ポイント</div>
+          <div class="info-box-content">
+            <p>要件定義の段階で「技術的に難しい」「これをやるとコストが大きい」といった情報を早めに伝えることで、後工程での手戻りを防げます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-4</span>
+        <h2 class="section-title">基本設計フェーズ（外部設計）</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　目的</h3>
+        <p>基本設計フェーズは、要件定義で決まった内容を「どのように実現するか」の概要を設計するフェーズです。システムの外から見た振る舞い（画面、帳票、外部インターフェースなど）を中心に設計するため、<strong>外部設計</strong>とも呼ばれます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　主な作業</h3>
+        <ul class="custom-list">
+          <li>システム構成の設計</li>
+          <li>画面設計（画面レイアウト、画面遷移）</li>
+          <li>帳票設計</li>
+          <li>データベース概念設計（ER図）</li>
+          <li>外部インターフェース設計（API、ファイル連携など）</li>
+          <li>バッチ処理の概要設計</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　主な成果物</h3>
+        <ul class="custom-list">
+          <li>基本設計書</li>
+          <li>システム構成図</li>
+          <li>画面設計書（画面レイアウト、画面遷移図）</li>
+          <li>帳票設計書</li>
+          <li>ER図（概念データモデル）</li>
+          <li>外部インターフェース設計書</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　バックエンドエンジニアの関わり方</h3>
+        <ul class="custom-list">
+          <li>DB設計のレビュー・助言</li>
+          <li>API設計の検討</li>
+          <li>バッチ処理の概要検討</li>
+          <li>性能・セキュリティ観点からの設計レビュー</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 5-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-5</span>
+        <h2 class="section-title">詳細設計フェーズ（内部設計）</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　目的</h3>
+        <p>詳細設計フェーズは、基本設計で決まった内容を、実装できるレベルまで詳細化するフェーズです。システムの内部構造（プログラムの構造、処理ロジック、データ構造など）を設計するため、<strong>内部設計</strong>とも呼ばれます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　主な作業</h3>
+        <ul class="custom-list">
+          <li>プログラム構造の設計（クラス設計、モジュール分割）</li>
+          <li>処理フローの詳細設計</li>
+          <li>データベース物理設計（テーブル定義、インデックス設計）</li>
+          <li>API仕様の詳細化</li>
+          <li>入力チェック（バリデーション）仕様の定義</li>
+          <li>エラー処理・例外処理の設計</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　主な成果物</h3>
+        <ul class="custom-list">
+          <li>詳細設計書</li>
+          <li>プログラム設計書</li>
+          <li>テーブル定義書</li>
+          <li>API仕様書</li>
+          <li>シーケンス図</li>
+          <li>クラス図</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　バックエンドエンジニアの関わり方</h3>
+        <ul class="custom-list">
+          <li>詳細設計書の作成</li>
+          <li>テーブル定義書の作成</li>
+          <li>API仕様書の作成</li>
+          <li>処理ロジックの設計</li>
+          <li>単体テスト仕様書の作成準備</li>
+        </ul>
+
+        <div class="warning-box">
+          <div class="warning-box-title">重要なポイント</div>
+          <div class="warning-box-content">
+            <p>詳細設計は、バックエンドエンジニアが最も深く関わるフェーズの一つです。設計の品質が、後の実装・テストの効率と品質に直結します。曖昧な点は早めに確認し、設計書に明確に記載しましょう。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-6 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-6</span>
+        <h2 class="section-title">実装（コーディング）・単体テストフェーズ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　目的</h3>
+        <p>実装フェーズは、詳細設計に基づいてプログラムを作成するフェーズです。単体テストでは、作成した各プログラム（関数、メソッド、クラスなど）が個別に正しく動作するかを確認します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　主な作業</h3>
+        <ul class="custom-list">
+          <li>プログラムのコーディング</li>
+          <li>コードレビュー</li>
+          <li>単体テストの設計・実施</li>
+          <li>バグ修正</li>
+          <li>ソースコードのバージョン管理</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　主な成果物</h3>
+        <ul class="custom-list">
+          <li>ソースコード</li>
+          <li>単体テスト仕様書</li>
+          <li>単体テスト結果報告書</li>
+          <li>コードレビュー記録</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　バックエンドエンジニアの関わり方</h3>
+        <ul class="custom-list">
+          <li>バックエンド処理のコーディング</li>
+          <li>SQL文の作成</li>
+          <li>APIの実装</li>
+          <li>単体テストコードの作成・実行</li>
+          <li>コードレビューへの参加</li>
+        </ul>
+
+        <div class="info-box">
+          <div class="info-box-title">単体テストの観点</div>
+          <div class="info-box-content">
+            <ul class="custom-list">
+              <li>正常系：想定通りの入力で、想定通りの出力が得られるか</li>
+              <li>異常系：不正な入力に対して、適切にエラー処理されるか</li>
+              <li>境界値：条件の境界（0、最大値、最小値など）で正しく動くか</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-7 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-7</span>
+        <h2 class="section-title">結合テストフェーズ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　目的</h3>
+        <p>結合テストフェーズは、単体テストをパスした複数のプログラムを組み合わせて、連携が正しく動作するかを確認するフェーズです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　主な作業</h3>
+        <ul class="custom-list">
+          <li>モジュール間の結合テスト</li>
+          <li>画面とバックエンドの連携テスト</li>
+          <li>APIの連携テスト</li>
+          <li>データベースとの連携テスト</li>
+          <li>バグ修正</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　主な成果物</h3>
+        <ul class="custom-list">
+          <li>結合テスト仕様書</li>
+          <li>結合テスト結果報告書</li>
+          <li>バグ管理表</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　バックエンドエンジニアの関わり方</h3>
+        <ul class="custom-list">
+          <li>API結合テストの実施</li>
+          <li>画面からの呼び出しテスト</li>
+          <li>データベース連携のテスト</li>
+          <li>外部システム連携のテスト</li>
+          <li>発見されたバグの修正</li>
+        </ul>
+
+        <div class="info-box">
+          <div class="info-box-title">結合テストの観点</div>
+          <div class="info-box-content">
+            <ul class="custom-list">
+              <li>インターフェースの整合性（引数、戻り値、データ型）</li>
+              <li>データの流れ（入力から出力まで正しく伝わるか）</li>
+              <li>エラー伝播（エラーが適切に伝わり、処理されるか）</li>
+              <li>トランザクションの整合性</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-8 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-8</span>
+        <h2 class="section-title">システムテストフェーズ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　目的</h3>
+        <p>システムテストフェーズは、システム全体として要件を満たしているかを確認するフェーズです。機能テストだけでなく、性能テスト、セキュリティテスト、負荷テストなど、非機能要件のテストも行います。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　主な作業</h3>
+        <ul class="custom-list">
+          <li>機能テスト（全機能の動作確認）</li>
+          <li>性能テスト（レスポンスタイム、スループット）</li>
+          <li>負荷テスト（大量アクセス時の動作確認）</li>
+          <li>セキュリティテスト（脆弱性診断）</li>
+          <li>回帰テスト（修正による影響確認）</li>
+          <li>障害復旧テスト</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　主な成果物</h3>
+        <ul class="custom-list">
+          <li>システムテスト仕様書</li>
+          <li>システムテスト結果報告書</li>
+          <li>性能テスト結果報告書</li>
+          <li>セキュリティテスト結果報告書</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　バックエンドエンジニアの関わり方</h3>
+        <ul class="custom-list">
+          <li>性能テストの実施・分析</li>
+          <li>負荷テストの実施・分析</li>
+          <li>セキュリティテストへの対応</li>
+          <li>性能チューニング（SQL最適化、キャッシュ導入など）</li>
+          <li>バグ修正</li>
+        </ul>
+
+        <div class="warning-box">
+          <div class="warning-box-title">重要なポイント</div>
+          <div class="warning-box-content">
+            <p>システムテストは本番に近い環境で行うことが重要です。開発環境では問題なくても、本番相当のデータ量や同時アクセス数では問題が発生することがあります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-9 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-9</span>
+        <h2 class="section-title">受入テスト（UAT）フェーズ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　目的</h3>
+        <p>受入テスト（UAT: User Acceptance Test）フェーズは、発注者（ユーザー）が実際にシステムを操作して、要件を満たしているかを確認するフェーズです。開発側のテストではなく、ユーザー側の視点でのテストになります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　主な作業</h3>
+        <ul class="custom-list">
+          <li>ユーザーによる業務シナリオテスト</li>
+          <li>実際の業務データを使ったテスト</li>
+          <li>操作性・使いやすさの確認</li>
+          <li>本番運用を想定した確認</li>
+          <li>指摘事項への対応</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　主な成果物</h3>
+        <ul class="custom-list">
+          <li>受入テスト仕様書</li>
+          <li>受入テスト結果報告書</li>
+          <li>検収書（受入完了の証明）</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　バックエンドエンジニアの関わり方</h3>
+        <ul class="custom-list">
+          <li>ユーザーからの質問・問い合わせへの対応</li>
+          <li>指摘されたバグの修正</li>
+          <li>性能や動作に関する説明</li>
+          <li>テスト環境の準備・サポート</li>
+        </ul>
+
+        <div class="info-box">
+          <div class="info-box-title">UAT成功のポイント</div>
+          <div class="info-box-content">
+            <p>UATでは、「開発者が想定していなかった使い方」が発見されることがよくあります。これは貴重なフィードバックです。防御的にならず、ユーザーの視点を学ぶ機会として捉えましょう。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-10 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-10</span>
+        <h2 class="section-title">リリース・本番移行フェーズ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　目的</h3>
+        <p>リリース・本番移行フェーズは、開発・テストが完了したシステムを本番環境に展開し、実際の運用を開始するフェーズです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　主な作業</h3>
+        <ul class="custom-list">
+          <li>本番環境の構築・設定</li>
+          <li>データ移行（旧システムからのデータ移行）</li>
+          <li>アプリケーションのデプロイ</li>
+          <li>動作確認</li>
+          <li>切り替え作業</li>
+          <li>ユーザーへの説明・教育</li>
+          <li>運用マニュアルの作成</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>3　主な成果物</h3>
+        <ul class="custom-list">
+          <li>リリース計画書</li>
+          <li>移行手順書</li>
+          <li>本番環境設定書</li>
+          <li>運用マニュアル</li>
+          <li>リリース報告書</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　バックエンドエンジニアの関わり方</h3>
+        <ul class="custom-list">
+          <li>デプロイ作業</li>
+          <li>データベースの移行作業</li>
+          <li>本番環境での動作確認</li>
+          <li>切り戻し手順の準備</li>
+          <li>リリース後の監視</li>
+        </ul>
+
+        <div class="warning-box">
+          <div class="warning-box-title">リリース時の注意点</div>
+          <div class="warning-box-content">
+            <ul class="custom-list">
+              <li><strong>切り戻し計画</strong>：問題が発生した場合に、旧システムに戻す手順を用意しておく</li>
+              <li><strong>段階的リリース</strong>：一部のユーザーから始めて、徐々に範囲を広げる方法も有効</li>
+              <li><strong>リリース時間帯</strong>：影響を最小限にするため、業務時間外やアクセスが少ない時間帯を選ぶ</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-11 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-11</span>
+        <h2 class="section-title">運用・保守フェーズ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　目的</h3>
+        <p>運用・保守フェーズは、リリース後のシステムを安定して稼働させ、必要に応じて修正や改善を行うフェーズです。システムのライフサイクルの中で最も長い期間を占めることが多いです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　運用と保守の違い</h3>
+        <div class="info-box">
+          <div class="info-box-title">運用</div>
+          <div class="info-box-content">
+            <p>システムを日々稼働させるための作業。監視、バックアップ、ログ管理、問い合わせ対応など。</p>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">保守</div>
+          <div class="info-box-content">
+            <p>システムを維持・改善するための作業。バグ修正、性能改善、機能追加、セキュリティパッチ適用など。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>3　主な作業</h3>
+        <ul class="custom-list">
+          <li>システム監視（死活監視、性能監視）</li>
+          <li>障害対応</li>
+          <li>バックアップ・リストア</li>
+          <li>セキュリティパッチの適用</li>
+          <li>バグ修正</li>
+          <li>機能追加・改善</li>
+          <li>問い合わせ対応</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>4　バックエンドエンジニアの関わり方</h3>
+        <ul class="custom-list">
+          <li>障害発生時の原因調査</li>
+          <li>バグ修正</li>
+          <li>性能改善</li>
+          <li>機能追加の設計・実装</li>
+          <li>ログ分析</li>
+        </ul>
+
+        <div class="info-box">
+          <div class="info-box-title">運用・保守で大切なこと</div>
+          <div class="info-box-content">
+            <ul class="custom-list">
+              <li>変更を加えるときは影響範囲を十分に調査する</li>
+              <li>修正内容をドキュメントに反映する</li>
+              <li>同じ問題が繰り返し起きないよう、根本原因を特定する</li>
+              <li>運用で得た知見を次の開発に活かす</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-12 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-12</span>
+        <h2 class="section-title">ライフサイクル全体で大事な「トレーサビリティ」と「変更管理」</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>1　トレーサビリティ（追跡可能性）</h3>
+        <p>トレーサビリティとは、要件から設計、実装、テストまでの対応関係を追跡できることを指します。</p>
+        <ul class="custom-list">
+          <li>この機能は、どの要件から来ているのか</li>
+          <li>この要件は、どの設計書に反映されているのか</li>
+          <li>この設計は、どのプログラムで実装されているのか</li>
+          <li>このプログラムは、どのテストで検証されているのか</li>
+        </ul>
+        <p>トレーサビリティが確保されていると、変更の影響範囲を把握しやすくなり、品質管理にも役立ちます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>2　変更管理</h3>
+        <p>プロジェクト進行中に要件や設計の変更が発生することは珍しくありません。変更管理とは、変更を適切にコントロールするための仕組みです。</p>
+        <ul class="custom-list">
+          <li><strong>変更要求の受付</strong>：何を変更したいのかを明確にする</li>
+          <li><strong>影響分析</strong>：変更による影響範囲、コスト、スケジュールへの影響を分析する</li>
+          <li><strong>承認プロセス</strong>：変更を実施するかどうかを判断・承認する</li>
+          <li><strong>変更の実施</strong>：承認された変更を設計・実装・テストする</li>
+          <li><strong>記録</strong>：変更内容と理由を記録として残す</li>
+        </ul>
+
+        <div class="warning-box">
+          <div class="warning-box-title">変更管理の重要性</div>
+          <div class="warning-box-content">
+            <p>変更管理がないと、「いつの間にか要件が変わっていた」「誰が決めたのか分からない」といった混乱が生じます。特に大規模プロジェクトでは、変更管理を徹底することがプロジェクト成功の鍵となります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-13 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-13</span>
+        <h2 class="section-title">まとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul class="custom-list">
+          <li>開発ライフサイクルは、要件定義から運用・保守までの一連の流れであり、各フェーズには明確な目的と成果物がある。</li>
+          <li>V字モデルでは、開発工程とテスト工程が対応関係にあり、各フェーズの設計内容が対応するテストで検証される。</li>
+          <li>要件定義では「何を作るか」、基本設計では「どう実現するかの概要」、詳細設計では「実装できるレベルの詳細」を決める。</li>
+          <li>実装・単体テストでは個々のプログラムを作成し、結合テストでは複数のプログラムの連携を確認し、システムテストではシステム全体の品質を確認する。</li>
+          <li>受入テスト（UAT）では、ユーザーが要件を満たしているかを確認する。</li>
+          <li>リリース・本番移行では、システムを本番環境に展開し、運用・保守では安定稼働と継続的な改善を行う。</li>
+          <li>トレーサビリティと変更管理は、ライフサイクル全体を通じて品質を維持するために重要である。</li>
+          <li>バックエンドエンジニアは、特に詳細設計、実装、単体テスト、結合テストで深く関わり、他のフェーズでも技術的な観点から貢献する。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ページナビゲーション -->
+    <nav class="page-nav">
+      <a href="4sd-waterfall-agile.html" class="page-nav-link prev">
+        <span class="page-nav-label">前の章</span>
+        <span class="page-nav-title">開発手法：ウォーターフォールとアジャイル</span>
+      </a>
+      <a href="6sd-wbs-meetings.html" class="page-nav-link next">
+        <span class="page-nav-label">次の章</span>
+        <span class="page-nav-title">WBSの考え方とミーティングの種類・役割</span>
+      </a>
+    </nav>
+  </div>
+
+  <footer class="footer">
+    <p>システム開発概論 - 職業訓練校教材</p>
+  </footer>
+
+  <script src="../../shared/demo.js"></script>
+</body>
+</html>

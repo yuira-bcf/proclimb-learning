@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第14章 実践：チームプロジェクト演習 - Git & GitHub完全ガイド</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #F5A623;
+        --primary-dark: #D4891D;
+        --primary-light: #FEF7E8;
+        --primary-lighter: #FDE4A8;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef7e8 0%, #fef7e8 100%);
+        border-radius: 16px; border: 1px solid #fde4a8;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F5A623; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F5A623; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(245,166,35,0.08);
+      }
+      .vd-box.accent { background: #F5A623; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F5A623; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fef7e8; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F5A623; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-git.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">14</div>
+            <h1 class="chapter-title">実践：チームプロジェクト演習</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">14-1</span><span>演習の概要と準備</span></li>
+                <li class="toc-item"><span class="toc-number">14-2</span><span>リポジトリのセットアップ</span></li>
+                <li class="toc-item"><span class="toc-number">14-3</span><span>ブランチ戦略の実践</span></li>
+                <li class="toc-item"><span class="toc-number">14-4</span><span>プルリクエストとコードレビュー実践</span></li>
+                <li class="toc-item"><span class="toc-number">14-5</span><span>プロジェクト完成とふりかえり</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 14-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 14-1</span>
+                <h2 class="section-title">演習の概要と準備</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>この章では、これまで学んだGit & GitHubの知識を総動員して、<strong>チームポートフォリオサイト</strong>を作成する実践演習を行います。3〜4人のチームで、GitHub Flowを使った共同開発を体験しましょう。</p>
+            </div>
+
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#128640; プロジェクト演習の全体フロー</div>
+    <div class="vd-flow">
+        <div class="vd-box">
+            <span class="vd-icon">&#128221;</span>
+            <span class="vd-label">Step 1</span>
+            <span class="vd-sub">計画・役割分担</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box">
+            <span class="vd-icon">&#128736;</span>
+            <span class="vd-label">Step 2</span>
+            <span class="vd-sub">リポジトリ準備</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box green" style="border-color:#a5d6a7;background:#f1f8e9;">
+            <span class="vd-icon">&#127793;</span>
+            <span class="vd-label" style="color:#2E7D32;">Step 3</span>
+            <span class="vd-sub">ブランチで開発</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box purple" style="border-color:#ce93d8;background:#f3e5f5;">
+            <span class="vd-icon">&#128172;</span>
+            <span class="vd-label" style="color:#7B1FA2;">Step 4</span>
+            <span class="vd-sub">PR & レビュー</span>
+        </div>
+        <div class="vd-arrow">&#8594;</div>
+        <div class="vd-box accent">
+            <span class="vd-icon">&#127881;</span>
+            <span class="vd-label">Step 5</span>
+            <span class="vd-sub">完成 & 公開</span>
+        </div>
+    </div>
+</div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 演習の目標</h3>
+                <div class="content-block">
+                    <ul class="bullet-list">
+                        <li>GitHub Flowに基づいたチーム開発の流れを体験する</li>
+                        <li>ブランチの作成・切り替え・マージを実践する</li>
+                        <li>プルリクエストの作成とコードレビューを行う</li>
+                        <li>コンフリクトが発生した場合に解決できるようになる</li>
+                        <li>完成したサイトをGitHub Pagesで公開する</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">1.2 プロジェクト概要：チームポートフォリオサイト</h3>
+                <div class="content-block">
+                    <p>チームメンバー全員の自己紹介を1つのWebサイトにまとめた<strong>チームポートフォリオサイト</strong>を作ります。</p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>内容</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>サイト構成</strong></td>
+                                <td>トップページ（index.html） + 各メンバーの紹介ページ</td>
+                            </tr>
+                            <tr>
+                                <td><strong>使用技術</strong></td>
+                                <td>HTML / CSS</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ワークフロー</strong></td>
+                                <td>GitHub Flow</td>
+                            </tr>
+                            <tr>
+                                <td><strong>チーム人数</strong></td>
+                                <td>3〜4人</td>
+                            </tr>
+                            <tr>
+                                <td><strong>公開方法</strong></td>
+                                <td>GitHub Pages</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+<div class="visual-diagram">
+    <div class="visual-diagram-title">&#128101; チームメンバーの役割分担</div>
+    <div class="vd-grid">
+        <div class="vd-card blue">
+            <span class="vd-icon">&#128081;</span>
+            <span class="vd-label">リーダー</span>
+            <span class="vd-sub">リポジトリ作成<br>index.html担当<br>最終レビュー</span>
+        </div>
+        <div class="vd-card green">
+            <span class="vd-icon">&#128100;</span>
+            <span class="vd-label">メンバーA</span>
+            <span class="vd-sub">自己紹介ページ<br>member-a.html<br>CSSの基本設計</span>
+        </div>
+        <div class="vd-card amber">
+            <span class="vd-icon">&#128100;</span>
+            <span class="vd-label">メンバーB</span>
+            <span class="vd-sub">自己紹介ページ<br>member-b.html<br>画像・アセット管理</span>
+        </div>
+        <div class="vd-card purple">
+            <span class="vd-icon">&#128100;</span>
+            <span class="vd-label">メンバーC</span>
+            <span class="vd-sub">自己紹介ページ<br>member-c.html<br>GitHub Pages設定</span>
+        </div>
+    </div>
+</div>
+        </section>
+
+        <!-- セクション 14-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 14-2</span>
+                <h2 class="section-title">リポジトリのセットアップ</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>まず、リーダーがGitHub上にリポジトリを作成し、チームメンバーを招待します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 リーダーの作業：リポジトリ作成</h3>
+                <div class="content-block">
+                    <ol class="bullet-list">
+                        <li>GitHubで<strong>「New repository」</strong>をクリック</li>
+                        <li>リポジトリ名を<code>team-portfolio</code>に設定</li>
+                        <li>「Public」を選択（GitHub Pagesで公開するため）</li>
+                        <li>「Add a README file」にチェックを入れる</li>
+                        <li>「Add .gitignore」でNode等の適切なテンプレートを選択</li>
+                        <li>「Create repository」をクリック</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">リーダー：初期ファイルの作成とpush</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># リポジトリをクローン
+$ git clone https://github.com/leader-name/team-portfolio.git
+$ cd team-portfolio
+
+# プロジェクトの基本構造を作成
+$ mkdir css images members
+
+# index.htmlの雛形を作成
+# (エディタで編集)
+
+# 共通CSSファイルを作成
+# (エディタで編集)
+
+# 初期コミット
+$ git add .
+$ git commit -m "feat: add initial project structure"
+$ git push origin main</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 リーダーの作業：メンバーの招待</h3>
+                <div class="content-block">
+                    <ol class="bullet-list">
+                        <li>リポジトリの<strong>Settings</strong>タブを開く</li>
+                        <li>左メニューの<strong>Collaborators</strong>を選択</li>
+                        <li><strong>「Add people」</strong>をクリック</li>
+                        <li>メンバーのGitHubユーザー名またはメールアドレスを入力して招待</li>
+                    </ol>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">招待を受ける側の操作</span>
+                        </div>
+                        <p>招待されたメンバーは、メールまたはGitHubの通知で招待を確認し、<strong>「Accept invitation」</strong>をクリックして承認します。承認後、リポジトリへのpush権限が付与されます。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.3 メンバーの作業：リポジトリのクローン</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">各メンバー：リポジトリをクローン</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># リポジトリをクローン
+$ git clone https://github.com/leader-name/team-portfolio.git
+$ cd team-portfolio
+
+# ファイル構成を確認
+$ ls
+README.md  css/  images/  index.html  members/</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2.4 Issueの作成</h3>
+                <div class="content-block">
+                    <p>各メンバーの担当タスクを<strong>Issue</strong>として登録します。これにより、誰が何をやっているかをチーム全体で把握できます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Issueの例</span>
+                            <span class="code-lang">テキスト</span>
+                        </div>
+                        <pre class="code-content"><code>Issue #1: トップページ（index.html）を作成する  → リーダー
+Issue #2: メンバーA の自己紹介ページを作成する   → メンバーA
+Issue #3: メンバーB の自己紹介ページを作成する   → メンバーB
+Issue #4: メンバーC の自己紹介ページを作成する   → メンバーC
+Issue #5: 共通CSSを整える                       → メンバーA
+Issue #6: GitHub Pagesを設定して公開する         → メンバーC</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 14-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 14-3</span>
+                <h2 class="section-title">ブランチ戦略の実践</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>GitHub Flowに従い、各メンバーはそれぞれのブランチで作業を進めます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 ブランチの作成と開発</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">メンバーA の作業例</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># mainを最新にする
+$ git checkout main
+$ git pull origin main
+
+# 作業ブランチを作成
+$ git checkout -b feature/member-a-page
+
+# 自己紹介ページを作成
+# members/member-a.html をエディタで作成
+
+# 変更をコミット
+$ git add members/member-a.html
+$ git commit -m "feat: add member A introduction page (#2)"
+
+# リモートにpush
+$ git push -u origin feature/member-a-page</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">自己紹介ページのテンプレート（members/member-a.html）</span>
+                            <span class="code-lang">HTML</span>
+                        </div>
+                        <pre class="code-content"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;メンバーA - チームポートフォリオ&lt;/title&gt;
+    &lt;link rel="stylesheet" href="../css/style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;header&gt;
+        &lt;nav&gt;
+            &lt;a href="../../index.html"&gt;ホーム&lt;/a&gt;
+        &lt;/nav&gt;
+    &lt;/header&gt;
+    &lt;main&gt;
+        &lt;section class="profile"&gt;
+            &lt;h1&gt;メンバーA&lt;/h1&gt;
+            &lt;img src="../images/member-a.jpg" alt="メンバーAの写真"&gt;
+            &lt;h2&gt;自己紹介&lt;/h2&gt;
+            &lt;p&gt;こんにちは！Web開発を学んでいます。&lt;/p&gt;
+            &lt;h2&gt;スキル&lt;/h2&gt;
+            &lt;ul&gt;
+                &lt;li&gt;HTML / CSS&lt;/li&gt;
+                &lt;li&gt;JavaScript&lt;/li&gt;
+                &lt;li&gt;Git / GitHub&lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/section&gt;
+    &lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">mainブランチに直接コミットしない</span>
+                        </div>
+                        <p>GitHub Flowでは、mainブランチには直接コミットしません。必ず<strong>featureブランチで作業</strong>し、プルリクエストを通じてmainにマージします。これにより、コードレビューの機会が生まれ、品質を保てます。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 作業中のmainの更新を取り込む</h3>
+                <div class="content-block">
+                    <p>他のメンバーの変更がmainにマージされた場合、自分のブランチにも最新の変更を取り込みましょう。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">mainの最新変更を自分のブランチに取り込む</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># mainの最新を取得
+$ git checkout main
+$ git pull origin main
+
+# 自分のブランチに戻ってmainをマージ
+$ git checkout feature/member-a-page
+$ git merge main
+
+# コンフリクトがあれば解決してコミット
+# コンフリクトがなければそのまま作業を続行</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 14-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 14-4</span>
+                <h2 class="section-title">プルリクエストとコードレビュー実践</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>featureブランチでの作業が完了したら、プルリクエスト（PR）を作成してコードレビューを受けましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 プルリクエストの作成</h3>
+                <div class="content-block">
+                    <ol class="bullet-list">
+                        <li>GitHubリポジトリのページを開く</li>
+                        <li>「Compare & pull request」ボタンをクリック（pushした直後に表示される）</li>
+                        <li>PRのタイトルと説明を記入</li>
+                        <li>Reviewersにレビュー担当者を指定</li>
+                        <li>「Create pull request」をクリック</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">プルリクエストの説明文テンプレート</span>
+                            <span class="code-lang">Markdown</span>
+                        </div>
+                        <pre class="code-content"><code>## 概要
+メンバーAの自己紹介ページを作成しました。
+
+## 変更内容
+- `members/member-a.html` を新規作成
+- 自己紹介、スキル一覧、プロフィール画像を追加
+
+## 関連Issue
+Closes #2
+
+## 確認してほしいポイント
+- HTMLの構造は適切か
+- リンクは正しく動作するか
+- レスポンシブ対応は問題ないか
+
+## スクリーンショット
+（画面キャプチャを添付）</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 コードレビューの実践</h3>
+                <div class="content-block">
+                    <p>レビュー担当者は、以下の観点でコードを確認します。</p>
+
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128270;</div>
+                            <div class="feature-content">
+                                <h4>コードの正確性</h4>
+                                <p>HTMLのタグは正しく閉じられているか、リンクのパスは正確かなどを確認します。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#128196;</div>
+                            <div class="feature-content">
+                                <h4>コードの可読性</h4>
+                                <p>インデントは揃っているか、クラス名は分かりやすいかなどを確認します。</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">&#127919;</div>
+                            <div class="feature-content">
+                                <h4>プロジェクトとの一貫性</h4>
+                                <p>他のメンバーのページと構造やスタイルが統一されているかを確認します。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">レビューコメントの書き方</span>
+                        </div>
+                        <p>レビューコメントは<strong>建設的で具体的</strong>に書きましょう。「ここがダメ」ではなく、「このクラス名を<code>profile-image</code>に変更すると、他のページとの一貫性が保てると思います」のように改善提案を含めるのが良いレビューです。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4.3 レビュー後のマージ</h3>
+                <div class="content-block">
+                    <ol class="bullet-list">
+                        <li>レビュアーが<strong>「Approve」</strong>（承認）を選択</li>
+                        <li>PRページの<strong>「Merge pull request」</strong>をクリック</li>
+                        <li><strong>「Confirm merge」</strong>でマージを確定</li>
+                        <li>マージ後、<strong>featureブランチを削除</strong>（「Delete branch」ボタン）</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">マージ後のローカル同期</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># mainを最新にする
+$ git checkout main
+$ git pull origin main
+
+# マージ済みのローカルブランチを削除
+$ git branch -d feature/member-a-page</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 14-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 14-5</span>
+                <h2 class="section-title">プロジェクト完成とふりかえり</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>全メンバーのページがマージされたら、最終調整を行い、GitHub Pagesでサイトを公開しましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.1 GitHub Pagesでの公開</h3>
+                <div class="content-block">
+                    <ol class="bullet-list">
+                        <li>リポジトリの<strong>Settings</strong>タブを開く</li>
+                        <li>左メニューの<strong>Pages</strong>を選択</li>
+                        <li>Sourceで「Deploy from a branch」を選択</li>
+                        <li>Branchで「main」、フォルダで「/ (root)」を選択</li>
+                        <li>「Save」をクリック</li>
+                        <li>数分後にURLが発行される</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5.2 ふりかえり（KPT法）</h3>
+                <div class="content-block">
+                    <p>プロジェクト終了後、チームで<strong>KPT法</strong>を使ってふりかえりを行いましょう。</p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>カテゴリ</th>
+                                <th>意味</th>
+                                <th>例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Keep（続けたいこと）</strong></td>
+                                <td>うまくいったこと、続けるべき習慣</td>
+                                <td>PRのテンプレートが分かりやすかった</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Problem（問題点）</strong></td>
+                                <td>困ったこと、改善が必要な点</td>
+                                <td>コンフリクトの解決に時間がかかった</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Try（次に試したいこと）</strong></td>
+                                <td>次回のプロジェクトで試したいこと</td>
+                                <td>こまめにpullして差分を小さくする</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">演習のアレンジ</span>
+                        </div>
+                        <p>この演習に慣れたら、GitHub ActionsでHTMLのリンクチェックを自動化したり、CSSフレームワーク（Bootstrap等）を導入してデザインを改善したり、さらにチャレンジしてみましょう。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">14章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>GitHub Flowでは、新しい機能を開発する際にまず何をしますか？</p>
+                        <ol type="A">
+                            <li>mainブランチに直接コミットする</li>
+                            <li>mainブランチから新しいfeatureブランチを作成する</li>
+                            <li>developブランチから新しいfeatureブランチを作成する</li>
+                            <li>リモートリポジトリを削除して作り直す</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>GitHubでコラボレーターを追加するには、リポジトリのどのページから操作しますか？</p>
+                        <ol type="A">
+                            <li>Code タブ</li>
+                            <li>Issues タブ</li>
+                            <li>Settings タブの Collaborators</li>
+                            <li>Actions タブ</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>プルリクエストの説明文に「Closes #2」と書くとどうなりますか？</p>
+                        <ol type="A">
+                            <li>Issue #2 が自動的に作成される</li>
+                            <li>PRがマージされると Issue #2 が自動的にクローズされる</li>
+                            <li>Issue #2 にコメントが自動投稿される</li>
+                            <li>Issue #2 の担当者が変更される</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">14章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p>GitHub Flowでは、新しい作業を始める際に<strong>mainブランチから新しいfeatureブランチを作成</strong>します。Git Flowとは異なり、developブランチは使いません。mainブランチは常にデプロイ可能な状態を保ちます。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: C</div>
+                    <div class="answer-content">
+                        <p>コラボレーターの追加は、リポジトリの<strong>Settingsタブ</strong>内にある<strong>Collaborators</strong>のページから行います。「Add people」ボタンをクリックして、ユーザー名やメールアドレスで招待できます。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: B</div>
+                    <div class="answer-content">
+                        <p>PRの説明文に<code>Closes #2</code>と記述すると、そのPRがmainにマージされた際に<strong>Issue #2が自動的にクローズ</strong>されます。同様に <code>Fixes #2</code>、<code>Resolves #2</code> でも同じ効果があります。これにより、タスク管理が効率化されます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="13github-features.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第13章 GitHubの活用機能</div>
+            </div>
+        </a>
+        <a href="15git-vscode-mcp.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第15章 VSCode GitHub MCP活用</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

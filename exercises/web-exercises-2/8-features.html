@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phase 8: 追加機能実装 - WEB総合制作演習 II</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #FF3B30;
+      --primary-dark: #E02B20;
+      --primary-light: #FFF5F4;
+      --primary-lighter: #FFD4D1;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-exercises-2.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Phase</div>
+      <div class="chapter-number">8</div>
+      <h1 class="chapter-title">追加機能実装</h1>
+      <p class="chapter-subtitle">Day 25-27 / 検索・ソート・その他機能</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この Phase の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">8-1</span>検索機能実装</li>
+        <li class="toc-item"><span class="toc-number">8-2</span>ソート・ページネーション</li>
+        <li class="toc-item"><span class="toc-number">8-3</span>その他追加機能</li>
+        <li class="toc-item"><span class="toc-number">8-4</span>参照チュートリアル</li>
+      </ul>
+    </nav>
+
+    <!-- Section 8-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-1</span>
+        <h2 class="section-title">検索機能実装</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><strong>キーワード検索</strong>や<strong>条件検索</strong>を実装し、ユーザーが必要なデータを素早く見つけられるようにします。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>キーワード検索</h3>
+        <div class="highlight-box">
+          <h4>実装のポイント</h4>
+          <ul>
+            <li>検索フォームの作成（GET リクエスト）</li>
+            <li>SQL の <code>LIKE</code> 句を使用</li>
+            <li>複数カラムを対象に検索</li>
+            <li>検索結果のハイライト表示（任意）</li>
+          </ul>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">SQL例</div>
+          <pre><code>SELECT * FROM tasks
+WHERE title LIKE CONCAT('%', #{keyword}, '%')
+   OR description LIKE CONCAT('%', #{keyword}, '%')</code></pre>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>条件検索（フィルタリング）</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">filter_list</span>
+            </div>
+            <div class="feature-content">
+              <h4>ステータスで絞り込み</h4>
+              <p>未完了/完了などの状態でフィルタ</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">category</span>
+            </div>
+            <div class="feature-content">
+              <h4>カテゴリで絞り込み</h4>
+              <p>プルダウンで選択</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #AF52DE;">
+              <span class="material-icons" style="color: white;">date_range</span>
+            </div>
+            <div class="feature-content">
+              <h4>日付範囲で絞り込み</h4>
+              <p>開始日〜終了日を指定</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 8-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-2</span>
+        <h2 class="section-title">ソート・ページネーション</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>一覧画面の<strong>並び替え</strong>と<strong>ページ分割</strong>を実装します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>ソート機能</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ソート項目の例</th>
+                <th>用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>作成日時（新しい順/古い順）</td>
+                <td>最新のデータを優先表示</td>
+              </tr>
+              <tr>
+                <td>更新日時</td>
+                <td>最近更新されたデータを優先表示</td>
+              </tr>
+              <tr>
+                <td>タイトル（あいうえお順）</td>
+                <td>名前でアルファベット順に並び替え</td>
+              </tr>
+              <tr>
+                <td>優先度（高い順/低い順）</td>
+                <td>重要なデータを優先表示</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">実装のポイント</div>
+          <div class="info-box-content">
+            <p>URLパラメータ（<code>?sort=created_at&order=desc</code>）でソート条件を受け取り、動的にSQLを生成します。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ページネーション</h3>
+        <div class="highlight-box">
+          <h4>実装する機能</h4>
+          <ul>
+            <li>1ページあたりの表示件数設定（10件、20件、50件など）</li>
+            <li>ページ番号リンク</li>
+            <li>「前へ」「次へ」ボタン</li>
+            <li>総件数・現在のページ番号の表示</li>
+          </ul>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">SQL例（MySQL）</div>
+          <pre><code>SELECT * FROM tasks
+ORDER BY created_at DESC
+LIMIT #{limit} OFFSET #{offset}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 8-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-3</span>
+        <h2 class="section-title">その他追加機能</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>以下から<strong>2つ以上</strong>を選んで実装します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>追加機能の例</h3>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #34C759;">
+              <span class="material-icons" style="color: white;">download</span>
+            </div>
+            <div class="feature-content">
+              <h4>CSV出力</h4>
+              <p>一覧データをCSV形式でダウンロード</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #007AFF;">
+              <span class="material-icons" style="color: white;">upload_file</span>
+            </div>
+            <div class="feature-content">
+              <h4>ファイルアップロード</h4>
+              <p>画像やドキュメントのアップロード機能</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #AF52DE;">
+              <span class="material-icons" style="color: white;">api</span>
+            </div>
+            <div class="feature-content">
+              <h4>REST API</h4>
+              <p>JSONでデータを返すAPIエンドポイント</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF9F0A;">
+              <span class="material-icons" style="color: white;">email</span>
+            </div>
+            <div class="feature-content">
+              <h4>メール送信</h4>
+              <p>通知メールやパスワードリセット</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #FF3B30;">
+              <span class="material-icons" style="color: white;">bar_chart</span>
+            </div>
+            <div class="feature-content">
+              <h4>ダッシュボード</h4>
+              <p>統計情報やグラフの表示</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #5856D6;">
+              <span class="material-icons" style="color: white;">content_copy</span>
+            </div>
+            <div class="feature-content">
+              <h4>一括操作</h4>
+              <p>複数データの一括削除・更新</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 8-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-4</span>
+        <h2 class="section-title">参照チュートリアル</h2>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>内容</th>
+              <th>チュートリアル</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>検索機能</td>
+              <td><a href="../../ai/promptpg-function/04_search.html">promptpg-function/04_search.html</a></td>
+            </tr>
+            <tr>
+              <td>ソート機能</td>
+              <td><a href="../../ai/promptpg-function/05_sort.html">promptpg-function/05_sort.html</a></td>
+            </tr>
+            <tr>
+              <td>ページネーション</td>
+              <td><a href="../../ai/promptpg-function/06_pagination.html">promptpg-function/06_pagination.html</a></td>
+            </tr>
+            <tr>
+              <td>CSV出力</td>
+              <td><a href="../../ai/promptpg-function/11_csv_export.html">promptpg-function/11_csv_export.html</a></td>
+            </tr>
+            <tr>
+              <td>ファイルアップロード</td>
+              <td><a href="../../ai/promptpg-function/20_file_upload.html">promptpg-function/20_file_upload.html</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- マイルストーン -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">マイルストーン</span>
+        <h2 class="section-title">Day 27 までの成果物</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>検索機能</strong> - キーワード検索・条件検索</li>
+          <li><strong>ソート機能</strong> - 一覧の並び替え</li>
+          <li><strong>ページネーション</strong> - ページ分割表示</li>
+          <li><strong>追加機能 2つ以上</strong> - CSV出力、ファイルアップロード等</li>
+        </ul>
+      </div>
+
+      <div class="info-box warning">
+        <div class="info-box-title"><span class="material-icons">schedule</span> 期日</div>
+        <div class="info-box-content">
+          <p>Day 27 までに追加機能を完成させてください。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="7-crud.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">Phase 7: 基本機能実装</div>
+    </a>
+    <a href="9-testing.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">Phase 9: テスト・品質管理</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>WEB総合制作演習 II - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

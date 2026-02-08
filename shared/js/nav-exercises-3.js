@@ -73,8 +73,8 @@ const navData = {
         }
     ],
     categories: [
-        { href: "../../index.html", text: "ダッシュボード" },
-        { href: "../../generaltraining/web-exercises-3.html", text: "演習トップ" }
+        { href: "../../../index.html", text: "ダッシュボード" },
+        { href: "../../../exercises/generaltraining/web-exercises-3.html", text: "演習トップ" }
     ]
 };
 

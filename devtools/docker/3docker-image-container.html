@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3章 イメージとコンテナの基礎 - Docker構築入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #F5A623;
+        --primary-dark: #D4891D;
+        --primary-light: #FEF7E8;
+        --primary-lighter: #FDE4A8;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      /* 図解用スタイル */
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef7e8 0%, #fef7e8 100%);
+        border-radius: 16px; border: 1px solid #fde4a8;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F5A623; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F5A623; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(245,166,35,0.08);
+      }
+      .vd-box.accent { background: #F5A623; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F5A623; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fef7e8; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F5A623; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-docker.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">3</div>
+            <h1 class="chapter-title">イメージとコンテナの基礎</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">3-1</span><span>イメージとコンテナの関係</span></li>
+                <li class="toc-item"><span class="toc-number">3-2</span><span>イメージの取得と管理</span></li>
+                <li class="toc-item"><span class="toc-number">3-3</span><span>コンテナの作成と実行</span></li>
+                <li class="toc-item"><span class="toc-number">3-4</span><span>コンテナのライフサイクル</span></li>
+                <li class="toc-item"><span class="toc-number">3-5</span><span>コンテナ内部の操作</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 3-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-1</span>
+                <h2 class="section-title">イメージとコンテナの関係</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Docker を理解する上で最も重要な概念が「イメージ」と「コンテナ」の関係です。プログラミングにおける「クラス」と「インスタンス」の関係に似ており、イメージが設計図、コンテナがその実体にあたります。</p>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128220; イメージとコンテナの関係</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128220;</span>
+                        <span class="vd-label">Dockerfile</span>
+                        <span class="vd-sub">設計図を記述</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box" style="border-color: #4caf50;">
+                        <span class="vd-icon">&#128230;</span>
+                        <span class="vd-label">イメージ</span>
+                        <span class="vd-sub">読み取り専用テンプレート</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <div class="vd-box accent">
+                            <span class="vd-icon">&#128187;</span>
+                            <span class="vd-label">コンテナ A</span>
+                            <span class="vd-sub">実行中インスタンス</span>
+                        </div>
+                        <div class="vd-box accent">
+                            <span class="vd-icon">&#128187;</span>
+                            <span class="vd-label">コンテナ B</span>
+                            <span class="vd-sub">実行中インスタンス</span>
+                        </div>
+                        <div class="vd-box accent">
+                            <span class="vd-icon">&#128187;</span>
+                            <span class="vd-label">コンテナ C</span>
+                            <span class="vd-sub">実行中インスタンス</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">イメージとは</h3>
+                <p><strong>イメージ（Image）</strong>は、アプリケーションの実行環境をパッケージ化した読み取り専用のテンプレートです。OS のベース環境、ライブラリ、アプリケーションコード、設定ファイルなどが含まれます。</p>
+                <ul>
+                    <li>読み取り専用（変更不可）で、一度作成されたイメージは変わらない</li>
+                    <li>レイヤー構造を持ち、差分で効率的に管理される</li>
+                    <li>Docker Hub からダウンロードするか、Dockerfile から自作できる</li>
+                    <li>タグでバージョンを管理する（例：<code>node:18-alpine</code>、<code>nginx:latest</code>）</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">コンテナとは</h3>
+                <p><strong>コンテナ（Container）</strong>は、イメージから作成された実行可能なインスタンスです。イメージの上に書き込み可能なレイヤーが追加され、アプリケーションが隔離された環境で動作します。</p>
+                <ul>
+                    <li>イメージをもとに作成され、独立した実行環境を持つ</li>
+                    <li>1つのイメージから複数のコンテナを作成できる</li>
+                    <li>コンテナ内の変更はそのコンテナにのみ反映される</li>
+                    <li>コンテナを削除すると、書き込みレイヤーのデータは失われる</li>
+                </ul>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p>「イメージ = 設計図（クラス）」「コンテナ = 実体（インスタンス）」と覚えましょう。イメージは共有・配布可能な不変のテンプレートで、コンテナはそこから生成された動くプロセスです。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 3-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-2</span>
+                <h2 class="section-title">イメージの取得と管理</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Docker イメージは Docker Hub などのレジストリからダウンロード（pull）して利用するのが基本です。イメージの取得・一覧表示・削除の基本コマンドを学びましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">イメージの取得（docker pull）</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">イメージのダウンロード</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># 最新版の nginx イメージを取得
+$ docker pull nginx
+Using default tag: latest
+latest: Pulling from library/nginx
+...
+Status: Downloaded newer image for nginx:latest
+
+# 特定バージョンを指定して取得
+$ docker pull node:18-alpine
+
+# 特定のプラットフォーム向けイメージを取得
+$ docker pull --platform linux/amd64 python:3.12</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">イメージの一覧表示（docker images）</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">ローカルのイメージ一覧</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code>$ docker images
+REPOSITORY   TAG          IMAGE ID       CREATED        SIZE
+nginx        latest       a6bd71f48f68   2 days ago     187MB
+node         18-alpine    7f2f7e3c2b1a   5 days ago     117MB
+python       3.12         c5d7f8e9a0b2   1 week ago     1.02GB
+
+# 特定のリポジトリのイメージだけ表示
+$ docker images nginx</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">イメージの削除（docker rmi）</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">イメージの削除</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># イメージ名で削除
+$ docker rmi nginx:latest
+
+# イメージIDで削除
+$ docker rmi a6bd71f48f68
+
+# 使用されていないイメージを一括削除
+$ docker image prune
+
+# すべての未使用イメージを削除（確認あり）
+$ docker image prune -a</code></pre>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-title">注意</div>
+                    <div class="warning-box-content">
+                        <p>コンテナが使用中のイメージは削除できません。先にコンテナを停止・削除してからイメージを削除してください。<code>docker image prune -a</code> は未使用のすべてのイメージを削除するため、必要なイメージまで消えないよう注意しましょう。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">イメージの検索（docker search）</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Docker Hub でイメージを検索</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># Docker Hub でイメージを検索
+$ docker search mysql
+NAME           DESCRIPTION                                     STARS   OFFICIAL
+mysql          MySQL is a widely used...                        15000   [OK]
+mariadb        MariaDB Server is a...                           6000    [OK]
+percona        Percona Server is a...                           600     [OK]
+
+# 公式イメージのみ検索
+$ docker search --filter is-official=true mysql</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 3-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-3</span>
+                <h2 class="section-title">コンテナの作成と実行</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>コンテナの作成・実行は <code>docker run</code> コマンドで行います。このコマンドは Docker で最も頻繁に使うコマンドの一つで、多くのオプションがあります。基本的な使い方をマスターしましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">基本的な docker run</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">docker run の基本構文</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># 基本構文
+docker run [オプション] イメージ名[:タグ] [コマンド]
+
+# 例：Ubuntu コンテナを起動して bash を実行
+$ docker run -it ubuntu bash
+
+# 例：Nginx をバックグラウンドで起動
+$ docker run -d -p 8080:80 --name web nginx
+
+# 例：コンテナを実行して終了後に自動削除
+$ docker run --rm alpine echo "Hello, Docker!"</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">よく使うオプション</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>オプション</th>
+                                <th>説明</th>
+                                <th>使用例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>-d</code></td>
+                                <td>バックグラウンド（デタッチ）モードで実行</td>
+                                <td><code>docker run -d nginx</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>-it</code></td>
+                                <td>対話型モード（ターミナルに接続）</td>
+                                <td><code>docker run -it ubuntu bash</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>-p</code></td>
+                                <td>ポートマッピング（ホスト:コンテナ）</td>
+                                <td><code>docker run -p 3000:3000 node-app</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>--name</code></td>
+                                <td>コンテナに名前を付ける</td>
+                                <td><code>docker run --name myapp nginx</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>--rm</code></td>
+                                <td>コンテナ終了時に自動削除</td>
+                                <td><code>docker run --rm alpine ls</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>-v</code></td>
+                                <td>ボリュームのマウント</td>
+                                <td><code>docker run -v ./data:/app/data nginx</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>-e</code></td>
+                                <td>環境変数の設定</td>
+                                <td><code>docker run -e DB_HOST=localhost app</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">実行中のコンテナの確認</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">コンテナの一覧表示</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># 実行中のコンテナを一覧表示
+$ docker ps
+CONTAINER ID   IMAGE   COMMAND   CREATED   STATUS   PORTS   NAMES
+
+# 停止中を含む全コンテナを表示
+$ docker ps -a
+
+# コンテナIDのみ表示
+$ docker ps -q</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 3-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-4</span>
+                <h2 class="section-title">コンテナのライフサイクル</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>コンテナには「作成・起動・一時停止・停止・削除」という一連のライフサイクルがあります。各状態と、状態を遷移させるコマンドを理解することが重要です。</p>
+            </div>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">&#128260; コンテナのライフサイクル</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#128230;</span>
+                        <span class="vd-label">Created</span>
+                        <span class="vd-sub">作成済み</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#9654;</span>
+                        <span class="vd-label">Running</span>
+                        <span class="vd-sub">実行中</span>
+                    </div>
+                    <span class="vd-arrow">&#8596;</span>
+                    <div class="vd-box" style="border-color: #ff9800;">
+                        <span class="vd-icon">&#9208;</span>
+                        <span class="vd-label">Paused</span>
+                        <span class="vd-sub">一時停止</span>
+                    </div>
+                </div>
+                <div class="vd-flow" style="margin-top: 16px;">
+                    <div class="vd-box" style="border-color: #f44336;">
+                        <span class="vd-icon">&#9632;</span>
+                        <span class="vd-label">Stopped</span>
+                        <span class="vd-sub">停止</span>
+                    </div>
+                    <span class="vd-arrow">&#8594;</span>
+                    <div class="vd-box" style="border-color: #9e9e9e;">
+                        <span class="vd-icon">&#128465;</span>
+                        <span class="vd-label">Deleted</span>
+                        <span class="vd-sub">削除済み</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">ライフサイクル管理コマンド</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">コンテナの状態管理コマンド</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># コンテナの作成（起動はしない）
+$ docker create --name myapp nginx
+
+# コンテナの起動
+$ docker start myapp
+
+# コンテナの停止（GracefulにSIGTERMを送信）
+$ docker stop myapp
+
+# コンテナの強制停止（SIGKILLを送信）
+$ docker kill myapp
+
+# コンテナの一時停止
+$ docker pause myapp
+
+# 一時停止の解除
+$ docker unpause myapp
+
+# コンテナの再起動
+$ docker restart myapp
+
+# コンテナの削除（停止済みのもの）
+$ docker rm myapp
+
+# 実行中のコンテナを強制削除
+$ docker rm -f myapp
+
+# 停止中の全コンテナを一括削除
+$ docker container prune</code></pre>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p><code>docker run</code> は <code>docker create</code> + <code>docker start</code> を同時に実行するコマンドです。通常は <code>docker run</code> を使いますが、設定を事前に行ってから起動したい場合は <code>create</code> と <code>start</code> を分けて実行します。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">コンテナの情報確認</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">コンテナの詳細情報を取得</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># コンテナの詳細情報（JSON形式）
+$ docker inspect myapp
+
+# コンテナのログを確認
+$ docker logs myapp
+
+# リアルタイムでログを表示（tail -f のように）
+$ docker logs -f myapp
+
+# コンテナのリソース使用量を表示
+$ docker stats myapp</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 3-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-5</span>
+                <h2 class="section-title">コンテナ内部の操作</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>実行中のコンテナの内部に入って操作する方法を学びましょう。デバッグや設定確認などで頻繁に使うテクニックです。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">docker exec でコンテナ内にアクセス</h3>
+                <p><code>docker exec</code> は、実行中のコンテナ内でコマンドを実行するためのコマンドです。最もよく使われるのが、シェル（bash / sh）を起動してコンテナ内部を操作するパターンです。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">コンテナ内部への接続</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># コンテナ内で bash を起動（対話モード）
+$ docker exec -it myapp bash
+root@a1b2c3d4e5f6:/# ls
+bin  boot  dev  etc  home  lib  ...
+
+# bash がない場合は sh を使う（alpine 系など）
+$ docker exec -it myapp sh
+
+# コンテナ内で特定のコマンドだけ実行
+$ docker exec myapp cat /etc/nginx/nginx.conf
+
+# 環境変数を確認
+$ docker exec myapp env
+
+# コンテナ内部から抜ける
+root@a1b2c3d4e5f6:/# exit</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">コンテナとホスト間のファイルコピー</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">docker cp でファイルをコピー</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># ホスト → コンテナへのコピー
+$ docker cp ./index.html myapp:/usr/share/nginx/html/
+
+# コンテナ → ホストへのコピー
+$ docker cp myapp:/var/log/nginx/access.log ./access.log
+
+# ディレクトリごとコピー
+$ docker cp ./config/ myapp:/etc/nginx/conf.d/</code></pre>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">POINT</div>
+                    <div class="info-box-content">
+                        <p><code>docker cp</code> は停止中のコンテナに対しても使用できます。デバッグ時にコンテナ内のログファイルをホストに取り出したり、設定ファイルを差し替えたりする際に便利です。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">実践例：Nginx コンテナを操作する</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Nginx コンテナの操作フロー</span>
+                        <span class="code-lang">Bash</span>
+                    </div>
+                    <pre class="code-content"><code># 1. Nginx コンテナを起動
+$ docker run -d -p 8080:80 --name web nginx
+
+# 2. コンテナ内に入る
+$ docker exec -it web bash
+
+# 3. デフォルトの HTML ファイルを確認
+root@xxx:/# cat /usr/share/nginx/html/index.html
+
+# 4. HTML を書き換え
+root@xxx:/# echo "&lt;h1&gt;Hello Docker!&lt;/h1&gt;" > /usr/share/nginx/html/index.html
+
+# 5. コンテナから抜ける
+root@xxx:/# exit
+
+# 6. ブラウザで http://localhost:8080 にアクセスして変更を確認
+
+# 7. ログを確認
+$ docker logs web
+
+# 8. 後片付け
+$ docker stop web && docker rm web</code></pre>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-title">注意</div>
+                    <div class="warning-box-content">
+                        <p>コンテナ内で行った変更は、コンテナを削除すると失われます。永続的な変更が必要な場合は、Dockerfile でイメージに組み込むか、ボリュームを使用してデータを永続化しましょう（第6章で詳しく解説します）。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">3章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Docker における「イメージ」と「コンテナ」の関係として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>イメージは実行中のプロセスで、コンテナは設計図である</li>
+                            <li>イメージは読み取り専用のテンプレートで、コンテナはそこから作成された実行可能なインスタンスである</li>
+                            <li>イメージとコンテナは同じもので、呼び方が違うだけである</li>
+                            <li>1つのイメージからは1つのコンテナしか作成できない</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>実行中のコンテナ内で bash シェルを起動するコマンドとして正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li><code>docker run -it myapp bash</code></li>
+                            <li><code>docker exec -it myapp bash</code></li>
+                            <li><code>docker start -it myapp bash</code></li>
+                            <li><code>docker attach myapp bash</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p><code>docker run --rm alpine echo "test"</code> を実行した後、このコンテナはどうなりますか？</p>
+                        <ol type="A">
+                            <li>バックグラウンドで実行を続ける</li>
+                            <li>停止状態（Stopped）で残る</li>
+                            <li>一時停止状態（Paused）になる</li>
+                            <li>自動的に削除される</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">3章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p>イメージは読み取り専用のテンプレートで、アプリケーションの実行に必要なすべてのファイルを含みます。コンテナはイメージから作成された実行可能なインスタンスで、書き込み可能なレイヤーが追加されます。1つのイメージから複数のコンテナを作成できる点も重要な特徴です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p><code>docker exec -it myapp bash</code> が正解です。<code>docker exec</code> は既に実行中のコンテナ内でコマンドを実行するためのコマンドです。<code>-i</code> は標準入力を維持、<code>-t</code> は疑似TTYを割り当てるオプションで、対話的なシェル操作に必要です。<code>docker run</code> は新しいコンテナを作成するコマンドなので異なります。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: D</div>
+                    <div class="answer-content">
+                        <p><code>--rm</code> オプションを指定すると、コンテナの実行が終了した時点で自動的にコンテナが削除されます。使い捨てのコンテナ（ワンショット実行）を行う際に便利なオプションで、不要なコンテナが溜まることを防げます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="2docker-setup.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第2章 Docker Desktopの導入</div>
+            </div>
+        </a>
+        <a href="4dockerfile.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第4章 Dockerfileの書き方</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+    <script>
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+            if (header && nav && toggle && !header.contains(e.target) && !nav.contains(e.target) && nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

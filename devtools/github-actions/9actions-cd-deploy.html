@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第9章 CD実践：自動デプロイ - GitHub Actions入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #F5A623;
+        --primary-dark: #D4891D;
+        --primary-light: #FEF7E8;
+        --primary-lighter: #FDE4A8;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+      .visual-diagram {
+        margin: 28px 0; padding: 28px 20px;
+        background: linear-gradient(135deg, #fef7e8 0%, #fef7e8 100%);
+        border-radius: 16px; border: 1px solid #fde4a8;
+      }
+      .visual-diagram-title {
+        text-align: center; font-size: 0.82rem; font-weight: 700;
+        color: #F5A623; margin-bottom: 20px; letter-spacing: 0.05em;
+      }
+      .vd-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; flex-wrap: wrap;
+      }
+      .vd-box {
+        background: white; border: 2px solid #F5A623; border-radius: 14px;
+        padding: 16px 14px; text-align: center; min-width: 110px;
+        box-shadow: 0 2px 8px rgba(245,166,35,0.08);
+      }
+      .vd-box.accent { background: #F5A623; color: white; }
+      .vd-box .vd-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+      .vd-box .vd-label { font-size: 0.78rem; font-weight: 700; display: block; }
+      .vd-box .vd-sub { font-size: 0.68rem; opacity: 0.7; display: block; margin-top: 2px; }
+      .vd-arrow { color: #F5A623; font-size: 1.3rem; font-weight: 700; }
+      .vd-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .vd-card {
+        background: white; border-radius: 12px; padding: 16px; text-align: center;
+        border: 2px solid #fef7e8; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      }
+      .vd-card .vd-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+      .vd-card .vd-label { font-size: 0.78rem; font-weight: 700; display: block; color: #F5A623; }
+      .vd-card .vd-sub { font-size: 0.68rem; color: #666; display: block; margin-top: 4px; }
+      .vd-card.green { border-color: #a5d6a7; background: #f1f8e9; }
+      .vd-card.red { border-color: #ef9a9a; background: #fce4ec; }
+      .vd-card.blue { border-color: #90caf9; background: #e3f2fd; }
+      .vd-card.amber { border-color: #ffe082; background: #fff8e1; }
+      .vd-card.purple { border-color: #ce93d8; background: #f3e5f5; }
+      .vd-bar {
+        display: flex; border-radius: 12px; overflow: hidden; margin: 16px 0;
+      }
+      .vd-bar-seg {
+        flex: 1; padding: 14px 8px; text-align: center; font-size: 0.72rem; font-weight: 600; color: white;
+      }
+      @media (max-width: 560px) {
+        .vd-flow { flex-direction: column; }
+        .vd-arrow { transform: rotate(90deg); }
+        .vd-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-github-actions.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">9</div>
+            <h1 class="chapter-title">CD実践：自動デプロイ</h1>
+            <p class="chapter-lead">継続的デリバリー/デプロイ（CD）を実践的に学びます。GitHub Pages、Dockerイメージのビルド、クラウドへのデプロイ、リリース自動化まで、コードの変更を自動的に本番環境に届ける仕組みを構築しましょう。</p>
+        </header>
+
+        <!-- セクション1: CDの基本戦略 -->
+        <section class="section" id="cd-strategy">
+            <h2><span class="material-icons">rocket_launch</span> CDの基本戦略</h2>
+
+            <p>CDには複数のデプロイ戦略があり、サービスの特性やリスク許容度に応じて選択します。ここでは代表的なデプロイ戦略と、その使い分けを解説します。</p>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">主要なデプロイ戦略の比較</div>
+                <div class="vd-grid">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#x1F535;&#x1F7E2;</span>
+                        <span class="vd-label">Blue/Green</span>
+                        <span class="vd-sub">2つの同一環境を切替<br>即座にロールバック可能</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#x1F426;</span>
+                        <span class="vd-label">Canary</span>
+                        <span class="vd-sub">一部のトラフィックから段階的に<br>リスクを最小化</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#x1F504;</span>
+                        <span class="vd-label">Rolling</span>
+                        <span class="vd-sub">インスタンスを順次更新<br>ダウンタイムなし</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">&#x1F3AF;</span>
+                        <span class="vd-label">Recreate</span>
+                        <span class="vd-sub">全停止→全起動<br>最もシンプル</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Blue/Green デプロイ</h3>
+            <p>2つの同一環境（Blue = 現在のバージョン、Green = 新バージョン）を用意し、ロードバランサーで切り替える方式です。</p>
+            <ul>
+                <li><strong>メリット</strong>: 即座にロールバック可能、ダウンタイムなし</li>
+                <li><strong>デメリット</strong>: 2倍のインフラコスト</li>
+                <li><strong>適用場面</strong>: ミッションクリティカルなサービス</li>
+            </ul>
+
+            <h3>Canary デプロイ</h3>
+            <p>まず全トラフィックの一部（例: 5%）を新バージョンに振り分け、問題がなければ段階的に比率を上げていく方式です。</p>
+            <ul>
+                <li><strong>メリット</strong>: リスクの最小化、段階的な展開</li>
+                <li><strong>デメリット</strong>: 設定が複雑、モニタリングが必要</li>
+                <li><strong>適用場面</strong>: 大規模ユーザーベースのサービス</li>
+            </ul>
+
+            <h3>Rolling デプロイ</h3>
+            <p>複数のインスタンスを一つずつ順番に新バージョンに更新する方式です。</p>
+            <ul>
+                <li><strong>メリット</strong>: 追加インフラ不要、ダウンタイムなし</li>
+                <li><strong>デメリット</strong>: 一時的に新旧バージョンが混在</li>
+                <li><strong>適用場面</strong>: 一般的なWebアプリケーション</li>
+            </ul>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">CD パイプラインの全体像</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#x1F4DD;</span>
+                        <span class="vd-label">コード変更</span>
+                        <span class="vd-sub">push / merge</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #4CAF50;">
+                        <span class="vd-icon">&#x2705;</span>
+                        <span class="vd-label">CI通過</span>
+                        <span class="vd-sub">テスト・Lint・ビルド</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #FF9800;">
+                        <span class="vd-icon">&#x1F9EA;</span>
+                        <span class="vd-label">Staging</span>
+                        <span class="vd-sub">自動デプロイ</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #9C27B0;">
+                        <span class="vd-icon">&#x1F44D;</span>
+                        <span class="vd-label">承認</span>
+                        <span class="vd-sub">Environment approval</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#x1F680;</span>
+                        <span class="vd-label">Production</span>
+                        <span class="vd-sub">本番デプロイ</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション2: GitHub Pagesデプロイ -->
+        <section class="section" id="github-pages">
+            <h2><span class="material-icons">web</span> GitHub Pages デプロイ</h2>
+
+            <p>GitHub Pagesは静的サイトのホスティングサービスです。GitHub Actionsと組み合わせることで、コードのpushに応じて自動的にサイトを更新できます。</p>
+
+            <h3>GitHub Pages への自動デプロイ</h3>
+            <pre><code>name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+
+# GitHub Pages デプロイに必要な権限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時デプロイの制御
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4</code></pre>
+
+            <h3>静的サイトジェネレーター（Vite）の例</h3>
+            <pre><code>name: Deploy Vite App
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run build
+        env:
+          BASE_URL: /${{ github.event.repository.name }}/
+
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4</code></pre>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習1: GitHub Pages デプロイ
+                </div>
+                <div class="exercise-body">
+                    <p>以下の要件を満たすGitHub Pagesデプロイワークフローを作成してください。</p>
+                    <ol>
+                        <li>mainブランチへのpushで起動</li>
+                        <li>Node.js 20でビルドする</li>
+                        <li>ビルド前にテストを実行し、テスト通過後にビルドを行う</li>
+                        <li><code>actions/deploy-pages</code> でデプロイする</li>
+                        <li><code>concurrency</code> でデプロイの同時実行を制御する</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション3: Dockerイメージのビルド＆プッシュ -->
+        <section class="section" id="docker-build">
+            <h2><span class="material-icons">inventory</span> Docker イメージのビルド & プッシュ</h2>
+
+            <p>コンテナベースのデプロイでは、DockerイメージをビルドしてレジストリにプッシュするステップがCDパイプラインの中核になります。</p>
+
+            <h3>Docker Hub へのプッシュ</h3>
+            <pre><code>name: Build and Push Docker Image
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            myuser/myapp:latest
+            myuser/myapp:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max</code></pre>
+
+            <h3>GitHub Container Registry（GHCR）へのプッシュ</h3>
+            <pre><code>name: Build and Push to GHCR
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">Docker イメージのタグ戦略</div>
+                <div class="vd-grid">
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#x1F3F7;</span>
+                        <span class="vd-label">latest</span>
+                        <span class="vd-sub">mainブランチの最新<br>開発・テスト用</span>
+                    </div>
+                    <div class="vd-card green">
+                        <span class="vd-icon">&#x1F4CC;</span>
+                        <span class="vd-label">v1.2.3</span>
+                        <span class="vd-sub">セマンティックバージョン<br>本番リリース用</span>
+                    </div>
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#x1F510;</span>
+                        <span class="vd-label">sha-abc1234</span>
+                        <span class="vd-sub">コミットSHA<br>特定ビルドの追跡</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">&#x1F33F;</span>
+                        <span class="vd-label">feature-xxx</span>
+                        <span class="vd-sub">ブランチ名<br>開発中の検証用</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip">
+                <span class="material-icons">lightbulb</span>
+                <strong>ベストプラクティス:</strong> 本番環境では <code>latest</code> タグではなく、セマンティックバージョン（<code>v1.2.3</code>）やコミットSHA（<code>sha-abc1234</code>）などの不変なタグを使用してください。<code>latest</code> は上書きされるため、デプロイの再現性が保証されません。
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習2: Docker イメージの自動ビルド
+                </div>
+                <div class="exercise-body">
+                    <p>以下の要件を満たすDockerイメージビルドワークフローを作成してください。</p>
+                    <ol>
+                        <li>mainブランチへのpushとタグ（<code>v*</code>）のプッシュで起動</li>
+                        <li>GitHub Container Registry（ghcr.io）にプッシュ</li>
+                        <li>タグ名に基づくイメージタグを自動生成（<code>docker/metadata-action</code> を使用）</li>
+                        <li>BuildxのGitHub Actionsキャッシュを有効化</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション4: クラウドへのデプロイ -->
+        <section class="section" id="cloud-deploy">
+            <h2><span class="material-icons">cloud</span> クラウドへのデプロイ</h2>
+
+            <p>主要なクラウドプロバイダーはGitHub Actions用の公式アクションを提供しています。各クラウドのデプロイ方法の概要を見ていきましょう。</p>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">主要クラウドのデプロイ先と対応アクション</div>
+                <div class="vd-grid">
+                    <div class="vd-card amber">
+                        <span class="vd-icon">&#x2601;</span>
+                        <span class="vd-label">AWS</span>
+                        <span class="vd-sub">S3, ECS, Lambda<br>aws-actions/*</span>
+                    </div>
+                    <div class="vd-card blue">
+                        <span class="vd-icon">&#x2601;</span>
+                        <span class="vd-label">GCP</span>
+                        <span class="vd-sub">Cloud Run, GKE, App Engine<br>google-github-actions/*</span>
+                    </div>
+                    <div class="vd-card purple">
+                        <span class="vd-icon">&#x2601;</span>
+                        <span class="vd-label">Azure</span>
+                        <span class="vd-sub">Web Apps, AKS, Functions<br>azure/webapps-deploy</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>AWS S3 への静的サイトデプロイ</h3>
+            <pre><code>name: Deploy to AWS S3
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # OIDC 認証に必要
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: npm ci && npm run build
+
+      # AWS OIDC 認証（推奨）
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsRole
+          aws-region: ap-northeast-1
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync dist/ s3://my-website-bucket \
+            --delete \
+            --cache-control "max-age=86400"
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CF_DISTRIBUTION_ID }} \
+            --paths "/*"</code></pre>
+
+            <h3>GCP Cloud Run へのデプロイ</h3>
+            <pre><code>name: Deploy to Cloud Run
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/123456/locations/global/workloadIdentityPools/github/providers/my-repo'
+          service_account: 'github-actions@my-project.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and push to Artifact Registry
+        run: |
+          gcloud builds submit \
+            --tag asia-northeast1-docker.pkg.dev/my-project/my-repo/myapp:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: myapp
+          region: asia-northeast1
+          image: asia-northeast1-docker.pkg.dev/my-project/my-repo/myapp:${{ github.sha }}</code></pre>
+
+            <h3>Azure Web Apps へのデプロイ</h3>
+            <pre><code>name: Deploy to Azure Web App
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.webapp-url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci && npm run build
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Web App
+        id: deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'my-web-app'
+          package: './dist'</code></pre>
+
+            <div class="tip">
+                <span class="material-icons">warning</span>
+                <strong>セキュリティ:</strong> クラウドへの認証には、長期的なアクセスキーの代わりに <strong>OIDC（OpenID Connect）</strong> を使用することが推奨されています。OIDC を使えば、シークレットにアクセスキーを保存する必要がなくなります。
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習3: クラウドデプロイの設計
+                </div>
+                <div class="exercise-body">
+                    <p>以下のシナリオに対して、最適なデプロイワークフローを設計してください。</p>
+                    <ul>
+                        <li>React SPAをビルドしてAWS S3にデプロイする</li>
+                        <li>CloudFrontのキャッシュを無効化する</li>
+                        <li>OIDC認証を使用する</li>
+                    </ul>
+                    <p><strong>追加課題:</strong> staging環境（S3バケット: staging-bucket）と production環境（S3バケット: prod-bucket）の2段階デプロイパイプラインを設計してください。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション5: リリース自動化 -->
+        <section class="section" id="release-automation">
+            <h2><span class="material-icons">new_releases</span> リリース自動化</h2>
+
+            <p>バージョンのタグ付け、CHANGELOG生成、GitHub Releasesの作成を自動化することで、リリースプロセスの効率と一貫性を大幅に向上させます。</p>
+
+            <h3>セマンティックバージョニング</h3>
+            <p>バージョン番号は <strong>MAJOR.MINOR.PATCH</strong> の形式で管理します。</p>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">セマンティックバージョニング（SemVer）</div>
+                <div class="vd-flow">
+                    <div class="vd-box" style="min-width: 160px; border-color: #e53935;">
+                        <span class="vd-icon">&#x1F534;</span>
+                        <span class="vd-label">MAJOR (1.x.x)</span>
+                        <span class="vd-sub">後方互換性のない変更</span>
+                    </div>
+                    <div class="vd-arrow">.</div>
+                    <div class="vd-box" style="min-width: 160px; border-color: #FF9800;">
+                        <span class="vd-icon">&#x1F7E0;</span>
+                        <span class="vd-label">MINOR (x.1.x)</span>
+                        <span class="vd-sub">後方互換性のある機能追加</span>
+                    </div>
+                    <div class="vd-arrow">.</div>
+                    <div class="vd-box" style="min-width: 160px; border-color: #4CAF50;">
+                        <span class="vd-icon">&#x1F7E2;</span>
+                        <span class="vd-label">PATCH (x.x.1)</span>
+                        <span class="vd-sub">バグ修正</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>タグ作成時の自動リリース</h3>
+            <pre><code>name: Release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # 全履歴を取得（CHANGELOG生成に必要）
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # 前のタグから現在のタグまでのコミットを取得
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD)
+          fi
+          # マルチライン出力をGITHUB_OUTPUTに設定
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = context.ref.replace('refs/tags/', '');
+            const changelog = `${{ steps.changelog.outputs.changelog }}`;
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: `Release ${tag}`,
+              body: `## Changes\n\n${changelog}`,
+              draft: false,
+              prerelease: tag.includes('-')
+            });</code></pre>
+
+            <h3>gh CLI を使ったリリース作成</h3>
+            <pre><code>      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          gh release create "$TAG" \
+            --title "Release $TAG" \
+            --generate-notes \
+            dist/*.zip dist/*.tar.gz</code></pre>
+
+            <h3>リリースワークフロー（ビルド + リリース + デプロイ）</h3>
+            <pre><code>name: Release and Deploy
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run build && npm test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-build
+          path: dist/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/download-artifact@v4
+        with: { name: release-build, path: dist/ }
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          cd dist && zip -r ../release.zip . && cd ..
+          gh release create "$TAG" release.zip \
+            --title "Release $TAG" \
+            --generate-notes
+
+  deploy:
+    needs: release
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: release-build, path: dist/ }
+      - name: Deploy to production
+        run: echo "Deploying release to production..."</code></pre>
+
+            <div class="visual-diagram">
+                <div class="visual-diagram-title">リリース自動化のフロー</div>
+                <div class="vd-flow">
+                    <div class="vd-box">
+                        <span class="vd-icon">&#x1F3F7;</span>
+                        <span class="vd-label">タグ作成</span>
+                        <span class="vd-sub">git tag v1.2.0</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #4CAF50;">
+                        <span class="vd-icon">&#x1F3D7;</span>
+                        <span class="vd-label">ビルド & テスト</span>
+                        <span class="vd-sub">CI パイプライン</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box" style="border-color: #FF9800;">
+                        <span class="vd-icon">&#x1F4DD;</span>
+                        <span class="vd-label">CHANGELOG生成</span>
+                        <span class="vd-sub">コミット履歴から自動生成</span>
+                    </div>
+                    <div class="vd-arrow">&rarr;</div>
+                    <div class="vd-box accent">
+                        <span class="vd-icon">&#x1F389;</span>
+                        <span class="vd-label">Release 公開</span>
+                        <span class="vd-sub">アセット付きリリース</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="exercise">
+                <div class="exercise-header">
+                    <span class="material-icons">fitness_center</span> 演習4: リリースワークフローの構築
+                </div>
+                <div class="exercise-body">
+                    <p>以下の要件を満たすリリースワークフローを作成してください。</p>
+                    <ol>
+                        <li><code>v*.*.*</code> 形式のタグプッシュで起動</li>
+                        <li>ビルドとテストを実行</li>
+                        <li>コミット履歴からCHANGELOGを自動生成</li>
+                        <li>GitHub Releaseを作成し、ビルド成果物（zipファイル）を添付</li>
+                        <li>プレリリース版（<code>v1.0.0-beta.1</code> など）の場合は prerelease フラグを設定</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- ページナビゲーション -->
+        <nav class="chapter-nav">
+            <a href="8actions-ci-testing.html" class="prev"><span class="material-icons">arrow_back</span> 前の章</a>
+            <a href="index.html" class="home"><span class="material-icons">home</span> 目次</a>
+            <a href="10actions-advanced.html" class="next">次の章 <span class="material-icons">arrow_forward</span></a>
+        </nav>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+</body>
+</html>
