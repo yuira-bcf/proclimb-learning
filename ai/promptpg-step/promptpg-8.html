@@ -131,17 +131,25 @@
 
 現在の状態:
 - TodoMapper.xml: findAll, insert, deleteById が定義済み
+- TodoService: findAll, create, deleteById が実装済み
+- list.html: テーブルに操作列（削除ボタン）あり
 - フォーム画面: form.html（タイトル入力欄）が存在
 
 要件:
+【バックエンド】
 - TodoMapper.xmlにSELECT文を追加（idで1件取得: findById）
 - TodoMapper.javaにfindById(Long id)メソッドを追加
 - TodoServiceにfindById()メソッドを追加
 - TodoControllerにGET /todo/{id}/edit を追加
-- DBから取得したデータをフォームに表示（edit.html）
-- edit.htmlはform.htmlと同様のレイアウト
 
-Controller、Service、Mapper、テンプレートのコードを示してください。</pre>
+【フロントエンド】
+- edit.htmlを新規作成（form.htmlと同様のレイアウト）
+- DBから取得したtitleをth:valueでinputに表示
+- formのaction先はPOST /todo/{id}/update
+- list.htmlの操作列に編集リンクを追加（各行にGET /todo/{id}/edit へのリンク）
+- Bootstrap 5の btn-outline-primary btn-sm を使用
+
+Controller、Service、Mapper（Java + XML）、edit.html、list.htmlのコードを示してください。</pre>
         </div>
         <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.querySelector('pre').textContent)">
           <span class="material-icons">content_copy</span> コピー
@@ -160,8 +168,11 @@ Controller、Service、Mapper、テンプレートのコードを示してくだ
         </div>
         <div class="code-content">
           <pre><span class="code-keyword">public</span> Todo findById(Long id) {
-    <span class="code-keyword">return</span> todoRepository.findById(id)
-        .orElseThrow(() -&gt; <span class="code-keyword">new</span> IllegalArgumentException(<span class="code-string">"ToDoが見つかりません: "</span> + id));
+    Todo todo = todoMapper.findById(id);
+    <span class="code-keyword">if</span> (todo == <span class="code-keyword">null</span>) {
+        <span class="code-keyword">throw new</span> RuntimeException(<span class="code-string">"ToDoが見つかりません: "</span> + id);
+    }
+    <span class="code-keyword">return</span> todo;
 }</pre>
         </div>
       </div>
@@ -207,13 +218,8 @@ Controller、Service、Mapper、テンプレートのコードを示してくだ
            <span class="code-annotation">th:value</span>=<span class="code-string">"${todo.title}"</span> required&gt;
   &lt;/div&gt;
 
-  &lt;div class=<span class="code-string">"mb-3"</span>&gt;
-    &lt;label class=<span class="code-string">"form-label"</span>&gt;説明&lt;/label&gt;
-    &lt;textarea name=<span class="code-string">"description"</span> class=<span class="code-string">"form-control"</span>
-              <span class="code-annotation">th:text</span>=<span class="code-string">"${todo.description}"</span>&gt;&lt;/textarea&gt;
-  &lt;/div&gt;
-
   &lt;button type=<span class="code-string">"submit"</span> class=<span class="code-string">"btn btn-primary"</span>&gt;更新&lt;/button&gt;
+  &lt;a <span class="code-annotation">th:href</span>=<span class="code-string">"@{/todo}"</span> class=<span class="code-string">"btn btn-secondary"</span>&gt;キャンセル&lt;/a&gt;
 &lt;/form&gt;</pre>
         </div>
       </div>
@@ -222,10 +228,10 @@ Controller、Service、Mapper、テンプレートのコードを示してくだ
         <div class="info-box-title"><span class="material-icons">lightbulb</span> コード解説</div>
         <div class="info-box-content">
           <ul style="margin: 0; padding-left: 20px;">
-            <li><code>findById().orElseThrow()</code> - データが無い場合は例外をスロー</li>
+            <li><code>todoMapper.findById(id)</code> - MyBatisでIDを指定して1件取得</li>
             <li><code>th:value="${todo.title}"</code> - 既存値をinputのvalueにセット</li>
-            <li><code>th:text="${todo.description}"</code> - textareaは th:text で値をセット</li>
             <li><code>type="hidden"</code> - IDを画面に表示せず送信データに含める</li>
+            <li><code>th:action="@{/todo/{id}/update(id=${todo.id})}"</code> - URLにIDを埋め込む</li>
           </ul>
         </div>
       </div>
@@ -273,22 +279,6 @@ Controller、Service、Mapper（Java + XML）のコードを示してくださ�
         </button>
       </div>
 
-      <!-- Entityにバージョンフィールド追加 -->
-      <div class="code-block">
-        <div class="code-header">
-          <div class="code-dots">
-            <span class="code-dot red"></span>
-            <span class="code-dot yellow"></span>
-            <span class="code-dot green"></span>
-          </div>
-          <span class="code-title">Todo.java（バージョン管理追加）</span>
-        </div>
-        <div class="code-content">
-          <pre><span class="code-annotation">@Version</span>
-<span class="code-keyword">private</span> Long version;</pre>
-        </div>
-      </div>
-
       <!-- Serviceサンプルコード -->
       <div class="code-block">
         <div class="code-header">
@@ -300,12 +290,10 @@ Controller、Service、Mapper（Java + XML）のコードを示してくださ�
           <span class="code-title">TodoService.java（更新処理）</span>
         </div>
         <div class="code-content">
-          <pre><span class="code-annotation">@Transactional</span>
-<span class="code-keyword">public</span> Todo update(Long id, String title, String description) {
+          <pre><span class="code-keyword">public void</span> update(Long id, String title) {
     Todo todo = findById(id);
     todo.setTitle(title);
-    todo.setDescription(description);
-    <span class="code-keyword">return</span> todoRepository.save(todo);
+    todoMapper.update(todo);
 }</pre>
         </div>
       </div>
@@ -321,15 +309,14 @@ Controller、Service、Mapper（Java + XML）のコードを示してくださ�
           <span class="code-title">TodoController.java（更新処理）</span>
         </div>
         <div class="code-content">
-          <pre><span class="code-annotation">@PostMapping</span>(<span class="code-string">"/todo/{id}/update"</span>)
+          <pre><span class="code-annotation">@PostMapping</span>(<span class="code-string">"/{id}/update"</span>)
 <span class="code-keyword">public</span> String update(
         <span class="code-annotation">@PathVariable</span> Long id,
         <span class="code-annotation">@RequestParam</span> String title,
-        <span class="code-annotation">@RequestParam</span>(required = <span class="code-keyword">false</span>) String description,
         RedirectAttributes redirectAttributes) {
 
-    todoService.update(id, title, description);
-    redirectAttributes.addFlashAttribute(<span class="code-string">"message"</span>, <span class="code-string">"更新が完了しました"</span>);
+    todoService.update(id, title);
+    redirectAttributes.addFlashAttribute(<span class="code-string">"successMessage"</span>, <span class="code-string">"更新が完了しました"</span>);
     <span class="code-keyword">return</span> <span class="code-string">"redirect:/todo"</span>;
 }</pre>
         </div>
@@ -339,10 +326,10 @@ Controller、Service、Mapper（Java + XML）のコードを示してくださ�
         <div class="info-box-title"><span class="material-icons">lightbulb</span> コード解説</div>
         <div class="info-box-content">
           <ul style="margin: 0; padding-left: 20px;">
-            <li><code>@Version</code> - 楽観的ロック用のバージョン管理フィールド</li>
-            <li>更新時にバージョンが一致しない場合は <code>OptimisticLockException</code> が発生</li>
-            <li><code>save()</code> - IDがある場合はUPDATE、無い場合はINSERT</li>
+            <li><code>todoMapper.update(todo)</code> - MyBatisのUPDATE文でDBを更新</li>
+            <li><code>findById()</code>で取得 → 値を変更 → <code>update()</code>で保存の流れ</li>
             <li>更新後は一覧画面にリダイレクトしてPRGパターンを実現</li>
+            <li><code>RedirectAttributes</code> でフラッシュメッセージを表示</li>
           </ul>
         </div>
       </div>
@@ -387,22 +374,22 @@ Controller、Service、Mapper（Java + XML）のコードを示してくださ�
         <table>
           <thead>
             <tr>
-              <th>楽観的ロック</th>
+              <th>MyBatis UPDATE</th>
               <th>説明</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><code>@Version</code></td>
-              <td>バージョン管理用フィールドに付与</td>
+              <td>Mapper XML</td>
+              <td><code>&lt;update id="update"&gt;</code> でUPDATE文を定義</td>
             </tr>
             <tr>
-              <td>動作</td>
-              <td>更新時にバージョンをチェックし、変更があれば例外発生</td>
+              <td>パラメータ</td>
+              <td>Todoオブジェクトのフィールドを <code>#{title}</code> 等で参照</td>
             </tr>
             <tr>
-              <td>メリット</td>
-              <td>同時編集によるデータ不整合を防止</td>
+              <td>WHERE句</td>
+              <td><code>WHERE id = #{id}</code> で更新対象を指定</td>
             </tr>
           </tbody>
         </table>
@@ -454,11 +441,10 @@ Controller、Service、テンプレートのコードを示してください。
           <span class="code-title">TodoService.java（完了状態切り替え）</span>
         </div>
         <div class="code-content">
-          <pre><span class="code-annotation">@Transactional</span>
-<span class="code-keyword">public</span> Todo toggleCompleted(Long id) {
+          <pre><span class="code-keyword">public void</span> toggleCompleted(Long id) {
     Todo todo = findById(id);
-    todo.setCompleted(!todo.getCompleted());
-    <span class="code-keyword">return</span> todoRepository.save(todo);
+    todo.setCompleted(!todo.isCompleted());
+    todoMapper.update(todo);
 }</pre>
         </div>
       </div>
@@ -515,7 +501,7 @@ Controller、Service、テンプレートのコードを示してください。
         <div class="info-box-title"><span class="material-icons">lightbulb</span> コード解説</div>
         <div class="info-box-content">
           <ul style="margin: 0; padding-left: 20px;">
-            <li><code>!todo.getCompleted()</code> - 現在の状態を反転（true↔false）</li>
+            <li><code>!todo.isCompleted()</code> - 現在の状態を反転（true↔false）</li>
             <li><code>th:classappend</code> - 完了時にCSSクラスを追加（打ち消し線）</li>
             <li><code>th:class</code> - 条件に応じてボタンの色を切り替え</li>
             <li>POST送信でページ遷移なしで状態を更新</li>
@@ -585,7 +571,7 @@ Controller、Service、テンプレートのコードを示してください。
           </div>
           <div class="feature-content">
             <h4>Chapter 4-5: データベース</h4>
-            <p>DB設定、Entity、Repository、データ登録</p>
+            <p>DB設定、Model、Mapper、データ登録</p>
           </div>
         </div>
         <div class="feature-item">
