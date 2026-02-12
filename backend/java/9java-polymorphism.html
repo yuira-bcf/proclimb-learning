@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第9章 参照型の型変換とポリモーフィズム</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #0097A7;
+        --primary-dark: #00838F;
+        --primary-light: #E0F7FA;
+        --primary-lighter: #B2EBF2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-java.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">9</div>
+            <h1 class="chapter-title">参照型の型変換とポリモーフィズム</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">9-1</span><span>アップキャストとダウンキャスト</span></li>
+                <li class="toc-item"><span class="toc-number">9-2</span><span>ポリモーフィズム</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 9-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-1</span>
+                <h2 class="section-title">アップキャストとダウンキャスト</h2>
+            </div>
+
+            <!-- 概要 -->
+            <div class="intro-text">
+                <p>ポリモーフィズム（多態性）は、同じメソッド呼び出しでも実際のオブジェクトの型に応じて異なる処理が実行される仕組みです。これにより、型に依存しない柔軟なコードが書けます。フレームワークやライブラリの設計で広く活用されている重要な概念です。</p>
+            </div>
+
+            <!-- 説明 -->
+            <div class="content-block">
+                <p>子クラスのオブジェクトを親クラス型の変数に代入すること（<strong>アップキャスト</strong>）で、異なる子クラスを同じ型として扱えます。メソッドを呼ぶと、変数の型ではなく<strong>実際のオブジェクトの型</strong>に応じた処理が実行されます。逆に親クラス型から子クラス型に戻す場合（<strong>ダウンキャスト</strong>）は、<code>instanceof</code>で型を確認してからキャストします。</p>
+            </div>
+
+            <!-- 図解 -->
+            <div class="content-block">
+                <div class="figure" style="margin: 20px 0;">
+                    <div class="figure-caption">ポリモーフィズム ― 同じ speak() でも実際の型に応じて動作が変わる</div>
+                    <svg viewBox="0 0 700 420" style="max-width: 700px; width: 100%; height: auto;">
+                        <!-- ===== コード行 ===== -->
+                        <rect x="10" y="10" width="680" height="60" rx="8" fill="#1e293b"/>
+                        <text x="30" y="34" font-size="13" font-family="monospace" fill="#94a3b8">List&lt;</text>
+                        <text x="71" y="34" font-size="13" font-family="monospace" fill="#f472b6">Animal</text>
+                        <text x="121" y="34" font-size="13" font-family="monospace" fill="#94a3b8">&gt; animals = new ArrayList&lt;&gt;();</text>
+                        <text x="30" y="56" font-size="13" font-family="monospace" fill="#67e8f9">for (Animal a : animals) { a.speak(); }</text>
+                        <text x="400" y="56" font-size="13" font-family="monospace" fill="#94a3b8">// どの型の speak() が呼ばれる？</text>
+
+                        <!-- ===== Animal型の変数 ===== -->
+                        <rect x="10" y="90" width="140" height="50" rx="10" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="2"/>
+                        <text x="80" y="112" text-anchor="middle" font-size="13" font-weight="700" fill="#0284c7">Animal 型</text>
+                        <text x="80" y="130" text-anchor="middle" font-size="11" fill="#64748b">変数の型</text>
+
+                        <!-- ===== 矢印（実行時に判定） ===== -->
+                        <line x1="150" y1="115" x2="200" y2="115" stroke="#64748b" stroke-width="2" marker-end="url(#arrowPoly)"/>
+                        <text x="220" y="110" font-size="11" font-weight="600" fill="#64748b">実行時に</text>
+                        <text x="220" y="126" font-size="11" font-weight="600" fill="#64748b">実際の型で判定</text>
+
+                        <!-- ===== Dog ===== -->
+                        <rect x="320" y="80" width="370" height="90" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="340" y="104" font-size="13" font-weight="700" fill="#92400e">実際の型が Dog の場合</text>
+                        <rect x="340" y="112" width="330" height="24" rx="6" fill="white" stroke="#fde68a" stroke-width="1"/>
+                        <text x="505" y="129" text-anchor="middle" font-size="12" font-family="monospace" fill="#92400e">a.speak() → "ポチがワンワン！"</text>
+                        <text x="340" y="158" font-size="11" fill="#64748b">Dog クラスの speak() が呼ばれる</text>
+
+                        <!-- ===== Cat ===== -->
+                        <rect x="320" y="180" width="370" height="90" rx="12" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                        <text x="340" y="204" font-size="13" font-weight="700" fill="#065f46">実際の型が Cat の場合</text>
+                        <rect x="340" y="212" width="330" height="24" rx="6" fill="white" stroke="#a7f3d0" stroke-width="1"/>
+                        <text x="505" y="229" text-anchor="middle" font-size="12" font-family="monospace" fill="#065f46">a.speak() → "タマがニャー！"</text>
+                        <text x="340" y="258" font-size="11" fill="#64748b">Cat クラスの speak() が呼ばれる</text>
+
+                        <!-- ===== アップキャスト & ダウンキャスト 図解 ===== -->
+                        <text x="10" y="300" font-size="13" font-weight="700" fill="#334155">型変換の方向</text>
+
+                        <!-- アップキャスト -->
+                        <rect x="10" y="312" width="330" height="100" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+                        <text x="175" y="336" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">アップキャスト（暗黙的）</text>
+                        <rect x="30" y="346" width="290" height="24" rx="6" fill="white" stroke="#93c5fd" stroke-width="1"/>
+                        <text x="175" y="363" text-anchor="middle" font-size="12" font-family="monospace" fill="#1e40af">Animal a = new Dog("ポチ");</text>
+                        <text x="175" y="400" text-anchor="middle" font-size="11" fill="#1e40af">子 → 親 は自動。キャスト不要。安全。</text>
+
+                        <!-- ダウンキャスト -->
+                        <rect x="360" y="312" width="330" height="100" rx="12" fill="#fff7ed" stroke="#fb923c" stroke-width="1.5"/>
+                        <text x="525" y="336" text-anchor="middle" font-size="13" font-weight="700" fill="#c2410c">ダウンキャスト（明示的）</text>
+                        <rect x="380" y="346" width="290" height="24" rx="6" fill="white" stroke="#fb923c" stroke-width="1"/>
+                        <text x="525" y="363" text-anchor="middle" font-size="12" font-family="monospace" fill="#9a3412">Dog d = (Dog) a;</text>
+                        <text x="525" y="400" text-anchor="middle" font-size="11" fill="#9a3412">親 → 子 は要キャスト。instanceof で確認！</text>
+
+                        <defs>
+                            <marker id="arrowPoly" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- プロンプト -->
+            <div class="prompt-box">
+                <div class="prompt-box-header">
+                    <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                    <span class="prompt-box-title">プロンプト</span>
+                    <button class="prompt-copy-btn">コピー</button>
+                </div>
+                <div class="prompt-box-content">
+                    <pre><code>## 機能
+参照型の型変換（アップキャスト・ダウンキャスト）を確認するサンプルプロジェクト
+
+## 生成先
+- ディレクトリ: chapter09
+- ファイル名: CastDemo.java
+
+## 実装要件
+- アップキャスト：DogをAnimal型変数に代入（暗黙的）
+- ダウンキャスト：Animal型からDog型に明示的キャスト
+- instanceof演算子で型チェックしてから安全にキャスト
+- パターンマッチング（Java 16以降）も示す
+
+
+- mainメソッドを含め、System.out.printlnで各処理の実行結果を出力して動作確認できるようにする
+- 1ファイルで完結するよう、必要なクラスをすべて含める
+
+## 使用するJava構文
+- アップキャスト（暗黙的型変換）
+- ダウンキャスト（明示的型変換）
+- instanceof演算子
+- パターンマッチングinstanceof（Java 16以降）</code></pre>
+                </div>
+            </div>
+
+            <!-- ソースコード -->
+            <div class="code-block">
+                <div class="code-header"><span class="code-title">chapter09/CastDemo.java</span><span class="code-lang">Java</span></div>
+                <pre class="code-content"><code>class CastAnimal {
+    protected String name;
+    public CastAnimal(String name) { this.name = name; }
+    public void eat() { System.out.println(name + "が食べる"); }
+}
+
+class CastDog extends CastAnimal {
+    public CastDog(String name) { super(name); }
+    public void bark() { System.out.println(name + "がワンワン！"); }
+}
+
+public class CastDemo {
+    public static void main(String[] args) {
+        CastAnimal animal = new CastDog("ポチ");  // アップキャスト（暗黙）
+        animal.eat();  // OK
+
+        // animal.bark();  // エラー：CastAnimal型にはbarkがない
+
+        if (animal instanceof CastDog) {
+            CastDog dog = (CastDog) animal;  // ダウンキャスト（明示）
+            dog.bark();  // OK
+        }
+
+        // パターンマッチング（Java 16以降）
+        if (animal instanceof CastDog dog) {
+            dog.bark();  // キャスト不要
+        }
+    }
+}</code></pre>
+            </div>
+
+            <!-- 構文 -->
+            <div class="syntax-box">
+                <div class="syntax-box-header">
+                    <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
+                    <span class="syntax-box-title">構文説明</span>
+                </div>
+                <div class="syntax-box-content">
+                    <div class="syntax-item">
+                        <h4>アップキャスト</h4>
+                        <div class="syntax-pattern">親クラス型 変数 = new サブクラス();</div>
+                        <p>サブクラスのインスタンスを親クラス型の変数に代入します。暗黙的に行われ、キャスト演算子は不要です。</p>
+                    </div>
+                    <div class="syntax-item">
+                        <h4>ダウンキャスト</h4>
+                        <div class="syntax-pattern">サブクラス型 変数 = (サブクラス型) 親クラス型変数;</div>
+                        <p>親クラス型の変数をサブクラス型に変換します。明示的なキャストが必要で、instanceofで型チェックしてから行うのが安全です。</p>
+                    </div>
+                    <div class="syntax-item">
+                        <h4>instanceof演算子</h4>
+                        <div class="syntax-pattern">変数 instanceof クラス型</div>
+                        <p>オブジェクトが指定した型かどうかを判定します。Java 16以降ではパターンマッチングで変数宣言も同時にできます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 9-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 9-2</span>
+                <h2 class="section-title">ポリモーフィズム</h2>
+            </div>
+
+            <!-- プロンプト -->
+            <div class="prompt-box">
+                <div class="prompt-box-header">
+                    <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                    <span class="prompt-box-title">プロンプト</span>
+                    <button class="prompt-copy-btn">コピー</button>
+                </div>
+                <div class="prompt-box-content">
+                    <pre><code>## 機能
+ポリモーフィズム（多態性）の動作を確認するサンプルプロジェクト
+
+## 生成先
+- ディレクトリ: chapter09
+- ファイル名: PolymorphismDemo.java
+
+## 実装要件
+- Animal型のListを作成
+- DogとCatのインスタンスをリストに追加
+- ループで各要素のspeak()を呼び出す
+- 実際のオブジェクト型に応じた処理が実行されることを示す
+
+
+- mainメソッドを含め、System.out.printlnで各処理の実行結果を出力して動作確認できるようにする
+- 1ファイルで完結するよう、必要なクラスをすべて含める
+
+## 使用するJava構文
+- List&lt;親クラス型&gt;への異なるサブクラスの格納
+- 拡張for文でのループ
+- 動的ディスパッチ（実行時の型に基づくメソッド呼び出し）</code></pre>
+                </div>
+            </div>
+
+            <!-- ソースコード -->
+            <div class="code-block">
+                <div class="code-header"><span class="code-title">chapter09/PolymorphismDemo.java</span><span class="code-lang">Java</span></div>
+                <pre class="code-content"><code>import java.util.ArrayList;
+import java.util.List;
+
+class PolyAnimal {
+    protected String name;
+    public PolyAnimal(String name) { this.name = name; }
+    public void speak() { System.out.println(name + "が鳴く"); }
+}
+
+class PolyDog extends PolyAnimal {
+    public PolyDog(String name) { super(name); }
+    public void speak() { System.out.println(name + "がワンワン！"); }
+}
+
+class PolyCat extends PolyAnimal {
+    public PolyCat(String name) { super(name); }
+    public void speak() { System.out.println(name + "がニャー！"); }
+}
+
+public class PolymorphismDemo {
+    public static void main(String[] args) {
+        List&lt;PolyAnimal&gt; animals = new ArrayList&lt;&gt;();
+        animals.add(new PolyDog("ポチ"));
+        animals.add(new PolyCat("タマ"));
+
+        for (PolyAnimal animal : animals) {
+            animal.speak();  // 実際の型に応じたメソッドが呼ばれる
+        }
+    }
+}</code></pre>
+            </div>
+
+            <!-- 構文 -->
+            <div class="syntax-box">
+                <div class="syntax-box-header">
+                    <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
+                    <span class="syntax-box-title">構文説明</span>
+                </div>
+                <div class="syntax-box-content">
+                    <div class="syntax-item">
+                        <h4>ポリモーフィズム（多態性）</h4>
+                        <div class="syntax-pattern">親クラス型 変数 = new サブクラス();
+変数.メソッド(); // サブクラスのメソッドが実行される</div>
+                        <p>親クラス型の変数でサブクラスのオブジェクトを扱い、実行時に実際のオブジェクト型に応じたメソッドが呼び出される仕組みです。これにより、型に依存しない柔軟なコードが書けます。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 実際のユースケース -->
+            <div class="info-box">
+                <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">work</span></span><span class="info-box-title">実際のユースケース</span></div>
+                <ul class="bullet-list">
+                    <li><strong>Spring の DI（依存性注入）</strong>：コントローラが <code>UserService</code> インタフェース型で依存を受け取り、実行時に <code>UserServiceImpl</code> が注入されます。これはポリモーフィズムそのものであり、実装クラスの切り替えが容易になります。</li>
+                    <li><strong>ファイル処理の統一</strong>：<code>FileProcessor</code> 型のリストに <code>CsvProcessor</code>、<code>JsonProcessor</code>、<code>XmlProcessor</code> を格納し、ループで <code>process()</code> を呼ぶと、各フォーマットに応じた処理が自動的に実行されます。</li>
+                    <li><strong>instanceof によるレスポンス分岐</strong>：API のレスポンスを <code>Object</code> 型で受け取り、<code>instanceof SuccessResponse sr</code> のようにパターンマッチングで型判定してから処理を分岐させます。</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer"><p>Java Silver 試験対策 教科書</p></footer>
+
+    <div class="page-nav">
+        <a href="8java-interface.html" class="page-nav-btn prev"><span>&#8592;</span><div><div class="page-nav-label">前の章</div><div class="page-nav-title">第8章</div></div></a>
+        <a href="10java-collection.html" class="page-nav-btn next"><div><div class="page-nav-label">次の章</div><div class="page-nav-title">第10章</div></div><span>&#8594;</span></a>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const toggle = document.querySelector('.nav-toggle');
+            const menu = document.querySelector('.nav-menu');
+            toggle.classList.toggle('active');
+            menu.classList.toggle('active');
+        }
+        document.addEventListener('click', function(e) {
+            const nav = document.querySelector('.global-nav');
+            const toggle = document.querySelector('.nav-toggle');
+            const menu = document.querySelector('.nav-menu');
+            if (!nav.contains(e.target) && menu.classList.contains('active')) {
+                toggle.classList.remove('active');
+                menu.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

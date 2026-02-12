@@ -17,8 +17,12 @@ const navData = {
         { href: "3java-operator.html", num: "3", text: "演算子と条件分岐" },
         { href: "4java-loop.html", num: "4", text: "繰り返しと制御文" },
         { href: "5java-class.html", num: "5", text: "クラスとインスタンス" },
-        { href: "6java-inheritance.html", num: "6", text: "継承とインタフェース" },
-        { href: "7java-exception.html", num: "7", text: "例外処理" }
+        { href: "6java-inheritance.html", num: "6", text: "継承" },
+        { href: "7java-abstract.html", num: "7", text: "抽象クラス" },
+        { href: "8java-interface.html", num: "8", text: "インタフェース" },
+        { href: "9java-polymorphism.html", num: "9", text: "参照型の型変換とポリモーフィズム" },
+        { href: "10java-collection.html", num: "10", text: "コレクションフレームワーク" },
+        { href: "11java-exception.html", num: "11", text: "例外処理" }
     ],
     categories: [
         { href: "../../index.html", text: "ダッシュボード" },
