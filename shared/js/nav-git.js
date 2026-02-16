@@ -26,7 +26,8 @@ const navData = {
         { href: "12git-team-workflow.html", num: "12", text: "チーム開発フローと.gitignore" },
         { href: "13github-features.html", num: "13", text: "GitHubの活用機能" },
         { href: "14git-project.html", num: "14", text: "実践：チームプロジェクト演習" },
-        { href: "15git-vscode-mcp.html", num: "15", text: "VSCode GitHub MCP活用" }
+        { href: "15git-vscode-mcp.html", num: "15", text: "VSCode GitHub MCP活用" },
+        { href: "16git-sourcetree.html", num: "16", text: "SourceTreeによるGUI操作" }
     ],
     categories: [
         { href: "../../index.html", text: "ダッシュボード" },
