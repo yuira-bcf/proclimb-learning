@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第6章 継承（@extend） - SCSS入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #CF649A;
+      --primary-dark: #B5507F;
+      --primary-light: #FDF2F7;
+      --primary-lighter: #F5D0E0;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-scss.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">SCSS入門</div>
+      <div class="chapter-number">6</div>
+      <h1 class="chapter-title">継承（@extend）</h1>
+      <p class="chapter-subtitle">スタイルの共有でDRYなCSSを実現</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">6-1</span>@extendの基本</li>
+        <li class="toc-item"><span class="toc-number">6-2</span>%プレースホルダーセレクタ</li>
+        <li class="toc-item"><span class="toc-number">6-3</span>@extend vs @mixin</li>
+        <li class="toc-item"><span class="toc-number">6-4</span>@extendの注意点</li>
+      </ul>
+    </nav>
+
+    <!-- Section 6-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-1</span>
+        <h2 class="section-title">@extendの基本</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><code>@extend</code> は、あるセレクタのスタイルを別のセレクタに「継承」させる機能です。同じスタイルを繰り返し書く必要がなくなり、DRY（Don't Repeat Yourself）なCSSを書くことができます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>@extendの構文</h3>
+        <p><code>@extend</code> を使うと、指定したセレクタのスタイルをそのまま引き継ぐことができます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// 基本構文
+.元のセレクタ {
+  // 共通スタイル
+}
+
+.新しいセレクタ {
+  @extend .元のセレクタ;
+  // 追加・上書きスタイル
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>簡単な例</h3>
+        <p>メッセージボックスのスタイルを共有する例を見てみましょう。</p>
+
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #CF649A; color: white;">SCSS</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>.message {
+  padding: 16px 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.message-success {
+  @extend .message;
+  border-color: #2ecc71;
+  background-color: #eafaf1;
+  color: #27ae60;
+}
+
+.message-error {
+  @extend .message;
+  border-color: #e74c3c;
+  background-color: #fdedec;
+  color: #c0392b;
+}
+
+.message-warning {
+  @extend .message;
+  border-color: #f39c12;
+  background-color: #fef9e7;
+  color: #e67e22;
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #3498db; color: white;">コンパイル結果（CSS）</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>/* セレクタがまとめられる！ */
+.message,
+.message-success,
+.message-error,
+.message-warning {
+  padding: 16px 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.message-success {
+  border-color: #2ecc71;
+  background-color: #eafaf1;
+  color: #27ae60;
+}
+
+.message-error {
+  border-color: #e74c3c;
+  background-color: #fdedec;
+  color: #c0392b;
+}
+
+.message-warning {
+  border-color: #f39c12;
+  background-color: #fef9e7;
+  color: #e67e22;
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">コンパイル結果のポイント</div>
+          <div class="info-box-content">
+            <p><code>@extend</code> を使うと、共通のスタイルがセレクタをカンマで連結した形にまとめられます。スタイルのコピーではなく、セレクタの統合が行われるため、CSSの出力サイズが小さくなるのが特徴です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-2</span>
+        <h2 class="section-title">%プレースホルダーセレクタ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>プレースホルダーとは</h3>
+        <p>プレースホルダーセレクタは、<code>%</code>（パーセント記号）で始まる特別なセレクタです。<code>@extend</code> 専用に設計されており、<strong>それ自体は単体でCSSに出力されません</strong>。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// %で始まるプレースホルダー
+%flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// @extendで使用
+.hero {
+  @extend %flex-center;
+  height: 100vh;
+  background: #333;
+}
+
+.card-icon {
+  @extend %flex-center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>/* %flex-center 自体は出力されない！ */
+.hero, .card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero {
+  height: 100vh;
+  background: #333;
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>使われなければCSSに出力されない利点</h3>
+        <p>通常のクラスセレクタを <code>@extend</code> の元にすると、そのクラス自体もCSSに出力されます。プレースホルダーなら、<code>@extend</code> で使われた場合のみCSSに反映され、使われなければ完全に無視されます。</p>
+
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #e74c3c; color: white;">クラスで@extend</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>// .base-btn がCSSに残る
+.base-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  @extend .base-btn;
+  background: #CF649A;
+  color: white;
+}
+
+/* CSS出力 */
+.base-btn, .btn-primary {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+/* .base-btn が不要なのに残る */</pre>
+              </div>
+            </div>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #2ecc71; color: white;">プレースホルダーで@extend</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>// %base-btn はCSSに出力されない
+%base-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  @extend %base-btn;
+  background: #CF649A;
+  color: white;
+}
+
+/* CSS出力 */
+.btn-primary {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+/* きれいな出力！ */</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">ベストプラクティス</div>
+          <div class="info-box-content">
+            <p><code>@extend</code> を使う場合は、通常のクラスではなく<strong>プレースホルダーセレクタ（%）</strong>を元にするのが推奨されます。不要なセレクタがCSSに残らず、出力がクリーンになります。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>実践例：ボタンの基本スタイル</h3>
+        <p>プレースホルダーを使ったボタンスタイルの実践例です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// ボタンの基本スタイル（プレースホルダー）
+%btn-base {
+  display: inline-block;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+
+  &amp;:hover {
+    transform: translateY(-1px);
+  }
+
+  &amp;:active {
+    transform: translateY(0);
+  }
+}
+
+// 各バリエーション
+.btn-primary {
+  @extend %btn-base;
+  background-color: #CF649A;
+  color: white;
+
+  &amp;:hover {
+    background-color: #B5507F;
+  }
+}
+
+.btn-secondary {
+  @extend %btn-base;
+  background-color: #6c757d;
+  color: white;
+
+  &amp;:hover {
+    background-color: #545b62;
+  }
+}
+
+.btn-outline {
+  @extend %btn-base;
+  background-color: transparent;
+  color: #CF649A;
+  border: 2px solid #CF649A;
+
+  &amp;:hover {
+    background-color: #CF649A;
+    color: white;
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-3</span>
+        <h2 class="section-title">@extend vs @mixin</h2>
+      </div>
+
+      <div class="intro-text">
+        <p><code>@extend</code> と <code>@mixin</code> はどちらもスタイルの再利用を実現しますが、仕組みも用途も異なります。それぞれの特徴を理解して使い分けましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>比較表</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>特徴</th>
+                <th>@extend</th>
+                <th>@mixin</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>出力方式</td>
+                <td>セレクタをまとめる（グループ化）</td>
+                <td>スタイルをコピーする（展開）</td>
+              </tr>
+              <tr>
+                <td>引数</td>
+                <td>使えない</td>
+                <td>使える</td>
+              </tr>
+              <tr>
+                <td>@contentブロック</td>
+                <td>使えない</td>
+                <td>使える</td>
+              </tr>
+              <tr>
+                <td>メディアクエリ内</td>
+                <td>制限あり</td>
+                <td>制限なし</td>
+              </tr>
+              <tr>
+                <td>CSS出力サイズ</td>
+                <td>小さくなりやすい</td>
+                <td>大きくなりやすい</td>
+              </tr>
+              <tr>
+                <td>使いどころ</td>
+                <td>固定の共通スタイル</td>
+                <td>動的・可変のスタイル</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>コンパイル結果の違い</h3>
+        <p>同じスタイルでも、<code>@extend</code> と <code>@mixin</code> ではCSSの出力が大きく異なります。</p>
+
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #CF649A; color: white;">@extend の場合</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>// SCSS
+%shadow-box {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+}
+
+.card { @extend %shadow-box; }
+.modal { @extend %shadow-box; }
+.dropdown { @extend %shadow-box; }
+
+/* CSS出力 - セレクタがまとめられる */
+.card, .modal, .dropdown {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #3498db; color: white;">@mixin の場合</div>
+            <div class="code-block">
+              <div class="code-content">
+                <pre>// SCSS
+@mixin shadow-box {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+}
+
+.card { @include shadow-box; }
+.modal { @include shadow-box; }
+.dropdown { @include shadow-box; }
+
+/* CSS出力 - 各セレクタにコピー */
+.card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+}
+.modal {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+}
+.dropdown {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>@extendが適するケース</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #2ecc71;">
+              <span class="material-icons" style="color: white;">check_circle</span>
+            </div>
+            <div class="feature-content">
+              <h4>完全に同じスタイルの共有</h4>
+              <p>引数による変化が不要で、まったく同じスタイルを複数のセレクタで共有したい場合。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #2ecc71;">
+              <span class="material-icons" style="color: white;">check_circle</span>
+            </div>
+            <div class="feature-content">
+              <h4>意味的に関連するセレクタ</h4>
+              <p>ボタンのバリエーション、メッセージの種類など、同じ「種族」のスタイルを共有する場合。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #2ecc71;">
+              <span class="material-icons" style="color: white;">check_circle</span>
+            </div>
+            <div class="feature-content">
+              <h4>CSS出力サイズを小さくしたい</h4>
+              <p>セレクタがまとめられるため、同じスタイルの繰り返しを減らせる。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>@mixinが適するケース</h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #3498db;">
+              <span class="material-icons" style="color: white;">tune</span>
+            </div>
+            <div class="feature-content">
+              <h4>引数でカスタマイズしたい</h4>
+              <p>色やサイズなどのパラメータを変えて使いたい場合は @mixin 一択。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #3498db;">
+              <span class="material-icons" style="color: white;">devices</span>
+            </div>
+            <div class="feature-content">
+              <h4>メディアクエリ内で使いたい</h4>
+              <p>@extend はメディアクエリ内での使用に制限があるため、レスポンシブ対応には @mixin を使う。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #3498db;">
+              <span class="material-icons" style="color: white;">code</span>
+            </div>
+            <div class="feature-content">
+              <h4>@contentブロックを使いたい</h4>
+              <p>ミックスインの中にコンテンツブロックを渡したい場合（レスポンシブミックスインなど）。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-4</span>
+        <h2 class="section-title">@extendの注意点</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>メディアクエリ内での制限</h3>
+        <p><code>@extend</code> は、メディアクエリの内側から外側のセレクタを継承することができません。これはSCSSの仕様上の制限です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（エラーになる例）</span>
+          </div>
+          <div class="code-content">
+            <pre>%btn-base {
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+@media (min-width: 768px) {
+  .btn-large {
+    @extend %btn-base;  // エラー！メディアクエリをまたげない
+    padding: 12px 32px;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（正しい対処法 - @mixin を使う）</span>
+          </div>
+          <div class="code-content">
+            <pre>@mixin btn-base {
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+@media (min-width: 768px) {
+  .btn-large {
+    @include btn-base;  // OK！@mixin なら問題なし
+    padding: 12px 32px;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">メディアクエリと@extend</div>
+          <div class="warning-box-content">
+            <p>メディアクエリ内で <code>@extend</code> を使いたい場合は、そのプレースホルダーも同じメディアクエリ内に定義する必要があります。メディアクエリをまたいだ <code>@extend</code> はコンパイルエラーになります。迷ったら <code>@mixin</code> を使いましょう。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>複雑なセレクタとの組み合わせリスク</h3>
+        <p><code>@extend</code> は、予期しないセレクタの組み合わせを生成することがあります。特にネストされたセレクタで使用する場合は注意が必要です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（予期しない結果の例）</span>
+          </div>
+          <div class="code-content">
+            <pre>// 元のセレクタ
+.sidebar .btn {
+  font-size: 12px;
+}
+
+.main-content .action {
+  @extend .btn;
+}
+
+/* CSS出力 - 予期しない組み合わせが生成される */
+.sidebar .btn,
+.sidebar .main-content .action,
+.main-content .sidebar .action {
+  font-size: 12px;
+}
+/* .sidebar .main-content .action は意図していない可能性が高い */</pre>
+          </div>
+        </div>
+
+        <p>このように、ネストが深いセレクタに <code>@extend</code> を使うと、意図しないセレクタの組み合わせが大量に生成される危険性があります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>使いすぎへの注意</h3>
+        <p><code>@extend</code> の多用は、CSSの出力を予測しにくくし、デバッグを困難にすることがあります。以下の点に注意しましょう。</p>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #e74c3c;">
+              <span class="material-icons" style="color: white;">warning</span>
+            </div>
+            <div class="feature-content">
+              <h4>連鎖的な@extend</h4>
+              <p>AがBを、BがCをextendするような連鎖は避ける。出力が予測しにくくなる。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #e74c3c;">
+              <span class="material-icons" style="color: white;">warning</span>
+            </div>
+            <div class="feature-content">
+              <h4>ファイルをまたいだ@extend</h4>
+              <p>異なるパーシャルファイル間でのextendは依存関係を複雑にする。同じファイル内での使用が望ましい。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #e74c3c;">
+              <span class="material-icons" style="color: white;">warning</span>
+            </div>
+            <div class="feature-content">
+              <h4>セレクタの肥大化</h4>
+              <p>多くのセレクタが1つのextendを共有すると、カンマ区切りのセレクタリストが巨大になる。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ベストプラクティス</h3>
+
+        <div class="info-box">
+          <div class="info-box-title">@extendを安全に使うためのルール</div>
+          <div class="info-box-content">
+            <p><strong>1. プレースホルダー（%）を使う</strong><br>
+            通常のクラスではなく、%プレースホルダーをextendの元にする。不要なCSSの出力を防げる。</p>
+            <p><strong>2. シンプルなセレクタに限定する</strong><br>
+            ネストされたセレクタや複合セレクタへのextendは避ける。</p>
+            <p><strong>3. 同じファイル内で使う</strong><br>
+            extendの元と使用箇所は同じファイル内に置き、依存関係を明確にする。</p>
+            <p><strong>4. 迷ったら@mixinを使う</strong><br>
+            @extendの動作が読めない場合は、@mixinの方が安全で予測しやすい。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第6章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>@extend</strong> は、あるセレクタのスタイルを別のセレクタに継承させる機能。セレクタがカンマ区切りでまとめられる。</li>
+          <li><strong>%プレースホルダー</strong>は @extend 専用のセレクタ。それ自体はCSSに出力されず、使われた時だけ反映される。</li>
+          <li><strong>@extend vs @mixin</strong>：引数が必要なら @mixin、固定の共通スタイルなら @extend。メディアクエリ内では @mixin を使う。</li>
+          <li><strong>メディアクエリ内</strong>では外側のセレクタを @extend できない制限がある。</li>
+          <li><strong>複雑なセレクタ</strong>との組み合わせは予期しない出力を生むリスクがある。</li>
+          <li>迷ったら <code>@mixin</code> を使うのが安全。<code>@extend</code> はシンプルなケースに限定して使う。</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="5scss-partials.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">パーシャルと@use</div>
+    </a>
+    <a href="7scss-functions.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">関数・演算・制御構文</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>SCSS入門 - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

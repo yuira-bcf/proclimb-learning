@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第5章 パーシャルと@use - SCSS入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #CF649A;
+      --primary-dark: #B5507F;
+      --primary-light: #FDF2F7;
+      --primary-lighter: #F5D0E0;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-scss.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">SCSS入門</div>
+      <div class="chapter-number">5</div>
+      <h1 class="chapter-title">パーシャルと@use</h1>
+      <p class="chapter-subtitle">ファイル分割でプロジェクトを整理</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">5-1</span>パーシャルとは</li>
+        <li class="toc-item"><span class="toc-number">5-2</span>@useによるモジュール読み込み</li>
+        <li class="toc-item"><span class="toc-number">5-3</span>@forwardによる再エクスポート</li>
+        <li class="toc-item"><span class="toc-number">5-4</span>実践的なファイル構成</li>
+      </ul>
+    </nav>
+
+    <!-- Section 5-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-1</span>
+        <h2 class="section-title">パーシャルとは</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>プロジェクトが大きくなると、1つのSCSSファイルにすべてのスタイルを書くのは管理が困難になります。SCSSでは「パーシャル」という仕組みを使って、ファイルを機能ごとに分割できます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>_アンダースコアで始まるファイル</h3>
+        <p>パーシャルファイルは、ファイル名の先頭に<strong>アンダースコア（_）</strong>を付けて作成します。このアンダースコアが「このファイルは単体ではCSSにコンパイルしないでください」というSCSSコンパイラへの目印になります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">ファイル名の例</span>
+          </div>
+          <div class="code-content">
+            <pre>_variables.scss    → コンパイルされない（パーシャル）
+_mixins.scss       → コンパイルされない（パーシャル）
+_header.scss       → コンパイルされない（パーシャル）
+main.scss          → コンパイルされる（エントリーポイント）</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">パーシャルの命名規則</div>
+          <div class="info-box-content">
+            <p>ファイル名の先頭に <code>_</code>（アンダースコア）を付けると、そのファイルはパーシャルとして扱われます。<code>@use</code> で読み込む際にはアンダースコアと拡張子を省略できます。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>パーシャルの仕組み</h3>
+        <p>パーシャルは、それ自体が単独でCSSファイルに変換されることはありません。他のSCSSファイルから <code>@use</code> で読み込まれて初めて、その内容がCSSに反映されます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">フォルダ構成</span>
+          </div>
+          <div class="code-content">
+            <pre>scss/
+├── _variables.scss    ← パーシャル（単体ではCSSにならない）
+├── _header.scss       ← パーシャル
+├── _footer.scss       ← パーシャル
+└── main.scss          ← エントリーポイント（CSSにコンパイルされる）
+
+css/
+└── main.css           ← コンパイル結果</pre>
+          </div>
+        </div>
+
+        <p>この仕組みにより、開発時はファイルを細かく分割して管理しやすくしつつ、最終的には1つのCSSファイルにまとめることができます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>使い方の基本</h3>
+        <p>パーシャルファイルに変数やスタイルを定義し、メインファイルから読み込みます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（_variables.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// _variables.scss
+$primary-color: #CF649A;
+$font-stack: "Noto Sans JP", sans-serif;
+$spacing-unit: 8px;</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（main.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// main.scss
+@use 'variables';
+
+body {
+  font-family: variables.$font-stack;
+  color: variables.$primary-color;
+  padding: variables.$spacing-unit * 2;
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">ポイント</div>
+          <div class="info-box-content">
+            <p><code>@use 'variables';</code> と書くだけで <code>_variables.scss</code> が読み込まれます。アンダースコア <code>_</code> と拡張子 <code>.scss</code> は省略可能です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-2</span>
+        <h2 class="section-title">@useによるモジュール読み込み</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>@use構文の基本</h3>
+        <p><code>@use</code> は、他のSCSSファイルをモジュールとして読み込むための構文です。読み込んだモジュールの変数やミックスインには、名前空間（namespace）を通じてアクセスします。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// @use の基本構文
+@use 'ファイルパス';
+
+// 使用例
+@use 'variables';
+
+.button {
+  // 「ファイル名.」を付けてアクセス
+  background-color: variables.$primary-color;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>名前空間（namespace）の使い方</h3>
+        <p><code>@use</code> で読み込んだモジュールには、自動的にファイル名が名前空間として割り当てられます。変数やミックスインにアクセスするときは <code>名前空間.メンバー名</code> の形式で指定します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（_colors.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// _colors.scss
+$red: #e74c3c;
+$blue: #3498db;
+$green: #2ecc71;</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（main.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// main.scss
+@use 'colors';
+
+.alert {
+  color: colors.$red;      // 名前空間「colors」でアクセス
+}
+.info {
+  color: colors.$blue;
+}
+.success {
+  color: colors.$green;
+}</pre>
+          </div>
+        </div>
+
+        <p>名前空間があることで、異なるファイルに同名の変数があっても衝突を防ぐことができます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>asでエイリアス指定</h3>
+        <p>名前空間が長い場合や、短い名前で呼びたい場合は <code>as</code> キーワードでエイリアスを設定できます。また <code>as *</code> と指定すると名前空間なしでアクセスできます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// エイリアスを付ける
+@use 'variables' as v;
+
+.card {
+  padding: v.$spacing-unit;
+  color: v.$primary-color;
+}
+
+// 名前空間なし（全メンバーをグローバルに展開）
+@use 'variables' as *;
+
+.card {
+  padding: $spacing-unit;     // 名前空間なしで直接アクセス
+  color: $primary-color;
+}</pre>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">as * の注意点</div>
+          <div class="warning-box-content">
+            <p><code>as *</code> は便利ですが、複数のモジュールで使うと変数名の衝突が起きる可能性があります。小規模なプロジェクトや、変数ファイルなど衝突の心配がない場合に限定して使いましょう。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>@use vs 旧@import の違い</h3>
+        <p>SCSSにはかつて <code>@import</code> という読み込み構文がありましたが、現在は<strong>非推奨</strong>です。新しい <code>@use</code> を使いましょう。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>特徴</th>
+                <th>@use（推奨）</th>
+                <th>@import（非推奨）</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>名前空間</td>
+                <td>あり（衝突防止）</td>
+                <td>なし（グローバルに展開）</td>
+              </tr>
+              <tr>
+                <td>二重読み込み</td>
+                <td>自動で防止</td>
+                <td>何度でも読み込まれる</td>
+              </tr>
+              <tr>
+                <td>プライベートメンバー</td>
+                <td>_始まりで非公開にできる</td>
+                <td>すべて公開される</td>
+              </tr>
+              <tr>
+                <td>記述位置</td>
+                <td>ファイルの先頭のみ</td>
+                <td>どこにでも書ける</td>
+              </tr>
+              <tr>
+                <td>ステータス</td>
+                <td>現行の推奨方式</td>
+                <td>将来的に廃止予定</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">@importは非推奨です</div>
+          <div class="warning-box-content">
+            <p>Dart Sass では <code>@import</code> は非推奨（deprecated）となっており、将来のバージョンで削除される予定です。既存のコードを見かけたら <code>@use</code> に書き換えていきましょう。ネット上の古い記事やサンプルでは <code>@import</code> が使われていることがありますが、新しいプロジェクトでは必ず <code>@use</code> を使用してください。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-3</span>
+        <h2 class="section-title">@forwardによる再エクスポート</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>@forwardの役割</h3>
+        <p><code>@forward</code> は、あるモジュールのメンバー（変数、ミックスイン、関数）を他のモジュールに「中継」するための構文です。直接読み込むのではなく、エントリーポイントを通じて公開する使い方をします。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// @forward の基本構文
+@forward 'ファイルパス';</pre>
+          </div>
+        </div>
+
+        <p>例えば、<code>abstracts/</code> フォルダに複数のパーシャルがある場合、各ファイルを個別に <code>@use</code> する代わりに、<code>_index.scss</code> で <code>@forward</code> してまとめることができます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>_index.scssパターン</h3>
+        <p>フォルダに <code>_index.scss</code> を置くと、フォルダ名だけで <code>@use</code> できるようになります。これが <code>@forward</code> の最も一般的な使い方です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">フォルダ構成</span>
+          </div>
+          <div class="code-content">
+            <pre>scss/
+├── abstracts/
+│   ├── _index.scss        ← @forward でまとめる
+│   ├── _variables.scss
+│   └── _mixins.scss
+└── main.scss</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（abstracts/_index.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// abstracts/_index.scss
+@forward 'variables';
+@forward 'mixins';</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（main.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// main.scss
+// フォルダ名だけで読み込める！
+@use 'abstracts';
+
+.button {
+  @include abstracts.respond-to('md') {
+    padding: abstracts.$spacing-unit;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">_index.scssの利点</div>
+          <div class="info-box-content">
+            <p>フォルダに <code>_index.scss</code> を配置すると、<code>@use 'abstracts';</code> のようにフォルダ名だけで読み込めます。フォルダ内のファイルが増えても、読み込む側のコードを変更する必要がありません。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>withによる変数の上書き</h3>
+        <p><code>@use</code> と <code>with</code> を組み合わせると、モジュール内の <code>!default</code> 付き変数を読み込み時に上書きできます。ライブラリの設定カスタマイズなどに便利です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（_config.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// _config.scss
+$base-font-size: 16px !default;
+$primary-color: #333 !default;
+$border-radius: 4px !default;</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（main.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// main.scss - withで値を上書き
+@use 'config' with (
+  $primary-color: #CF649A,
+  $border-radius: 8px
+);
+
+.card {
+  color: config.$primary-color;        // #CF649A（上書きされた値）
+  border-radius: config.$border-radius; // 8px（上書きされた値）
+  font-size: config.$base-font-size;    // 16px（デフォルト値）
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">!default フラグ</div>
+          <div class="info-box-content">
+            <p><code>!default</code> を付けた変数だけが <code>with</code> で上書きできます。このフラグは「値がまだ設定されていなければこの値を使う」という意味です。ライブラリやフレームワークの設定変数によく使われるパターンです。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-4</span>
+        <h2 class="section-title">実践的なファイル構成</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>7-1パターン</h3>
+        <p>大規模プロジェクトでよく採用される「7-1パターン」は、7つのフォルダと1つのメインファイルで構成されるSCSSの設計パターンです。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">フォルダ構成（7-1パターン）</span>
+          </div>
+          <div class="code-content">
+            <pre>scss/
+├── abstracts/          ← 変数・ミックスイン・関数
+│   ├── _index.scss
+│   ├── _variables.scss
+│   ├── _mixins.scss
+│   └── _functions.scss
+├── base/               ← リセット・タイポグラフィ
+│   ├── _index.scss
+│   ├── _reset.scss
+│   └── _typography.scss
+├── components/         ← ボタン・カードなど部品
+│   ├── _index.scss
+│   ├── _buttons.scss
+│   ├── _cards.scss
+│   └── _forms.scss
+├── layout/             ← ヘッダー・フッター・グリッド
+│   ├── _index.scss
+│   ├── _header.scss
+│   ├── _footer.scss
+│   └── _grid.scss
+├── pages/              ← ページ固有のスタイル
+│   ├── _index.scss
+│   ├── _home.scss
+│   └── _about.scss
+├── themes/             ← テーマ（ダーク・ライト）
+│   ├── _index.scss
+│   └── _dark.scss
+├── vendors/            ← 外部ライブラリの上書き
+│   ├── _index.scss
+│   └── _bootstrap.scss
+└── main.scss           ← エントリーポイント</pre>
+          </div>
+        </div>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #CF649A;">
+              <span class="material-icons" style="color: white;">settings</span>
+            </div>
+            <div class="feature-content">
+              <h4>abstracts/</h4>
+              <p>プロジェクト全体で使う変数、ミックスイン、関数を格納。CSS出力を持たない設定ファイル群。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #3498db;">
+              <span class="material-icons" style="color: white;">foundation</span>
+            </div>
+            <div class="feature-content">
+              <h4>base/</h4>
+              <p>リセットCSS、基本タイポグラフィ、html/body の基本スタイルなど土台となるスタイル。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #2ecc71;">
+              <span class="material-icons" style="color: white;">widgets</span>
+            </div>
+            <div class="feature-content">
+              <h4>components/</h4>
+              <p>ボタン、カード、フォーム、モーダルなど再利用可能なUI部品のスタイル。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #e67e22;">
+              <span class="material-icons" style="color: white;">dashboard</span>
+            </div>
+            <div class="feature-content">
+              <h4>layout/</h4>
+              <p>ヘッダー、フッター、サイドバー、グリッドシステムなどページの骨格。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #9b59b6;">
+              <span class="material-icons" style="color: white;">web</span>
+            </div>
+            <div class="feature-content">
+              <h4>pages/</h4>
+              <p>トップページ、アバウトページなど特定のページにだけ適用するスタイル。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #1abc9c;">
+              <span class="material-icons" style="color: white;">palette</span>
+            </div>
+            <div class="feature-content">
+              <h4>themes/</h4>
+              <p>ダークモード、ライトモードなどテーマ切り替え用のスタイル。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #e74c3c;">
+              <span class="material-icons" style="color: white;">extension</span>
+            </div>
+            <div class="feature-content">
+              <h4>vendors/</h4>
+              <p>Bootstrap、Normalize.cssなど外部ライブラリのカスタマイズ・上書き。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>小規模プロジェクト向け簡易構成</h3>
+        <p>すべてのプロジェクトで7-1パターンを使う必要はありません。小規模なサイトではもっとシンプルな構成で十分です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">フォルダ構成（簡易版）</span>
+          </div>
+          <div class="code-content">
+            <pre>scss/
+├── _variables.scss     ← 変数
+├── _mixins.scss        ← ミックスイン
+├── _base.scss          ← 基本スタイル・リセット
+├── _header.scss        ← ヘッダー
+├── _footer.scss        ← フッター
+├── _components.scss    ← ボタン・カードなど
+└── main.scss           ← エントリーポイント</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">構成のコツ</div>
+          <div class="info-box-content">
+            <p>最初はシンプルに始めて、ファイルが大きくなってきたら分割するのが現実的なアプローチです。1ファイルが200行を超えたら分割を検討しましょう。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>main.scssの例</h3>
+        <p>エントリーポイントとなる <code>main.scss</code> では、各モジュールを <code>@use</code> で読み込むだけのシンプルな構成にします。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（main.scss - 7-1パターン）</span>
+          </div>
+          <div class="code-content">
+            <pre>// main.scss
+// ========================================
+// 読み込み順序が重要！
+// 1. 抽象（変数・ミックスイン）→ CSS出力なし
+// 2. 基本スタイル → リセット・タイポグラフィ
+// 3. レイアウト → ページの骨格
+// 4. コンポーネント → UI部品
+// 5. ページ固有 → 個別ページのスタイル
+// 6. テーマ → テーマの上書き
+// 7. ベンダー → 外部ライブラリの上書き
+// ========================================
+
+@use 'abstracts';
+@use 'base';
+@use 'layout';
+@use 'components';
+@use 'pages';
+@use 'themes';
+@use 'vendors';</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（main.scss - 簡易版）</span>
+          </div>
+          <div class="code-content">
+            <pre>// main.scss（簡易版）
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'base';
+@use 'header';
+@use 'footer';
+@use 'components';</pre>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">読み込み順序に注意</div>
+          <div class="warning-box-content">
+            <p>変数やミックスインを定義するファイルは、それを使用するファイルより先に読み込む必要があります。<code>main.scss</code> での記述順序がCSSの出力順序にも影響するため、カスケード（後から書いたスタイルが優先される性質）も考慮して順序を決めましょう。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第5章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>パーシャル</strong>はファイル名の先頭に <code>_</code> を付けた分割用SCSSファイル。単体ではCSSにコンパイルされない。</li>
+          <li><strong>@use</strong> でモジュールを読み込み、名前空間を通じて変数・ミックスインにアクセスする。</li>
+          <li><strong>as</strong> キーワードでエイリアスを設定でき、<code>as *</code> で名前空間なしのアクセスも可能。</li>
+          <li><strong>@import は非推奨</strong>。新しいプロジェクトでは必ず <code>@use</code> を使用する。</li>
+          <li><strong>@forward</strong> はモジュールのメンバーを再エクスポートする仕組み。<code>_index.scss</code> でフォルダ単位の読み込みを実現。</li>
+          <li><strong>with</strong> で <code>!default</code> 付き変数を読み込み時に上書きできる。</li>
+          <li>大規模プロジェクトでは<strong>7-1パターン</strong>、小規模なら簡易構成でファイルを整理する。</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="4scss-mixins.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">ミックスイン</div>
+    </a>
+    <a href="6scss-extend.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">継承（@extend）</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>SCSS入門 - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

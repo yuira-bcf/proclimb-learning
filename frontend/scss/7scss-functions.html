@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第7章 関数・演算・制御構文 - SCSS入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #CF649A;
+      --primary-dark: #B5507F;
+      --primary-light: #FDF2F7;
+      --primary-lighter: #F5D0E0;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-scss.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">SCSS入門</div>
+      <div class="chapter-number">7</div>
+      <h1 class="chapter-title">関数・演算・制御構文</h1>
+      <p class="chapter-subtitle">SCSSのプログラミング的機能</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">7-1</span>演算</li>
+        <li class="toc-item"><span class="toc-number">7-2</span>組み込み関数</li>
+        <li class="toc-item"><span class="toc-number">7-3</span>カスタム関数（@function）</li>
+        <li class="toc-item"><span class="toc-number">7-4</span>条件分岐（@if / @else）</li>
+        <li class="toc-item"><span class="toc-number">7-5</span>ループ（@each, @for, @while）</li>
+      </ul>
+    </nav>
+
+    <!-- Section 7-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-1</span>
+        <h2 class="section-title">演算</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>SCSSでは、プロパティの値に対して数値の計算を直接記述できます。CSSの <code>calc()</code> を使わなくても、コンパイル時に計算結果が確定するため、シンプルなコードが書けます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>数値の四則演算</h3>
+        <p>加算（+）、減算（-）、乗算（*）、除算（/）の四則演算が使えます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// 四則演算
+$base-size: 16px;
+
+.container {
+  width: 960px + 40px;         // 1000px
+  padding: $base-size * 2;     // 32px
+  margin-bottom: $base-size - 4px; // 12px
+}
+
+// 除算は math.div() を使う（Dart Sass推奨）
+@use 'sass:math';
+
+.column {
+  width: math.div(960px, 12);  // 80px
+}</pre>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">除算の注意点</div>
+          <div class="warning-box-content">
+            <p>Dart Sass では <code>/</code> 演算子による除算は非推奨です。代わりに <code>math.div()</code> 関数を使用してください。<code>@use 'sass:math';</code> を先頭に追加する必要があります。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>単位付き演算</h3>
+        <p>SCSSでは同じ単位同士の演算が可能ですが、異なる単位同士（pxとemなど）の演算はエラーになります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// 同じ単位同士はOK
+$width: 100px + 50px;     // 150px
+$margin: 2rem + 1rem;     // 3rem
+
+// 単位なし × 単位ありもOK
+$double: 16px * 2;        // 32px
+$half: 100% * 0.5;        // 50%
+
+// 異なる単位同士はエラー
+// $invalid: 100px + 2rem;  // エラー！</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>色の演算</h3>
+        <p>SCSSには色を操作する便利な組み込み関数が用意されています。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>$brand-color: #CF649A;
+
+.button {
+  background-color: $brand-color;
+
+  &amp;:hover {
+    // 10%暗くする
+    background-color: darken($brand-color, 10%);
+  }
+
+  &amp;:active {
+    // 15%暗くする
+    background-color: darken($brand-color, 15%);
+  }
+}
+
+.badge {
+  // 30%明るくする
+  background-color: lighten($brand-color, 30%);
+  color: $brand-color;
+}
+
+.overlay {
+  // 2色を50:50で混ぜる
+  background-color: mix($brand-color, #3498db, 50%);
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>文字列の結合</h3>
+        <p><code>+</code> 演算子で文字列を結合できます。画像パスの生成やクラス名の組み立てに便利です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>$image-path: "../images/";
+
+.hero {
+  background-image: url($image-path + "hero-bg.jpg");
+  // → background-image: url("../images/hero-bg.jpg");
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-2</span>
+        <h2 class="section-title">組み込み関数</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>SCSSには多数の組み込み関数が用意されています。色の操作、数値の変換、文字列の処理、リストやマップの操作など、さまざまな場面で活用できます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>色関数</h3>
+        <p>色の明るさ、彩度、透明度などを操作する関数です。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>関数</th>
+                <th>説明</th>
+                <th>使用例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>lighten($color, $amount)</code></td>
+                <td>色を明るくする</td>
+                <td><code>lighten(#CF649A, 20%)</code></td>
+              </tr>
+              <tr>
+                <td><code>darken($color, $amount)</code></td>
+                <td>色を暗くする</td>
+                <td><code>darken(#CF649A, 10%)</code></td>
+              </tr>
+              <tr>
+                <td><code>saturate($color, $amount)</code></td>
+                <td>彩度を上げる</td>
+                <td><code>saturate(#CF649A, 20%)</code></td>
+              </tr>
+              <tr>
+                <td><code>desaturate($color, $amount)</code></td>
+                <td>彩度を下げる</td>
+                <td><code>desaturate(#CF649A, 20%)</code></td>
+              </tr>
+              <tr>
+                <td><code>rgba($color, $alpha)</code></td>
+                <td>透明度を設定する</td>
+                <td><code>rgba(#CF649A, 0.5)</code></td>
+              </tr>
+              <tr>
+                <td><code>mix($color1, $color2, $weight)</code></td>
+                <td>2色を混ぜる</td>
+                <td><code>mix(#CF649A, #fff, 70%)</code></td>
+              </tr>
+              <tr>
+                <td><code>complement($color)</code></td>
+                <td>補色を取得する</td>
+                <td><code>complement(#CF649A)</code></td>
+              </tr>
+              <tr>
+                <td><code>adjust-hue($color, $degrees)</code></td>
+                <td>色相を回転する</td>
+                <td><code>adjust-hue(#CF649A, 45deg)</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>数値関数</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>関数</th>
+                <th>説明</th>
+                <th>使用例</th>
+                <th>結果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>percentage($number)</code></td>
+                <td>数値を%に変換</td>
+                <td><code>percentage(0.5)</code></td>
+                <td>50%</td>
+              </tr>
+              <tr>
+                <td><code>round($number)</code></td>
+                <td>四捨五入</td>
+                <td><code>round(4.6)</code></td>
+                <td>5</td>
+              </tr>
+              <tr>
+                <td><code>ceil($number)</code></td>
+                <td>切り上げ</td>
+                <td><code>ceil(4.1)</code></td>
+                <td>5</td>
+              </tr>
+              <tr>
+                <td><code>floor($number)</code></td>
+                <td>切り捨て</td>
+                <td><code>floor(4.9)</code></td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <td><code>abs($number)</code></td>
+                <td>絶対値</td>
+                <td><code>abs(-10px)</code></td>
+                <td>10px</td>
+              </tr>
+              <tr>
+                <td><code>min($numbers...)</code></td>
+                <td>最小値</td>
+                <td><code>min(10px, 20px, 5px)</code></td>
+                <td>5px</td>
+              </tr>
+              <tr>
+                <td><code>max($numbers...)</code></td>
+                <td>最大値</td>
+                <td><code>max(10px, 20px, 5px)</code></td>
+                <td>20px</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>文字列関数</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>関数</th>
+                <th>説明</th>
+                <th>使用例</th>
+                <th>結果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>to-upper-case($string)</code></td>
+                <td>大文字に変換</td>
+                <td><code>to-upper-case("hello")</code></td>
+                <td>"HELLO"</td>
+              </tr>
+              <tr>
+                <td><code>to-lower-case($string)</code></td>
+                <td>小文字に変換</td>
+                <td><code>to-lower-case("HELLO")</code></td>
+                <td>"hello"</td>
+              </tr>
+              <tr>
+                <td><code>str-length($string)</code></td>
+                <td>文字列の長さ</td>
+                <td><code>str-length("SCSS")</code></td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <td><code>str-index($string, $substring)</code></td>
+                <td>部分文字列の位置</td>
+                <td><code>str-index("SCSS", "CS")</code></td>
+                <td>2</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>リスト関数</h3>
+        <p>SCSSのリストは、スペースまたはカンマで区切られた値の集合です。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>関数</th>
+                <th>説明</th>
+                <th>使用例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>length($list)</code></td>
+                <td>リストの要素数</td>
+                <td><code>length(10px 20px 30px)</code> → 3</td>
+              </tr>
+              <tr>
+                <td><code>nth($list, $n)</code></td>
+                <td>n番目の要素を取得</td>
+                <td><code>nth(10px 20px 30px, 2)</code> → 20px</td>
+              </tr>
+              <tr>
+                <td><code>append($list, $val)</code></td>
+                <td>要素を追加</td>
+                <td><code>append(10px 20px, 30px)</code> → 10px 20px 30px</td>
+              </tr>
+              <tr>
+                <td><code>join($list1, $list2)</code></td>
+                <td>リストを結合</td>
+                <td><code>join(10px, 20px 30px)</code> → 10px 20px 30px</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>マップ関数</h3>
+        <p>マップはキーと値のペアの集合です。設定値やテーマの管理に非常に便利です。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>関数</th>
+                <th>説明</th>
+                <th>使用例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>map-get($map, $key)</code></td>
+                <td>キーに対応する値を取得</td>
+                <td><code>map-get($colors, "primary")</code></td>
+              </tr>
+              <tr>
+                <td><code>map-keys($map)</code></td>
+                <td>すべてのキーをリストで返す</td>
+                <td><code>map-keys($colors)</code></td>
+              </tr>
+              <tr>
+                <td><code>map-values($map)</code></td>
+                <td>すべての値をリストで返す</td>
+                <td><code>map-values($colors)</code></td>
+              </tr>
+              <tr>
+                <td><code>map-has-key($map, $key)</code></td>
+                <td>キーの存在確認</td>
+                <td><code>map-has-key($colors, "primary")</code></td>
+              </tr>
+              <tr>
+                <td><code>map-merge($map1, $map2)</code></td>
+                <td>マップを結合</td>
+                <td><code>map-merge($defaults, $custom)</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（マップの使用例）</span>
+          </div>
+          <div class="code-content">
+            <pre>// マップの定義
+$colors: (
+  "primary": #CF649A,
+  "secondary": #6c757d,
+  "success": #2ecc71,
+  "danger": #e74c3c,
+  "warning": #f39c12
+);
+
+// マップから値を取得
+.alert-success {
+  color: map-get($colors, "success");
+}
+
+// マップにキーがあるか確認
+@if map-has-key($colors, "primary") {
+  .brand {
+    color: map-get($colors, "primary");
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-3</span>
+        <h2 class="section-title">カスタム関数（@function）</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>@functionの定義と@return</h3>
+        <p>SCSSでは <code>@function</code> を使って独自の関数を定義できます。関数は値を計算して <code>@return</code> で返します。ミックスインと違い、関数はスタイルブロックではなく「値」を返すのが特徴です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// @functionの基本構文
+@function 関数名($引数) {
+  // 計算処理
+  @return 戻り値;
+}
+
+// 使用例
+.element {
+  width: 関数名(引数);
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">@function vs @mixin の違い</div>
+          <div class="info-box-content">
+            <p><strong>@function</strong>：値を計算して返す。プロパティの値として使用する。<br>
+            <strong>@mixin</strong>：スタイルブロック（プロパティ: 値のセット）を出力する。<br>
+            値だけが欲しい場合は <code>@function</code>、スタイル一式を出力したい場合は <code>@mixin</code> を使います。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>実践例：px → rem変換関数</h3>
+        <p>デザインカンプのpx値をrem単位に変換する関数は、実務で非常によく使われます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>@use 'sass:math';
+
+// px → rem 変換関数
+@function rem($px, $base: 16) {
+  @return math.div($px, $base) * 1rem;
+}
+
+// 使用例
+body {
+  font-size: rem(16);    // 1rem
+}
+
+h1 {
+  font-size: rem(32);    // 2rem
+  margin-bottom: rem(24); // 1.5rem
+}
+
+.card {
+  padding: rem(20);      // 1.25rem
+  border-radius: rem(8); // 0.5rem
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>body {
+  font-size: 1rem;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>実践例：色のコントラスト計算</h3>
+        <p>背景色に応じてテキスト色を自動で白か黒に切り替える関数です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// 背景色に応じて文字色を返す関数
+@function contrast-color($bg-color) {
+  // 明度が50%以上なら暗い文字、未満なら白い文字
+  @if (lightness($bg-color) > 50%) {
+    @return #333;
+  } @else {
+    @return #fff;
+  }
+}
+
+// 使用例
+$colors: (
+  "primary": #CF649A,
+  "light": #f8f9fa,
+  "dark": #212529,
+  "warning": #ffc107
+);
+
+@each $name, $color in $colors {
+  .badge-#{$name} {
+    background-color: $color;
+    color: contrast-color($color); // 自動で適切な文字色
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-4</span>
+        <h2 class="section-title">条件分岐（@if / @else）</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>@if, @else if, @elseの構文</h3>
+        <p>SCSSでは <code>@if</code> を使って条件に応じたスタイルの出力を制御できます。プログラミング言語のif文と同じような書き方です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// @if の基本構文
+@if 条件 {
+  // 条件がtrueの場合のスタイル
+} @else if 別の条件 {
+  // 別の条件がtrueの場合
+} @else {
+  // どの条件にも当てはまらない場合
+}
+
+// 使用例
+$theme: "dark";
+
+body {
+  @if $theme == "dark" {
+    background-color: #1a1a2e;
+    color: #eee;
+  } @else if $theme == "light" {
+    background-color: #fff;
+    color: #333;
+  } @else {
+    background-color: #f5f5f5;
+    color: #555;
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>実践例：テーマに応じた色の切り替え</h3>
+        <p>ミックスインと条件分岐を組み合わせて、テーマに応じたスタイルを切り替えるパターンです。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// テーマカラーを返すミックスイン
+@mixin theme-colors($theme) {
+  @if $theme == "primary" {
+    background-color: #CF649A;
+    color: white;
+    border-color: darken(#CF649A, 10%);
+  } @else if $theme == "secondary" {
+    background-color: #6c757d;
+    color: white;
+    border-color: darken(#6c757d, 10%);
+  } @else if $theme == "outline" {
+    background-color: transparent;
+    color: #CF649A;
+    border-color: #CF649A;
+  } @else {
+    background-color: #e9ecef;
+    color: #495057;
+    border-color: #dee2e6;
+  }
+}
+
+// 使用
+.btn-primary {
+  @include theme-colors("primary");
+}
+
+.btn-secondary {
+  @include theme-colors("secondary");
+}
+
+.btn-outline {
+  @include theme-colors("outline");
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">条件分岐の活用シーン</div>
+          <div class="info-box-content">
+            <p>条件分岐は、テーマ切り替え、方向（ltr/rtl）に応じたスタイル、ブレークポイントの判定、引数に応じた出力の変更など、さまざまな場面で活用できます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-5</span>
+        <h2 class="section-title">ループ（@each, @for, @while）</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>SCSSのループ構文を使うと、繰り返しのスタイル定義を自動化できます。ユーティリティクラスの生成やバリエーションの作成に非常に効果的です。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>@each（リスト・マップの反復）</h3>
+        <p><code>@each</code> は、リストやマップの各要素に対して繰り返し処理を行います。最もよく使われるループ構文です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（リストの反復）</span>
+          </div>
+          <div class="code-content">
+            <pre>// リストで反復
+$sizes: "sm", "md", "lg";
+
+@each $size in $sizes {
+  .text-#{$size} {
+    @if $size == "sm" { font-size: 12px; }
+    @else if $size == "md" { font-size: 16px; }
+    @else if $size == "lg" { font-size: 20px; }
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（マップの反復）</span>
+          </div>
+          <div class="code-content">
+            <pre>// マップでキーと値のペアを反復
+$social-colors: (
+  "twitter": #1da1f2,
+  "facebook": #1877f2,
+  "instagram": #e4405f,
+  "youtube": #ff0000,
+  "line": #00b900
+);
+
+@each $name, $color in $social-colors {
+  .social-#{$name} {
+    background-color: $color;
+    color: white;
+
+    &amp;:hover {
+      background-color: darken($color, 10%);
+    }
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.social-twitter {
+  background-color: #1da1f2;
+  color: white;
+}
+.social-twitter:hover {
+  background-color: #0c85d0;
+}
+.social-facebook {
+  background-color: #1877f2;
+  color: white;
+}
+.social-facebook:hover {
+  background-color: #0b5fcc;
+}
+/* ... 以下同様 */</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>@for（連番の反復）</h3>
+        <p><code>@for</code> は、指定した範囲の連番で繰り返し処理を行います。<code>through</code> は終了値を含み、<code>to</code> は終了値を含みません。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// through: 1から12まで（12を含む）
+@for $i from 1 through 12 {
+  .col-#{$i} {
+    width: percentage(math.div($i, 12));
+  }
+}
+
+// to: 1から11まで（12を含まない）
+@for $i from 1 to 12 {
+  .gap-#{$i} {
+    gap: $i * 4px;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果の一部）</span>
+          </div>
+          <div class="code-content">
+            <pre>.col-1  { width: 8.3333333333%; }
+.col-2  { width: 16.6666666667%; }
+.col-3  { width: 25%; }
+.col-4  { width: 33.3333333333%; }
+/* ... */
+.col-12 { width: 100%; }</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>@while</h3>
+        <p><code>@while</code> は条件がtrueの間、繰り返し処理を行います。無限ループにならないよう注意が必要です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// @while の例
+$i: 1;
+
+@while $i &lt;= 6 {
+  .h#{$i} {
+    font-size: (42px - ($i * 4px));
+  }
+  $i: $i + 1;  // 忘れると無限ループ！
+}
+
+/* CSS出力 */
+// .h1 { font-size: 38px; }
+// .h2 { font-size: 34px; }
+// .h3 { font-size: 30px; }
+// .h4 { font-size: 26px; }
+// .h5 { font-size: 22px; }
+// .h6 { font-size: 18px; }</pre>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">@while の注意</div>
+          <div class="warning-box-content">
+            <p><code>@while</code> は条件を変化させる処理（カウンタのインクリメントなど）を忘れると無限ループになります。多くの場合、<code>@for</code> や <code>@each</code> で代替できるため、<code>@while</code> を使う場面は限定的です。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>実践例：ユーティリティクラスの自動生成</h3>
+        <p>Tailwind CSSのようなユーティリティクラスを自動生成する例です。margin/padding のクラスを一括で作成できます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// スペーシングユーティリティの自動生成
+$spacing-base: 4px;
+
+// .mt-0 〜 .mt-8, .mb-0 〜 .mb-8, .pt-0 〜 .pt-8, .pb-0 〜 .pb-8
+$properties: (
+  "mt": "margin-top",
+  "mb": "margin-bottom",
+  "ml": "margin-left",
+  "mr": "margin-right",
+  "pt": "padding-top",
+  "pb": "padding-bottom",
+  "pl": "padding-left",
+  "pr": "padding-right"
+);
+
+@each $prefix, $property in $properties {
+  @for $i from 0 through 8 {
+    .#{$prefix}-#{$i} {
+      #{$property}: $spacing-base * $i;
+    }
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果の一部）</span>
+          </div>
+          <div class="code-content">
+            <pre>.mt-0 { margin-top: 0px; }
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }
+.mt-5 { margin-top: 20px; }
+.mt-6 { margin-top: 24px; }
+.mt-7 { margin-top: 28px; }
+.mt-8 { margin-top: 32px; }
+/* mb, ml, mr, pt, pb, pl, pr も同様に生成 */</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">ループの威力</div>
+          <div class="info-box-content">
+            <p>上の例では、わずか10行程度のSCSSで72個のユーティリティクラス（8プロパティ x 9段階）を自動生成しています。手動で書くと大変な量のCSSを、ループで効率的に管理できます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第7章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>演算</strong>：加減乗除が使える。除算は <code>math.div()</code> を推奨。異なる単位同士の演算はエラー。</li>
+          <li><strong>色関数</strong>：lighten, darken, mix, rgba などで色を柔軟に操作できる。</li>
+          <li><strong>数値・文字列・リスト・マップ関数</strong>：多数の組み込み関数で値を変換・操作できる。</li>
+          <li><strong>@function</strong>：独自の関数を定義し、<code>@return</code> で値を返す。px→rem変換などに便利。</li>
+          <li><strong>@if / @else</strong>：条件に応じたスタイルの出力制御。テーマ切り替えなどに活用。</li>
+          <li><strong>@each</strong>：リストやマップの各要素を反復。最もよく使うループ。</li>
+          <li><strong>@for</strong>：連番で反復。グリッドカラムやユーティリティクラスの生成に最適。</li>
+          <li><strong>@while</strong>：条件付きループ。無限ループに注意。@for/@eachで代替できることが多い。</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="6scss-extend.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">継承（@extend）</div>
+    </a>
+    <a href="8scss-practice.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">実践プロジェクト</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>SCSS入門 - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

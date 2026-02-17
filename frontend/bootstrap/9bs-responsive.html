@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第9章 レスポンシブデザイン - Bootstrap入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #7952B3;
+      --primary-dark: #5E3D8F;
+      --primary-light: #F3EEFA;
+      --primary-lighter: #C9B3E6;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-bootstrap.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Bootstrap入門</div>
+      <div class="chapter-number">9</div>
+      <h1 class="chapter-title">レスポンシブデザイン</h1>
+      <p class="chapter-subtitle">あらゆる画面サイズに対応する</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">9-1</span><span>レスポンシブデザインとは</span></li>
+        <li class="toc-item"><span class="toc-number">9-2</span><span>ブレイクポイント一覧と設計思想</span></li>
+        <li class="toc-item"><span class="toc-number">9-3</span><span>レスポンシブユーティリティの活用</span></li>
+        <li class="toc-item"><span class="toc-number">9-4</span><span>実践：カフェサイトのレスポンシブ対応</span></li>
+      </ul>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- Section 9-1 -->
+    <!-- ============================================================ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-1</span>
+        <h2 class="section-title">レスポンシブデザインとは</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>レスポンシブデザインの概念</h3>
+        <p>レスポンシブデザインとは、1つのHTMLファイルで、スマートフォン・タブレット・PCなど、あらゆる画面サイズに対して最適な表示を実現するデザイン手法です。</p>
+        <p>従来はPC用サイトとモバイル用サイトを別々に作成していましたが、現在ではレスポンシブデザインが主流となっています。Googleもモバイルフレンドリーなサイトを検索結果で優遇しているため、レスポンシブ対応は必須のスキルです。</p>
+
+        <div class="highlight-box">
+          <h4>なぜレスポンシブデザインが必要なのか</h4>
+          <p>2024年現在、Webサイトへのアクセスの約60%がスマートフォンからです。PC用のデザインだけでは、多くのユーザーにとって使いにくいサイトになってしまいます。1つのHTMLで全デバイスに対応できるレスポンシブデザインは、開発・保守コストの面でも大きなメリットがあります。</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>モバイルファーストという考え方</h3>
+        <p>Bootstrapは<strong>モバイルファースト</strong>というデザイン思想を採用しています。これは「まず小さい画面（スマホ）のデザインを基準に作り、画面が大きくなるにつれてレイアウトを拡張する」という考え方です。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>アプローチ</th>
+                <th>考え方</th>
+                <th>CSSの書き方</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>デスクトップファースト</td>
+                <td>PC用デザインを基準に、小さい画面用に縮小する</td>
+                <td>max-width を使うメディアクエリ</td>
+              </tr>
+              <tr>
+                <td>モバイルファースト</td>
+                <td>スマホ用デザインを基準に、大きい画面用に拡張する</td>
+                <td>min-width を使うメディアクエリ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Bootstrapではすべてのユーティリティクラスが<strong>min-width</strong>ベースで設計されています。つまり、クラス名に何もブレイクポイントをつけなければ「全画面サイズに適用」され、<code>-md</code>などをつけると「その画面サイズ以上に適用」されます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（Bootstrapの内部実装イメージ）</span>
+          </div>
+          <div class="code-content">
+            <pre>/* モバイルファースト：まず全画面サイズに適用 */
+.col-12 {
+  width: 100%;
+}
+
+/* md（768px）以上の画面に適用 */
+@media (min-width: 768px) {
+  .col-md-6 {
+    width: 50%;
+  }
+}
+
+/* lg（992px）以上の画面に適用 */
+@media (min-width: 992px) {
+  .col-lg-4 {
+    width: 33.333%;
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>viewport メタタグの重要性</h3>
+        <p>レスポンシブデザインを正しく機能させるには、HTMLの<code>&lt;head&gt;</code>内に<strong>viewport メタタグ</strong>が必須です。このタグがないと、スマートフォンのブラウザがPC用の表示をそのまま縮小表示してしまいます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>属性</th>
+                <th>意味</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>width=device-width</td>
+                <td>表示幅をデバイスの画面幅に合わせる</td>
+              </tr>
+              <tr>
+                <td>initial-scale=1.0</td>
+                <td>初期のズーム倍率を100%にする</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="highlight-box">
+          <h4>注意</h4>
+          <p>Bootstrapのスターターテンプレートには最初からこのメタタグが含まれていますが、手動でHTMLを書く場合は忘れずに追加しましょう。これがないとレスポンシブデザインが機能しません。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Section 9-2 -->
+    <!-- ============================================================ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-2</span>
+        <h2 class="section-title">ブレイクポイント一覧と設計思想</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>Bootstrapの6つのブレイクポイント</h3>
+        <p>Bootstrapには画面サイズに応じた<strong>6つのブレイクポイント</strong>が用意されています。ブレイクポイントとは「レイアウトが切り替わる画面幅の境界値」のことです。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ブレイクポイント</th>
+                <th>クラス接頭辞</th>
+                <th>画面幅</th>
+                <th>対象デバイス</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Extra small</td>
+                <td>（なし）</td>
+                <td>&lt;576px</td>
+                <td>スマートフォン（縦向き）</td>
+              </tr>
+              <tr>
+                <td>Small</td>
+                <td>sm</td>
+                <td>&ge;576px</td>
+                <td>スマートフォン（横向き）</td>
+              </tr>
+              <tr>
+                <td>Medium</td>
+                <td>md</td>
+                <td>&ge;768px</td>
+                <td>タブレット</td>
+              </tr>
+              <tr>
+                <td>Large</td>
+                <td>lg</td>
+                <td>&ge;992px</td>
+                <td>ノートPC</td>
+              </tr>
+              <tr>
+                <td>Extra large</td>
+                <td>xl</td>
+                <td>&ge;1200px</td>
+                <td>デスクトップPC</td>
+              </tr>
+              <tr>
+                <td>Extra extra large</td>
+                <td>xxl</td>
+                <td>&ge;1400px</td>
+                <td>大型モニター</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="highlight-box">
+          <h4>ブレイクポイントの読み方</h4>
+          <p>例えば <code>col-md-6</code> は「md（768px）以上の画面幅で、6カラム幅になる」という意味です。md未満（スマホサイズ）ではこのクラスは適用されず、<code>col-12</code>（全幅）がデフォルトで適用されます。</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>モバイルファーストの仕組み</h3>
+        <p>Bootstrapのブレイクポイントはすべて<strong>min-width</strong>（最小幅）で定義されています。これがモバイルファーストの根幹です。</p>
+
+        <p>クラスの適用ルールは以下の通りです。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>クラス</th>
+                <th>適用される画面幅</th>
+                <th>説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>col-12</td>
+                <td>0px 以上（全サイズ）</td>
+                <td>常に12カラム幅（全幅）</td>
+              </tr>
+              <tr>
+                <td>col-sm-6</td>
+                <td>576px 以上</td>
+                <td>スマホ横向き以上で6カラム幅</td>
+              </tr>
+              <tr>
+                <td>col-md-4</td>
+                <td>768px 以上</td>
+                <td>タブレット以上で4カラム幅</td>
+              </tr>
+              <tr>
+                <td>col-lg-3</td>
+                <td>992px 以上</td>
+                <td>PC以上で3カラム幅</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>複数のブレイクポイントを組み合わせることで、画面サイズごとに異なるレイアウトを実現できます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;div class="container"&gt;
+  &lt;div class="row"&gt;
+    &lt;!-- スマホ: 全幅 / タブレット: 半分 / PC: 3分の1 --&gt;
+    &lt;div class="col-12 col-md-6 col-lg-4"&gt;
+      コンテンツA
+    &lt;/div&gt;
+    &lt;div class="col-12 col-md-6 col-lg-4"&gt;
+      コンテンツB
+    &lt;/div&gt;
+    &lt;div class="col-12 col-md-12 col-lg-4"&gt;
+      コンテンツC
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <p>上記の例では以下のように表示が切り替わります。</p>
+        <ul>
+          <li><strong>スマホ（768px未満）</strong>：3つのコンテンツがすべて縦1列に並ぶ（各 col-12 = 全幅）</li>
+          <li><strong>タブレット（768px〜991px）</strong>：A と B が横2列、C は次の行に全幅で表示</li>
+          <li><strong>PC（992px以上）</strong>：3つが横3列に均等に並ぶ（各 col-lg-4）</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <h3>実践でよく使うブレイクポイントの組み合わせ</h3>
+        <p>実務でよく使われるパターンをいくつか紹介します。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>パターン</th>
+                <th>クラスの組み合わせ</th>
+                <th>表示結果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2カラム切替</td>
+                <td>col-12 col-md-6</td>
+                <td>スマホ:1列 → タブレット以上:2列</td>
+              </tr>
+              <tr>
+                <td>3カラム切替</td>
+                <td>col-12 col-md-6 col-lg-4</td>
+                <td>スマホ:1列 → タブレット:2列 → PC:3列</td>
+              </tr>
+              <tr>
+                <td>4カラム切替</td>
+                <td>col-6 col-md-4 col-lg-3</td>
+                <td>スマホ:2列 → タブレット:3列 → PC:4列</td>
+              </tr>
+              <tr>
+                <td>サイドバー</td>
+                <td>col-12 col-lg-8 / col-12 col-lg-4</td>
+                <td>スマホ:縦積み → PC:メイン+サイドバー</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Section 9-3 -->
+    <!-- ============================================================ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-3</span>
+        <h2 class="section-title">レスポンシブユーティリティの活用</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>表示・非表示の切り替え（Display ユーティリティ）</h3>
+        <p>画面サイズによって要素の表示・非表示を切り替えることは、レスポンシブデザインで非常に多い操作です。Bootstrapの <code>d-*</code> ユーティリティを使えば、簡単に実現できます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>クラス</th>
+                <th>効果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>d-none</td>
+                <td>すべての画面で非表示</td>
+              </tr>
+              <tr>
+                <td>d-block</td>
+                <td>すべての画面で表示</td>
+              </tr>
+              <tr>
+                <td>d-none d-md-block</td>
+                <td>スマホで非表示、タブレット以上で表示</td>
+              </tr>
+              <tr>
+                <td>d-block d-md-none</td>
+                <td>スマホで表示、タブレット以上で非表示</td>
+              </tr>
+              <tr>
+                <td>d-none d-lg-block</td>
+                <td>タブレット以下で非表示、PC以上で表示</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!-- スマホでは短いテキスト、PCではフルテキストを表示 --&gt;
+&lt;p class="d-block d-md-none"&gt;お問い合わせ&lt;/p&gt;
+&lt;p class="d-none d-md-block"&gt;お気軽にお問い合わせください。24時間受付中です。&lt;/p&gt;
+
+&lt;!-- PCのみにサイドバーを表示 --&gt;
+&lt;div class="d-none d-lg-block"&gt;
+  &lt;h3&gt;サイドバー&lt;/h3&gt;
+  &lt;p&gt;関連リンクやカテゴリ一覧など&lt;/p&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>d-none と d-md-block の組み合わせ</h4>
+          <p>「d-none」で一旦すべての画面で非表示にし、「d-md-block」でmd以上で表示に切り替えるという考え方です。モバイルファーストの原則に基づいて、まず非表示にしてから必要な画面サイズで表示するパターンが基本です。</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>レスポンシブなテキストサイズ</h3>
+        <p>Bootstrapの <code>fs-*</code>（font-size）クラスを使うと統一的なテキストサイズが適用できます。さらに、画面サイズによってテキストサイズを変えたい場合は、Displayユーティリティと組み合わせて実現します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!-- レスポンシブな見出し表示 --&gt;
+&lt;h1 class="display-4"&gt;大きな見出し&lt;/h1&gt;
+
+&lt;!-- Bootstrapのdisplayクラスはレスポンシブに縮小される --&gt;
+&lt;h1 class="display-1"&gt;レスポンシブ見出し&lt;/h1&gt;
+&lt;p class="lead"&gt;リード文はleadクラスで少し大きめに表示&lt;/p&gt;
+&lt;p class="fs-6"&gt;通常サイズのテキスト&lt;/p&gt;</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>クラス</th>
+                <th>フォントサイズ</th>
+                <th>用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>display-1</td>
+                <td>最大（レスポンシブ対応）</td>
+                <td>ヒーローセクションの見出し</td>
+              </tr>
+              <tr>
+                <td>display-4</td>
+                <td>やや大きめ（レスポンシブ対応）</td>
+                <td>セクション見出し</td>
+              </tr>
+              <tr>
+                <td>lead</td>
+                <td>1.25rem</td>
+                <td>リード文・導入文</td>
+              </tr>
+              <tr>
+                <td>fs-1 〜 fs-6</td>
+                <td>h1 〜 h6 相当</td>
+                <td>一般的なテキスト</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>レスポンシブなスペーシング</h3>
+        <p>余白（margin / padding）も画面サイズに応じて変えることができます。ブレイクポイント付きの<code>p-*</code> や <code>m-*</code>クラスを使います。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!-- スマホ: padding-2 / タブレット以上: padding-4 / PC以上: padding-5 --&gt;
+&lt;div class="p-2 p-md-4 p-lg-5 bg-light"&gt;
+  &lt;h2&gt;セクションタイトル&lt;/h2&gt;
+  &lt;p&gt;画面サイズに応じて余白が変わります。&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;!-- スマホ: margin-bottom-3 / PC以上: margin-bottom-5 --&gt;
+&lt;div class="mb-3 mb-lg-5"&gt;
+  &lt;p&gt;コンテンツ間の余白もレスポンシブに調整&lt;/p&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>クラス例</th>
+                <th>意味</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>p-2 p-md-4</td>
+                <td>スマホ: padding 0.5rem / md以上: padding 1.5rem</td>
+              </tr>
+              <tr>
+                <td>mb-3 mb-lg-5</td>
+                <td>スマホ: margin-bottom 1rem / lg以上: 3rem</td>
+              </tr>
+              <tr>
+                <td>mx-2 mx-xl-auto</td>
+                <td>スマホ: 左右margin 0.5rem / xl以上: 自動中央寄せ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>レスポンシブなFlexbox</h3>
+        <p>Flexbox関連のユーティリティもブレイクポイント付きで使えます。「スマホでは縦並び、PCでは横並び」というよくあるパターンが簡単に実現できます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!-- スマホ: 縦並び / md以上: 横並び --&gt;
+&lt;div class="d-flex flex-column flex-md-row gap-3"&gt;
+  &lt;div class="p-3 bg-light flex-fill"&gt;カラムA&lt;/div&gt;
+  &lt;div class="p-3 bg-light flex-fill"&gt;カラムB&lt;/div&gt;
+  &lt;div class="p-3 bg-light flex-fill"&gt;カラムC&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- スマホ: 左寄せ / md以上: 中央寄せ / lg以上: 右寄せ --&gt;
+&lt;div class="d-flex justify-content-start justify-content-md-center justify-content-lg-end"&gt;
+  &lt;button class="btn btn-primary"&gt;ボタン&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;!-- スマホ: 折り返しあり / lg以上: 折り返しなし --&gt;
+&lt;div class="d-flex flex-wrap flex-lg-nowrap gap-2"&gt;
+  &lt;div class="p-3 bg-light"&gt;アイテム1&lt;/div&gt;
+  &lt;div class="p-3 bg-light"&gt;アイテム2&lt;/div&gt;
+  &lt;div class="p-3 bg-light"&gt;アイテム3&lt;/div&gt;
+  &lt;div class="p-3 bg-light"&gt;アイテム4&lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>レスポンシブな画像（img-fluid）</h3>
+        <p>画像をレスポンシブ対応にするには <code>img-fluid</code> クラスを使います。このクラスは画像に <code>max-width: 100%</code> と <code>height: auto</code> を適用し、親要素の幅に合わせて自動的に縮小されるようにします。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!-- 基本的なレスポンシブ画像 --&gt;
+&lt;img src="hero.jpg" class="img-fluid" alt="ヒーロー画像"&gt;
+
+&lt;!-- 角丸のレスポンシブ画像 --&gt;
+&lt;img src="photo.jpg" class="img-fluid rounded" alt="写真"&gt;
+
+&lt;!-- サムネイル風の画像 --&gt;
+&lt;img src="thumb.jpg" class="img-thumbnail" alt="サムネイル"&gt;</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>クラス</th>
+                <th>効果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>img-fluid</td>
+                <td>max-width: 100% で親要素に合わせて縮小</td>
+              </tr>
+              <tr>
+                <td>img-thumbnail</td>
+                <td>ボーダー付きのサムネイルスタイル</td>
+              </tr>
+              <tr>
+                <td>rounded</td>
+                <td>角丸を追加</td>
+              </tr>
+              <tr>
+                <td>rounded-circle</td>
+                <td>丸い画像にする</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="highlight-box">
+          <h4>img-fluid の注意点</h4>
+          <p>img-fluid は画像を「縮小」はしますが「拡大」はしません。元の画像サイズ以上には大きくならないため、大きな表示エリアで使う場合は十分なサイズの画像を用意しましょう。また、Webパフォーマンスのためにsrcset属性での画像の出し分けも検討してください。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Section 9-4 -->
+    <!-- ============================================================ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-4</span>
+        <h2 class="section-title">実践：カフェサイトのレスポンシブ対応</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>作成するページの概要</h3>
+        <p>この実践では、カフェのメニューページをレスポンシブ対応で作成します。以下の3つの表示パターンに対応させます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>デバイス</th>
+                <th>画面幅</th>
+                <th>レイアウト</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>PC</td>
+                <td>992px以上</td>
+                <td>3カラム表示</td>
+              </tr>
+              <tr>
+                <td>タブレット</td>
+                <td>768px〜991px</td>
+                <td>2カラム表示</td>
+              </tr>
+              <tr>
+                <td>スマートフォン</td>
+                <td>768px未満</td>
+                <td>1カラム表示</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>完成コード</h3>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;Cafe Mocha - メニュー&lt;/title&gt;
+  &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"&gt;
+  &lt;style&gt;
+    body { background-color: #f8f5f0; }
+    .hero {
+      background-color: #4a3728;
+      color: white;
+      padding: 3rem 0;
+      text-align: center;
+    }
+    .menu-card {
+      border: none;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.3s;
+    }
+    .menu-card:hover { transform: translateY(-4px); }
+    .menu-price { color: #4a3728; font-weight: bold; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+  &lt;!-- ヒーローセクション --&gt;
+  &lt;div class="hero"&gt;
+    &lt;div class="container"&gt;
+      &lt;!-- スマホでは小さめ、PCでは大きい見出し --&gt;
+      &lt;h1 class="display-5 display-md-3 fw-bold"&gt;Cafe Mocha&lt;/h1&gt;
+      &lt;!-- スマホでは非表示の説明文 --&gt;
+      &lt;p class="lead d-none d-md-block"&gt;
+        厳選された豆で淹れる、こだわりの一杯をお届けします
+      &lt;/p&gt;
+      &lt;p class="d-block d-md-none"&gt;こだわりの一杯&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- メニューセクション --&gt;
+  &lt;div class="container py-3 py-md-5"&gt;
+    &lt;h2 class="text-center mb-3 mb-md-4 fw-bold"&gt;MENU&lt;/h2&gt;
+
+    &lt;!-- レスポンシブグリッド: 1col → 2col → 3col --&gt;
+    &lt;div class="row g-3 g-md-4"&gt;
+
+      &lt;!-- カード1 --&gt;
+      &lt;div class="col-12 col-md-6 col-lg-4"&gt;
+        &lt;div class="card menu-card shadow-sm h-100"&gt;
+          &lt;img src="https://via.placeholder.com/400x250"
+               class="card-img-top" alt="ドリップコーヒー"&gt;
+          &lt;div class="card-body"&gt;
+            &lt;h5 class="card-title"&gt;ドリップコーヒー&lt;/h5&gt;
+            &lt;p class="card-text d-none d-md-block"&gt;
+              毎朝焙煎した新鮮な豆を、一杯ずつ丁寧にハンドドリップ。
+            &lt;/p&gt;
+            &lt;p class="menu-price fs-5"&gt;&amp;yen;450&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;!-- カード2 --&gt;
+      &lt;div class="col-12 col-md-6 col-lg-4"&gt;
+        &lt;div class="card menu-card shadow-sm h-100"&gt;
+          &lt;img src="https://via.placeholder.com/400x250"
+               class="card-img-top" alt="カフェラテ"&gt;
+          &lt;div class="card-body"&gt;
+            &lt;h5 class="card-title"&gt;カフェラテ&lt;/h5&gt;
+            &lt;p class="card-text d-none d-md-block"&gt;
+              エスプレッソとスチームミルクの絶妙なハーモニー。
+            &lt;/p&gt;
+            &lt;p class="menu-price fs-5"&gt;&amp;yen;520&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;!-- カード3 --&gt;
+      &lt;div class="col-12 col-md-6 col-lg-4"&gt;
+        &lt;div class="card menu-card shadow-sm h-100"&gt;
+          &lt;img src="https://via.placeholder.com/400x250"
+               class="card-img-top" alt="抹茶ラテ"&gt;
+          &lt;div class="card-body"&gt;
+            &lt;h5 class="card-title"&gt;抹茶ラテ&lt;/h5&gt;
+            &lt;p class="card-text d-none d-md-block"&gt;
+              京都産の高級抹茶を使用した、和と洋の融合ドリンク。
+            &lt;/p&gt;
+            &lt;p class="menu-price fs-5"&gt;&amp;yen;580&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;!-- カード4 --&gt;
+      &lt;div class="col-12 col-md-6 col-lg-4"&gt;
+        &lt;div class="card menu-card shadow-sm h-100"&gt;
+          &lt;img src="https://via.placeholder.com/400x250"
+               class="card-img-top" alt="チーズケーキ"&gt;
+          &lt;div class="card-body"&gt;
+            &lt;h5 class="card-title"&gt;チーズケーキ&lt;/h5&gt;
+            &lt;p class="card-text d-none d-md-block"&gt;
+              濃厚でなめらかな自家製ベイクドチーズケーキ。
+            &lt;/p&gt;
+            &lt;p class="menu-price fs-5"&gt;&amp;yen;480&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;!-- カード5 --&gt;
+      &lt;div class="col-12 col-md-6 col-lg-4"&gt;
+        &lt;div class="card menu-card shadow-sm h-100"&gt;
+          &lt;img src="https://via.placeholder.com/400x250"
+               class="card-img-top" alt="スコーン"&gt;
+          &lt;div class="card-body"&gt;
+            &lt;h5 class="card-title"&gt;スコーン&lt;/h5&gt;
+            &lt;p class="card-text d-none d-md-block"&gt;
+              毎朝焼き上げるサクサクのプレーンスコーン。
+            &lt;/p&gt;
+            &lt;p class="menu-price fs-5"&gt;&amp;yen;350&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;!-- カード6 --&gt;
+      &lt;div class="col-12 col-md-6 col-lg-4"&gt;
+        &lt;div class="card menu-card shadow-sm h-100"&gt;
+          &lt;img src="https://via.placeholder.com/400x250"
+               class="card-img-top" alt="季節のパフェ"&gt;
+          &lt;div class="card-body"&gt;
+            &lt;h5 class="card-title"&gt;季節のパフェ&lt;/h5&gt;
+            &lt;p class="card-text d-none d-md-block"&gt;
+              旬のフルーツをふんだんに使った贅沢パフェ。
+            &lt;/p&gt;
+            &lt;p class="menu-price fs-5"&gt;&amp;yen;780&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- フッター --&gt;
+  &lt;footer class="bg-dark text-white text-center py-3 py-md-4"&gt;
+    &lt;p class="mb-0"&gt;&amp;copy; 2025 Cafe Mocha. All rights reserved.&lt;/p&gt;
+  &lt;/footer&gt;
+
+  &lt;script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>コードのポイント解説</h3>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>使用テクニック</th>
+                <th>該当クラス</th>
+                <th>効果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>レスポンシブグリッド</td>
+                <td>col-12 col-md-6 col-lg-4</td>
+                <td>1列 → 2列 → 3列の切り替え</td>
+              </tr>
+              <tr>
+                <td>レスポンシブスペーシング</td>
+                <td>py-3 py-md-5, g-3 g-md-4</td>
+                <td>画面サイズに応じた余白調整</td>
+              </tr>
+              <tr>
+                <td>コンテンツの出し分け</td>
+                <td>d-none d-md-block</td>
+                <td>スマホでは説明文を非表示</td>
+              </tr>
+              <tr>
+                <td>高さ揃え</td>
+                <td>h-100</td>
+                <td>カードの高さを揃える</td>
+              </tr>
+              <tr>
+                <td>レスポンシブ画像</td>
+                <td>card-img-top（内部でimg-fluid相当）</td>
+                <td>画像の自動リサイズ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Chrome DevToolsでのレスポンシブ確認方法</h3>
+        <p>作成したページのレスポンシブ表示を確認するには、Chrome DevToolsのデバイスモードが便利です。</p>
+
+        <h4>デバイスモードの開き方</h4>
+        <ol>
+          <li>Chromeでページを開く</li>
+          <li><strong>F12キー</strong>（またはCtrl + Shift + I / Cmd + Option + I）でDevToolsを開く</li>
+          <li>DevTools左上の<strong>デバイスアイコン</strong>（スマホとタブレットのアイコン）をクリック</li>
+          <li>上部のドロップダウンからデバイスを選択、またはサイズを手動入力</li>
+        </ol>
+
+        <div class="highlight-box">
+          <h4>確認すべきポイント</h4>
+          <p>以下の画面幅でレイアウトが正しく切り替わるか確認しましょう。</p>
+          <ul>
+            <li><strong>375px</strong>（iPhone SE）- 1カラム表示になるか</li>
+            <li><strong>768px</strong>（iPad）- 2カラム表示に切り替わるか</li>
+            <li><strong>1024px</strong>（ノートPC）- 3カラム表示になるか</li>
+            <li>各ブレイクポイントの境界（576px, 768px, 992px, 1200px）でレイアウト崩れがないか</li>
+          </ul>
+        </div>
+
+        <h4>レスポンシブモードでよく使うデバイスプリセット</h4>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>デバイス名</th>
+                <th>画面幅</th>
+                <th>対応ブレイクポイント</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>iPhone SE</td>
+                <td>375px</td>
+                <td>xs（576px未満）</td>
+              </tr>
+              <tr>
+                <td>iPhone 12 Pro</td>
+                <td>390px</td>
+                <td>xs（576px未満）</td>
+              </tr>
+              <tr>
+                <td>iPad Mini</td>
+                <td>768px</td>
+                <td>md（768px以上）</td>
+              </tr>
+              <tr>
+                <td>iPad Air</td>
+                <td>820px</td>
+                <td>md（768px以上）</td>
+              </tr>
+              <tr>
+                <td>Nest Hub</td>
+                <td>1024px</td>
+                <td>lg（992px以上）</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- まとめ -->
+    <!-- ============================================================ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第9章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>レスポンシブデザイン</td>
+                <td>1つのHTMLであらゆる画面サイズに対応するデザイン手法</td>
+              </tr>
+              <tr>
+                <td>モバイルファースト</td>
+                <td>スマホを基準に設計し、画面が大きくなるにつれてレイアウトを拡張する考え方</td>
+              </tr>
+              <tr>
+                <td>ブレイクポイント</td>
+                <td>xs / sm(576px) / md(768px) / lg(992px) / xl(1200px) / xxl(1400px)</td>
+              </tr>
+              <tr>
+                <td>表示切替</td>
+                <td>d-none / d-md-block などで画面サイズ別に表示・非表示を制御</td>
+              </tr>
+              <tr>
+                <td>レスポンシブスペーシング</td>
+                <td>p-2 p-md-4 のようにブレイクポイント付きで余白を調整</td>
+              </tr>
+              <tr>
+                <td>レスポンシブFlexbox</td>
+                <td>flex-column flex-md-row で縦横の切り替えが可能</td>
+              </tr>
+              <tr>
+                <td>レスポンシブ画像</td>
+                <td>img-fluid で親要素に合わせた自動リサイズ</td>
+              </tr>
+              <tr>
+                <td>確認方法</td>
+                <td>Chrome DevTools のデバイスモードで各画面幅をシミュレーション</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="8bs-utilities.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">ユーティリティクラス</div>
+    </a>
+    <a href="10bs-cards.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">カードレイアウト</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>Bootstrap入門 - 職業訓練校教材</p>
+  </footer>
+
+  <script src="../../shared/demo.js"></script>
+</body>
+</html>

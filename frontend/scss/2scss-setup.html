@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第2章 環境構築と基本的な使い方 - SCSS入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #CF649A;
+      --primary-dark: #B5507F;
+      --primary-light: #FDF2F7;
+      --primary-lighter: #F5D0E0;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-scss.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">SCSS入門</div>
+      <div class="chapter-number">2</div>
+      <h1 class="chapter-title">環境構築と基本的な使い方</h1>
+      <p class="chapter-subtitle">SCSSの開発環境を準備しよう</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">1</span>SCSSのコンパイルとは</li>
+        <li class="toc-item"><span class="toc-number">2</span>VS Code拡張機能での環境構築</li>
+        <li class="toc-item"><span class="toc-number">3</span>npmでの環境構築</li>
+        <li class="toc-item"><span class="toc-number">4</span>ファイル構成の基本</li>
+        <li class="toc-item"><span class="toc-number">5</span>最初のSCSSファイルを書いてみよう</li>
+      </ul>
+    </nav>
+
+    <!-- Section 2-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-1</span>
+        <h2 class="section-title">SCSSのコンパイルとは</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>コンパイルの仕組み</h3>
+        <p>第1章で学んだ通り、ブラウザはSCSSを直接理解できません。<br>
+        SCSSで書いたコードを、ブラウザが理解できるCSSに変換する作業を<strong>「コンパイル」</strong>と呼びます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">コンパイルの流れ</span>
+          </div>
+          <div class="code-content">
+            <pre>【開発者が書くファイル】          【自動生成されるファイル】
+style.scss          ─────→        style.css
+                   コンパイル
+                  （自動変換）</pre>
+          </div>
+        </div>
+
+        <p>具体的なコード例で見てみましょう。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（style.scss）- 開発者が書くコード</span>
+          </div>
+          <div class="code-content">
+            <pre>$main-color: #CF649A;
+$font-size-base: 16px;
+
+.header {
+  background-color: $main-color;
+  padding: 20px;
+
+  h1 {
+    font-size: $font-size-base * 1.5;
+    color: white;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（style.css）- コンパイル後に自動生成</span>
+          </div>
+          <div class="code-content">
+            <pre>.header {
+  background-color: #CF649A;
+  padding: 20px;
+}
+.header h1 {
+  font-size: 24px;
+  color: white;
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">ポイント</div>
+          <div class="info-box-content">
+            <p>コンパイル後のCSSを見ると、変数（$main-color）は実際の値に、ネストは通常のセレクタに、演算（$font-size-base * 1.5）は計算結果に変換されていることが分かります。HTMLから読み込むのは、この生成されたCSSファイルです。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>コンパイル方法の選択肢</h3>
+        <p>SCSSをコンパイルする方法はいくつかあります。この章では代表的な2つの方法を紹介します。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>方法</th>
+                <th>難易度</th>
+                <th>特徴</th>
+                <th>おすすめ対象</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>VS Code拡張機能</strong></td>
+                <td>簡単</td>
+                <td>拡張機能をインストールするだけ。GUIで操作</td>
+                <td>初学者・手軽に始めたい方</td>
+              </tr>
+              <tr>
+                <td><strong>npm（コマンドライン）</strong></td>
+                <td>やや難しい</td>
+                <td>Node.jsの知識が必要。細かい設定が可能</td>
+                <td>実務・チーム開発</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>まずはVS Code拡張機能で手軽に始め、慣れてきたらnpmを使う方法に移行するのがおすすめです。</p>
+      </div>
+    </section>
+
+    <!-- Section 2-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-2</span>
+        <h2 class="section-title">VS Code拡張機能での環境構築</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>Live Sass Compilerのインストール</h3>
+        <p>VS Codeの拡張機能「<strong>Live Sass Compiler</strong>」を使えば、SCSSファイルを保存するたびに自動でCSSにコンパイルしてくれます。</p>
+
+        <p><strong>インストール手順：</strong></p>
+        <ol>
+          <li>VS Codeを開く</li>
+          <li>左サイドバーの拡張機能アイコン（四角が4つのアイコン）をクリック</li>
+          <li>検索ボックスに「<strong>Live Sass Compiler</strong>」と入力</li>
+          <li>「<strong>Live Sass Compiler</strong>」（作者：Glenn Marks）をインストール</li>
+        </ol>
+
+        <div class="warning-box">
+          <div class="warning-box-title">注意：正しい拡張機能を選ぶ</div>
+          <div class="warning-box-content">
+            <p>「Live Sass Compiler」には複数のバージョンが存在します。作者が「<strong>Glenn Marks</strong>」のものを選んでください。古いバージョン（作者：Ritwick Dey）はメンテナンスされていません。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>設定方法</h3>
+        <p>インストール後、VS Codeの設定ファイル（settings.json）でコンパイルの出力先を指定できます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">settings.json（VS Code設定）</span>
+          </div>
+          <div class="code-content">
+            <pre>{
+  "liveSassCompile.settings.formats": [
+    {
+      "format": "expanded",
+      "extensionName": ".css",
+      "savePath": "/css"
+    }
+  ],
+  "liveSassCompile.settings.excludeList": [
+    "**/node_modules/**"
+  ]
+}</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>設定項目</th>
+                <th>説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>format</td>
+                <td>"expanded"（読みやすい形式）または "compressed"（圧縮形式）を指定</td>
+              </tr>
+              <tr>
+                <td>extensionName</td>
+                <td>出力ファイルの拡張子（通常は .css）</td>
+              </tr>
+              <tr>
+                <td>savePath</td>
+                <td>CSSファイルの出力先フォルダ（"/css" なら css フォルダに出力）</td>
+              </tr>
+              <tr>
+                <td>excludeList</td>
+                <td>コンパイル対象から除外するフォルダ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Watch Sassの使い方</h3>
+        <p>拡張機能をインストールすると、VS Codeの画面下部のステータスバーに「<strong>Watch Sass</strong>」というボタンが表示されます。</p>
+
+        <ol>
+          <li>SCSSファイルを開いた状態で、ステータスバーの「<strong>Watch Sass</strong>」をクリック</li>
+          <li>ボタンが「<strong>Watching...</strong>」に変わり、監視モードが開始される</li>
+          <li>SCSSファイルを編集・保存するたびに、自動でCSSが生成される</li>
+          <li>停止するには、もう一度「Watching...」をクリック</li>
+        </ol>
+
+        <div class="info-box">
+          <div class="info-box-title">補足</div>
+          <div class="info-box-content">
+            <p>「Watch（ウォッチ）」とは「監視する」という意味です。SCSSファイルの変更を監視し、変更が検知されると自動的にコンパイルを実行してくれます。開発中は常にWatch状態にしておくのが一般的です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-3</span>
+        <h2 class="section-title">npmでの環境構築</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>前提条件</h3>
+        <p>npmを使ったSCSSの環境構築には、Node.jsがインストールされている必要があります。<br>
+        ターミナル（コマンドプロンプト）で以下のコマンドを実行して、インストール状況を確認しましょう。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">ターミナル</span>
+          </div>
+          <div class="code-content">
+            <pre>node -v
+# 例：v20.11.0
+
+npm -v
+# 例：10.2.4</pre>
+          </div>
+        </div>
+
+        <p>バージョン番号が表示されれば、Node.jsとnpmはインストール済みです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>sassパッケージのインストール</h3>
+        <p>プロジェクトフォルダで以下のコマンドを実行します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">ターミナル</span>
+          </div>
+          <div class="code-content">
+            <pre># プロジェクトフォルダで初期化（初回のみ）
+npm init -y
+
+# sassパッケージをインストール
+npm install sass --save-dev</pre>
+          </div>
+        </div>
+
+        <p><code>--save-dev</code> はこのパッケージが開発用であることを示すオプションです。<br>
+        インストールが完了すると、package.json の devDependencies に sass が追加されます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>コンパイルコマンド</h3>
+        <p>インストール後、以下のコマンドでSCSSをCSSにコンパイルできます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">ターミナル - 単発コンパイル</span>
+          </div>
+          <div class="code-content">
+            <pre># 基本形：npx sass 入力ファイル 出力ファイル
+npx sass scss/style.scss css/style.css</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">ターミナル - 監視モード（--watch）</span>
+          </div>
+          <div class="code-content">
+            <pre># --watch オプションで変更を自動検知してコンパイル
+npx sass --watch scss/style.scss css/style.css</pre>
+          </div>
+        </div>
+
+        <p><code>--watch</code> オプションを付けると、VS Codeの拡張機能と同様にファイルの変更を監視し、<br>
+        保存のたびに自動でコンパイルが実行されます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>package.jsonへのscripts登録</h3>
+        <p>毎回長いコマンドを打つのは大変なので、package.jsonのscriptsに登録しておくと便利です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">package.json</span>
+          </div>
+          <div class="code-content">
+            <pre>{
+  "name": "my-project",
+  "version": "1.0.0",
+  "scripts": {
+    "sass": "sass scss/style.scss css/style.css",
+    "sass:watch": "sass --watch scss/style.scss css/style.css",
+    "sass:build": "sass scss/style.scss css/style.css --style=compressed"
+  },
+  "devDependencies": {
+    "sass": "^1.77.0"
+  }
+}</pre>
+          </div>
+        </div>
+
+        <p>登録後は、短いコマンドで実行できるようになります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">ターミナル</span>
+          </div>
+          <div class="code-content">
+            <pre># 単発コンパイル
+npm run sass
+
+# 監視モード（開発中はこれを使う）
+npm run sass:watch
+
+# 圧縮して出力（本番用）
+npm run sass:build</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>スクリプト名</th>
+                <th>用途</th>
+                <th>出力形式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>sass</td>
+                <td>1回だけコンパイル</td>
+                <td>expanded（読みやすい）</td>
+              </tr>
+              <tr>
+                <td>sass:watch</td>
+                <td>ファイル変更を監視して自動コンパイル</td>
+                <td>expanded（読みやすい）</td>
+              </tr>
+              <tr>
+                <td>sass:build</td>
+                <td>本番環境用に圧縮してコンパイル</td>
+                <td>compressed（圧縮）</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">expanded と compressed の違い</div>
+          <div class="info-box-content">
+            <p><strong>expanded</strong>：人間が読みやすいように整形されたCSS。開発中はこちらを使います。<br>
+            <strong>compressed</strong>：改行やスペースを削除して1行に圧縮されたCSS。ファイルサイズが小さくなるため、本番環境で使います。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-4</span>
+        <h2 class="section-title">ファイル構成の基本</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>.scss と .css の関係</h3>
+        <p>SCSSのプロジェクトでは、ソースファイル（.scss）と出力ファイル（.css）を別のフォルダに整理するのが一般的です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">基本的なフォルダ構成</span>
+          </div>
+          <div class="code-content">
+            <pre>my-project/
+├── index.html
+├── scss/               ← SCSSファイルを格納（ソース）
+│   └── style.scss
+├── css/                ← CSSファイルが出力される（自動生成）
+│   ├── style.css
+│   └── style.css.map
+├── package.json
+└── node_modules/</pre>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">重要：CSSファイルは直接編集しない</div>
+          <div class="warning-box-content">
+            <p>css/ フォルダ内のファイルはコンパイルで自動生成されるものです。直接編集してはいけません。次にコンパイルされたときに上書きされて変更が消えてしまいます。スタイルの変更は必ず scss/ フォルダ内の .scss ファイルで行いましょう。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ソースマップ（.css.map）ファイルとは</h3>
+        <p>コンパイルすると、CSSファイルと一緒に <code>.css.map</code> というファイルが生成されます。<br>
+        これは<strong>ソースマップ</strong>と呼ばれるファイルで、ブラウザの開発者ツール（DevTools）で非常に役立ちます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ファイル名</td>
+                <td>style.css.map（CSSファイル名 + .map）</td>
+              </tr>
+              <tr>
+                <td>役割</td>
+                <td>CSSの各行が、元のSCSSファイルのどの行に対応するかを記録</td>
+              </tr>
+              <tr>
+                <td>メリット</td>
+                <td>DevToolsで要素を検証したとき、CSSではなくSCSSのファイル名と行番号が表示される</td>
+              </tr>
+              <tr>
+                <td>本番環境</td>
+                <td>ソースマップは不要。--no-source-map オプションで生成を無効にできる</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">DevToolsでの活用</div>
+          <div class="info-box-content">
+            <p>ソースマップがあると、ブラウザのDevToolsでスタイルを確認する際に「style.scss:15」のように、元のSCSSファイルの行番号が表示されます。これにより、大規模なプロジェクトでも修正すべきSCSSファイルの場所をすぐに特定できます。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>HTMLからの読み込み</h3>
+        <p>HTMLファイルから読み込むのは、コンパイルされた<strong>CSSファイル</strong>です。SCSSファイルではありません。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!-- 正しい：コンパイル済みのCSSを読み込む --&gt;
+&lt;link rel="stylesheet" href="css/style.css"&gt;
+
+&lt;!-- 間違い：SCSSは直接読み込めない --&gt;
+&lt;!-- &lt;link rel="stylesheet" href="scss/style.scss"&gt; --&gt;</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-5</span>
+        <h2 class="section-title">最初のSCSSファイルを書いてみよう</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>プロジェクトの準備</h3>
+        <p>実際にSCSSを使ったプロジェクトを作ってみましょう。<br>
+        以下のフォルダ構成でファイルを用意します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">フォルダ構成</span>
+          </div>
+          <div class="code-content">
+            <pre>scss-practice/
+├── index.html
+└── scss/
+    └── style.scss</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>SCSSファイルを書く</h3>
+        <p>まずは簡単なSCSSコードを書いてみましょう。変数とネストを使います。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（scss/style.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// === 変数の定義 ===
+$bg-color: #f5f5f5;
+$text-color: #333;
+$primary-color: #CF649A;
+$border-radius: 8px;
+
+// === ベーススタイル ===
+body {
+  background-color: $bg-color;
+  color: $text-color;
+  font-family: "Noto Sans JP", sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+
+// === ヘッダー ===
+.header {
+  background-color: $primary-color;
+  color: white;
+  padding: 20px;
+  border-radius: $border-radius;
+  text-align: center;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+  }
+
+  p {
+    margin: 8px 0 0;
+    opacity: 0.9;
+  }
+}
+
+// === カード ===
+.card {
+  background: white;
+  border-radius: $border-radius;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    color: $primary-color;
+    margin-top: 0;
+  }
+
+  p {
+    line-height: 1.8;
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>コンパイルして確認</h3>
+        <p>Watch Sass（VS Code拡張機能）または <code>npx sass</code> コマンドでコンパイルします。<br>
+        すると、以下のようなCSSファイルが自動生成されます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（css/style.css）- 自動生成</span>
+          </div>
+          <div class="code-content">
+            <pre>body {
+  background-color: #f5f5f5;
+  color: #333;
+  font-family: "Noto Sans JP", sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+
+.header {
+  background-color: #CF649A;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+.header p {
+  margin: 8px 0 0;
+  opacity: 0.9;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.card h2 {
+  color: #CF649A;
+  margin-top: 0;
+}
+.card p {
+  line-height: 1.8;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>HTMLファイルの作成</h3>
+        <p>生成されたCSSを読み込むHTMLファイルを作成します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML（index.html）</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;SCSS練習&lt;/title&gt;
+  &lt;!-- コンパイル済みのCSSを読み込む --&gt;
+  &lt;link rel="stylesheet" href="css/style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="header"&gt;
+    &lt;h1&gt;SCSSで作ったページ&lt;/h1&gt;
+    &lt;p&gt;変数とネストを使っています&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;div class="card"&gt;
+    &lt;h2&gt;SCSSの特徴&lt;/h2&gt;
+    &lt;p&gt;SCSSを使うと、CSSをより効率的に書くことができます。
+    変数で色やサイズを管理し、ネストで構造を分かりやすくできます。&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </div>
+        </div>
+
+        <p>ブラウザで index.html を開くと、SCSSで指定したスタイルが適用されたページが表示されます。<br>
+        これでSCSSの基本的なワークフロー（SCSS記述 → コンパイル → ブラウザ表示）が体験できました。</p>
+
+        <div class="info-box">
+          <div class="info-box-title">開発の流れ</div>
+          <div class="info-box-content">
+            <p>実際の開発では、以下のサイクルを繰り返します。<br>
+            <strong>1.</strong> SCSSファイルを編集 → <strong>2.</strong> 保存（自動コンパイル） → <strong>3.</strong> ブラウザで確認 → <strong>1.</strong> に戻る<br>
+            Watch機能を使えば、保存するだけでCSSが更新されるため、非常にスムーズに開発を進められます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第2章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>コンパイル</strong>とは、SCSSをブラウザが理解できるCSSに変換する処理のこと</li>
+          <li><strong>VS Code拡張機能</strong>（Live Sass Compiler）を使えば、手軽にSCSSのコンパイル環境を構築できる</li>
+          <li><strong>npm</strong>で sass パッケージをインストールすれば、コマンドラインからコンパイルできる</li>
+          <li><strong>--watch</strong> オプションを使うと、ファイルの変更を監視して自動コンパイルされる</li>
+          <li>package.json の <strong>scripts</strong> にコマンドを登録しておくと便利</li>
+          <li>SCSSファイルと出力CSSファイルは<strong>別フォルダ</strong>に整理するのが基本</li>
+          <li><strong>ソースマップ</strong>（.css.map）があると、DevToolsでSCSSの行番号を確認できる</li>
+          <li>HTMLから読み込むのはコンパイル済みの<strong>CSSファイル</strong>（SCSSファイルではない）</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="1scss-intro.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">SCSSとは</div>
+    </a>
+    <a href="3scss-variables-nesting.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">変数とネスト</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>SCSS入門 - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第3章 変数とネスト - SCSS入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #CF649A;
+      --primary-dark: #B5507F;
+      --primary-light: #FDF2F7;
+      --primary-lighter: #F5D0E0;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-scss.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">SCSS入門</div>
+      <div class="chapter-number">3</div>
+      <h1 class="chapter-title">変数とネスト</h1>
+      <p class="chapter-subtitle">SCSSの基本機能を使いこなす</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">1</span>変数（$variables）</li>
+        <li class="toc-item"><span class="toc-number">2</span>ネスト（Nesting）</li>
+        <li class="toc-item"><span class="toc-number">3</span>親セレクタ参照（&amp;）</li>
+        <li class="toc-item"><span class="toc-number">4</span>変数とネストの実践例</li>
+      </ul>
+    </nav>
+
+    <!-- Section 3-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-1</span>
+        <h2 class="section-title">変数（$variables）</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>$変数の宣言と使用</h3>
+        <p>SCSSでは、<code>$</code>（ドルマーク）を先頭に付けて変数を宣言します。<br>
+        プログラミング言語の変数と同じように、値に名前を付けて管理することができます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - 変数の基本</span>
+          </div>
+          <div class="code-content">
+            <pre>// 変数の宣言（$変数名: 値;）
+$primary-color: #CF649A;
+$font-size-base: 16px;
+$spacing: 20px;
+
+// 変数の使用
+.button {
+  background-color: $primary-color;
+  font-size: $font-size-base;
+  padding: $spacing;
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.button {
+  background-color: #CF649A;
+  font-size: 16px;
+  padding: 20px;
+}</pre>
+          </div>
+        </div>
+
+        <p>コンパイルされると、変数は実際の値に置き換えられます。<br>
+        変数はコンパイル時に処理されるため、出力されるCSSに変数は残りません。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>よく変数化する値</h3>
+        <p>実務では、以下のような値を変数として定義するのが一般的です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - 実務でよく使う変数</span>
+          </div>
+          <div class="code-content">
+            <pre>// --- カラー ---
+$primary: #CF649A;
+$secondary: #6C757D;
+$success: #28A745;
+$danger: #DC3545;
+$warning: #FFC107;
+$text-color: #333333;
+$text-light: #666666;
+$bg-color: #F5F5F5;
+$white: #FFFFFF;
+
+// --- フォントサイズ ---
+$font-size-sm: 12px;
+$font-size-base: 16px;
+$font-size-lg: 20px;
+$font-size-xl: 24px;
+
+// --- スペーシング ---
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+// --- ボーダー ---
+$border-radius: 4px;
+$border-radius-lg: 8px;
+$border-color: #E0E0E0;
+
+// --- フォントファミリー ---
+$font-family-base: "Noto Sans JP", "Hiragino Sans", sans-serif;
+$font-family-mono: "JetBrains Mono", monospace;</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">命名のコツ</div>
+          <div class="info-box-content">
+            <p>変数名は「役割」で名付けるのがベストプラクティスです。<br>
+            <strong>良い例：</strong>$primary-color, $text-color, $spacing-lg<br>
+            <strong>避けたい例：</strong>$pink, $gray333, $twenty（具体的な値を名前にすると、値を変更したときに名前と合わなくなります）</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>変数のスコープ</h3>
+        <p>SCSSの変数には<strong>グローバルスコープ</strong>と<strong>ローカルスコープ</strong>があります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - スコープの例</span>
+          </div>
+          <div class="code-content">
+            <pre>// グローバル変数（どこからでも使える）
+$color: blue;
+
+.header {
+  // ローカル変数（この { } の中でのみ有効）
+  $color: red;
+  color: $color;  // → red
+}
+
+.footer {
+  color: $color;  // → blue（グローバル変数が使われる）
+}</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>スコープ</th>
+                <th>宣言場所</th>
+                <th>使える範囲</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>グローバル</td>
+                <td>セレクタの外（ファイルの直下）</td>
+                <td>ファイル全体</td>
+              </tr>
+              <tr>
+                <td>ローカル</td>
+                <td>セレクタの { } の中</td>
+                <td>そのセレクタの中だけ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>SCSS変数とCSS変数（カスタムプロパティ）の違い</h3>
+        <p>CSSにも「CSS変数（カスタムプロパティ）」という仕組みがあります。<br>
+        SCSS変数とCSS変数は似ているようで、実は大きく異なります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS変数</span>
+          </div>
+          <div class="code-content">
+            <pre>// SCSS変数（コンパイル時に値に置換される）
+$primary: #CF649A;
+
+.button {
+  background-color: $primary;
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS変数（カスタムプロパティ）</span>
+          </div>
+          <div class="code-content">
+            <pre>/* CSS変数（ブラウザ上で動的に参照される） */
+:root {
+  --primary: #CF649A;
+}
+
+.button {
+  background-color: var(--primary);
+}</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>SCSS変数（$variable）</th>
+                <th>CSS変数（--variable）</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>処理タイミング</td>
+                <td>コンパイル時（ビルド時）</td>
+                <td>実行時（ブラウザ上）</td>
+              </tr>
+              <tr>
+                <td>出力CSS</td>
+                <td>実際の値に置換される（変数は残らない）</td>
+                <td>var(--name) のまま残る</td>
+              </tr>
+              <tr>
+                <td>JavaScript操作</td>
+                <td>できない</td>
+                <td>できる（動的に変更可能）</td>
+              </tr>
+              <tr>
+                <td>演算</td>
+                <td>可能（コンパイル時に計算）</td>
+                <td>calc() を使えば可能</td>
+              </tr>
+              <tr>
+                <td>カスケード</td>
+                <td>なし（単純な値の置換）</td>
+                <td>あり（セレクタに応じて値が変わる）</td>
+              </tr>
+              <tr>
+                <td>使い分け</td>
+                <td>固定値の管理に最適</td>
+                <td>テーマ切り替え等の動的変更に最適</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">使い分けのポイント</div>
+          <div class="info-box-content">
+            <p>SCSS変数とCSS変数は併用できます。例えば、SCSS変数で定義した値をCSS変数に代入するというパターンもよく使われます。<br>
+            <code>:root { --primary: #{$primary}; }</code> のように書くことで、両方の利点を活かせます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-2</span>
+        <h2 class="section-title">ネスト（Nesting）</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>基本的なネスト記法</h3>
+        <p>SCSSでは、セレクタを入れ子（ネスト）にして書くことができます。<br>
+        HTMLの構造に合わせてCSSを整理できるため、コードの見通しが良くなります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;nav class="nav"&gt;
+  &lt;ul class="nav-list"&gt;
+    &lt;li class="nav-item"&gt;
+      &lt;a href="#"&gt;ホーム&lt;/a&gt;
+    &lt;/li&gt;
+    &lt;li class="nav-item"&gt;
+      &lt;a href="#"&gt;サービス&lt;/a&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - ネストを使った書き方</span>
+          </div>
+          <div class="code-content">
+            <pre>.nav {
+  background-color: #333;
+  padding: 10px;
+
+  .nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+  }
+
+  .nav-item {
+    margin-right: 20px;
+
+    a {
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+    }
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>コンパイル結果</h3>
+        <p>ネストされたSCSSがどのようなCSSに変換されるか確認しましょう。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.nav {
+  background-color: #333;
+  padding: 10px;
+}
+.nav .nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+.nav .nav-item {
+  margin-right: 20px;
+}
+.nav .nav-item a {
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+}</pre>
+          </div>
+        </div>
+
+        <p>SCSSのネストは、コンパイル時に親セレクタを連結した通常のCSSセレクタに展開されます。<br>
+        <code>.nav { .nav-item { a { } } }</code> は <code>.nav .nav-item a</code> になります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>ネストの深さに注意</h3>
+        <p>ネストは便利ですが、深くしすぎると問題が発生します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - 悪い例：深すぎるネスト</span>
+          </div>
+          <div class="code-content">
+            <pre>// 悪い例：5階層のネスト
+.page {
+  .main {
+    .content {
+      .article {
+        .text {
+          color: #333;  // → .page .main .content .article .text
+        }
+      }
+    }
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - 良い例：3階層以内</span>
+          </div>
+          <div class="code-content">
+            <pre>// 良い例：3階層以内に収める
+.article {
+  padding: 20px;
+
+  .text {
+    color: #333;
+    line-height: 1.8;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">ネストは3階層までが推奨</div>
+          <div class="warning-box-content">
+            <p>ネストが深くなりすぎると、以下の問題が生じます。<br>
+            <strong>1. 詳細度が高くなりすぎる：</strong>CSSの優先度が不必要に高くなり、スタイルの上書きが困難になります。<br>
+            <strong>2. 可読性の低下：</strong>どのセレクタがどの要素に対応するか分かりにくくなります。<br>
+            <strong>3. パフォーマンス：</strong>セレクタが長いとブラウザの処理がわずかに遅くなります。<br>
+            目安として<strong>3階層以内</strong>に収めるようにしましょう。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-3</span>
+        <h2 class="section-title">親セレクタ参照（&amp;）</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>&amp;の基本的な使い方</h3>
+        <p>SCSSでは <code>&amp;</code>（アンパサンド）を使って、親セレクタを参照できます。<br>
+        これはネストの中で非常によく使う重要な機能です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - &amp;の基本</span>
+          </div>
+          <div class="code-content">
+            <pre>.button {
+  background-color: #CF649A;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+
+  // &amp; = 親セレクタ（.button）を参照
+  &amp;:hover {
+    background-color: #B5507F;
+  }
+
+  &amp;:active {
+    background-color: #9A3D6A;
+  }
+
+  &amp;:focus {
+    outline: 2px solid #CF649A;
+    outline-offset: 2px;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.button {
+  background-color: #CF649A;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+.button:hover {
+  background-color: #B5507F;
+}
+.button:active {
+  background-color: #9A3D6A;
+}
+.button:focus {
+  outline: 2px solid #CF649A;
+  outline-offset: 2px;
+}</pre>
+          </div>
+        </div>
+
+        <p><code>&amp;</code> は「ネストの外側にある親セレクタそのもの」に置き換えられます。<br>
+        <code>&amp;:hover</code> は <code>.button:hover</code> になります（間にスペースは入りません）。</p>
+
+        <div class="info-box">
+          <div class="info-box-title">&amp;あり と &amp;なし の違い</div>
+          <div class="info-box-content">
+            <p><code>&amp;:hover</code> → <code>.button:hover</code>（スペースなしで直結。同じ要素の擬似クラス）<br>
+            <code>:hover</code>（&amp;なし） → <code>.button :hover</code>（スペースが入る。子孫要素の擬似クラス）<br>
+            擬似クラス（:hover, :focus等）には必ず <code>&amp;</code> を付けてください。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>BEM記法での&amp;の活用</h3>
+        <p>BEM（Block Element Modifier）はCSS設計手法の1つで、<br>
+        <code>.block__element--modifier</code> の形式でクラス名を付ける方法です。<br>
+        SCSSの <code>&amp;</code> はBEM記法と非常に相性が良いです。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - BEM記法での&amp;の活用</span>
+          </div>
+          <div class="code-content">
+            <pre>// Block: card
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  // Element: card__title
+  &amp;__title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+
+  // Element: card__text
+  &amp;__text {
+    color: #666;
+    line-height: 1.6;
+  }
+
+  // Element: card__button
+  &amp;__button {
+    background-color: #CF649A;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+
+    &amp;:hover {
+      background-color: #B5507F;
+    }
+  }
+
+  // Modifier: card--featured
+  &amp;--featured {
+    border: 2px solid #CF649A;
+  }
+
+  // Modifier: card--large
+  &amp;--large {
+    padding: 32px;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.card__title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+.card__text {
+  color: #666;
+  line-height: 1.6;
+}
+.card__button {
+  background-color: #CF649A;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+}
+.card__button:hover {
+  background-color: #B5507F;
+}
+.card--featured {
+  border: 2px solid #CF649A;
+}
+.card--large {
+  padding: 32px;
+}</pre>
+          </div>
+        </div>
+
+        <p><code>&amp;__title</code> は <code>.card__title</code> に展開されます。<br>
+        <code>&amp;</code> が親セレクタ <code>.card</code> に置換され、そのまま <code>__title</code> が連結される仕組みです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>メディアクエリでの&amp;の活用</h3>
+        <p>SCSSでは、メディアクエリもセレクタの中にネストできます。<br>
+        これにより、レスポンシブ対応のコードが非常に見やすくなります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - メディアクエリのネスト</span>
+          </div>
+          <div class="code-content">
+            <pre>.container {
+  width: 100%;
+  padding: 16px;
+
+  // タブレット以上
+  @media (min-width: 768px) {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  // デスクトップ以上
+  @media (min-width: 1024px) {
+    max-width: 960px;
+    padding: 32px;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.container {
+  width: 100%;
+  padding: 16px;
+}
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+}
+@media (min-width: 1024px) {
+  .container {
+    max-width: 960px;
+    padding: 32px;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">メディアクエリのネストのメリット</div>
+          <div class="info-box-content">
+            <p>通常のCSSでは、メディアクエリをファイルの末尾にまとめて書くことが多く、同じセレクタのスタイルが分散してしまいます。SCSSではセレクタの中にメディアクエリをネストできるため、1つの要素に関するすべてのスタイルを1箇所にまとめて管理できます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-4</span>
+        <h2 class="section-title">変数とネストの実践例</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>ナビゲーションバーの実装</h3>
+        <p>実践的な例として、ナビゲーションバーをSCSSで実装してみましょう。<br>
+        変数、ネスト、&amp; のすべてを使います。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - ナビゲーションバー</span>
+          </div>
+          <div class="code-content">
+            <pre>// 変数の定義
+$nav-bg: #1a1a2e;
+$nav-text: #e0e0e0;
+$nav-hover: #CF649A;
+$nav-height: 60px;
+$nav-padding: 0 24px;
+
+.navbar {
+  background-color: $nav-bg;
+  height: $nav-height;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $nav-padding;
+
+  // ロゴ
+  &amp;__logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    text-decoration: none;
+
+    &amp;:hover {
+      color: $nav-hover;
+    }
+  }
+
+  // メニューリスト
+  &amp;__menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 24px;
+  }
+
+  // メニュー項目
+  &amp;__link {
+    color: $nav-text;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 8px 0;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+
+    &amp;:hover {
+      color: $nav-hover;
+      border-bottom-color: $nav-hover;
+    }
+
+    &amp;--active {
+      color: white;
+      border-bottom-color: $nav-hover;
+    }
+  }
+
+  // レスポンシブ対応
+  @media (max-width: 768px) {
+    padding: 0 16px;
+
+    &amp;__menu {
+      gap: 16px;
+    }
+
+    &amp;__link {
+      font-size: 12px;
+    }
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.navbar {
+  background-color: #1a1a2e;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+.navbar__logo {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+.navbar__logo:hover {
+  color: #CF649A;
+}
+.navbar__menu {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 24px;
+}
+.navbar__link {
+  color: #e0e0e0;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 8px 0;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+.navbar__link:hover {
+  color: #CF649A;
+  border-bottom-color: #CF649A;
+}
+.navbar__link--active {
+  color: white;
+  border-bottom-color: #CF649A;
+}
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 16px;
+  }
+  .navbar__menu {
+    gap: 16px;
+  }
+  .navbar__link {
+    font-size: 12px;
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ボタンコンポーネントの実装</h3>
+        <p>バリエーションのあるボタンコンポーネントを、変数とネストを活用して実装します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - ボタンコンポーネント</span>
+          </div>
+          <div class="code-content">
+            <pre>// カラー変数
+$btn-primary: #CF649A;
+$btn-secondary: #6C757D;
+$btn-success: #28A745;
+$btn-danger: #DC3545;
+$btn-radius: 6px;
+
+.btn {
+  display: inline-block;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  border: none;
+  border-radius: $btn-radius;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  // プライマリーボタン
+  &amp;--primary {
+    background-color: $btn-primary;
+    color: white;
+
+    &amp;:hover {
+      background-color: darken($btn-primary, 10%);
+    }
+  }
+
+  // セカンダリーボタン
+  &amp;--secondary {
+    background-color: $btn-secondary;
+    color: white;
+
+    &amp;:hover {
+      background-color: darken($btn-secondary, 10%);
+    }
+  }
+
+  // サクセスボタン
+  &amp;--success {
+    background-color: $btn-success;
+    color: white;
+
+    &amp;:hover {
+      background-color: darken($btn-success, 10%);
+    }
+  }
+
+  // サイズバリエーション
+  &amp;--small {
+    padding: 6px 16px;
+    font-size: 12px;
+  }
+
+  &amp;--large {
+    padding: 14px 32px;
+    font-size: 16px;
+  }
+
+  // 無効状態
+  &amp;:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">darken() 関数について</div>
+          <div class="info-box-content">
+            <p>上のコードで使われている <code>darken($color, $amount)</code> はSCSSの組み込み関数です。指定した色を暗くすることができます。これにより、hover時の色を手動で指定する必要がなくなります。関数の詳細は第7章で学びます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第3章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>$変数</strong>を使うと、色・サイズ・フォントなどの値を一元管理でき、変更が1箇所で済む</li>
+          <li>変数名は具体的な値（$pinkなど）ではなく、<strong>役割</strong>（$primary-colorなど）で命名するのがベスト</li>
+          <li>SCSS変数はコンパイル時に値に置換され、CSS変数はブラウザ上で動的に参照される</li>
+          <li><strong>ネスト</strong>を使うと、HTMLの構造に合わせてCSSを階層的に書ける</li>
+          <li>ネストは<strong>3階層以内</strong>に収めるのが推奨。深すぎると詳細度の問題が発生する</li>
+          <li><strong>&amp;（アンパサンド）</strong>で親セレクタを参照でき、:hoverや:focusなどの擬似クラスに必須</li>
+          <li>&amp;はBEM記法（&amp;__element, &amp;--modifier）と相性が非常に良い</li>
+          <li><strong>メディアクエリ</strong>もセレクタ内にネストでき、レスポンシブ対応のコードを1箇所にまとめられる</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="2scss-setup.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">環境構築と基本的な使い方</div>
+    </a>
+    <a href="4scss-mixins.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">ミックスイン</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>SCSS入門 - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

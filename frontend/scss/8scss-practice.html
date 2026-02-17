@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第8章 実践プロジェクト - SCSS入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #CF649A;
+      --primary-dark: #B5507F;
+      --primary-light: #FDF2F7;
+      --primary-lighter: #F5D0E0;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-scss.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">SCSS入門</div>
+      <div class="chapter-number">8</div>
+      <h1 class="chapter-title">実践プロジェクト</h1>
+      <p class="chapter-subtitle">総合演習で実務力を身につける</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">8-1</span>ボタンシステムの構築</li>
+        <li class="toc-item"><span class="toc-number">8-2</span>カラーテーマの実装</li>
+        <li class="toc-item"><span class="toc-number">8-3</span>レスポンシブGridシステム</li>
+        <li class="toc-item"><span class="toc-number">8-4</span>プロジェクトのファイル構成</li>
+      </ul>
+    </nav>
+
+    <!-- Section 8-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-1</span>
+        <h2 class="section-title">ボタンシステムの構築</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>これまで学んだ変数、ミックスイン、@each ループを組み合わせて、実務で使えるボタンコンポーネントシステムを構築します。カラーバリエーションとサイズバリエーションを自動生成する仕組みを作りましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>変数でカラーパレット定義</h3>
+        <p>まず、ボタンのカラーバリエーションに使う色をマップで定義します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（_variables.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// ボタンカラーパレット
+$btn-colors: (
+  "primary":   #CF649A,
+  "secondary": #6c757d,
+  "danger":    #e74c3c,
+  "success":   #2ecc71
+);
+
+// ボタンサイズ
+$btn-sizes: (
+  "sm": (
+    "padding": 6px 14px,
+    "font-size": 12px,
+    "border-radius": 4px
+  ),
+  "md": (
+    "padding": 10px 24px,
+    "font-size": 14px,
+    "border-radius": 6px
+  ),
+  "lg": (
+    "padding": 14px 32px,
+    "font-size": 16px,
+    "border-radius": 8px
+  )
+);</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>@mixinでボタン基本スタイル</h3>
+        <p>ボタンの基本スタイルと、カラー・サイズを適用するミックスインを定義します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（_mixins.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// ボタン基本スタイル
+@mixin btn-base {
+  display: inline-block;
+  border: none;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease,
+              transform 0.1s ease,
+              box-shadow 0.2s ease;
+
+  &amp;:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &amp;:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  &amp;:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+// カラー適用ミックスイン
+@mixin btn-color($color) {
+  background-color: $color;
+  color: white;
+
+  &amp;:hover {
+    background-color: darken($color, 8%);
+  }
+
+  &amp;:active {
+    background-color: darken($color, 12%);
+  }
+}
+
+// サイズ適用ミックスイン
+@mixin btn-size($size-map) {
+  padding: map-get($size-map, "padding");
+  font-size: map-get($size-map, "font-size");
+  border-radius: map-get($size-map, "border-radius");
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>@eachでバリエーション自動生成</h3>
+        <p>ループを使って、すべてのカラーとサイズのバリエーションを自動生成します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（_buttons.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>@use 'variables' as v;
+@use 'mixins' as m;
+
+// 基本ボタンクラス
+.btn {
+  @include m.btn-base;
+  // デフォルトサイズはmd
+  @include m.btn-size(map-get(v.$btn-sizes, "md"));
+}
+
+// カラーバリエーション生成
+// .btn-primary, .btn-secondary, .btn-danger, .btn-success
+@each $name, $color in v.$btn-colors {
+  .btn-#{$name} {
+    @include m.btn-color($color);
+  }
+}
+
+// サイズバリエーション生成
+// .btn-sm, .btn-md, .btn-lg
+@each $name, $size-map in v.$btn-sizes {
+  .btn-#{$name} {
+    @include m.btn-size($size-map);
+  }
+}
+
+// アウトラインバリエーション
+@each $name, $color in v.$btn-colors {
+  .btn-outline-#{$name} {
+    background-color: transparent;
+    color: $color;
+    border: 2px solid $color;
+
+    &amp;:hover {
+      background-color: $color;
+      color: white;
+    }
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>コンパイル結果CSS</h3>
+        <p>上記のSCSSがコンパイルされると、以下のようなCSSが生成されます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.btn {
+  display: inline-block;
+  border: none;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease,
+              transform 0.1s ease,
+              box-shadow 0.2s ease;
+  padding: 10px 24px;
+  font-size: 14px;
+  border-radius: 6px;
+}
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: #CF649A;
+  color: white;
+}
+.btn-primary:hover {
+  background-color: #c04787;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+.btn-secondary:hover {
+  background-color: #585f65;
+}
+
+.btn-danger {
+  background-color: #e74c3c;
+  color: white;
+}
+.btn-danger:hover {
+  background-color: #d62c1a;
+}
+
+.btn-success {
+  background-color: #2ecc71;
+  color: white;
+}
+.btn-success:hover {
+  background-color: #25a25a;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.btn-lg {
+  padding: 14px 32px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+/* アウトラインバリエーション */
+.btn-outline-primary {
+  background-color: transparent;
+  color: #CF649A;
+  border: 2px solid #CF649A;
+}
+.btn-outline-primary:hover {
+  background-color: #CF649A;
+  color: white;
+}
+/* ... 他のアウトラインも同様 */</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">HTMLでの使い方</div>
+          <div class="info-box-content">
+            <p>生成されたボタンクラスはBootstrapと同じ感覚で組み合わせて使えます。<br>
+            <code>&lt;button class="btn btn-primary"&gt;送信&lt;/button&gt;</code><br>
+            <code>&lt;button class="btn btn-danger btn-lg"&gt;削除&lt;/button&gt;</code><br>
+            <code>&lt;button class="btn btn-outline-primary btn-sm"&gt;詳細&lt;/button&gt;</code></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 8-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-2</span>
+        <h2 class="section-title">カラーテーマの実装</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>テーマ用変数マップ</h3>
+        <p>ライトテーマとダークテーマの色をマップで管理します。すべてのテーマカラーを一箇所で定義することで、一貫性のあるデザインを実現できます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（_themes.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// テーマカラーの定義
+$themes: (
+  "light": (
+    "bg-primary":    #ffffff,
+    "bg-secondary":  #f8f9fa,
+    "text-primary":  #212529,
+    "text-secondary": #6c757d,
+    "border":        #dee2e6,
+    "shadow":        rgba(0, 0, 0, 0.08),
+    "accent":        #CF649A,
+    "accent-hover":  #B5507F
+  ),
+  "dark": (
+    "bg-primary":    #1a1a2e,
+    "bg-secondary":  #16213e,
+    "text-primary":  #eee,
+    "text-secondary": #adb5bd,
+    "border":        #2d3748,
+    "shadow":        rgba(0, 0, 0, 0.3),
+    "accent":        #e88ab9,
+    "accent-hover":  #CF649A
+  )
+);</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>@mixinでテーマ適用</h3>
+        <p>テーマカラーをCSS変数として出力するミックスインを作成します。CSS変数（カスタムプロパティ）を使うことで、JavaScriptからテーマを動的に切り替えることも可能になります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// テーマカラーをCSS変数として出力
+@mixin apply-theme($theme-name) {
+  $theme: map-get($themes, $theme-name);
+
+  @each $key, $value in $theme {
+    --color-#{$key}: #{$value};
+  }
+}
+
+// ライトテーマ（デフォルト）
+:root {
+  @include apply-theme("light");
+}
+
+// ダークテーマ（data属性で切り替え）
+[data-theme="dark"] {
+  @include apply-theme("dark");
+}
+
+// prefers-color-scheme 対応
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    @include apply-theme("dark");
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>実践コード例</h3>
+        <p>CSS変数を使ってコンポーネントのスタイルを定義します。テーマが切り替わると、CSS変数の値が変わり、スタイルが自動的に更新されます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（テーマ対応コンポーネント）</span>
+          </div>
+          <div class="code-content">
+            <pre>// テーマ対応のカードコンポーネント
+.card {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px var(--color-shadow);
+
+  &amp;__title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  &amp;__body {
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+  }
+
+  &amp;__footer {
+    border-top: 1px solid var(--color-border);
+    padding-top: 16px;
+    margin-top: 16px;
+  }
+}
+
+// ナビゲーション
+.navbar {
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  padding: 12px 24px;
+
+  &amp;__link {
+    color: var(--color-text-primary);
+    text-decoration: none;
+
+    &amp;:hover {
+      color: var(--color-accent);
+    }
+
+    &amp;--active {
+      color: var(--color-accent);
+      font-weight: 600;
+    }
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>:root {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8f9fa;
+  --color-text-primary: #212529;
+  --color-text-secondary: #6c757d;
+  --color-border: #dee2e6;
+  --color-shadow: rgba(0, 0, 0, 0.08);
+  --color-accent: #CF649A;
+  --color-accent-hover: #B5507F;
+}
+
+[data-theme="dark"] {
+  --color-bg-primary: #1a1a2e;
+  --color-bg-secondary: #16213e;
+  --color-text-primary: #eee;
+  --color-text-secondary: #adb5bd;
+  --color-border: #2d3748;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+  --color-accent: #e88ab9;
+  --color-accent-hover: #CF649A;
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">テーマ切り替えの仕組み</div>
+          <div class="info-box-content">
+            <p>JavaScriptで <code>document.documentElement.setAttribute('data-theme', 'dark')</code> を実行するだけでテーマが切り替わります。SCSS側はCSS変数の定義を出力するだけで、切り替えロジックはJavaScriptに任せるのが一般的なパターンです。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 8-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-3</span>
+        <h2 class="section-title">レスポンシブGridシステム</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>ブレークポイント変数</h3>
+        <p>レスポンシブ対応のためのブレークポイントをマップで管理します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>@use 'sass:math';
+
+// ブレークポイント
+$breakpoints: (
+  "sm": 576px,
+  "md": 768px,
+  "lg": 992px,
+  "xl": 1200px
+);
+
+// グリッド設定
+$grid-columns: 12;
+$grid-gutter: 24px;
+$container-max-width: 1200px;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>グリッドミックスイン</h3>
+        <p>レスポンシブ対応のためのミックスインを定義します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// メディアクエリミックスイン
+@mixin respond-to($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (min-width: map-get($breakpoints, $breakpoint)) {
+      @content;
+    }
+  } @else {
+    @warn "ブレークポイント '#{$breakpoint}' は定義されていません。";
+  }
+}
+
+// コンテナ
+.container {
+  width: 100%;
+  max-width: $container-max-width;
+  margin: 0 auto;
+  padding: 0 math.div($grid-gutter, 2);
+}
+
+// 行（Flexbox）
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 math.div(-$grid-gutter, 2);
+}
+
+// カラムの基本スタイル
+%col-base {
+  padding: 0 math.div($grid-gutter, 2);
+  width: 100%;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>@forでカラムクラス自動生成</h3>
+        <p>12カラムのグリッドクラスを <code>@for</code> ループで自動生成します。各ブレークポイント用のクラスも一括で作成します。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS</span>
+          </div>
+          <div class="code-content">
+            <pre>// 基本カラムクラス（.col-1 〜 .col-12）
+@for $i from 1 through $grid-columns {
+  .col-#{$i} {
+    @extend %col-base;
+    width: percentage(math.div($i, $grid-columns));
+  }
+}
+
+// レスポンシブカラムクラス
+// .col-sm-1 〜 .col-sm-12
+// .col-md-1 〜 .col-md-12
+// .col-lg-1 〜 .col-lg-12
+// .col-xl-1 〜 .col-xl-12
+@each $bp-name, $bp-value in $breakpoints {
+  @media (min-width: $bp-value) {
+    @for $i from 1 through $grid-columns {
+      .col-#{$bp-name}-#{$i} {
+        width: percentage(math.div($i, $grid-columns));
+      }
+    }
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果の一部）</span>
+          </div>
+          <div class="code-content">
+            <pre>/* 基本カラム */
+.col-1  { width: 8.3333333333%; }
+.col-2  { width: 16.6666666667%; }
+.col-3  { width: 25%; }
+.col-4  { width: 33.3333333333%; }
+.col-6  { width: 50%; }
+.col-12 { width: 100%; }
+
+/* mdブレークポイント */
+@media (min-width: 768px) {
+  .col-md-4 { width: 33.3333333333%; }
+  .col-md-6 { width: 50%; }
+  .col-md-8 { width: 66.6666666667%; }
+  /* ... */
+}
+
+/* lgブレークポイント */
+@media (min-width: 992px) {
+  .col-lg-3 { width: 25%; }
+  .col-lg-4 { width: 33.3333333333%; }
+  .col-lg-6 { width: 50%; }
+  /* ... */
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>レスポンシブ対応の使用例</h3>
+        <p>生成されたグリッドクラスをHTMLで使用する例です。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTML</span>
+          </div>
+          <div class="code-content">
+            <pre>&lt;div class="container"&gt;
+  &lt;div class="row"&gt;
+    &lt;!-- モバイル: 全幅、タブレット: 半分、PC: 1/3 --&gt;
+    &lt;div class="col-12 col-md-6 col-lg-4"&gt;
+      &lt;div class="card"&gt;カード1&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="col-12 col-md-6 col-lg-4"&gt;
+      &lt;div class="card"&gt;カード2&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="col-12 col-md-6 col-lg-4"&gt;
+      &lt;div class="card"&gt;カード3&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">Bootstrapとの比較</div>
+          <div class="info-box-content">
+            <p>この仕組みはBootstrapのグリッドシステムと同じ考え方です。Bootstrapを使う場合はこのコードは不要ですが、自前で軽量なグリッドシステムを作りたい場合に、SCSSのループ機能が強力に活きます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 8-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-4</span>
+        <h2 class="section-title">プロジェクトのファイル構成</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>全体のフォルダツリー</h3>
+        <p>ここまでの実践プロジェクトを、実務で使えるファイル構成にまとめます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">フォルダ構成</span>
+          </div>
+          <div class="code-content">
+            <pre>project/
+├── index.html
+├── css/
+│   └── main.css              ← コンパイル出力先
+├── scss/
+│   ├── abstracts/
+│   │   ├── _index.scss       ← @forward でまとめる
+│   │   ├── _variables.scss   ← 変数・カラーパレット・ブレークポイント
+│   │   ├── _mixins.scss      ← ミックスイン（ボタン・レスポンシブ等）
+│   │   └── _functions.scss   ← カスタム関数（rem変換等）
+│   ├── base/
+│   │   ├── _index.scss
+│   │   ├── _reset.scss       ← リセットCSS
+│   │   └── _typography.scss  ← 基本タイポグラフィ
+│   ├── components/
+│   │   ├── _index.scss
+│   │   ├── _buttons.scss     ← ボタンシステム
+│   │   ├── _cards.scss       ← カードコンポーネント
+│   │   └── _forms.scss       ← フォーム要素
+│   ├── layout/
+│   │   ├── _index.scss
+│   │   ├── _grid.scss        ← Gridシステム
+│   │   ├── _header.scss      ← ヘッダー
+│   │   └── _footer.scss      ← フッター
+│   ├── themes/
+│   │   ├── _index.scss
+│   │   └── _themes.scss      ← ライト/ダークテーマ
+│   └── main.scss             ← エントリーポイント
+└── js/
+    └── theme-toggle.js       ← テーマ切り替えスクリプト</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>各ファイルの役割説明</h3>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>フォルダ/ファイル</th>
+                <th>役割</th>
+                <th>内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>abstracts/</code></td>
+                <td>設定・ユーティリティ</td>
+                <td>変数、ミックスイン、関数。CSS出力を持たない。</td>
+              </tr>
+              <tr>
+                <td><code>base/</code></td>
+                <td>基礎スタイル</td>
+                <td>リセットCSS、html/body、見出し、リンクの基本スタイル。</td>
+              </tr>
+              <tr>
+                <td><code>components/</code></td>
+                <td>UI部品</td>
+                <td>ボタン、カード、フォームなど再利用可能なパーツ。</td>
+              </tr>
+              <tr>
+                <td><code>layout/</code></td>
+                <td>ページ骨格</td>
+                <td>グリッド、ヘッダー、フッターなどレイアウト構造。</td>
+              </tr>
+              <tr>
+                <td><code>themes/</code></td>
+                <td>テーマ</td>
+                <td>ライト/ダークモードのCSS変数定義。</td>
+              </tr>
+              <tr>
+                <td><code>main.scss</code></td>
+                <td>エントリーポイント</td>
+                <td>すべてのパーシャルを@useで読み込むだけのファイル。</td>
+              </tr>
+              <tr>
+                <td><code>_index.scss</code></td>
+                <td>中継ファイル</td>
+                <td>各フォルダ内のパーシャルを@forwardでまとめる。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>main.scssでの@use読み込み順</h3>
+        <p>エントリーポイントでは、依存関係を考慮した順序でモジュールを読み込みます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（main.scss）</span>
+          </div>
+          <div class="code-content">
+            <pre>// main.scss
+// ========================================
+// プロジェクトのエントリーポイント
+// 読み込み順序:
+//   1. abstracts → CSS出力なし（変数・ミックスイン・関数）
+//   2. base      → リセット・タイポグラフィ（最も基本的なスタイル）
+//   3. layout    → ページの骨格（グリッド・ヘッダー・フッター）
+//   4. components → UI部品（ボタン・カード・フォーム）
+//   5. themes    → テーマの上書き（最後に読み込んで優先させる）
+// ========================================
+
+@use 'abstracts';
+@use 'base';
+@use 'layout';
+@use 'components';
+@use 'themes';</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（abstracts/_index.scss の例）</span>
+          </div>
+          <div class="code-content">
+            <pre>// abstracts/_index.scss
+@forward 'variables';
+@forward 'mixins';
+@forward 'functions';</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（components/_index.scss の例）</span>
+          </div>
+          <div class="code-content">
+            <pre>// components/_index.scss
+@forward 'buttons';
+@forward 'cards';
+@forward 'forms';</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ビルドフロー</h3>
+        <p>SCSSからCSSへのコンパイルと、実際の開発ワークフローをまとめます。</p>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #3498db;">
+              <span class="material-icons" style="color: white;">edit</span>
+            </div>
+            <div class="feature-content">
+              <h4>1. SCSSファイルを編集</h4>
+              <p>各パーシャルファイルでスタイルを記述・修正する。main.scssは基本的に変更しない。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #e67e22;">
+              <span class="material-icons" style="color: white;">build</span>
+            </div>
+            <div class="feature-content">
+              <h4>2. コンパイル</h4>
+              <p>VS CodeのLive Sass Compiler、またはCLIで <code>sass scss/main.scss css/main.css</code> を実行。<code>--watch</code> オプションで自動コンパイルも可能。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #2ecc71;">
+              <span class="material-icons" style="color: white;">compress</span>
+            </div>
+            <div class="feature-content">
+              <h4>3. 本番用に圧縮</h4>
+              <p><code>sass scss/main.scss css/main.css --style=compressed</code> で圧縮版を出力。ファイルサイズを最小化する。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" style="background: #9b59b6;">
+              <span class="material-icons" style="color: white;">cloud_upload</span>
+            </div>
+            <div class="feature-content">
+              <h4>4. デプロイ</h4>
+              <p>コンパイル済みのCSSファイルだけを本番サーバーにアップロード。SCSSファイルはデプロイ不要。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">ターミナル（コンパイルコマンド）</span>
+          </div>
+          <div class="code-content">
+            <pre># 開発中（watchモード）
+sass --watch scss/main.scss:css/main.css
+
+# 本番ビルド（圧縮）
+sass scss/main.scss css/main.css --style=compressed
+
+# ソースマップ付きビルド（デバッグ用）
+sass scss/main.scss css/main.css --source-map</pre>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">本番環境での注意</div>
+          <div class="warning-box-content">
+            <p>本番環境には<strong>コンパイル済みのCSSファイルのみ</strong>をデプロイします。SCSSファイルやsource mapファイルは開発用であり、本番サーバーにアップロードする必要はありません。<code>--style=compressed</code> オプションで圧縮することで、ファイルサイズを大幅に削減できます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第8章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>ボタンシステム</strong>：マップ + @each ループで、カラー・サイズ・アウトラインのバリエーションを自動生成。少ないコードで多くのクラスを管理できる。</li>
+          <li><strong>カラーテーマ</strong>：テーマカラーをマップで定義し、@mixin でCSS変数として出力。<code>data-theme</code> 属性でライト/ダーク切り替えが実現できる。</li>
+          <li><strong>Gridシステム</strong>：@for ループで .col-1〜.col-12 を自動生成。各ブレークポイント用のレスポンシブクラスも一括生成。</li>
+          <li><strong>ファイル構成</strong>：abstracts / base / components / layout / themes のフォルダ分けで管理。各フォルダに _index.scss を置いて @forward でまとめる。</li>
+          <li><strong>ビルドフロー</strong>：開発時は watch モード、本番は compressed で出力。CSSファイルのみデプロイする。</li>
+          <li>SCSSの機能を組み合わせることで、<strong>保守性が高く、拡張しやすい</strong>CSS設計が実現できる。</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="7scss-functions.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">関数・演算・制御構文</div>
+    </a>
+    <a href="index.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">SCSS入門トップ</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>SCSS入門 - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

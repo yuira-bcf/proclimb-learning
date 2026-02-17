@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第1章 SCSSとは - SCSS入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #CF649A;
+      --primary-dark: #B5507F;
+      --primary-light: #FDF2F7;
+      --primary-lighter: #F5D0E0;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-scss.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">SCSS入門</div>
+      <div class="chapter-number">1</div>
+      <h1 class="chapter-title">SCSSとは</h1>
+      <p class="chapter-subtitle">CSSを拡張するプリプロセッサ</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">1</span>CSSプリプロセッサとは</li>
+        <li class="toc-item"><span class="toc-number">2</span>SassとSCSSの違い</li>
+        <li class="toc-item"><span class="toc-number">3</span>SCSSのメリット</li>
+        <li class="toc-item"><span class="toc-number">4</span>SCSSの公式ドキュメント</li>
+      </ul>
+    </nav>
+
+    <!-- Section 1-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 1-1</span>
+        <h2 class="section-title">CSSプリプロセッサとは</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>プリプロセッサの概念</h3>
+        <p>CSSプリプロセッサとは、CSSを拡張した言語で書いたコードを、通常のCSSに変換（コンパイル）する仕組みのことです。<br>
+        「プリ（pre = 前もって）」＋「プロセッサ（processor = 処理装置）」という名前の通り、<br>
+        ブラウザが読み込む前の段階で処理を行い、最終的にCSSファイルを生成します。</p>
+
+        <p>基本的な流れは以下の通りです。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">コンパイルの流れ</span>
+          </div>
+          <div class="code-content">
+            <pre>SCSSファイル（.scss）
+    ↓  コンパイル（自動変換）
+CSSファイル（.css）
+    ↓  ブラウザが読み込み
+Webページに反映</pre>
+          </div>
+        </div>
+
+        <p>つまり、開発者はSCSSで効率よくスタイルを書き、<br>
+        コンパイラが自動的に通常のCSSに変換してくれるという仕組みです。<br>
+        ブラウザはSCSSを直接理解できないため、必ずCSSへの変換が必要になります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>なぜプリプロセッサが必要なのか</h3>
+        <p>CSSは非常に強力なスタイリング言語ですが、大規模なプロジェクトになると次のような課題が出てきます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>CSSの課題</th>
+                <th>具体的な問題</th>
+                <th>プリプロセッサの解決策</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>値の繰り返し</td>
+                <td>同じ色コードやサイズを何十箇所にも書く必要がある</td>
+                <td>変数（$variable）で一元管理</td>
+              </tr>
+              <tr>
+                <td>セレクタの冗長さ</td>
+                <td>親子関係のセレクタを毎回フルパスで書く必要がある</td>
+                <td>ネスト記法で階層構造を表現</td>
+              </tr>
+              <tr>
+                <td>再利用の困難さ</td>
+                <td>同じパターンのスタイルをコピー&ペーストで使い回す</td>
+                <td>ミックスイン（@mixin）で再利用可能に</td>
+              </tr>
+              <tr>
+                <td>ファイル管理の煩雑さ</td>
+                <td>1つの巨大CSSファイルが管理しづらい</td>
+                <td>パーシャル（ファイル分割）で整理</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">ポイント</div>
+          <div class="info-box-content">
+            <p>プリプロセッサは「CSSをより効率的に書くための拡張ツール」です。最終的に出力されるのは通常のCSSなので、ブラウザ側の互換性を心配する必要はありません。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>代表的なCSSプリプロセッサ</h3>
+        <p>CSSプリプロセッサにはいくつかの種類がありますが、代表的なものは以下の3つです。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>プリプロセッサ</th>
+                <th>拡張子</th>
+                <th>特徴</th>
+                <th>シェア</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Sass / SCSS</strong></td>
+                <td>.sass / .scss</td>
+                <td>最も普及。機能が豊富でコミュニティが大きい</td>
+                <td>最も高い</td>
+              </tr>
+              <tr>
+                <td>Less</td>
+                <td>.less</td>
+                <td>Bootstrap 3で採用されていた。JavaScriptベース</td>
+                <td>中程度</td>
+              </tr>
+              <tr>
+                <td>Stylus</td>
+                <td>.styl</td>
+                <td>柔軟な記法。Node.jsベース</td>
+                <td>低い</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>現在の業界では<strong>Sass（SCSS記法）</strong>が圧倒的なシェアを持っており、<br>
+        多くのフレームワークやプロジェクトで採用されています。<br>
+        このチュートリアルでは、最も広く使われているSCSSについて学んでいきます。</p>
+      </div>
+    </section>
+
+    <!-- Section 1-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 1-2</span>
+        <h2 class="section-title">SassとSCSSの違い</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>2つの構文</h3>
+        <p>「Sass」というプリプロセッサには、実は2つの書き方（構文）が存在します。<br>
+        よく混同されますが、この2つの違いを正確に理解しておきましょう。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Sass（インデント構文）</th>
+                <th>SCSS（Sassy CSS）</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>拡張子</td>
+                <td>.sass</td>
+                <td>.scss</td>
+              </tr>
+              <tr>
+                <td>波括弧 { }</td>
+                <td>不要（インデントで表現）</td>
+                <td>必要（CSSと同じ）</td>
+              </tr>
+              <tr>
+                <td>セミコロン ;</td>
+                <td>不要</td>
+                <td>必要（CSSと同じ）</td>
+              </tr>
+              <tr>
+                <td>CSS互換性</td>
+                <td>なし</td>
+                <td>あり（CSSをそのまま書ける）</td>
+              </tr>
+              <tr>
+                <td>登場時期</td>
+                <td>2006年（先に登場）</td>
+                <td>2010年（後から追加）</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>コードの比較</h3>
+        <p>同じスタイルを、Sass構文とSCSS構文で書くとこのようになります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Sass（.sass）- インデント構文</span>
+          </div>
+          <div class="code-content">
+            <pre>$primary-color: #CF649A
+
+.header
+  background-color: $primary-color
+  padding: 20px
+
+  .title
+    font-size: 24px
+    color: white</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS（.scss）- CSS互換構文</span>
+          </div>
+          <div class="code-content">
+            <pre>$primary-color: #CF649A;
+
+.header {
+  background-color: $primary-color;
+  padding: 20px;
+
+  .title {
+    font-size: 24px;
+    color: white;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <p>どちらもコンパイルすると、まったく同じCSSが出力されます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（出力結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.header {
+  background-color: #CF649A;
+  padding: 20px;
+}
+.header .title {
+  font-size: 24px;
+  color: white;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>現在はSCSSが主流</h3>
+        <p>現在のWeb開発では、SCSS構文が圧倒的に主流です。その理由は次の通りです。</p>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon"><span class="material-icons">check_circle</span></div>
+            <div class="feature-content">
+              <h4>CSS互換性</h4>
+              <p>既存のCSSコードをそのままSCSSファイルにコピーしても動作します。移行コストがゼロです。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><span class="material-icons">check_circle</span></div>
+            <div class="feature-content">
+              <h4>学習コストが低い</h4>
+              <p>CSSを知っていれば、SCSSの基本構文は既に理解しているのと同じです。新しい機能だけ覚えればOKです。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><span class="material-icons">check_circle</span></div>
+            <div class="feature-content">
+              <h4>情報量が多い</h4>
+              <p>ドキュメント、チュートリアル、Stack Overflowの回答など、SCSS記法での情報が最も多く見つかります。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">注意</div>
+          <div class="warning-box-content">
+            <p>「Sass」という名前はプリプロセッサ全体の名称としても使われます。そのため、「Sass」と言っているがSCSS構文を指している場合が多くあります。本チュートリアルでは「SCSS」と表記して、SCSS構文（.scss）を使用していきます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 1-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 1-3</span>
+        <h2 class="section-title">SCSSのメリット</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>SCSSの4つの主要機能</h3>
+        <p>SCSSには、CSSをより効率的に書くための強力な機能が備わっています。<br>
+        ここでは代表的な4つの機能を紹介します（各機能の詳細は後の章で学びます）。</p>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon"><span class="material-icons">palette</span></div>
+            <div class="feature-content">
+              <h4>変数（Variables）</h4>
+              <p>色やサイズなどの値を変数として定義し、一元管理できます。値の変更が1箇所で済むため、保守性が大幅に向上します。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><span class="material-icons">account_tree</span></div>
+            <div class="feature-content">
+              <h4>ネスト（Nesting）</h4>
+              <p>HTMLの構造に合わせてCSSセレクタを入れ子にできます。親子関係が視覚的に分かりやすくなり、コードの可読性が向上します。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><span class="material-icons">recycling</span></div>
+            <div class="feature-content">
+              <h4>ミックスイン（Mixins）</h4>
+              <p>よく使うスタイルのパターンをテンプレート化し、何度でも再利用できます。引数を渡してカスタマイズすることも可能です。</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><span class="material-icons">folder_open</span></div>
+            <div class="feature-content">
+              <h4>ファイル分割（Partials）</h4>
+              <p>スタイルを複数のファイルに分割して管理できます。コンパイル時に1つのCSSファイルにまとめられるため、保守性と可読性が両立します。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>CSSとSCSSの比較</h3>
+        <p>同じデザインを実現するために、CSSとSCSSでどれだけコードが違うか比較してみましょう。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS - 従来の書き方</span>
+          </div>
+          <div class="code-content">
+            <pre>.card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card .card-title {
+  font-size: 20px;
+  color: #333333;
+  margin-bottom: 12px;
+}
+
+.card .card-text {
+  font-size: 14px;
+  color: #666666;
+  line-height: 1.6;
+}
+
+.card .card-button {
+  background-color: #CF649A;
+  color: #ffffff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.card .card-button:hover {
+  background-color: #B5507F;
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - 効率的な書き方</span>
+          </div>
+          <div class="code-content">
+            <pre>// 変数で色を一元管理
+$white: #ffffff;
+$text-dark: #333333;
+$text-light: #666666;
+$primary: #CF649A;
+$primary-dark: #B5507F;
+
+.card {
+  background-color: $white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  // ネストで親子関係を表現
+  .card-title {
+    font-size: 20px;
+    color: $text-dark;
+    margin-bottom: 12px;
+  }
+
+  .card-text {
+    font-size: 14px;
+    color: $text-light;
+    line-height: 1.6;
+  }
+
+  .card-button {
+    background-color: $primary;
+    color: $white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &amp;:hover {
+      background-color: $primary-dark;
+    }
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">比較のポイント</div>
+          <div class="info-box-content">
+            <p>SCSSでは変数で色を一元管理し、ネストでHTMLの構造を反映した見やすいコードを書けます。<br>
+            もし$primaryの色を変更したい場合、SCSSなら変数の値を1箇所変えるだけで済みますが、CSSでは使われている全箇所を手動で修正する必要があります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 1-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 1-4</span>
+        <h2 class="section-title">SCSSの公式ドキュメント</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>公式サイト</h3>
+        <p>Sass/SCSSの公式サイトは以下のURLです。英語で書かれていますが、学習を進める上で非常に重要なリソースです。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">公式サイト</span>
+          </div>
+          <div class="code-content">
+            <pre>https://sass-lang.com</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>主要なドキュメントページ</h3>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ページ</th>
+                <th>URL</th>
+                <th>内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ドキュメント トップ</td>
+                <td>sass-lang.com/documentation</td>
+                <td>全機能のリファレンス</td>
+              </tr>
+              <tr>
+                <td>Variables</td>
+                <td>sass-lang.com/documentation/variables</td>
+                <td>変数の使い方</td>
+              </tr>
+              <tr>
+                <td>Nesting</td>
+                <td>sass-lang.com/documentation/style-rules</td>
+                <td>ネストなどのスタイルルール</td>
+              </tr>
+              <tr>
+                <td>Mixins</td>
+                <td>sass-lang.com/documentation/at-rules/mixin</td>
+                <td>ミックスインの定義と使用</td>
+              </tr>
+              <tr>
+                <td>Modules (@use)</td>
+                <td>sass-lang.com/documentation/at-rules/use</td>
+                <td>モジュールシステム</td>
+              </tr>
+              <tr>
+                <td>Install</td>
+                <td>sass-lang.com/install</td>
+                <td>インストール方法</td>
+              </tr>
+              <tr>
+                <td>Playground</td>
+                <td>sass-lang.com/playground</td>
+                <td>ブラウザ上でSCSSを試せる</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">Playgroundを活用しよう</div>
+          <div class="info-box-content">
+            <p>公式サイトの「Playground」では、ブラウザ上でSCSSコードを入力し、リアルタイムでCSSへの変換結果を確認できます。環境構築なしでSCSSを試せるため、学習の際にぜひ活用してください。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>学習リソース</h3>
+        <p>公式サイト以外にも、SCSSを学ぶ際に役立つリソースがあります。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>リソース</th>
+                <th>種類</th>
+                <th>特徴</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Sass公式ガイド</td>
+                <td>ドキュメント</td>
+                <td>sass-lang.com/guide で基本を網羅的に学べる</td>
+              </tr>
+              <tr>
+                <td>MDN Web Docs</td>
+                <td>リファレンス</td>
+                <td>CSSの基礎知識の確認に最適（日本語あり）</td>
+              </tr>
+              <tr>
+                <td>Sass Playground</td>
+                <td>実行環境</td>
+                <td>ブラウザ上でSCSSを試せる公式ツール</td>
+              </tr>
+              <tr>
+                <td>CodePen</td>
+                <td>実行環境</td>
+                <td>SCSSに対応したオンラインエディタ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">注意：@import から @use への移行</div>
+          <div class="warning-box-content">
+            <p>古い記事やチュートリアルでは @import を使った書き方が紹介されていることがありますが、@import は現在非推奨（deprecated）です。新しいプロジェクトでは必ず @use を使用してください。本チュートリアルでも @use を使って解説していきます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第1章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>CSSプリプロセッサ</strong>は、CSSを拡張した言語で書いたコードを通常のCSSに変換する仕組みである</li>
+          <li><strong>SCSS</strong>は最も広く使われているCSSプリプロセッサで、CSS互換の構文を持つ</li>
+          <li>Sass（インデント構文）とSCSS（CSS互換構文）の2つの記法があり、現在は<strong>SCSS</strong>が主流である</li>
+          <li>SCSSの主要な機能は、<strong>変数</strong>・<strong>ネスト</strong>・<strong>ミックスイン</strong>・<strong>ファイル分割</strong>の4つ</li>
+          <li>SCSSで書いたコードは<strong>コンパイル</strong>してCSSに変換する必要がある（ブラウザはSCSSを直接読めない）</li>
+          <li>公式サイト（sass-lang.com）の<strong>Playground</strong>でブラウザ上からSCSSを試すことができる</li>
+          <li>古い記事の @import ではなく、新しい<strong>@use</strong>を使うこと</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="index.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">SCSS入門</div>
+    </a>
+    <a href="2scss-setup.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">環境構築と基本的な使い方</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>SCSS入門 - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

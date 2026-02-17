@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第4章 ミックスイン - SCSS入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #CF649A;
+      --primary-dark: #B5507F;
+      --primary-light: #FDF2F7;
+      --primary-lighter: #F5D0E0;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-scss.js"></script>
+
+  <div class="container">
+    <!-- チャプターヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge">SCSS入門</div>
+      <div class="chapter-number">4</div>
+      <h1 class="chapter-title">ミックスイン</h1>
+      <p class="chapter-subtitle">スタイルの再利用で効率化</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">1</span>ミックスインとは</li>
+        <li class="toc-item"><span class="toc-number">2</span>引数付きミックスイン</li>
+        <li class="toc-item"><span class="toc-number">3</span>レスポンシブ対応ミックスイン</li>
+        <li class="toc-item"><span class="toc-number">4</span>実践的なミックスイン集</li>
+      </ul>
+    </nav>
+
+    <!-- Section 4-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-1</span>
+        <h2 class="section-title">ミックスインとは</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>@mixin と @include の基本</h3>
+        <p>ミックスイン（mixin）とは、再利用可能なスタイルのかたまりを定義する仕組みです。<br>
+        <code>@mixin</code> でスタイルのテンプレートを定義し、<code>@include</code> で呼び出して使います。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - ミックスインの基本構文</span>
+          </div>
+          <div class="code-content">
+            <pre>// ミックスインの定義
+@mixin ミックスイン名 {
+  プロパティ: 値;
+  プロパティ: 値;
+}
+
+// ミックスインの呼び出し
+.セレクタ {
+  @include ミックスイン名;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>簡単な例：Flexbox中央揃え</h3>
+        <p>要素をFlexboxで中央揃えにするパターンは、よく繰り返し使います。<br>
+        これをミックスインにしてみましょう。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - Flexbox中央揃えミックスイン</span>
+          </div>
+          <div class="code-content">
+            <pre>// ミックスインの定義
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+// 使用例1：ヘッダー
+.header {
+  @include flex-center;
+  height: 60px;
+  background-color: #333;
+}
+
+// 使用例2：カードのアイコン
+.card-icon {
+  @include flex-center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #CF649A;
+}
+
+// 使用例3：ヒーローセクション
+.hero {
+  @include flex-center;
+  flex-direction: column;
+  min-height: 400px;
+  background-color: #f5f5f5;
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+  background-color: #333;
+}
+
+.card-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #CF649A;
+}
+
+.hero {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  min-height: 400px;
+  background-color: #f5f5f5;
+}</pre>
+          </div>
+        </div>
+
+        <p><code>@include flex-center;</code> と書くだけで、3行のFlexboxプロパティが展開されます。<br>
+        同じスタイルを何度もコピー&ペーストする必要がなくなりました。</p>
+
+        <div class="info-box">
+          <div class="info-box-title">ミックスインのメリット</div>
+          <div class="info-box-content">
+            <p><strong>1. 再利用性：</strong>同じスタイルパターンを何度でも使い回せる<br>
+            <strong>2. 保守性：</strong>ミックスインの定義を変更すれば、使用箇所すべてに反映される<br>
+            <strong>3. 可読性：</strong>@include flex-center のように、意図が伝わりやすいコードになる</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-2</span>
+        <h2 class="section-title">引数付きミックスイン</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>引数の基本</h3>
+        <p>ミックスインには引数（パラメータ）を渡すことができます。<br>
+        これにより、同じパターンでも値を変えて使い回すことが可能になります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - 引数付きミックスイン</span>
+          </div>
+          <div class="code-content">
+            <pre>// 引数を受け取るミックスイン
+@mixin box-shadow($x, $y, $blur, $color) {
+  box-shadow: $x $y $blur $color;
+}
+
+// 使用例
+.card {
+  @include box-shadow(0, 2px, 8px, rgba(0, 0, 0, 0.1));
+}
+
+.modal {
+  @include box-shadow(0, 4px, 24px, rgba(0, 0, 0, 0.2));
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>デフォルト値の設定</h3>
+        <p>引数にはデフォルト値を設定できます。呼び出し時に値を省略すると、デフォルト値が使用されます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - デフォルト値付きミックスイン</span>
+          </div>
+          <div class="code-content">
+            <pre>// デフォルト値を設定
+@mixin border($width: 1px, $style: solid, $color: #e0e0e0) {
+  border: $width $style $color;
+}
+
+// デフォルト値をそのまま使う
+.box-a {
+  @include border;
+  // → border: 1px solid #e0e0e0;
+}
+
+// 一部の値を変更
+.box-b {
+  @include border(2px, solid, #CF649A);
+  // → border: 2px solid #CF649A;
+}
+
+// 特定の引数だけ変更（名前付き引数）
+.box-c {
+  @include border($color: red);
+  // → border: 1px solid red;
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.box-a {
+  border: 1px solid #e0e0e0;
+}
+
+.box-b {
+  border: 2px solid #CF649A;
+}
+
+.box-c {
+  border: 1px solid red;
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">名前付き引数</div>
+          <div class="info-box-content">
+            <p><code>@include border($color: red);</code> のように、引数名を指定して値を渡すことができます。これを「名前付き引数」と呼びます。特定の引数だけ変更したいときに便利です。指定しなかった引数にはデフォルト値が使用されます。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>複数引数の実践例</h3>
+        <p>より実践的な例として、ボタンのスタイルを生成するミックスインを作ってみましょう。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - ボタン生成ミックスイン</span>
+          </div>
+          <div class="code-content">
+            <pre>@mixin button-style($bg-color, $text-color: white, $radius: 6px) {
+  display: inline-block;
+  padding: 10px 24px;
+  background-color: $bg-color;
+  color: $text-color;
+  border: none;
+  border-radius: $radius;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+
+  &amp;:hover {
+    background-color: darken($bg-color, 10%);
+  }
+
+  &amp;:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// 各種ボタンの生成
+.btn-primary {
+  @include button-style(#CF649A);
+}
+
+.btn-success {
+  @include button-style(#28A745);
+}
+
+.btn-danger {
+  @include button-style(#DC3545);
+}
+
+.btn-outline {
+  @include button-style(transparent, #CF649A, 6px);
+  border: 2px solid #CF649A;
+
+  &amp;:hover {
+    background-color: #CF649A;
+    color: white;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果 - .btn-primary のみ抜粋）</span>
+          </div>
+          <div class="code-content">
+            <pre>.btn-primary {
+  display: inline-block;
+  padding: 10px 24px;
+  background-color: #CF649A;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+.btn-primary:hover {
+  background-color: #c24b87;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}</pre>
+          </div>
+        </div>
+
+        <p>1つのミックスインから、色を変えるだけで複数のバリエーションのボタンを生成できます。<br>
+        hover時の色も <code>darken()</code> 関数で自動計算されるため、手動で色を指定する必要がありません。</p>
+      </div>
+    </section>
+
+    <!-- Section 4-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-3</span>
+        <h2 class="section-title">レスポンシブ対応ミックスイン</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>ブレークポイント用ミックスイン</h3>
+        <p>レスポンシブデザインでは、画面幅に応じてスタイルを切り替えるためにメディアクエリを多用します。<br>
+        ブレークポイントの値をミックスインで管理すると、統一的で保守しやすいコードになります。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - ブレークポイント変数とミックスイン</span>
+          </div>
+          <div class="code-content">
+            <pre>// ブレークポイントの定義
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+
+// メディアクエリ ミックスイン
+@mixin sm {
+  @media (min-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin md {
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin lg {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin xl {
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>@content の使い方</h3>
+        <p>上の例で使われている <code>@content</code> は、ミックスインの呼び出し時に渡されるスタイルブロックの挿入位置を示すキーワードです。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - @content の仕組み</span>
+          </div>
+          <div class="code-content">
+            <pre>// ミックスインの定義（@content = 呼び出し時の { } の中身が入る）
+@mixin md {
+  @media (min-width: 768px) {
+    @content;    // ← ここに呼び出し側のスタイルが入る
+  }
+}
+
+// 呼び出し
+.container {
+  width: 100%;
+  padding: 16px;
+
+  @include md {
+    // この { } の中身が @content に入る
+    max-width: 720px;
+    margin: 0 auto;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.container {
+  width: 100%;
+  padding: 16px;
+}
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">@content とは</div>
+          <div class="info-box-content">
+            <p>通常のミックスインは「定義された内容を展開する」だけですが、<code>@content</code> を使うと「呼び出し側がスタイルブロックを渡す」ことができます。これにより、メディアクエリのようなラッパー的なパターンをミックスインにできます。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>レスポンシブ対応の実装例</h3>
+        <p>先ほどのブレークポイント ミックスインを使って、レスポンシブなレイアウトを実装してみましょう。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - レスポンシブなグリッドレイアウト</span>
+          </div>
+          <div class="code-content">
+            <pre>.grid {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+
+  // モバイル：1カラム（デフォルト）
+  grid-template-columns: 1fr;
+
+  // タブレット：2カラム
+  @include md {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    padding: 24px;
+  }
+
+  // デスクトップ：3カラム
+  @include lg {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    padding: 32px;
+  }
+}
+
+.sidebar-layout {
+  display: flex;
+  flex-direction: column;
+
+  @include md {
+    flex-direction: row;
+  }
+
+  .main-content {
+    flex: 1;
+
+    @include md {
+      order: 2;
+    }
+  }
+
+  .sidebar {
+    @include md {
+      width: 280px;
+      order: 1;
+    }
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.grid {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    padding: 24px;
+  }
+}
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    padding: 32px;
+  }
+}
+
+.sidebar-layout {
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 768px) {
+  .sidebar-layout {
+    flex-direction: row;
+  }
+}
+.sidebar-layout .main-content {
+  flex: 1;
+}
+@media (min-width: 768px) {
+  .sidebar-layout .main-content {
+    order: 2;
+  }
+}
+@media (min-width: 768px) {
+  .sidebar-layout .sidebar {
+    width: 280px;
+    order: 1;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <p><code>@include md { ... }</code> と書くだけで、メディアクエリの値を覚えておく必要がなくなります。<br>
+        ブレークポイントの値を変更したい場合も、変数の定義を1箇所変えるだけで済みます。</p>
+
+        <div class="warning-box">
+          <div class="warning-box-title">メディアクエリの重複について</div>
+          <div class="warning-box-content">
+            <p>SCSSのネスト内でメディアクエリを使うと、同じ @media ルールが複数回出力されることがあります。これはファイルサイズに若干の影響がありますが、ブラウザの処理に大きな問題はありません。また、CSSの圧縮ツール（cssnano等）が重複をまとめてくれます。コードの可読性と保守性を優先して、セレクタ内にネストする方法をおすすめします。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-4</span>
+        <h2 class="section-title">実践的なミックスイン集</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>よく使うミックスインのパターン</h3>
+        <p>実務でよく使うミックスインのパターンをまとめました。<br>
+        プロジェクトに合わせてカスタマイズして活用してください。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ミックスイン名</th>
+                <th>用途</th>
+                <th>使用頻度</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>flex-center</td>
+                <td>Flexboxで中央揃え</td>
+                <td>非常に高い</td>
+              </tr>
+              <tr>
+                <td>text-truncate</td>
+                <td>テキストを省略して「...」表示</td>
+                <td>高い</td>
+              </tr>
+              <tr>
+                <td>absolute-center</td>
+                <td>絶対配置で中央揃え</td>
+                <td>中程度</td>
+              </tr>
+              <tr>
+                <td>responsive（md, lgなど）</td>
+                <td>メディアクエリのラッパー</td>
+                <td>非常に高い</td>
+              </tr>
+              <tr>
+                <td>font-face</td>
+                <td>Webフォントの読み込み定義</td>
+                <td>低い（初期設定時のみ）</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>text-truncate（テキスト省略）</h3>
+        <p>テキストが長すぎる場合に「...」で省略表示するパターンです。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - テキスト省略ミックスイン</span>
+          </div>
+          <div class="code-content">
+            <pre>// 1行テキストの省略
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// 複数行テキストの省略（行数を指定）
+@mixin text-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// 使用例
+.card-title {
+  @include text-truncate;
+  // 1行を超えたら「...」で省略
+}
+
+.card-description {
+  @include text-clamp(3);
+  // 3行を超えたら「...」で省略
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.card-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>absolute-center（絶対配置中央）</h3>
+        <p>position: absoluteで要素を中央に配置するパターンです。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - 絶対配置中央揃えミックスイン</span>
+          </div>
+          <div class="code-content">
+            <pre>@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// 使用例：オーバーレイ上のコンテンツ
+.overlay {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background-color: rgba(0, 0, 0, 0.5);
+
+  .overlay-content {
+    @include absolute-center;
+    color: white;
+    text-align: center;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果）</span>
+          </div>
+          <div class="code-content">
+            <pre>.overlay {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.overlay .overlay-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>font-face（Webフォント読み込み）</h3>
+        <p>カスタムフォントを読み込む @font-face の記述をミックスインにまとめることもできます。</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">SCSS - フォント読み込みミックスイン</span>
+          </div>
+          <div class="code-content">
+            <pre>@mixin font-face($name, $path, $weight: 400, $style: normal) {
+  @font-face {
+    font-family: $name;
+    src: url("#{$path}.woff2") format("woff2"),
+         url("#{$path}.woff") format("woff");
+    font-weight: $weight;
+    font-style: $style;
+    font-display: swap;
+  }
+}
+
+// 使用例
+@include font-face("MyFont", "../fonts/myfont-regular");
+@include font-face("MyFont", "../fonts/myfont-bold", 700);
+@include font-face("MyFont", "../fonts/myfont-italic", 400, italic);</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">CSS（コンパイル結果 - 1つ目のみ）</span>
+          </div>
+          <div class="code-content">
+            <pre>@font-face {
+  font-family: "MyFont";
+  src: url("../fonts/myfont-regular.woff2") format("woff2"),
+       url("../fonts/myfont-regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">#{} について</div>
+          <div class="info-box-content">
+            <p><code>#{$path}</code> の <code>#{}</code> はSCSSの「補間（インターポレーション）」構文です。文字列の中に変数の値を埋め込むために使います。url() やセレクタの中など、通常の変数展開が効かない場所で使用します。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ミックスイン使用時の注意点</h3>
+
+        <div class="warning-box">
+          <div class="warning-box-title">ミックスインの使い過ぎに注意</div>
+          <div class="warning-box-content">
+            <p>ミックスインは @include のたびにスタイルがコピーされるため、多用するとCSSのファイルサイズが大きくなる場合があります。<br>
+            <strong>ミックスインが適している場合：</strong>引数で値を変えて使うパターン（ボタン、レスポンシブなど）<br>
+            <strong>@extend が適している場合：</strong>まったく同じスタイルを複数箇所で共有するパターン（@extend は第6章で学びます）<br>
+            使い分けを意識して、効率的なCSSを出力しましょう。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- まとめ -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">まとめ</span>
+        <h2 class="section-title">第4章のまとめ</h2>
+      </div>
+
+      <div class="summary-box">
+        <ul>
+          <li><strong>@mixin</strong> でスタイルのテンプレートを定義し、<strong>@include</strong> で呼び出して使う</li>
+          <li>ミックスインには<strong>引数</strong>を渡すことができ、同じパターンで値を変えて再利用できる</li>
+          <li>引数には<strong>デフォルト値</strong>を設定でき、呼び出し時に省略可能</li>
+          <li><strong>名前付き引数</strong>（$color: red）で特定の引数だけ指定することもできる</li>
+          <li><strong>@content</strong> を使うと、メディアクエリのようなラッパーパターンをミックスインにできる</li>
+          <li>ブレークポイント用ミックスイン（md, lg等）を定義しておくと、<strong>レスポンシブ対応</strong>が効率化する</li>
+          <li>よく使うパターン（flex-center, text-truncate, absolute-center等）をミックスインにしておくと便利</li>
+          <li>ミックスインは @include のたびにスタイルがコピーされるため、<strong>使い過ぎに注意</strong>すること</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="3scss-variables-nesting.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">変数とネスト</div>
+    </a>
+    <a href="5scss-partials.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">パーシャルと@use</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>SCSS入門 - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>
