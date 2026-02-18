@@ -12,7 +12,18 @@ const navData = {
         text: "Tailwind CSS入門"
     },
     chapters: [
-        { href: "1tw-intro.html", num: "1", text: "Tailwind CSSの概念と基礎" }
+        { href: "1tw-intro.html", num: "1", text: "Tailwind CSSとは" },
+        { href: "2tw-setup.html", num: "2", text: "導入とセットアップ" },
+        { href: "3tw-colors-typography.html", num: "3", text: "カラーとタイポグラフィ" },
+        { href: "4tw-spacing-sizing.html", num: "4", text: "スペーシングとサイズ" },
+        { href: "5tw-flexbox.html", num: "5", text: "Flexboxレイアウト" },
+        { href: "6tw-grid.html", num: "6", text: "Gridレイアウト" },
+        { href: "7tw-responsive.html", num: "7", text: "レスポンシブデザイン" },
+        { href: "8tw-states.html", num: "8", text: "状態とインタラクション" },
+        { href: "9tw-forms.html", num: "9", text: "フォームスタイリング" },
+        { href: "10tw-components.html", num: "10", text: "コンポーネント実践" },
+        { href: "11tw-customize.html", num: "11", text: "カスタマイズ" },
+        { href: "12tw-practice.html", num: "12", text: "総合実践プロジェクト" }
     ],
     categories: [
         { href: "../../index.html", text: "ダッシュボード" },

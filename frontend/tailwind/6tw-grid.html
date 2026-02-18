@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第6章 Gridレイアウト - Tailwind CSS入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <link rel="stylesheet" href="../../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #06B6D4;
+      --primary-dark: #0891B2;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #B2EBF2;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-tailwind.js"></script>
+
+  <div class="container">
+    <!-- ========== HEADER ========== -->
+    <header class="chapter-header">
+      <div class="chapter-badge">Tailwind CSS入門</div>
+      <div class="chapter-number">6</div>
+      <h1 class="chapter-title">Gridレイアウト</h1>
+      <p class="chapter-subtitle">2次元レイアウトを極める</p>
+    </header>
+
+    <!-- ========== TOC ========== -->
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><a href="#section1">6-1. CSS Gridの基本</a></li>
+        <li class="toc-item"><a href="#section2">6-2. gapと配置</a></li>
+        <li class="toc-item"><a href="#section3">6-3. col-spanとrow-span</a></li>
+        <li class="toc-item"><a href="#section4">6-4. auto-fitとauto-fill</a></li>
+        <li class="toc-item"><a href="#section5">6-5. 実践：Gridレイアウトパターン</a></li>
+      </ul>
+    </nav>
+
+    <!-- ========== SECTION 6-1 ========== -->
+    <section id="section1" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-1</span>
+        <h2 class="section-title">CSS Gridの基本</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>CSS Gridとは</h3>
+        <p>CSS Grid Layout（以下Grid）は、要素を2次元（行と列）で配置するためのCSSレイアウトモデルです。Flexboxが1次元（横または縦）のレイアウトに強いのに対し、Gridは行と列を同時にコントロールできるため、より複雑なレイアウトを簡潔に表現できます。</p>
+
+        <div class="info-box">
+          <div class="info-box-title">FlexboxとGridの使い分け</div>
+          <div class="info-box-content">
+            <p><strong>Flexbox</strong>は1方向の配置に向いています。ナビバーのリンク並び、カード内のテキスト配置など、横方向または縦方向のレイアウトに最適です。<strong>Grid</strong>は2方向の配置に向いています。ダッシュボード、ギャラリー、料金表など、行と列の両方を制御したいレイアウトに最適です。実際のプロジェクトでは両者を組み合わせて使います。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>gridの有効化</h3>
+        <p>親要素に<code>grid</code>クラスを付けると、その子要素がGridアイテムになります。<code>grid-cols-*</code>で列数を指定することでレイアウトが完成します。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- 基本の3カラムグリッド --&gt;
+&lt;div class="grid grid-cols-3 gap-4"&gt;
+  &lt;div class="bg-cyan-100 p-4 rounded"&gt;1&lt;/div&gt;
+  &lt;div class="bg-cyan-200 p-4 rounded"&gt;2&lt;/div&gt;
+  &lt;div class="bg-cyan-300 p-4 rounded"&gt;3&lt;/div&gt;
+  &lt;div class="bg-cyan-100 p-4 rounded"&gt;4&lt;/div&gt;
+  &lt;div class="bg-cyan-200 p-4 rounded"&gt;5&lt;/div&gt;
+  &lt;div class="bg-cyan-300 p-4 rounded"&gt;6&lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>grid-cols-*（列数の指定）</h3>
+        <p>Tailwind CSSでは<code>grid-cols-1</code>から<code>grid-cols-12</code>まで、列数を指定するクラスが用意されています。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tailwindクラス</th>
+                <th>CSSプロパティ</th>
+                <th>説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>grid-cols-1</code></td>
+                <td><code>grid-template-columns: repeat(1, minmax(0, 1fr));</code></td>
+                <td>1列</td>
+              </tr>
+              <tr>
+                <td><code>grid-cols-2</code></td>
+                <td><code>grid-template-columns: repeat(2, minmax(0, 1fr));</code></td>
+                <td>2列</td>
+              </tr>
+              <tr>
+                <td><code>grid-cols-3</code></td>
+                <td><code>grid-template-columns: repeat(3, minmax(0, 1fr));</code></td>
+                <td>3列</td>
+              </tr>
+              <tr>
+                <td><code>grid-cols-4</code></td>
+                <td><code>grid-template-columns: repeat(4, minmax(0, 1fr));</code></td>
+                <td>4列</td>
+              </tr>
+              <tr>
+                <td><code>grid-cols-6</code></td>
+                <td><code>grid-template-columns: repeat(6, minmax(0, 1fr));</code></td>
+                <td>6列</td>
+              </tr>
+              <tr>
+                <td><code>grid-cols-12</code></td>
+                <td><code>grid-template-columns: repeat(12, minmax(0, 1fr));</code></td>
+                <td>12列</td>
+              </tr>
+              <tr>
+                <td><code>grid-cols-none</code></td>
+                <td><code>grid-template-columns: none;</code></td>
+                <td>列指定なし</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>grid-rows-*（行数の指定）</h3>
+        <p><code>grid-rows-*</code>で行数を明示的に指定することもできます。通常は列数だけ指定すれば行は自動生成されますが、行数を固定したい場合に使います。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- 3列2行のグリッド --&gt;
+&lt;div class="grid grid-cols-3 grid-rows-2 gap-4"&gt;
+  &lt;div class="bg-cyan-100 p-4 rounded"&gt;1&lt;/div&gt;
+  &lt;div class="bg-cyan-200 p-4 rounded"&gt;2&lt;/div&gt;
+  &lt;div class="bg-cyan-300 p-4 rounded"&gt;3&lt;/div&gt;
+  &lt;div class="bg-cyan-100 p-4 rounded"&gt;4&lt;/div&gt;
+  &lt;div class="bg-cyan-200 p-4 rounded"&gt;5&lt;/div&gt;
+  &lt;div class="bg-cyan-300 p-4 rounded"&gt;6&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 2列のグリッド（行は自動） --&gt;
+&lt;div class="grid grid-cols-2 gap-4"&gt;
+  &lt;div class="bg-cyan-100 p-4 rounded"&gt;1&lt;/div&gt;
+  &lt;div class="bg-cyan-200 p-4 rounded"&gt;2&lt;/div&gt;
+  &lt;div class="bg-cyan-300 p-4 rounded"&gt;3&lt;/div&gt;
+  &lt;div class="bg-cyan-100 p-4 rounded"&gt;4&lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>POINT</h4>
+          <p>ほとんどの場合、<code>grid-cols-*</code>だけ指定すれば十分です。行数は要素の数に応じて自動的に増えます。<code>grid-rows-*</code>を使うのは、固定レイアウトが必要な場合（例：ダッシュボードの固定グリッド）に限られます。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== SECTION 6-2 ========== -->
+    <section id="section2" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-2</span>
+        <h2 class="section-title">gapと配置</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>gap（要素間の余白）</h3>
+        <p>Gridでも<code>gap-*</code>クラスを使って要素間の余白を設定できます。Flexboxと同じ書き方です。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- 全方向に同じ余白 --&gt;
+&lt;div class="grid grid-cols-3 gap-6"&gt;
+  &lt;div class="bg-cyan-100 p-4 rounded"&gt;A&lt;/div&gt;
+  &lt;div class="bg-cyan-200 p-4 rounded"&gt;B&lt;/div&gt;
+  &lt;div class="bg-cyan-300 p-4 rounded"&gt;C&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 横方向と縦方向で異なる余白 --&gt;
+&lt;div class="grid grid-cols-3 gap-x-8 gap-y-4"&gt;
+  &lt;div class="bg-cyan-100 p-4 rounded"&gt;横32px、縦16pxの余白&lt;/div&gt;
+  &lt;div class="bg-cyan-200 p-4 rounded"&gt;横32px、縦16pxの余白&lt;/div&gt;
+  &lt;div class="bg-cyan-300 p-4 rounded"&gt;横32px、縦16pxの余白&lt;/div&gt;
+  &lt;div class="bg-cyan-100 p-4 rounded"&gt;横32px、縦16pxの余白&lt;/div&gt;
+  &lt;div class="bg-cyan-200 p-4 rounded"&gt;横32px、縦16pxの余白&lt;/div&gt;
+  &lt;div class="bg-cyan-300 p-4 rounded"&gt;横32px、縦16pxの余白&lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Gridの配置関連クラス</h3>
+        <p>Gridではアイテムの配置をさまざまなクラスで制御できます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tailwindクラス</th>
+                <th>CSSプロパティ</th>
+                <th>説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>place-items-center</code></td>
+                <td><code>place-items: center;</code></td>
+                <td>全アイテムを中央に配置</td>
+              </tr>
+              <tr>
+                <td><code>place-items-start</code></td>
+                <td><code>place-items: start;</code></td>
+                <td>全アイテムを左上に配置</td>
+              </tr>
+              <tr>
+                <td><code>place-items-end</code></td>
+                <td><code>place-items: end;</code></td>
+                <td>全アイテムを右下に配置</td>
+              </tr>
+              <tr>
+                <td><code>place-items-stretch</code></td>
+                <td><code>place-items: stretch;</code></td>
+                <td>全アイテムを引き伸ばす（デフォルト）</td>
+              </tr>
+              <tr>
+                <td><code>place-content-center</code></td>
+                <td><code>place-content: center;</code></td>
+                <td>グリッド全体を中央に配置</td>
+              </tr>
+              <tr>
+                <td><code>place-self-center</code></td>
+                <td><code>place-self: center;</code></td>
+                <td>個別アイテムを中央に配置</td>
+              </tr>
+              <tr>
+                <td><code>justify-items-center</code></td>
+                <td><code>justify-items: center;</code></td>
+                <td>全アイテムを水平中央に配置</td>
+              </tr>
+              <tr>
+                <td><code>justify-items-start</code></td>
+                <td><code>justify-items: start;</code></td>
+                <td>全アイテムを左揃え</td>
+              </tr>
+              <tr>
+                <td><code>justify-items-end</code></td>
+                <td><code>justify-items: end;</code></td>
+                <td>全アイテムを右揃え</td>
+              </tr>
+              <tr>
+                <td><code>items-center</code></td>
+                <td><code>align-items: center;</code></td>
+                <td>全アイテムを垂直中央に配置</td>
+              </tr>
+              <tr>
+                <td><code>items-start</code></td>
+                <td><code>align-items: start;</code></td>
+                <td>全アイテムを上揃え</td>
+              </tr>
+              <tr>
+                <td><code>items-end</code></td>
+                <td><code>align-items: end;</code></td>
+                <td>全アイテムを下揃え</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ギャラリーレイアウト例</h3>
+        <p>Gridの配置クラスを活用した、画像ギャラリーのレイアウト例です。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- 画像ギャラリー --&gt;
+&lt;div class="grid grid-cols-3 gap-4 p-8"&gt;
+  &lt;div class="bg-gray-200 rounded-lg overflow-hidden"&gt;
+    &lt;div class="aspect-square bg-cyan-100 flex items-center justify-center"&gt;
+      &lt;span class="text-cyan-600 text-lg font-bold"&gt;写真 1&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="bg-gray-200 rounded-lg overflow-hidden"&gt;
+    &lt;div class="aspect-square bg-cyan-200 flex items-center justify-center"&gt;
+      &lt;span class="text-cyan-700 text-lg font-bold"&gt;写真 2&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="bg-gray-200 rounded-lg overflow-hidden"&gt;
+    &lt;div class="aspect-square bg-cyan-300 flex items-center justify-center"&gt;
+      &lt;span class="text-cyan-800 text-lg font-bold"&gt;写真 3&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="bg-gray-200 rounded-lg overflow-hidden"&gt;
+    &lt;div class="aspect-square bg-cyan-100 flex items-center justify-center"&gt;
+      &lt;span class="text-cyan-600 text-lg font-bold"&gt;写真 4&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="bg-gray-200 rounded-lg overflow-hidden"&gt;
+    &lt;div class="aspect-square bg-cyan-200 flex items-center justify-center"&gt;
+      &lt;span class="text-cyan-700 text-lg font-bold"&gt;写真 5&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="bg-gray-200 rounded-lg overflow-hidden"&gt;
+    &lt;div class="aspect-square bg-cyan-300 flex items-center justify-center"&gt;
+      &lt;span class="text-cyan-800 text-lg font-bold"&gt;写真 6&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>POINT</h4>
+          <p><code>aspect-square</code>クラスを使うと、正方形のアスペクト比を簡単に維持できます。ギャラリーや画像グリッドで統一されたサイズ感を出すのに便利です。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== SECTION 6-3 ========== -->
+    <section id="section3" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-3</span>
+        <h2 class="section-title">col-spanとrow-span</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>col-span-*（複数列にまたがる）</h3>
+        <p><code>col-span-*</code>を使うと、Gridアイテムを複数の列にまたがらせることができます。これにより、ダッシュボードのような不均等なレイアウトを簡単に作成できます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tailwindクラス</th>
+                <th>CSSプロパティ</th>
+                <th>説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>col-span-1</code></td>
+                <td><code>grid-column: span 1 / span 1;</code></td>
+                <td>1列分（デフォルト）</td>
+              </tr>
+              <tr>
+                <td><code>col-span-2</code></td>
+                <td><code>grid-column: span 2 / span 2;</code></td>
+                <td>2列にまたがる</td>
+              </tr>
+              <tr>
+                <td><code>col-span-3</code></td>
+                <td><code>grid-column: span 3 / span 3;</code></td>
+                <td>3列にまたがる</td>
+              </tr>
+              <tr>
+                <td><code>col-span-full</code></td>
+                <td><code>grid-column: 1 / -1;</code></td>
+                <td>全列にまたがる</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>col-start-*, col-end-*（列の開始・終了位置）</h3>
+        <p>Gridアイテムの開始位置と終了位置を明示的に指定することもできます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tailwindクラス</th>
+                <th>CSSプロパティ</th>
+                <th>説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>col-start-1</code></td>
+                <td><code>grid-column-start: 1;</code></td>
+                <td>1列目から開始</td>
+              </tr>
+              <tr>
+                <td><code>col-start-2</code></td>
+                <td><code>grid-column-start: 2;</code></td>
+                <td>2列目から開始</td>
+              </tr>
+              <tr>
+                <td><code>col-end-3</code></td>
+                <td><code>grid-column-end: 3;</code></td>
+                <td>3列目のラインで終了</td>
+              </tr>
+              <tr>
+                <td><code>col-end-4</code></td>
+                <td><code>grid-column-end: 4;</code></td>
+                <td>4列目のラインで終了</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>row-span-*（複数行にまたがる）</h3>
+        <p><code>row-span-*</code>は行方向に要素をまたがらせます。列方向の<code>col-span-*</code>と組み合わせることで、複雑なグリッドレイアウトを構築できます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tailwindクラス</th>
+                <th>CSSプロパティ</th>
+                <th>説明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>row-span-1</code></td>
+                <td><code>grid-row: span 1 / span 1;</code></td>
+                <td>1行分（デフォルト）</td>
+              </tr>
+              <tr>
+                <td><code>row-span-2</code></td>
+                <td><code>grid-row: span 2 / span 2;</code></td>
+                <td>2行にまたがる</td>
+              </tr>
+              <tr>
+                <td><code>row-span-3</code></td>
+                <td><code>grid-row: span 3 / span 3;</code></td>
+                <td>3行にまたがる</td>
+              </tr>
+              <tr>
+                <td><code>row-span-full</code></td>
+                <td><code>grid-row: 1 / -1;</code></td>
+                <td>全行にまたがる</td>
+              </tr>
+              <tr>
+                <td><code>row-start-1</code></td>
+                <td><code>grid-row-start: 1;</code></td>
+                <td>1行目から開始</td>
+              </tr>
+              <tr>
+                <td><code>row-end-3</code></td>
+                <td><code>grid-row-end: 3;</code></td>
+                <td>3行目のラインで終了</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ダッシュボードレイアウト</h3>
+        <p><code>col-span-*</code>を使って、メインエリアを広く、サイドバーを狭くしたダッシュボードレイアウトの例です。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- ダッシュボードレイアウト：3列グリッド --&gt;
+&lt;div class="grid grid-cols-3 gap-6 p-8"&gt;
+  &lt;!-- メインエリア：2列分 --&gt;
+  &lt;div class="col-span-2 bg-white rounded-xl shadow p-6"&gt;
+    &lt;h2 class="text-xl font-bold text-gray-800 mb-4"&gt;売上グラフ&lt;/h2&gt;
+    &lt;div class="h-64 bg-gray-50 rounded-lg flex items-center justify-center"&gt;
+      &lt;span class="text-gray-400"&gt;グラフエリア&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- サイドバー：1列分 --&gt;
+  &lt;div class="col-span-1 bg-white rounded-xl shadow p-6"&gt;
+    &lt;h2 class="text-xl font-bold text-gray-800 mb-4"&gt;最新の通知&lt;/h2&gt;
+    &lt;ul class="space-y-3"&gt;
+      &lt;li class="flex items-start gap-3"&gt;
+        &lt;div class="w-2 h-2 bg-cyan-500 rounded-full mt-2 shrink-0"&gt;&lt;/div&gt;
+        &lt;p class="text-sm text-gray-600"&gt;新規ユーザーが登録しました&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li class="flex items-start gap-3"&gt;
+        &lt;div class="w-2 h-2 bg-emerald-500 rounded-full mt-2 shrink-0"&gt;&lt;/div&gt;
+        &lt;p class="text-sm text-gray-600"&gt;月次レポートが完了しました&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li class="flex items-start gap-3"&gt;
+        &lt;div class="w-2 h-2 bg-amber-500 rounded-full mt-2 shrink-0"&gt;&lt;/div&gt;
+        &lt;p class="text-sm text-gray-600"&gt;サーバーメンテナンス予定&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+
+  &lt;!-- 下段：全幅 --&gt;
+  &lt;div class="col-span-full bg-white rounded-xl shadow p-6"&gt;
+    &lt;h2 class="text-xl font-bold text-gray-800 mb-4"&gt;最近の取引&lt;/h2&gt;
+    &lt;div class="h-32 bg-gray-50 rounded-lg flex items-center justify-center"&gt;
+      &lt;span class="text-gray-400"&gt;テーブルエリア&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ニュースサイト風レイアウト</h3>
+        <p><code>col-span</code>と<code>row-span</code>を組み合わせたニュースサイト風のレイアウトです。メイン記事を大きく、サブ記事を小さく表示します。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- ニュースサイト風レイアウト --&gt;
+&lt;div class="grid grid-cols-4 grid-rows-2 gap-4 p-8"&gt;
+  &lt;!-- メイン記事：2列 x 2行 --&gt;
+  &lt;div class="col-span-2 row-span-2 bg-cyan-600 rounded-xl p-6
+              flex flex-col justify-end text-white"&gt;
+    &lt;span class="text-sm bg-white/20 px-2 py-1 rounded w-fit"&gt;注目&lt;/span&gt;
+    &lt;h2 class="text-2xl font-bold mt-2"&gt;メイン記事のタイトル&lt;/h2&gt;
+    &lt;p class="text-cyan-100 mt-2"&gt;記事の概要テキストがここに入ります。&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;!-- サブ記事1 --&gt;
+  &lt;div class="col-span-1 bg-white rounded-xl shadow p-4"&gt;
+    &lt;div class="h-24 bg-gray-100 rounded-lg mb-3"&gt;&lt;/div&gt;
+    &lt;h3 class="font-bold text-gray-800 text-sm"&gt;サブ記事1&lt;/h3&gt;
+    &lt;p class="text-gray-500 text-xs mt-1"&gt;2026年2月17日&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;!-- サブ記事2 --&gt;
+  &lt;div class="col-span-1 bg-white rounded-xl shadow p-4"&gt;
+    &lt;div class="h-24 bg-gray-100 rounded-lg mb-3"&gt;&lt;/div&gt;
+    &lt;h3 class="font-bold text-gray-800 text-sm"&gt;サブ記事2&lt;/h3&gt;
+    &lt;p class="text-gray-500 text-xs mt-1"&gt;2026年2月16日&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;!-- サブ記事3 --&gt;
+  &lt;div class="col-span-1 bg-white rounded-xl shadow p-4"&gt;
+    &lt;div class="h-24 bg-gray-100 rounded-lg mb-3"&gt;&lt;/div&gt;
+    &lt;h3 class="font-bold text-gray-800 text-sm"&gt;サブ記事3&lt;/h3&gt;
+    &lt;p class="text-gray-500 text-xs mt-1"&gt;2026年2月15日&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;!-- サブ記事4 --&gt;
+  &lt;div class="col-span-1 bg-white rounded-xl shadow p-4"&gt;
+    &lt;div class="h-24 bg-gray-100 rounded-lg mb-3"&gt;&lt;/div&gt;
+    &lt;h3 class="font-bold text-gray-800 text-sm"&gt;サブ記事4&lt;/h3&gt;
+    &lt;p class="text-gray-500 text-xs mt-1"&gt;2026年2月14日&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">注意</div>
+          <div class="warning-box-content">
+            <p><code>col-span</code>と<code>row-span</code>の合計がグリッドの列数・行数を超えないように注意しましょう。超えた場合、アイテムは次の行に押し出されて意図しないレイアウトになります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== SECTION 6-4 ========== -->
+    <section id="section4" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-4</span>
+        <h2 class="section-title">auto-fitとauto-fill</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>任意値（Arbitrary values）でレスポンシブグリッド</h3>
+        <p>Tailwind CSSの任意値（角括弧記法）を使うと、<code>repeat(auto-fit, ...)</code>や<code>repeat(auto-fill, ...)</code>を直接指定できます。これにより、メディアクエリなしでレスポンシブなグリッドを作成できます。</p>
+
+        <div class="info-box">
+          <div class="info-box-title">任意値（Arbitrary values）の使い方</div>
+          <div class="info-box-content">
+            <p>Tailwind CSSでは、あらかじめ用意されたクラスに該当するものがない場合、<code>grid-cols-[repeat(auto-fit,minmax(300px,1fr))]</code>のように角括弧で任意のCSS値を指定できます。これを<strong>Arbitrary values（任意値）</strong>と呼びます。スペースを含む場合はアンダースコア（_）で代用します。</p>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- auto-fit を使ったレスポンシブカードグリッド --&gt;
+&lt;div class="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6 p-8"&gt;
+  &lt;div class="bg-white rounded-xl shadow-md p-6"&gt;
+    &lt;div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center
+                justify-center mb-4"&gt;
+      &lt;span class="text-cyan-600 text-xl"&gt;🚀&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;h3 class="font-bold text-gray-800"&gt;高速パフォーマンス&lt;/h3&gt;
+    &lt;p class="text-gray-600 text-sm mt-2"&gt;
+      最適化されたビルドプロセスにより、高速なページ読み込みを実現します。
+    &lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;div class="bg-white rounded-xl shadow-md p-6"&gt;
+    &lt;div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center
+                justify-center mb-4"&gt;
+      &lt;span class="text-emerald-600 text-xl"&gt;🔒&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;h3 class="font-bold text-gray-800"&gt;セキュリティ&lt;/h3&gt;
+    &lt;p class="text-gray-600 text-sm mt-2"&gt;
+      業界標準のセキュリティプロトコルでデータを安全に保護します。
+    &lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;div class="bg-white rounded-xl shadow-md p-6"&gt;
+    &lt;div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center
+                justify-center mb-4"&gt;
+      &lt;span class="text-amber-600 text-xl"&gt;📱&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;h3 class="font-bold text-gray-800"&gt;レスポンシブ対応&lt;/h3&gt;
+    &lt;p class="text-gray-600 text-sm mt-2"&gt;
+      あらゆるデバイスで最適な表示を自動的に提供します。
+    &lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;div class="bg-white rounded-xl shadow-md p-6"&gt;
+    &lt;div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center
+                justify-center mb-4"&gt;
+      &lt;span class="text-purple-600 text-xl"&gt;🎨&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;h3 class="font-bold text-gray-800"&gt;カスタマイズ性&lt;/h3&gt;
+    &lt;p class="text-gray-600 text-sm mt-2"&gt;
+      柔軟な設定オプションで、思い通りのデザインを実現できます。
+    &lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>auto-fit vs auto-fill の違い</h3>
+        <p><code>auto-fit</code>と<code>auto-fill</code>は似ていますが、空きスペースの扱いが異なります。</p>
+
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #06B6D4; color: white;">auto-fit</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">HTML</span></div>
+              <div class="code-content">
+<pre>&lt;div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4"&gt;
+  &lt;div class="bg-cyan-100 p-4"&gt;A&lt;/div&gt;
+  &lt;div class="bg-cyan-200 p-4"&gt;B&lt;/div&gt;
+&lt;/div&gt;</pre>
+              </div>
+            </div>
+            <ul>
+              <li>アイテムが少ない場合、残りスペースを<strong>埋めるように拡大</strong></li>
+              <li>空のトラックを折りたたむ（0pxにする）</li>
+              <li>アイテムが常に親の幅いっぱいに広がる</li>
+              <li>カードやフィーチャーセクションに最適</li>
+            </ul>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #8B5CF6; color: white;">auto-fill</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">HTML</span></div>
+              <div class="code-content">
+<pre>&lt;div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4"&gt;
+  &lt;div class="bg-purple-100 p-4"&gt;A&lt;/div&gt;
+  &lt;div class="bg-purple-200 p-4"&gt;B&lt;/div&gt;
+&lt;/div&gt;</pre>
+              </div>
+            </div>
+            <ul>
+              <li>アイテムが少ない場合、<strong>空のトラックを維持</strong></li>
+              <li>アイテムは最小サイズ（minmax の min）を保つ</li>
+              <li>右側に空きスペースができることがある</li>
+              <li>厳密なグリッドレイアウトに最適</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>POINT</h4>
+          <p>一般的なWebサイトやアプリケーションでは<code>auto-fit</code>の方がよく使われます。アイテム数が少ない場合でも要素が自然に広がり、見た目がきれいになるためです。固定幅のグリッドセルが必要な場合は<code>auto-fill</code>を使いましょう。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== SECTION 6-5 ========== -->
+    <section id="section5" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-5</span>
+        <h2 class="section-title">実践：Gridレイアウトパターン</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>AIにダッシュボードを生成させる</h3>
+        <p>AIツールを活用して、Gridレイアウトを使ったダッシュボードを効率的に作成しましょう。</p>
+
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🏗️</span>
+            <span class="prompt-card-label">ダッシュボードレイアウト生成プロンプト</span>
+          </div>
+          <div class="prompt-card-content">Tailwind CSSのGridレイアウトを使って、管理画面のダッシュボードを作成してください。上段に4つのKPIカード（grid-cols-4）、中段にグラフエリア（col-span-3）と通知パネル（col-span-1）、下段にテーブル（col-span-full）を配置してください。gapは6、パディングは8にしてください。</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ダッシュボード完全HTML</h3>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- ダッシュボード --&gt;
+&lt;div class="min-h-screen bg-gray-100 p-8"&gt;
+  &lt;h1 class="text-2xl font-bold text-gray-800 mb-6"&gt;ダッシュボード&lt;/h1&gt;
+
+  &lt;!-- KPIカード：4列 --&gt;
+  &lt;div class="grid grid-cols-4 gap-6 mb-6"&gt;
+    &lt;div class="bg-white rounded-xl shadow p-6"&gt;
+      &lt;p class="text-sm text-gray-500"&gt;総売上&lt;/p&gt;
+      &lt;p class="text-3xl font-bold text-gray-800 mt-1"&gt;¥2,456,789&lt;/p&gt;
+      &lt;p class="text-sm text-emerald-600 mt-2"&gt;+12.5% 先月比&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="bg-white rounded-xl shadow p-6"&gt;
+      &lt;p class="text-sm text-gray-500"&gt;新規ユーザー&lt;/p&gt;
+      &lt;p class="text-3xl font-bold text-gray-800 mt-1"&gt;1,234&lt;/p&gt;
+      &lt;p class="text-sm text-emerald-600 mt-2"&gt;+8.3% 先月比&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="bg-white rounded-xl shadow p-6"&gt;
+      &lt;p class="text-sm text-gray-500"&gt;コンバージョン率&lt;/p&gt;
+      &lt;p class="text-3xl font-bold text-gray-800 mt-1"&gt;3.24%&lt;/p&gt;
+      &lt;p class="text-sm text-red-600 mt-2"&gt;-0.5% 先月比&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="bg-white rounded-xl shadow p-6"&gt;
+      &lt;p class="text-sm text-gray-500"&gt;アクティブユーザー&lt;/p&gt;
+      &lt;p class="text-3xl font-bold text-gray-800 mt-1"&gt;8,567&lt;/p&gt;
+      &lt;p class="text-sm text-emerald-600 mt-2"&gt;+5.7% 先月比&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- メインエリア：4列グリッド --&gt;
+  &lt;div class="grid grid-cols-4 gap-6 mb-6"&gt;
+    &lt;!-- グラフ：3列分 --&gt;
+    &lt;div class="col-span-3 bg-white rounded-xl shadow p-6"&gt;
+      &lt;h2 class="text-lg font-bold text-gray-800 mb-4"&gt;売上推移&lt;/h2&gt;
+      &lt;div class="h-72 bg-gray-50 rounded-lg flex items-center justify-center"&gt;
+        &lt;span class="text-gray-400"&gt;グラフエリア（Chart.jsなどを配置）&lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- 通知パネル：1列分 --&gt;
+    &lt;div class="col-span-1 bg-white rounded-xl shadow p-6"&gt;
+      &lt;h2 class="text-lg font-bold text-gray-800 mb-4"&gt;通知&lt;/h2&gt;
+      &lt;ul class="space-y-4"&gt;
+        &lt;li class="flex items-start gap-3"&gt;
+          &lt;div class="w-2 h-2 bg-cyan-500 rounded-full mt-2 shrink-0"&gt;&lt;/div&gt;
+          &lt;div&gt;
+            &lt;p class="text-sm text-gray-800 font-medium"&gt;新規注文&lt;/p&gt;
+            &lt;p class="text-xs text-gray-500"&gt;5分前&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li class="flex items-start gap-3"&gt;
+          &lt;div class="w-2 h-2 bg-emerald-500 rounded-full mt-2 shrink-0"&gt;&lt;/div&gt;
+          &lt;div&gt;
+            &lt;p class="text-sm text-gray-800 font-medium"&gt;支払い完了&lt;/p&gt;
+            &lt;p class="text-xs text-gray-500"&gt;12分前&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li class="flex items-start gap-3"&gt;
+          &lt;div class="w-2 h-2 bg-amber-500 rounded-full mt-2 shrink-0"&gt;&lt;/div&gt;
+          &lt;div&gt;
+            &lt;p class="text-sm text-gray-800 font-medium"&gt;レビュー投稿&lt;/p&gt;
+            &lt;p class="text-xs text-gray-500"&gt;30分前&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li class="flex items-start gap-3"&gt;
+          &lt;div class="w-2 h-2 bg-red-500 rounded-full mt-2 shrink-0"&gt;&lt;/div&gt;
+          &lt;div&gt;
+            &lt;p class="text-sm text-gray-800 font-medium"&gt;エラー検知&lt;/p&gt;
+            &lt;p class="text-xs text-gray-500"&gt;1時間前&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- テーブル：全幅 --&gt;
+  &lt;div class="col-span-full bg-white rounded-xl shadow p-6"&gt;
+    &lt;h2 class="text-lg font-bold text-gray-800 mb-4"&gt;最近の取引&lt;/h2&gt;
+    &lt;table class="w-full text-left"&gt;
+      &lt;thead&gt;
+        &lt;tr class="border-b border-gray-200"&gt;
+          &lt;th class="py-3 text-sm font-medium text-gray-500"&gt;取引ID&lt;/th&gt;
+          &lt;th class="py-3 text-sm font-medium text-gray-500"&gt;顧客名&lt;/th&gt;
+          &lt;th class="py-3 text-sm font-medium text-gray-500"&gt;金額&lt;/th&gt;
+          &lt;th class="py-3 text-sm font-medium text-gray-500"&gt;ステータス&lt;/th&gt;
+        &lt;/tr&gt;
+      &lt;/thead&gt;
+      &lt;tbody&gt;
+        &lt;tr class="border-b border-gray-100"&gt;
+          &lt;td class="py-3 text-sm text-gray-800"&gt;#001&lt;/td&gt;
+          &lt;td class="py-3 text-sm text-gray-800"&gt;田中太郎&lt;/td&gt;
+          &lt;td class="py-3 text-sm text-gray-800"&gt;¥12,500&lt;/td&gt;
+          &lt;td class="py-3"&gt;
+            &lt;span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1
+                          rounded-full"&gt;完了&lt;/span&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr class="border-b border-gray-100"&gt;
+          &lt;td class="py-3 text-sm text-gray-800"&gt;#002&lt;/td&gt;
+          &lt;td class="py-3 text-sm text-gray-800"&gt;佐藤花子&lt;/td&gt;
+          &lt;td class="py-3 text-sm text-gray-800"&gt;¥8,900&lt;/td&gt;
+          &lt;td class="py-3"&gt;
+            &lt;span class="text-xs bg-amber-100 text-amber-700 px-2 py-1
+                          rounded-full"&gt;処理中&lt;/span&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>写真ギャラリー（Masonryっぽいグリッド）</h3>
+        <p><code>row-span</code>を使って高さの異なるアイテムを配置する、Pinterest風のギャラリーレイアウトです。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- Masonryっぽいギャラリー --&gt;
+&lt;div class="grid grid-cols-3 gap-4 p-8"&gt;
+  &lt;!-- 大きい画像（2行分） --&gt;
+  &lt;div class="row-span-2 rounded-xl overflow-hidden"&gt;
+    &lt;div class="h-full bg-cyan-200 flex items-center justify-center
+                min-h-[320px]"&gt;
+      &lt;span class="text-cyan-700 font-bold"&gt;大きい写真&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- 通常の画像 --&gt;
+  &lt;div class="rounded-xl overflow-hidden"&gt;
+    &lt;div class="h-40 bg-emerald-200 flex items-center justify-center"&gt;
+      &lt;span class="text-emerald-700 font-bold"&gt;写真 2&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- 通常の画像 --&gt;
+  &lt;div class="rounded-xl overflow-hidden"&gt;
+    &lt;div class="h-40 bg-amber-200 flex items-center justify-center"&gt;
+      &lt;span class="text-amber-700 font-bold"&gt;写真 3&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- 通常の画像 --&gt;
+  &lt;div class="rounded-xl overflow-hidden"&gt;
+    &lt;div class="h-40 bg-purple-200 flex items-center justify-center"&gt;
+      &lt;span class="text-purple-700 font-bold"&gt;写真 4&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- 大きい画像（2行分） --&gt;
+  &lt;div class="row-span-2 rounded-xl overflow-hidden"&gt;
+    &lt;div class="h-full bg-rose-200 flex items-center justify-center
+                min-h-[320px]"&gt;
+      &lt;span class="text-rose-700 font-bold"&gt;大きい写真&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- 通常の画像 --&gt;
+  &lt;div class="rounded-xl overflow-hidden"&gt;
+    &lt;div class="h-40 bg-sky-200 flex items-center justify-center"&gt;
+      &lt;span class="text-sky-700 font-bold"&gt;写真 6&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- 通常の画像 --&gt;
+  &lt;div class="rounded-xl overflow-hidden"&gt;
+    &lt;div class="h-40 bg-orange-200 flex items-center justify-center"&gt;
+      &lt;span class="text-orange-700 font-bold"&gt;写真 7&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>料金表レイアウト（3カラム）</h3>
+        <p>Gridを使った料金表は、均等な幅の列と統一された高さを自然に実現できます。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- 料金表レイアウト --&gt;
+&lt;div class="grid grid-cols-3 gap-8 p-8 max-w-5xl mx-auto"&gt;
+  &lt;!-- ベーシックプラン --&gt;
+  &lt;div class="bg-white rounded-2xl shadow-md p-8 flex flex-col"&gt;
+    &lt;h3 class="text-lg font-bold text-gray-800"&gt;ベーシック&lt;/h3&gt;
+    &lt;p class="text-gray-500 text-sm mt-1"&gt;個人利用に最適&lt;/p&gt;
+    &lt;div class="mt-6"&gt;
+      &lt;span class="text-4xl font-bold text-gray-800"&gt;¥980&lt;/span&gt;
+      &lt;span class="text-gray-500"&gt;/月&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;ul class="mt-6 space-y-3 flex-1"&gt;
+      &lt;li class="flex items-center gap-2 text-sm text-gray-600"&gt;
+        &lt;span class="text-cyan-500"&gt;✓&lt;/span&gt;5GBストレージ
+      &lt;/li&gt;
+      &lt;li class="flex items-center gap-2 text-sm text-gray-600"&gt;
+        &lt;span class="text-cyan-500"&gt;✓&lt;/span&gt;メールサポート
+      &lt;/li&gt;
+      &lt;li class="flex items-center gap-2 text-sm text-gray-600"&gt;
+        &lt;span class="text-cyan-500"&gt;✓&lt;/span&gt;基本機能
+      &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;button class="mt-8 w-full py-3 rounded-lg border-2 border-cyan-500
+                    text-cyan-500 font-medium hover:bg-cyan-50
+                    transition-colors"&gt;
+      選択する
+    &lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;!-- プロプラン（おすすめ） --&gt;
+  &lt;div class="bg-cyan-500 rounded-2xl shadow-lg p-8 flex flex-col
+              text-white relative"&gt;
+    &lt;div class="absolute -top-3 left-1/2 -translate-x-1/2
+                bg-amber-400 text-amber-900 text-xs font-bold
+                px-4 py-1 rounded-full"&gt;おすすめ&lt;/div&gt;
+    &lt;h3 class="text-lg font-bold"&gt;プロ&lt;/h3&gt;
+    &lt;p class="text-cyan-100 text-sm mt-1"&gt;チーム利用に最適&lt;/p&gt;
+    &lt;div class="mt-6"&gt;
+      &lt;span class="text-4xl font-bold"&gt;¥2,980&lt;/span&gt;
+      &lt;span class="text-cyan-100"&gt;/月&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;ul class="mt-6 space-y-3 flex-1"&gt;
+      &lt;li class="flex items-center gap-2 text-sm"&gt;
+        &lt;span&gt;✓&lt;/span&gt;100GBストレージ
+      &lt;/li&gt;
+      &lt;li class="flex items-center gap-2 text-sm"&gt;
+        &lt;span&gt;✓&lt;/span&gt;優先サポート
+      &lt;/li&gt;
+      &lt;li class="flex items-center gap-2 text-sm"&gt;
+        &lt;span&gt;✓&lt;/span&gt;全機能利用可能
+      &lt;/li&gt;
+      &lt;li class="flex items-center gap-2 text-sm"&gt;
+        &lt;span&gt;✓&lt;/span&gt;API連携
+      &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;button class="mt-8 w-full py-3 rounded-lg bg-white text-cyan-600
+                    font-medium hover:bg-cyan-50 transition-colors"&gt;
+      選択する
+    &lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;!-- エンタープライズプラン --&gt;
+  &lt;div class="bg-white rounded-2xl shadow-md p-8 flex flex-col"&gt;
+    &lt;h3 class="text-lg font-bold text-gray-800"&gt;エンタープライズ&lt;/h3&gt;
+    &lt;p class="text-gray-500 text-sm mt-1"&gt;大規模チーム向け&lt;/p&gt;
+    &lt;div class="mt-6"&gt;
+      &lt;span class="text-4xl font-bold text-gray-800"&gt;¥9,800&lt;/span&gt;
+      &lt;span class="text-gray-500"&gt;/月&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;ul class="mt-6 space-y-3 flex-1"&gt;
+      &lt;li class="flex items-center gap-2 text-sm text-gray-600"&gt;
+        &lt;span class="text-cyan-500"&gt;✓&lt;/span&gt;無制限ストレージ
+      &lt;/li&gt;
+      &lt;li class="flex items-center gap-2 text-sm text-gray-600"&gt;
+        &lt;span class="text-cyan-500"&gt;✓&lt;/span&gt;24時間サポート
+      &lt;/li&gt;
+      &lt;li class="flex items-center gap-2 text-sm text-gray-600"&gt;
+        &lt;span class="text-cyan-500"&gt;✓&lt;/span&gt;全機能利用可能
+      &lt;/li&gt;
+      &lt;li class="flex items-center gap-2 text-sm text-gray-600"&gt;
+        &lt;span class="text-cyan-500"&gt;✓&lt;/span&gt;専用インフラ
+      &lt;/li&gt;
+      &lt;li class="flex items-center gap-2 text-sm text-gray-600"&gt;
+        &lt;span class="text-cyan-500"&gt;✓&lt;/span&gt;SLA保証
+      &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;button class="mt-8 w-full py-3 rounded-lg border-2 border-cyan-500
+                    text-cyan-500 font-medium hover:bg-cyan-50
+                    transition-colors"&gt;
+      お問い合わせ
+    &lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>AIに特徴セクションを生成させる</h3>
+
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">📊</span>
+            <span class="prompt-card-label">特徴セクション生成プロンプト</span>
+          </div>
+          <div class="prompt-card-content">Tailwind CSSのGridレイアウトを使って、サービスの特徴セクションを作成してください。grid-cols-3で3列に並べ、各カードにはアイコン、タイトル、説明文を含めてください。レスポンシブ対応として、モバイルではgrid-cols-1、タブレットではgrid-cols-2、デスクトップではgrid-cols-3にしてください。</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Grid vs Flexbox 使い分けガイド</h3>
+
+        <div class="highlight-box">
+          <h4>POINT</h4>
+          <p>GridとFlexboxの使い分けの指針をまとめます。<br>
+            <strong>Gridが適しているケース：</strong><br>
+            - ダッシュボードやカードグリッドなど、2次元の配置が必要な場合<br>
+            - 列数が決まっている均等なレイアウト（料金表、ギャラリーなど）<br>
+            - <code>col-span</code>/<code>row-span</code>で不均等なサイズの配置が必要な場合<br>
+            - <code>auto-fit</code>/<code>auto-fill</code>でレスポンシブ対応したい場合<br><br>
+            <strong>Flexboxが適しているケース：</strong><br>
+            - ナビバー、ヘッダーなど1方向の配置<br>
+            - 要素のサイズに応じた柔軟な配置<br>
+            - 中央配置や両端配置などのアライメント<br>
+            - コンポーネント内部のレイアウト<br><br>
+            <strong>実践的なルール：</strong>ページ全体の構造にはGridを、コンポーネント内部にはFlexboxを使うことが多いです。両者を組み合わせて使いましょう。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== SUMMARY ========== -->
+    <section class="section summary-section">
+      <h2>まとめ</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-number">1</div>
+          <p><code>grid</code>クラスでGridコンテナを作成し、<code>grid-cols-*</code>で列数を指定する</p>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">2</div>
+          <p><code>gap-*</code>で要素間の余白を設定し、<code>gap-x-*</code>/<code>gap-y-*</code>で方向別に制御する</p>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">3</div>
+          <p><code>place-items-*</code>や<code>justify-items-*</code>でグリッドアイテムの配置を制御する</p>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">4</div>
+          <p><code>col-span-*</code>で複数列、<code>row-span-*</code>で複数行にまたがるアイテムを作成する</p>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">5</div>
+          <p><code>auto-fit</code>を使えば、メディアクエリなしでレスポンシブなグリッドを実現できる</p>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">6</div>
+          <p>任意値（Arbitrary values）を角括弧記法で指定し、柔軟なグリッドを定義できる</p>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">7</div>
+          <p>ページ全体の構造にはGridを、コンポーネント内部にはFlexboxを使い分ける</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ========== PAGE NAV ========== -->
+  <div class="page-nav">
+    <a href="5tw-flexbox.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">Flexboxレイアウト</div>
+    </a>
+    <a href="7tw-responsive.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">レスポンシブデザイン</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>Tailwind CSS入門 - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

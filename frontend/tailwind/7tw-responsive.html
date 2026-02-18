@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第7章 レスポンシブデザイン - Tailwind CSS入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <link rel="stylesheet" href="../../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #06B6D4;
+      --primary-dark: #0891B2;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #B2EBF2;
+    }
+    .nav-category-links { display: none; }
+    .tw-breakpoint-demo { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+    .tw-breakpoint-item { display: flex; align-items: center; gap: 8px; background: #F3F4F6; border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+    .tw-breakpoint-prefix { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #06B6D4; font-size: 13px; }
+    .tw-breakpoint-value { color: #6B7280; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-tailwind.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge">Tailwind CSS入門</div>
+      <div class="chapter-number">7</div>
+      <h1 class="chapter-title">レスポンシブデザイン</h1>
+      <p class="chapter-subtitle">あらゆるデバイスに対応する</p>
+    </header>
+
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li><a href="#section1">7-1. モバイルファーストの考え方</a></li>
+        <li><a href="#section2">7-2. ブレークポイント一覧</a></li>
+        <li><a href="#section3">7-3. レスポンシブレイアウト実践</a></li>
+        <li><a href="#section4">7-4. レスポンシブの高度なテクニック</a></li>
+        <li><a href="#section5">7-5. 実践：レスポンシブページ制作</a></li>
+      </ul>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- Section 7-1 -->
+    <!-- ============================================================ -->
+    <section id="section1" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-1</span>
+        <h2 class="section-title">モバイルファーストの考え方</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>Tailwindのモバイルファースト設計哲学</h3>
+        <p>Tailwind CSSはモバイルファーストのアプローチを採用しています。これは「まずモバイル（小さい画面）向けのスタイルを書き、必要に応じて大きい画面向けのスタイルを追加していく」という考え方です。</p>
+        <p>現代のWeb利用では、スマートフォンからのアクセスが全体の50%以上を占めることも珍しくありません。モバイルファーストで設計することで、最も多くのユーザーに最適な体験を提供できます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>プレフィックスなし＝全画面サイズに適用</h3>
+        <p>Tailwindでは、プレフィックスなしのクラスはすべての画面サイズに適用されます。<code>sm:</code> 以上のプレフィックスを付けると、その画面サイズ以上でのみスタイルが適用されます。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- プレフィックスなし → すべての画面サイズで適用 --&gt;
+&lt;div class="text-sm"&gt;常に小さいテキスト&lt;/div&gt;
+
+&lt;!-- sm: → 640px以上で適用（上書き） --&gt;
+&lt;div class="text-sm sm:text-base"&gt;
+  モバイル: 小さい / 640px以上: 通常サイズ
+&lt;/div&gt;
+
+&lt;!-- 段階的に上書き --&gt;
+&lt;div class="text-sm sm:text-base md:text-lg lg:text-xl"&gt;
+  画面が大きくなるにつれてテキストも大きく
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">プレフィックスなしがベーススタイル</div>
+          <div class="info-box-content">
+            <p>Tailwindのレスポンシブでは、プレフィックスなしのクラスが「ベーススタイル」として全画面サイズに適用されます。<code>sm:</code> や <code>md:</code> は「min-width」に基づくメディアクエリとして機能し、ベーススタイルを上書きします。モバイル向けのスタイルを先に定義し、大きい画面で調整するのが正しい使い方です。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>デスクトップファーストとの違い</h3>
+        <p>従来のCSSでは「デスクトップファースト」で設計し、<code>max-width</code> メディアクエリで小さい画面に対応する方法が一般的でした。Tailwindはこれとは逆のアプローチを取ります。</p>
+
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #EF4444; color: white;">デスクトップファースト（従来）</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">CSS</span></div>
+              <div class="code-content">
+<pre>/* デフォルト: デスクトップ向け */
+.container {
+  display: flex;
+  gap: 24px;
+}
+
+/* タブレット以下で上書き */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+/* モバイル以下で上書き */
+@media (max-width: 480px) {
+  .container {
+    gap: 8px;
+  }
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #06B6D4; color: white;">モバイルファースト（Tailwind）</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">HTML</span></div>
+              <div class="code-content">
+<pre>&lt;!-- デフォルト: モバイル向け --&gt;
+&lt;!-- sm以上: タブレット調整 --&gt;
+&lt;!-- md以上: デスクトップ向け --&gt;
+&lt;div class="
+  flex flex-col gap-2
+  sm:gap-4
+  md:flex-row md:gap-6
+"&gt;
+  ...
+&lt;/div&gt;
+
+&lt;!-- 小さい画面から順に
+     スタイルを積み上げていく --&gt;</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- モバイルファーストの実例 --&gt;
+&lt;div class="
+  p-4 text-center
+  sm:p-6 sm:text-left
+  md:p-8
+  lg:p-12
+"&gt;
+  &lt;h1 class="
+    text-2xl font-bold
+    sm:text-3xl
+    md:text-4xl
+    lg:text-5xl
+  "&gt;
+    レスポンシブな見出し
+  &lt;/h1&gt;
+  &lt;p class="
+    mt-2 text-sm text-gray-600
+    sm:mt-3 sm:text-base
+    md:mt-4 md:text-lg
+  "&gt;
+    画面サイズに合わせてテキストとパディングが変化します
+  &lt;/p&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Section 7-2 -->
+    <!-- ============================================================ -->
+    <section id="section2" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-2</span>
+        <h2 class="section-title">ブレークポイント一覧</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>デフォルトブレークポイント</h3>
+        <p>Tailwind CSSには5つのデフォルトブレークポイントが用意されています。すべて <code>min-width</code> ベースです。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>プレフィックス</th>
+                <th>最小幅</th>
+                <th>CSS</th>
+                <th>対象デバイス</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>sm:</code></td>
+                <td>640px</td>
+                <td><code>@media (min-width: 640px)</code></td>
+                <td>大きいスマートフォン（横向き）</td>
+              </tr>
+              <tr>
+                <td><code>md:</code></td>
+                <td>768px</td>
+                <td><code>@media (min-width: 768px)</code></td>
+                <td>タブレット</td>
+              </tr>
+              <tr>
+                <td><code>lg:</code></td>
+                <td>1024px</td>
+                <td><code>@media (min-width: 1024px)</code></td>
+                <td>ノートPC・小型デスクトップ</td>
+              </tr>
+              <tr>
+                <td><code>xl:</code></td>
+                <td>1280px</td>
+                <td><code>@media (min-width: 1280px)</code></td>
+                <td>デスクトップ</td>
+              </tr>
+              <tr>
+                <td><code>2xl:</code></td>
+                <td>1536px</td>
+                <td><code>@media (min-width: 1536px)</code></td>
+                <td>大型デスクトップモニター</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ブレークポイントの視覚化</h3>
+        <p>各ブレークポイントがどの画面幅から適用されるか、視覚的に確認しましょう。</p>
+
+        <div class="tw-breakpoint-demo">
+          <div class="tw-breakpoint-item">
+            <span class="tw-breakpoint-prefix">(なし)</span>
+            <span class="tw-breakpoint-value">0px 〜</span>
+          </div>
+          <div class="tw-breakpoint-item">
+            <span class="tw-breakpoint-prefix">sm:</span>
+            <span class="tw-breakpoint-value">640px 〜</span>
+          </div>
+          <div class="tw-breakpoint-item">
+            <span class="tw-breakpoint-prefix">md:</span>
+            <span class="tw-breakpoint-value">768px 〜</span>
+          </div>
+          <div class="tw-breakpoint-item">
+            <span class="tw-breakpoint-prefix">lg:</span>
+            <span class="tw-breakpoint-value">1024px 〜</span>
+          </div>
+          <div class="tw-breakpoint-item">
+            <span class="tw-breakpoint-prefix">xl:</span>
+            <span class="tw-breakpoint-value">1280px 〜</span>
+          </div>
+          <div class="tw-breakpoint-item">
+            <span class="tw-breakpoint-prefix">2xl:</span>
+            <span class="tw-breakpoint-value">1536px 〜</span>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- 各ブレークポイントの使用例 --&gt;
+
+&lt;!-- パディングをブレークポイントごとに変更 --&gt;
+&lt;div class="p-2 sm:p-4 md:p-6 lg:p-8 xl:p-12 2xl:p-16"&gt;
+  画面幅に応じてパディングが変化
+&lt;/div&gt;
+
+&lt;!-- 背景色をブレークポイントごとに変更（デバッグ用） --&gt;
+&lt;div class="
+  bg-red-200
+  sm:bg-yellow-200
+  md:bg-green-200
+  lg:bg-blue-200
+  xl:bg-purple-200
+  2xl:bg-pink-200
+"&gt;
+  現在のブレークポイントが色でわかる
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>テキストサイズの段階的変更</h3>
+        <p>レスポンシブで最も頻繁に使うのがテキストサイズの調整です。小さい画面では読みやすいサイズ、大きい画面ではインパクトのあるサイズにします。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- テキストサイズの段階的変更 --&gt;
+&lt;h1 class="text-sm sm:text-base md:text-lg lg:text-xl"&gt;
+  段階的に大きくなる見出し
+&lt;/h1&gt;
+
+&lt;!-- ヒーローセクションの見出し --&gt;
+&lt;h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold"&gt;
+  大きなヒーロー見出し
+&lt;/h1&gt;
+
+&lt;!-- 本文テキスト --&gt;
+&lt;p class="text-sm sm:text-base lg:text-lg leading-relaxed"&gt;
+  本文テキストも画面サイズに合わせて読みやすく調整します。
+  行間（leading）も合わせて調整するとさらに読みやすくなります。
+&lt;/p&gt;</pre>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>POINT</h4>
+          <p>よく使うブレークポイントの組み合わせは以下の3パターンです。(1) <code>text-base md:text-lg</code> 2段階切り替え（シンプル）、(2) <code>text-sm sm:text-base lg:text-lg</code> 3段階切り替え（バランス型）、(3) <code>text-sm sm:text-base md:text-lg lg:text-xl</code> 4段階切り替え（きめ細かい調整）。まずは2段階から始めて、必要に応じて細かく調整しましょう。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Section 7-3 -->
+    <!-- ============================================================ -->
+    <section id="section3" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-3</span>
+        <h2 class="section-title">レスポンシブレイアウト実践</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>グリッドのレスポンシブ対応</h3>
+        <p>CSSグリッドとレスポンシブを組み合わせて、画面幅に応じてカラム数を変化させるのは最も一般的なパターンです。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- レスポンシブグリッド: 1列 → 2列 → 3列 --&gt;
+&lt;div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"&gt;
+  &lt;div class="bg-white rounded-lg shadow p-6"&gt;
+    &lt;h3 class="font-bold text-lg"&gt;カード1&lt;/h3&gt;
+    &lt;p class="text-gray-600 mt-2"&gt;カードの内容です&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class="bg-white rounded-lg shadow p-6"&gt;
+    &lt;h3 class="font-bold text-lg"&gt;カード2&lt;/h3&gt;
+    &lt;p class="text-gray-600 mt-2"&gt;カードの内容です&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class="bg-white rounded-lg shadow p-6"&gt;
+    &lt;h3 class="font-bold text-lg"&gt;カード3&lt;/h3&gt;
+    &lt;p class="text-gray-600 mt-2"&gt;カードの内容です&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- レスポンシブグリッド: 1列 → 2列 → 3列 → 4列 --&gt;
+&lt;div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"&gt;
+  &lt;!-- 商品一覧など、多数のアイテムを並べる場合 --&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Flexboxのレスポンシブ対応</h3>
+        <p>Flexboxでは方向の切り替えが主なレスポンシブパターンです。モバイルでは縦並び、デスクトップでは横並びにします。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- Flexbox: 縦並び → 横並び --&gt;
+&lt;div class="flex flex-col md:flex-row gap-6"&gt;
+  &lt;div class="md:w-1/3"&gt;
+    &lt;img src="image.jpg" alt="" class="w-full rounded-lg"&gt;
+  &lt;/div&gt;
+  &lt;div class="md:w-2/3"&gt;
+    &lt;h2 class="text-xl font-bold"&gt;タイトル&lt;/h2&gt;
+    &lt;p class="mt-2 text-gray-600"&gt;本文テキスト&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- サイドバーレイアウト --&gt;
+&lt;div class="flex flex-col lg:flex-row gap-8"&gt;
+  &lt;main class="lg:w-3/4"&gt;
+    &lt;!-- メインコンテンツ --&gt;
+  &lt;/main&gt;
+  &lt;aside class="lg:w-1/4"&gt;
+    &lt;!-- サイドバー --&gt;
+  &lt;/aside&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>要素の表示/非表示</h3>
+        <p>特定の画面サイズでのみ要素を表示・非表示にするパターンは、ナビゲーションやサイドバーでよく使います。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- レスポンシブナビゲーションバー --&gt;
+&lt;nav class="bg-white shadow"&gt;
+  &lt;div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"&gt;
+    &lt;div class="flex items-center justify-between h-16"&gt;
+      &lt;!-- ロゴ --&gt;
+      &lt;div class="text-xl font-bold text-cyan-600"&gt;MyApp&lt;/div&gt;
+
+      &lt;!-- デスクトップメニュー（モバイルで非表示） --&gt;
+      &lt;div class="hidden md:flex items-center space-x-8"&gt;
+        &lt;a href="#" class="text-gray-700 hover:text-cyan-600"&gt;ホーム&lt;/a&gt;
+        &lt;a href="#" class="text-gray-700 hover:text-cyan-600"&gt;機能&lt;/a&gt;
+        &lt;a href="#" class="text-gray-700 hover:text-cyan-600"&gt;料金&lt;/a&gt;
+        &lt;a href="#" class="text-gray-700 hover:text-cyan-600"&gt;お問合せ&lt;/a&gt;
+      &lt;/div&gt;
+
+      &lt;!-- ハンバーガーメニュー（デスクトップで非表示） --&gt;
+      &lt;button class="md:hidden p-2"&gt;
+        &lt;svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"&gt;
+          &lt;path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16" /&gt;
+        &lt;/svg&gt;
+      &lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/nav&gt;</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- レスポンシブカードグリッド --&gt;
+&lt;div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4 md:p-8"&gt;
+
+  &lt;div class="bg-white rounded-xl shadow-md overflow-hidden"&gt;
+    &lt;img src="card1.jpg" alt="" class="w-full h-48 object-cover"&gt;
+    &lt;div class="p-4 sm:p-6"&gt;
+      &lt;span class="text-xs font-semibold text-cyan-600 uppercase"&gt;カテゴリ&lt;/span&gt;
+      &lt;h3 class="mt-2 text-lg font-bold text-gray-900"&gt;カードタイトル&lt;/h3&gt;
+      &lt;p class="mt-2 text-sm text-gray-600 line-clamp-3"&gt;
+        カードの説明文がここに入ります。
+      &lt;/p&gt;
+      &lt;!-- 詳細ボタン: モバイルでは全幅、デスクトップでは自動幅 --&gt;
+      &lt;button class="mt-4 w-full sm:w-auto px-4 py-2 bg-cyan-500
+                     text-white rounded-lg hover:bg-cyan-600"&gt;
+        詳細を見る
+      &lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- 同様のカードを繰り返し --&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>クラスの組み合わせ</th>
+                <th>動作</th>
+                <th>よくある用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>hidden md:block</code></td>
+                <td>モバイルで非表示、md以上で表示</td>
+                <td>デスクトップメニュー、サイドバー</td>
+              </tr>
+              <tr>
+                <td><code>md:hidden</code></td>
+                <td>md以上で非表示</td>
+                <td>ハンバーガーボタン、モバイル専用UI</td>
+              </tr>
+              <tr>
+                <td><code>hidden sm:flex</code></td>
+                <td>モバイルで非表示、sm以上でflex表示</td>
+                <td>横並びメニュー</td>
+              </tr>
+              <tr>
+                <td><code>hidden lg:grid</code></td>
+                <td>lg未満で非表示、lg以上でgrid表示</td>
+                <td>ダッシュボードのグリッド</td>
+              </tr>
+              <tr>
+                <td><code>block sm:hidden</code></td>
+                <td>モバイルのみ表示</td>
+                <td>モバイル専用のCTAボタン</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Section 7-4 -->
+    <!-- ============================================================ -->
+    <section id="section4" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-4</span>
+        <h2 class="section-title">レスポンシブの高度なテクニック</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>containerクラスの使い方</h3>
+        <p>Tailwindの <code>container</code> クラスは、各ブレークポイントに応じた <code>max-width</code> を自動設定します。<code>mx-auto</code> と組み合わせてコンテンツを中央揃えにします。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- containerクラスの基本的な使い方 --&gt;
+&lt;div class="container mx-auto px-4"&gt;
+  &lt;!--
+    sm (640px以上) → max-width: 640px
+    md (768px以上) → max-width: 768px
+    lg (1024px以上) → max-width: 1024px
+    xl (1280px以上) → max-width: 1280px
+    2xl (1536px以上) → max-width: 1536px
+  --&gt;
+  &lt;h1&gt;コンテンツがここに入ります&lt;/h1&gt;
+&lt;/div&gt;
+
+&lt;!-- max-w-* で手動設定する方法 --&gt;
+&lt;div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"&gt;
+  &lt;!-- 常にmax-width: 896pxで中央揃え --&gt;
+  &lt;!-- パディングだけレスポンシブで変更 --&gt;
+&lt;/div&gt;
+
+&lt;!-- ページ全体のレイアウト例 --&gt;
+&lt;div class="min-h-screen bg-gray-50"&gt;
+  &lt;header class="bg-white shadow"&gt;
+    &lt;div class="container mx-auto px-4 py-4"&gt;
+      &lt;!-- ヘッダーコンテンツ --&gt;
+    &lt;/div&gt;
+  &lt;/header&gt;
+  &lt;main class="container mx-auto px-4 py-8"&gt;
+    &lt;!-- メインコンテンツ --&gt;
+  &lt;/main&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>任意のブレークポイント</h3>
+        <p>Tailwindでは、デフォルトの5つ以外に任意の値をブレークポイントとして使えます。<code>min-[値]:</code> と <code>max-[値]:</code> の記法を使います。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- 任意のmin-widthブレークポイント --&gt;
+&lt;div class="min-[800px]:flex min-[800px]:gap-6"&gt;
+  &lt;!-- 800px以上でflexレイアウト --&gt;
+&lt;/div&gt;
+
+&lt;!-- 任意のmax-widthブレークポイント --&gt;
+&lt;div class="max-[600px]:text-sm max-[600px]:p-2"&gt;
+  &lt;!-- 600px以下で小さいテキストとパディング --&gt;
+&lt;/div&gt;
+
+&lt;!-- 範囲を指定する場合は両方組み合わせる --&gt;
+&lt;div class="min-[600px]:max-[900px]:bg-yellow-100"&gt;
+  &lt;!-- 600px〜900pxの間だけ黄色の背景 --&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">任意ブレークポイントの乱用に注意</div>
+          <div class="warning-box-content">
+            <p>任意のブレークポイント（<code>min-[800px]:</code> など）は便利ですが、乱用するとコードの一貫性が失われます。デフォルトの <code>sm:</code> <code>md:</code> <code>lg:</code> <code>xl:</code> <code>2xl:</code> で対応できないか、まず検討しましょう。チーム開発では特に、統一されたブレークポイントを使うことが重要です。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>レスポンシブパディングとフォントサイズ</h3>
+        <p>ページ全体のパディングやフォントサイズをレスポンシブに調整するパターンは非常に汎用的です。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- レスポンシブパディング --&gt;
+&lt;section class="px-4 md:px-8 lg:px-16 py-8 md:py-12 lg:py-20"&gt;
+  &lt;!-- セクション内コンテンツ --&gt;
+&lt;/section&gt;
+
+&lt;!-- レスポンシブフォントサイズ --&gt;
+&lt;article class="prose"&gt;
+  &lt;h1 class="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold"&gt;
+    メインの見出し
+  &lt;/h1&gt;
+  &lt;h2 class="text-xl md:text-2xl lg:text-3xl font-semibold"&gt;
+    サブ見出し
+  &lt;/h2&gt;
+  &lt;p class="text-base md:text-lg leading-relaxed md:leading-loose"&gt;
+    本文テキストです。行間も合わせて調整しています。
+  &lt;/p&gt;
+&lt;/article&gt;
+
+&lt;!-- レスポンシブなギャップ --&gt;
+&lt;div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8"&gt;
+  &lt;!-- アイテム --&gt;
+&lt;/div&gt;</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Section 7-5 -->
+    <!-- ============================================================ -->
+    <section id="section5" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 7-5</span>
+        <h2 class="section-title">実践：レスポンシブページ制作</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>AI活用：レスポンシブLP生成</h3>
+        <p>AIを使ってレスポンシブなランディングページを効率的に生成しましょう。</p>
+
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">📱</span>
+            <span class="prompt-card-label">レスポンシブLP生成プロンプト</span>
+          </div>
+          <div class="prompt-card-content">Tailwind CSSで、モバイルファーストのランディングページを作成してください。以下の要件でお願いします：
+- ヘッダー: モバイルではハンバーガーメニュー、デスクトップ(md以上)では横並びナビ
+- ヒーロー: モバイルではテキストのみ中央揃え、デスクトップではテキスト左+画像右の2カラム
+- 特徴セクション: モバイル1列、sm2列、lg3列のカードグリッド
+- フッター: モバイル1列、md以上で4列のリンクグリッド
+- すべてのテキストサイズ・パディングをレスポンシブ対応にしてください</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ヘッダー実装例</h3>
+        <p>モバイルではハンバーガーメニュー、デスクトップでは横並びのナビゲーションを実装します。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- レスポンシブヘッダー --&gt;
+&lt;header class="bg-white shadow-sm sticky top-0 z-50"&gt;
+  &lt;div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"&gt;
+    &lt;div class="flex items-center justify-between h-14 md:h-16"&gt;
+      &lt;!-- ロゴ --&gt;
+      &lt;a href="#" class="text-lg md:text-xl font-bold text-cyan-600"&gt;
+        MyService
+      &lt;/a&gt;
+
+      &lt;!-- デスクトップナビゲーション --&gt;
+      &lt;nav class="hidden md:flex items-center space-x-6 lg:space-x-8"&gt;
+        &lt;a href="#" class="text-sm lg:text-base text-gray-700
+                        hover:text-cyan-600 transition-colors"&gt;機能&lt;/a&gt;
+        &lt;a href="#" class="text-sm lg:text-base text-gray-700
+                        hover:text-cyan-600 transition-colors"&gt;料金&lt;/a&gt;
+        &lt;a href="#" class="text-sm lg:text-base text-gray-700
+                        hover:text-cyan-600 transition-colors"&gt;事例&lt;/a&gt;
+        &lt;a href="#" class="px-4 py-2 bg-cyan-500 text-white text-sm
+                        rounded-lg hover:bg-cyan-600 transition-colors"&gt;
+          お問合せ
+        &lt;/a&gt;
+      &lt;/nav&gt;
+
+      &lt;!-- モバイルハンバーガーボタン --&gt;
+      &lt;button class="md:hidden p-2 rounded-lg hover:bg-gray-100"
+              onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"&gt;
+        &lt;svg class="w-6 h-6 text-gray-700" fill="none"
+             stroke="currentColor" viewBox="0 0 24 24"&gt;
+          &lt;path stroke-linecap="round" stroke-linejoin="round"
+                stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /&gt;
+        &lt;/svg&gt;
+      &lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;!-- モバイルメニュー --&gt;
+    &lt;div id="mobile-menu" class="hidden md:hidden pb-4"&gt;
+      &lt;a href="#" class="block py-2 text-gray-700"&gt;機能&lt;/a&gt;
+      &lt;a href="#" class="block py-2 text-gray-700"&gt;料金&lt;/a&gt;
+      &lt;a href="#" class="block py-2 text-gray-700"&gt;事例&lt;/a&gt;
+      &lt;a href="#" class="block mt-2 py-2 text-center bg-cyan-500
+                        text-white rounded-lg"&gt;お問合せ&lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/header&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>ヒーローセクション</h3>
+        <p>テキストサイズと余白がレスポンシブで変化するヒーローセクションを実装します。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- レスポンシブ ヒーローセクション --&gt;
+&lt;section class="bg-gradient-to-br from-cyan-50 to-blue-50
+                px-4 py-12 sm:px-6 sm:py-16 md:py-20 lg:py-28"&gt;
+  &lt;div class="max-w-7xl mx-auto
+              flex flex-col md:flex-row items-center gap-8 lg:gap-12"&gt;
+
+    &lt;!-- テキスト: モバイル中央揃え → デスクトップ左揃え --&gt;
+    &lt;div class="text-center md:text-left md:w-1/2"&gt;
+      &lt;h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl
+                 font-bold text-gray-900 leading-tight"&gt;
+        サービスを&lt;br class="hidden sm:inline"&gt;
+        もっと&lt;span class="text-cyan-600"&gt;簡単&lt;/span&gt;に
+      &lt;/h1&gt;
+      &lt;p class="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl
+                text-gray-600 max-w-lg mx-auto md:mx-0"&gt;
+        直感的なUIで、チームの生産性を劇的に向上させます。
+        今すぐ無料で始めましょう。
+      &lt;/p&gt;
+      &lt;div class="mt-6 sm:mt-8 flex flex-col sm:flex-row
+                  gap-3 justify-center md:justify-start"&gt;
+        &lt;a href="#" class="px-6 py-3 bg-cyan-500 text-white
+                          rounded-lg text-base font-semibold
+                          hover:bg-cyan-600 transition-colors
+                          text-center"&gt;
+          無料で始める
+        &lt;/a&gt;
+        &lt;a href="#" class="px-6 py-3 border-2 border-gray-300
+                          rounded-lg text-base font-semibold
+                          text-gray-700 hover:border-cyan-500
+                          hover:text-cyan-600 transition-colors
+                          text-center"&gt;
+          デモを見る
+        &lt;/a&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- 画像: モバイルでは下に、デスクトップでは右に --&gt;
+    &lt;div class="md:w-1/2"&gt;
+      &lt;img src="hero-image.png" alt="サービスイメージ"
+           class="w-full max-w-md mx-auto md:max-w-none rounded-xl shadow-lg"&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>特徴セクション（1列→2列→3列）</h3>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- 特徴セクション: レスポンシブカードグリッド --&gt;
+&lt;section class="px-4 py-12 sm:px-6 md:py-16 lg:py-20 bg-white"&gt;
+  &lt;div class="max-w-7xl mx-auto"&gt;
+    &lt;div class="text-center mb-8 md:mb-12"&gt;
+      &lt;h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900"&gt;
+        主な特徴
+      &lt;/h2&gt;
+      &lt;p class="mt-3 text-base sm:text-lg text-gray-600 max-w-2xl mx-auto"&gt;
+        シンプルで強力な機能であなたのワークフローを改善します
+      &lt;/p&gt;
+    &lt;/div&gt;
+
+    &lt;div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"&gt;
+      &lt;!-- カード1 --&gt;
+      &lt;div class="bg-gray-50 rounded-xl p-6 md:p-8 text-center sm:text-left"&gt;
+        &lt;div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center
+                    justify-center mx-auto sm:mx-0 mb-4"&gt;
+          &lt;svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor"
+               viewBox="0 0 24 24"&gt;
+            &lt;path stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /&gt;
+          &lt;/svg&gt;
+        &lt;/div&gt;
+        &lt;h3 class="text-lg font-bold text-gray-900"&gt;高速処理&lt;/h3&gt;
+        &lt;p class="mt-2 text-sm text-gray-600"&gt;
+          最適化されたアルゴリズムで、大量のデータも瞬時に処理します。
+        &lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;!-- カード2 --&gt;
+      &lt;div class="bg-gray-50 rounded-xl p-6 md:p-8 text-center sm:text-left"&gt;
+        &lt;div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center
+                    justify-center mx-auto sm:mx-0 mb-4"&gt;
+          &lt;svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor"
+               viewBox="0 0 24 24"&gt;
+            &lt;path stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6
+                  a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7
+                  a4 4 0 00-8 0v4h8z" /&gt;
+          &lt;/svg&gt;
+        &lt;/div&gt;
+        &lt;h3 class="text-lg font-bold text-gray-900"&gt;セキュリティ&lt;/h3&gt;
+        &lt;p class="mt-2 text-sm text-gray-600"&gt;
+          業界最高レベルの暗号化で、あなたのデータを安全に保護します。
+        &lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;!-- カード3 --&gt;
+      &lt;div class="bg-gray-50 rounded-xl p-6 md:p-8 text-center sm:text-left"&gt;
+        &lt;div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center
+                    justify-center mx-auto sm:mx-0 mb-4"&gt;
+          &lt;svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor"
+               viewBox="0 0 24 24"&gt;
+            &lt;path stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857
+                  M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2
+                  a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857
+                  m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0
+                  3 3 0 016 0z" /&gt;
+          &lt;/svg&gt;
+        &lt;/div&gt;
+        &lt;h3 class="text-lg font-bold text-gray-900"&gt;チーム連携&lt;/h3&gt;
+        &lt;p class="mt-2 text-sm text-gray-600"&gt;
+          リアルタイム共同編集で、チーム全員が同じページで作業できます。
+        &lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>AI活用：レスポンシブダッシュボード</h3>
+
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">🖥️</span>
+            <span class="prompt-card-label">レスポンシブダッシュボードプロンプト</span>
+          </div>
+          <div class="prompt-card-content">Tailwind CSSでレスポンシブなダッシュボードを作成してください。以下の要件でお願いします：
+- サイドバー: モバイルでは非表示(hidden)、lg以上で表示(lg:block)、幅は64(w-64)
+- ヘッダーバー: 固定表示(sticky top-0)、モバイルではハンバーガーメニューボタンあり
+- 統計カード: モバイル1列、sm2列、xl4列のグリッド
+- メインコンテンツ: テーブルはモバイルではカード表示、md以上でテーブル表示
+- すべてのパディング・フォントサイズをレスポンシブ対応にしてください</div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>POINT</h4>
+          <p>レスポンシブ設計のチェックリスト：(1) モバイルのスタイルを最初に書いているか、(2) テキストサイズは画面幅に合わせて変化するか、(3) パディング・マージンは適切に調整されているか、(4) ナビゲーションはモバイルで使いやすいか、(5) 画像はレスポンシブに対応しているか（w-full, object-cover）、(6) ボタンはモバイルでタップしやすいサイズか（最低44x44px）、(7) 実機またはブラウザのデベロッパーツールで全ブレークポイントを確認したか。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Summary -->
+    <!-- ============================================================ -->
+    <section class="section summary-section">
+      <h2>まとめ</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-number">1</div>
+          <div class="summary-text">Tailwindはモバイルファーストで、プレフィックスなしのクラスが全画面サイズのベーススタイルになる</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">2</div>
+          <div class="summary-text">ブレークポイントは <code>sm(640px)</code> <code>md(768px)</code> <code>lg(1024px)</code> <code>xl(1280px)</code> <code>2xl(1536px)</code> の5段階</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">3</div>
+          <div class="summary-text">グリッドのレスポンシブは <code>grid-cols-1 sm:grid-cols-2 lg:grid-cols-3</code> のパターンが基本</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">4</div>
+          <div class="summary-text">Flexboxのレスポンシブは <code>flex-col md:flex-row</code> で縦横を切り替える</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">5</div>
+          <div class="summary-text"><code>hidden md:block</code> と <code>md:hidden</code> で画面サイズ別に要素の表示/非表示を制御する</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">6</div>
+          <div class="summary-text"><code>container</code> クラスと <code>max-w-*</code> でコンテンツ幅を自動調整する</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">7</div>
+          <div class="summary-text">テキストサイズ・パディング・ギャップを段階的に変更し、あらゆるデバイスで読みやすいデザインを実現する</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Page Navigation -->
+  <!-- ============================================================ -->
+  <div class="page-nav">
+    <a href="6tw-grid.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">Gridレイアウト</div>
+    </a>
+    <a href="8tw-states.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">状態とインタラクション</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>Tailwind CSS入門 - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>

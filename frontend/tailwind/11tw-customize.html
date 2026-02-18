@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第11章 カスタマイズ - Tailwind CSS入門</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <link rel="stylesheet" href="../../shared/css/prompt-gemini.css">
+  <style>
+    :root {
+      --primary: #06B6D4;
+      --primary-dark: #0891B2;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #B2EBF2;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-tailwind.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge">Tailwind CSS入門</div>
+      <div class="chapter-number">11</div>
+      <h1 class="chapter-title">カスタマイズ</h1>
+      <p class="chapter-subtitle">Tailwind CSSを自分好みに設定する</p>
+    </header>
+
+    <nav class="toc">
+      <h2 class="toc-title">この章の内容</h2>
+      <ul class="toc-list">
+        <li><a href="#section1">11-1. tailwind.config.js の基本</a></li>
+        <li><a href="#section2">11-2. テーマの拡張（extend）</a></li>
+        <li><a href="#section3">11-3. @apply ディレクティブ</a></li>
+        <li><a href="#section4">11-4. カスタムクラスとCSS変数</a></li>
+        <li><a href="#section5">11-5. プラグイン</a></li>
+      </ul>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- Section 11-1 -->
+    <!-- ============================================================ -->
+    <section id="section1" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-1</span>
+        <h2 class="section-title">tailwind.config.js の基本</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>設定ファイルの構造</h3>
+        <p>Tailwind CSSの大きな魅力のひとつは、設定ファイルを通じてフレームワーク全体をカスタマイズできることです。プロジェクトのルートに配置される <code>tailwind.config.js</code> ファイルが、すべてのカスタマイズの起点となります。</p>
+        <p>設定ファイルは大きく分けて <strong>content</strong>（対象ファイルの指定）、<strong>theme</strong>（デザイントークンの定義）、<strong>extend</strong>（既存テーマの拡張）、<strong>plugins</strong>（プラグインの追加）の4つのセクションで構成されています。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span></div>
+          <div class="code-content">
+<pre>/** @type {import('tailwindcss').Config} */
+module.exports = {
+  // 1. Tailwindを適用するファイルのパス
+  content: [
+    "./src/**/*.{html,js,jsx,ts,tsx}",
+    "./public/index.html",
+  ],
+
+  // 2. テーマの設定
+  theme: {
+    // 既存の値を完全に上書きする場合
+    screens: {
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+    },
+
+    // 既存の値に追加する場合
+    extend: {
+      colors: {
+        brand: '#06B6D4',
+      },
+      fontFamily: {
+        sans: ['Noto Sans JP', 'sans-serif'],
+      },
+    },
+  },
+
+  // 3. プラグイン
+  plugins: [],
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>content配列の設定</h3>
+        <p><code>content</code> プロパティは、Tailwindがクラス名をスキャンする対象ファイルを指定します。ここに含まれないファイルのクラスは、ビルド時に生成されるCSSに含まれません。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span></div>
+          <div class="code-content">
+<pre>module.exports = {
+  content: [
+    // HTMLファイル
+    "./index.html",
+    "./pages/**/*.html",
+
+    // JavaScriptファイル（React, Vue等）
+    "./src/**/*.{js,jsx,ts,tsx,vue}",
+
+    // テンプレートファイル
+    "./templates/**/*.ejs",
+    "./components/**/*.hbs",
+
+    // nodeモジュール内のUIライブラリ
+    "./node_modules/@my-ui-lib/**/*.js",
+  ],
+}</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>プロパティ</th>
+                <th>説明</th>
+                <th>必須</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>content</code></td>
+                <td>クラス名をスキャンするファイルパスの配列</td>
+                <td>はい</td>
+              </tr>
+              <tr>
+                <td><code>theme</code></td>
+                <td>デザイントークン（色、フォント、スペーシング等）の定義</td>
+                <td>いいえ</td>
+              </tr>
+              <tr>
+                <td><code>theme.extend</code></td>
+                <td>既存テーマに値を追加（上書きではない）</td>
+                <td>いいえ</td>
+              </tr>
+              <tr>
+                <td><code>plugins</code></td>
+                <td>追加プラグインの配列</td>
+                <td>いいえ</td>
+              </tr>
+              <tr>
+                <td><code>darkMode</code></td>
+                <td>ダークモードの戦略（'class' または 'media'）</td>
+                <td>いいえ</td>
+              </tr>
+              <tr>
+                <td><code>prefix</code></td>
+                <td>全クラスに付与する接頭辞（例: 'tw-'）</td>
+                <td>いいえ</td>
+              </tr>
+              <tr>
+                <td><code>important</code></td>
+                <td>全ユーティリティに !important を付与するか</td>
+                <td>いいえ</td>
+              </tr>
+              <tr>
+                <td><code>separator</code></td>
+                <td>修飾子の区切り文字（デフォルト: ':'）</td>
+                <td>いいえ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">v3とv4の設定方法の違い</div>
+          <div class="info-box-content">
+            <p>Tailwind CSS v4ではゼロコンフィグを目指しており、設定ファイルが不要になるケースが増えています。v4では <code>@theme</code> ディレクティブを使ってCSS内で直接テーマをカスタマイズできます。本章ではv3の <code>tailwind.config.js</code> をベースに解説しますが、v4への移行も視野に入れておきましょう。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Section 11-2 -->
+    <!-- ============================================================ -->
+    <section id="section2" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-2</span>
+        <h2 class="section-title">テーマの拡張（extend）</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>theme.extend の役割</h3>
+        <p>Tailwindのデフォルトテーマには、豊富な色、スペーシング、フォントサイズなどが用意されています。<code>theme.extend</code> を使うと、これらのデフォルト値を保ちながら、新しい値を追加できます。</p>
+        <p><strong>注意:</strong> <code>theme</code> 直下に記述すると既存の値が完全に上書きされますが、<code>theme.extend</code> 内に記述すると既存の値に追加されます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>カスタムカラーの追加</h3>
+        <p>プロジェクトのブランドカラーを追加する場合、<code>extend.colors</code> にオブジェクトとして定義します。数値キーを使うとTailwindの標準的な色の濃淡パターンに合わせられます。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span></div>
+          <div class="code-content">
+<pre>// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        // 単色の追加
+        brand: '#06B6D4',
+
+        // 濃淡バリエーションの追加
+        primary: {
+          50:  '#E0F7FA',
+          100: '#B2EBF2',
+          200: '#80DEEA',
+          300: '#4DD0E1',
+          400: '#26C6DA',
+          500: '#06B6D4',  // メインカラー
+          600: '#0891B2',
+          700: '#0E7490',
+          800: '#155E75',
+          900: '#164E63',
+        },
+
+        // セマンティックカラー
+        success: '#10B981',
+        warning: '#F59E0B',
+        danger:  '#EF4444',
+      },
+    },
+  },
+}
+
+// 使用例:
+// bg-brand, text-primary-500, border-primary-200
+// bg-success, text-danger, border-warning</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>カスタムフォントファミリー</h3>
+        <p>日本語フォントを使ったプロジェクトでは、<code>fontFamily</code> のカスタマイズが重要です。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span></div>
+          <div class="code-content">
+<pre>// tailwind.config.js
+const defaultTheme = require('tailwindcss/defaultTheme')
+
+module.exports = {
+  theme: {
+    extend: {
+      fontFamily: {
+        // デフォルトのsansに日本語フォントを追加
+        sans: [
+          'Noto Sans JP',
+          ...defaultTheme.fontFamily.sans,
+        ],
+        // コード表示用フォント
+        mono: [
+          'JetBrains Mono',
+          ...defaultTheme.fontFamily.mono,
+        ],
+        // 見出し用フォント
+        heading: [
+          'Noto Sans JP',
+          'sans-serif',
+        ],
+      },
+    },
+  },
+}
+
+// 使用例:
+// font-sans  → Noto Sans JP, system-ui, ...
+// font-mono  → JetBrains Mono, ui-monospace, ...
+// font-heading → Noto Sans JP, sans-serif</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>カスタムスペーシングとブレークポイント</h3>
+        <p>スペーシングやブレークポイントもプロジェクトに合わせて拡張できます。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span></div>
+          <div class="code-content">
+<pre>// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      // カスタムスペーシング
+      spacing: {
+        '18': '4.5rem',   // 72px
+        '88': '22rem',    // 352px
+        '128': '32rem',   // 512px
+        'header': '64px', // ヘッダーの高さ
+        'sidebar': '280px', // サイドバーの幅
+      },
+
+      // カスタムブレークポイント
+      screens: {
+        'xs': '475px',     // 小さいスマホ向け
+        '3xl': '1600px',   // 大画面モニター向け
+        'tall': { 'raw': '(min-height: 800px)' }, // 高さベース
+      },
+
+      // カスタム最大幅
+      maxWidth: {
+        'content': '720px',
+        'wide': '1400px',
+      },
+
+      // カスタムz-index
+      zIndex: {
+        'dropdown': '1000',
+        'modal': '2000',
+        'tooltip': '3000',
+      },
+    },
+  },
+}
+
+// 使用例:
+// p-18, mt-header, w-sidebar
+// xs:flex, 3xl:grid-cols-4, tall:py-12
+// max-w-content, z-modal</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>extendプロパティ</th>
+                <th>説明</th>
+                <th>使用例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>colors</code></td>
+                <td>カスタムカラーの追加</td>
+                <td><code>bg-brand</code>, <code>text-primary-500</code></td>
+              </tr>
+              <tr>
+                <td><code>fontFamily</code></td>
+                <td>フォントファミリーの追加</td>
+                <td><code>font-sans</code>, <code>font-heading</code></td>
+              </tr>
+              <tr>
+                <td><code>spacing</code></td>
+                <td>スペーシング値の追加</td>
+                <td><code>p-18</code>, <code>mt-header</code></td>
+              </tr>
+              <tr>
+                <td><code>screens</code></td>
+                <td>ブレークポイントの追加</td>
+                <td><code>xs:flex</code>, <code>3xl:grid-cols-4</code></td>
+              </tr>
+              <tr>
+                <td><code>fontSize</code></td>
+                <td>フォントサイズの追加</td>
+                <td><code>text-xxs</code>, <code>text-huge</code></td>
+              </tr>
+              <tr>
+                <td><code>borderRadius</code></td>
+                <td>角丸の値の追加</td>
+                <td><code>rounded-4xl</code></td>
+              </tr>
+              <tr>
+                <td><code>boxShadow</code></td>
+                <td>影の追加</td>
+                <td><code>shadow-card</code>, <code>shadow-soft</code></td>
+              </tr>
+              <tr>
+                <td><code>animation</code></td>
+                <td>アニメーションの追加</td>
+                <td><code>animate-fade-in</code></td>
+              </tr>
+              <tr>
+                <td><code>maxWidth</code></td>
+                <td>最大幅の追加</td>
+                <td><code>max-w-content</code></td>
+              </tr>
+              <tr>
+                <td><code>zIndex</code></td>
+                <td>z-indexの追加</td>
+                <td><code>z-modal</code>, <code>z-tooltip</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Section 11-3 -->
+    <!-- ============================================================ -->
+    <section id="section3" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-3</span>
+        <h2 class="section-title">@apply ディレクティブ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>@applyとは</h3>
+        <p><code>@apply</code> は、TailwindのユーティリティクラスをカスタムCSSクラス内で再利用するためのディレクティブです。HTMLのクラス属性が長くなりすぎる場合や、繰り返し使うスタイルパターンをまとめたい場合に便利です。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>ボタンクラスの定義</h3>
+        <p>最もよく使われるパターンが、ボタンのスタイル定義です。同じボタンスタイルを複数箇所で使う場合、<code>@apply</code> でクラスを作成すると保守性が向上します。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">CSS</span></div>
+          <div class="code-content">
+<pre>/* styles.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* @applyでボタンクラスを定義 */
+.btn {
+  @apply inline-flex items-center justify-center
+         px-6 py-2.5 rounded-lg
+         font-semibold text-sm
+         transition-colors duration-200
+         focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+  @apply btn bg-cyan-500 text-white
+         hover:bg-cyan-600
+         focus:ring-cyan-500;
+}
+
+.btn-secondary {
+  @apply btn bg-gray-100 text-gray-700
+         hover:bg-gray-200
+         focus:ring-gray-500;
+}
+
+.btn-outline {
+  @apply btn border-2 border-cyan-500 text-cyan-600
+         hover:bg-cyan-50
+         focus:ring-cyan-500;
+}
+
+.btn-danger {
+  @apply btn bg-red-500 text-white
+         hover:bg-red-600
+         focus:ring-red-500;
+}
+
+.btn-lg {
+  @apply px-8 py-3 text-base;
+}
+
+.btn-sm {
+  @apply px-4 py-1.5 text-xs;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>カードクラスの定義</h3>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">CSS</span></div>
+          <div class="code-content">
+<pre>/* カードコンポーネント */
+.card {
+  @apply bg-white rounded-xl shadow-md
+         overflow-hidden
+         transition-shadow duration-200
+         hover:shadow-lg;
+}
+
+.card-header {
+  @apply px-6 py-4 border-b border-gray-100;
+}
+
+.card-body {
+  @apply px-6 py-4;
+}
+
+.card-footer {
+  @apply px-6 py-4 bg-gray-50 border-t border-gray-100;
+}
+
+/* 入力フィールド */
+.input {
+  @apply w-full px-4 py-2 rounded-lg
+         border border-gray-300
+         text-gray-900 placeholder-gray-400
+         focus:border-cyan-500 focus:ring-2
+         focus:ring-cyan-200 focus:outline-none
+         transition-colors duration-200;
+}
+
+.input-error {
+  @apply input border-red-500
+         focus:border-red-500 focus:ring-red-200;
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>HTMLクラス vs @apply の比較</h3>
+
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #EF4444; color: white;">HTMLに直接記述（長くなりがち）</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">HTML</span></div>
+              <div class="code-content">
+<pre>&lt;!-- 同じスタイルを何度も書く --&gt;
+&lt;button class="inline-flex items-center
+  justify-center px-6 py-2.5 rounded-lg
+  font-semibold text-sm bg-cyan-500
+  text-white hover:bg-cyan-600
+  transition-colors duration-200
+  focus:outline-none focus:ring-2
+  focus:ring-offset-2 focus:ring-cyan-500"&gt;
+  保存する
+&lt;/button&gt;
+
+&lt;button class="inline-flex items-center
+  justify-center px-6 py-2.5 rounded-lg
+  font-semibold text-sm bg-cyan-500
+  text-white hover:bg-cyan-600
+  transition-colors duration-200
+  focus:outline-none focus:ring-2
+  focus:ring-offset-2 focus:ring-cyan-500"&gt;
+  送信する
+&lt;/button&gt;</pre>
+              </div>
+            </div>
+          </div>
+          <div class="comparison-card">
+            <div class="comparison-label" style="background: #10B981; color: white;">@applyで整理</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">HTML</span></div>
+              <div class="code-content">
+<pre>&lt;!-- スッキリ読みやすい --&gt;
+&lt;button class="btn-primary"&gt;
+  保存する
+&lt;/button&gt;
+
+&lt;button class="btn-primary"&gt;
+  送信する
+&lt;/button&gt;
+
+&lt;!-- サイズバリエーション --&gt;
+&lt;button class="btn-primary btn-lg"&gt;
+  大きなボタン
+&lt;/button&gt;
+
+&lt;button class="btn-outline btn-sm"&gt;
+  小さなアウトライン
+&lt;/button&gt;</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          <div class="warning-box-title">@applyの使いすぎに注意</div>
+          <div class="warning-box-content">
+            <p><code>@apply</code> を多用しすぎると、Tailwindの「HTMLを見ればスタイルがわかる」という利点が失われます。Tailwindの作者であるAdam Wathan氏も「@applyは最後の手段」と述べています。基本的にはHTMLにユーティリティクラスを直接書き、どうしても繰り返しが発生する場合にのみ <code>@apply</code> を使いましょう。</p>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <h4>POINT: @applyを使うべき場面</h4>
+          <p><strong>使うべき場面:</strong> 同じボタンスタイルが10箇所以上で使われる場合、フォームの入力欄など統一が必要な要素、CMSなどHTMLを直接編集できない場面。<br>
+          <strong>使わない方がよい場面:</strong> 1〜2箇所でしか使わないスタイル、レスポンシブやホバー状態だけが異なる場合（ユーティリティクラスの方が柔軟）、コンポーネントフレームワーク（React/Vue）を使っている場合（コンポーネント化で解決できる）。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Section 11-4 -->
+    <!-- ============================================================ -->
+    <section id="section4" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-4</span>
+        <h2 class="section-title">カスタムクラスとCSS変数</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>CSS変数との組み合わせ</h3>
+        <p>CSS変数（カスタムプロパティ）とTailwindを組み合わせることで、テーマの動的な切り替えやブランドカラーの一元管理が可能になります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3>@layer ディレクティブ</h3>
+        <p>Tailwindでは <code>@layer</code> ディレクティブを使って、カスタムCSSをTailwindのレイヤーシステムに統合できます。これにより、スタイルの優先順位が適切に管理されます。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">CSS</span></div>
+          <div class="code-content">
+<pre>@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* @layer base: リセットやデフォルトスタイル */
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply text-gray-800 bg-gray-50
+           font-sans leading-relaxed;
+  }
+
+  h1 {
+    @apply text-3xl font-bold text-gray-900;
+  }
+
+  h2 {
+    @apply text-2xl font-bold text-gray-900;
+  }
+
+  h3 {
+    @apply text-xl font-semibold text-gray-800;
+  }
+
+  a {
+    @apply text-cyan-600 hover:text-cyan-700
+           transition-colors;
+  }
+}
+
+/* @layer components: 再利用可能なコンポーネント */
+@layer components {
+  .container-custom {
+    @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-title {
+    @apply text-2xl font-bold text-gray-900
+           mb-2 pb-2 border-b-2 border-cyan-500;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5
+           rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-cyan-100 text-cyan-800;
+  }
+
+  .badge-success {
+    @apply badge bg-green-100 text-green-800;
+  }
+
+  .badge-warning {
+    @apply badge bg-yellow-100 text-yellow-800;
+  }
+}
+
+/* @layer utilities: カスタムユーティリティ */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>CSS変数でテーマカラーを管理</h3>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">CSS</span></div>
+          <div class="code-content">
+<pre>/* CSS変数でテーマを定義 */
+:root {
+  --color-primary: 6 182 212;     /* cyan-500 */
+  --color-secondary: 139 92 246;  /* violet-500 */
+  --color-accent: 245 158 11;     /* amber-500 */
+  --color-surface: 255 255 255;
+  --color-text: 31 41 55;
+}
+
+/* ダークテーマ */
+.dark {
+  --color-primary: 34 211 238;    /* cyan-400 */
+  --color-secondary: 167 139 250; /* violet-400 */
+  --color-accent: 251 191 36;     /* amber-400 */
+  --color-surface: 31 41 55;
+  --color-text: 243 244 246;
+}</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span></div>
+          <div class="code-content">
+<pre>// tailwind.config.js でCSS変数を参照
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: 'rgb(var(--color-primary) / &lt;alpha-value&gt;)',
+        secondary: 'rgb(var(--color-secondary) / &lt;alpha-value&gt;)',
+        accent: 'rgb(var(--color-accent) / &lt;alpha-value&gt;)',
+        surface: 'rgb(var(--color-surface) / &lt;alpha-value&gt;)',
+        'on-surface': 'rgb(var(--color-text) / &lt;alpha-value&gt;)',
+      },
+    },
+  },
+}
+
+// 使用例:
+// bg-primary          → var(--color-primary)
+// bg-primary/50       → var(--color-primary) 50%透明度
+// text-on-surface     → var(--color-text)
+// dark:bg-primary     → ダークモードでCSS変数が切り替わる</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>カスタムユーティリティの追加</h3>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">CSS</span></div>
+          <div class="code-content">
+<pre>@layer utilities {
+  /* テキストの段階的な影 */
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
+  }
+
+  .text-shadow {
+    text-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
+  }
+
+  .text-shadow-lg {
+    text-shadow: 0 4px 8px rgb(0 0 0 / 0.15);
+  }
+
+  /* グラスモーフィズム */
+  .glass {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* アスペクト比（古いブラウザ対応） */
+  .aspect-video-legacy {
+    position: relative;
+    padding-bottom: 56.25%;
+  }
+
+  .aspect-video-legacy > * {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>@layer</th>
+                <th>用途</th>
+                <th>優先順位</th>
+                <th>例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>base</code></td>
+                <td>リセット、デフォルトスタイル、要素のグローバルスタイル</td>
+                <td>最も低い</td>
+                <td>h1のフォントサイズ、bodyの背景色</td>
+              </tr>
+              <tr>
+                <td><code>components</code></td>
+                <td>再利用可能なUIコンポーネント</td>
+                <td>中間</td>
+                <td>.btn, .card, .badge などのクラス</td>
+              </tr>
+              <tr>
+                <td><code>utilities</code></td>
+                <td>単一目的のユーティリティ</td>
+                <td>最も高い</td>
+                <td>.text-shadow, .glass, .scrollbar-hide</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Section 11-5 -->
+    <!-- ============================================================ -->
+    <section id="section5" class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-5</span>
+        <h2 class="section-title">プラグイン</h2>
+      </div>
+
+      <div class="subsection">
+        <h3>公式プラグイン</h3>
+        <p>Tailwind CSSには、よく使われる機能を追加する公式プラグインが用意されています。これらを導入することで、フォームのスタイルリセットやリッチテキストの表示など、実践的な機能を簡単に追加できます。</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>プラグイン</th>
+                <th>パッケージ名</th>
+                <th>機能</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Forms</td>
+                <td><code>@tailwindcss/forms</code></td>
+                <td>フォーム要素のベーススタイルをリセットし、ユーティリティクラスで簡単にカスタマイズ可能に</td>
+              </tr>
+              <tr>
+                <td>Typography</td>
+                <td><code>@tailwindcss/typography</code></td>
+                <td><code>prose</code> クラスでマークダウンやリッチテキストを美しく表示</td>
+              </tr>
+              <tr>
+                <td>Aspect Ratio</td>
+                <td><code>@tailwindcss/aspect-ratio</code></td>
+                <td>要素のアスペクト比を制御するユーティリティ（v3.x以降は組み込み）</td>
+              </tr>
+              <tr>
+                <td>Container Queries</td>
+                <td><code>@tailwindcss/container-queries</code></td>
+                <td>コンテナクエリに基づくレスポンシブデザイン</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>プラグインのインストールと設定</h3>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Bash</span></div>
+          <div class="code-content">
+<pre># 公式プラグインのインストール
+npm install -D @tailwindcss/forms
+npm install -D @tailwindcss/typography
+npm install -D @tailwindcss/container-queries
+
+# まとめてインストール
+npm install -D @tailwindcss/forms @tailwindcss/typography @tailwindcss/container-queries</pre>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span></div>
+          <div class="code-content">
+<pre>// tailwind.config.js
+module.exports = {
+  content: ["./src/**/*.{html,js}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/container-queries'),
+  ],
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>@tailwindcss/typography の使用例</h3>
+        <p>Typographyプラグインは、ブログ記事やドキュメントなど、マークダウンから生成されたHTMLを美しく表示するための <code>prose</code> クラスを提供します。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">HTML</span></div>
+          <div class="code-content">
+<pre>&lt;!-- proseクラスで包むだけで美しいタイポグラフィに --&gt;
+&lt;article class="prose prose-cyan lg:prose-lg max-w-none"&gt;
+  &lt;h1&gt;記事のタイトル&lt;/h1&gt;
+  &lt;p&gt;
+    これは本文のテキストです。&lt;strong&gt;太字&lt;/strong&gt;や
+    &lt;em&gt;斜体&lt;/em&gt;、&lt;a href="#"&gt;リンク&lt;/a&gt;も
+    自動的に美しくスタイリングされます。
+  &lt;/p&gt;
+
+  &lt;h2&gt;見出し2&lt;/h2&gt;
+  &lt;p&gt;段落間のスペーシングも自動調整されます。&lt;/p&gt;
+
+  &lt;ul&gt;
+    &lt;li&gt;リスト項目1&lt;/li&gt;
+    &lt;li&gt;リスト項目2&lt;/li&gt;
+    &lt;li&gt;リスト項目3&lt;/li&gt;
+  &lt;/ul&gt;
+
+  &lt;blockquote&gt;
+    引用文もスタイル付きで表示されます。
+  &lt;/blockquote&gt;
+
+  &lt;pre&gt;&lt;code&gt;console.log('コードブロックも対応');&lt;/code&gt;&lt;/pre&gt;
+&lt;/article&gt;
+
+&lt;!-- proseのカラーテーマ --&gt;
+&lt;!-- prose-gray, prose-slate, prose-zinc --&gt;
+&lt;!-- prose-neutral, prose-stone --&gt;
+&lt;!-- prose-red, prose-cyan, prose-blue 等 --&gt;
+
+&lt;!-- proseのサイズ --&gt;
+&lt;!-- prose-sm, prose-base, prose-lg, prose-xl, prose-2xl --&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>カスタムプラグインの作成</h3>
+        <p>独自のユーティリティやコンポーネントをプラグインとして作成することもできます。チーム内で共有する共通スタイルをプラグインにまとめると便利です。</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span></div>
+          <div class="code-content">
+<pre>// tailwind.config.js
+const plugin = require('tailwindcss/plugin')
+
+module.exports = {
+  plugins: [
+    // カスタムプラグインの例
+    plugin(function({ addComponents, addUtilities, theme }) {
+
+      // カスタムコンポーネント
+      addComponents({
+        '.card-elevated': {
+          backgroundColor: theme('colors.white'),
+          borderRadius: theme('borderRadius.xl'),
+          boxShadow: theme('boxShadow.lg'),
+          padding: theme('spacing.6'),
+          transition: 'box-shadow 0.2s ease',
+          '&:hover': {
+            boxShadow: theme('boxShadow.xl'),
+          },
+        },
+        '.section-divider': {
+          borderTop: `2px solid ${theme('colors.gray.200')}`,
+          margin: `${theme('spacing.8')} 0`,
+        },
+      })
+
+      // カスタムユーティリティ
+      addUtilities({
+        '.content-auto': {
+          contentVisibility: 'auto',
+        },
+        '.drag-none': {
+          '-webkit-user-drag': 'none',
+          userDrag: 'none',
+        },
+      })
+    }),
+  ],
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>AI活用: Tailwind設定ファイルの生成</h3>
+
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <span class="prompt-card-icon">⚙️</span>
+            <span class="prompt-card-label">Tailwind設定ファイル生成プロンプト</span>
+          </div>
+          <div class="prompt-card-content">以下の要件で tailwind.config.js を作成してください。
+
+プロジェクト: コーポレートサイト
+ブランドカラー: プライマリー #06B6D4、セカンダリー #8B5CF6
+フォント: 日本語対応（Noto Sans JP）
+カスタムスペーシング: ヘッダー高さ 80px、セクション間 120px
+ブレークポイント: タブレット 768px、デスクトップ 1024px、ワイド 1400px
+プラグイン: forms, typography
+追加: ダークモード対応（class方式）、カスタムアニメーション（fade-in, slide-up）</div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">CDN環境でのカスタマイズ方法</div>
+          <div class="info-box-content">
+            <p>Tailwind CDN（Play CDN）を使っている場合は、<code>&lt;script&gt;</code> タグ内で設定を記述できます。本格的な開発にはビルド環境が推奨されますが、学習やプロトタイプ作成には便利です。</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">HTML</span></div>
+              <div class="code-content">
+<pre>&lt;!-- CDN版のカスタマイズ --&gt;
+&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;
+&lt;script&gt;
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: {
+            500: '#06B6D4',
+            600: '#0891B2',
+          },
+        },
+        fontFamily: {
+          sans: ['Noto Sans JP', 'sans-serif'],
+        },
+      },
+    },
+  }
+&lt;/script&gt;</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- まとめ -->
+    <!-- ============================================================ -->
+    <section class="section summary-section">
+      <h2>まとめ</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-number">1</div>
+          <div class="summary-text"><code>tailwind.config.js</code> はTailwindカスタマイズの中心。content, theme, extend, plugins の4つの主要セクションで構成される</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">2</div>
+          <div class="summary-text"><code>theme.extend</code> を使えば、デフォルトのユーティリティを維持したまま、カスタムカラー・フォント・スペーシングなどを追加できる</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">3</div>
+          <div class="summary-text"><code>@apply</code> ディレクティブでユーティリティクラスをCSS内で再利用できるが、使いすぎるとTailwindの利点が失われるため注意</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">4</div>
+          <div class="summary-text"><code>@layer</code> ディレクティブ（base, components, utilities）を使って、カスタムCSSをTailwindのレイヤーシステムに適切に統合する</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">5</div>
+          <div class="summary-text">CSS変数とTailwindを組み合わせることで、テーマの動的切り替えやダークモード対応が容易になる</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">6</div>
+          <div class="summary-text">公式プラグイン（forms, typography, container-queries）を活用して、よく使う機能を効率的に追加できる</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">7</div>
+          <div class="summary-text">カスタムプラグインを作成すれば、チーム共通のコンポーネントやユーティリティを再利用可能な形で共有できる</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="10tw-components.html" class="page-nav-btn prev">
+      <div class="page-nav-label">前へ</div>
+      <div class="page-nav-title">コンポーネント実践</div>
+    </a>
+    <a href="12tw-practice.html" class="page-nav-btn next">
+      <div class="page-nav-label">次へ</div>
+      <div class="page-nav-title">総合実践プロジェクト</div>
+    </a>
+  </div>
+
+  <footer class="footer">
+    <p>Tailwind CSS入門 - 職業訓練校教材</p>
+  </footer>
+</body>
+</html>
