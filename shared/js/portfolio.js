@@ -72,10 +72,6 @@ function generateNavigation() {
         <a href="${promptsPath}prompt-function.html"><span class="material-symbols-outlined icon-sm">extension</span> 機能追加別プロンプト</a>
         <a href="${promptsPath}prompt-log.html"><span class="material-symbols-outlined icon-sm">history</span> 実行ログ</a>
       </div>
-      <div class="nav-group">
-        <div class="nav-group-title">ガイド</div>
-        <a href="${rootPath}prompt-guide.html"><span class="material-symbols-outlined icon-sm">menu_book</span> プロンプトガイド</a>
-      </div>
     </nav>
     <div class="sidebar-footer">
       &copy; Project Archive 2026
