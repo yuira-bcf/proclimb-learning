@@ -110,6 +110,9 @@
     }
 }</code></pre>
                     </div>
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 16px 0; text-align: center;">
+                        <div id="flow-exception"></div>
+                    </div>
                     <div class="syntax-box">
                         <div class="syntax-box-header">
                             <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
@@ -297,6 +300,9 @@ try-catch-finally構文を使った基本的な例外処理を確認するサン
         }
     }
 }</code></pre>
+                </div>
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 16px 0; text-align: center;">
+                    <div id="flow-trycatch"></div>
                 </div>
                 <div class="syntax-box">
                     <div class="syntax-box-header">
@@ -654,6 +660,9 @@ throws宣言を使って例外を呼び出し元に転送するサンプルプ�
     }
 }</code></pre>
                     </div>
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 16px 0; text-align: center;">
+                        <div id="flow-throws"></div>
+                    </div>
                     <div class="syntax-box">
                         <div class="syntax-box-header">
                             <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
@@ -859,5 +868,82 @@ public class RethrowDemo {
         });
     </script>
     <script src="../../shared/demo.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.17.1/flowchart.min.js"></script>
+    <script>
+    const flowOpts = {
+        'line-width': 2,
+        'line-color': '#64748b',
+        'element-color': '#64748b',
+        'font-family': '"Noto Sans JP", sans-serif',
+        'font-size': 14,
+        'font-color': '#1e293b',
+        'fill': '#dbeafe',
+        'yes-text': 'true',
+        'no-text': 'false',
+        'flowstate': {
+            start: { 'fill': '#1e293b', 'font-color': '#fff', 'element-color': '#1e293b' },
+            end: { 'fill': '#1e293b', 'font-color': '#fff', 'element-color': '#1e293b' },
+            process: { 'fill': '#dbeafe', 'element-color': '#3b82f6', 'font-color': '#1e40af' },
+            condition: { 'fill': '#fef3c7', 'element-color': '#f59e0b', 'font-color': '#92400e' },
+            output: { 'fill': '#dcfce7', 'element-color': '#22c55e', 'font-color': '#166534' },
+            error: { 'fill': '#fef2f2', 'element-color': '#ef4444', 'font-color': '#991b1b' },
+            fin: { 'fill': '#f3e8ff', 'element-color': '#a855f7', 'font-color': '#6b21a8' }
+        }
+    };
+
+    // ExceptionDemo - try-catch flow
+    flowchart.parse(`st=>start: 開始|start
+op1=>operation: tryブロック実行|process
+cond1=>condition: 例外発生？|condition
+op2=>operation: 正常終了|output
+err1=>operation: ArrayIndexOut
+OfBoundsException|error
+err2=>operation: NullPointer
+Exception|error
+err3=>operation: Arithmetic
+Exception|error
+op3=>operation: catchブロック実行|process
+op4=>operation: エラーメッセージ出力|output
+e=>end: 次の処理へ|end
+
+st->op1->cond1
+cond1(yes)->op3->op4->e
+cond1(no)->op2->e`).drawSVG('flow-exception', flowOpts);
+
+    // TryCatchDemo - try-catch-finally flow
+    flowchart.parse(`st=>start: 開始|start
+op1=>operation: tryブロック実行|process
+cond1=>condition: 例外発生？|condition
+op2=>operation: 正常処理|output
+op3=>operation: catchブロック
+例外処理|error
+op4=>operation: finallyブロック
+（必ず実行）|fin
+e=>end: 終了|end
+
+st->op1->cond1
+cond1(yes)->op3->op4->e
+cond1(no)->op2->op4`).drawSVG('flow-trycatch', flowOpts);
+
+    // ThrowsDemo - throws + validation
+    flowchart.parse(`st=>start: main() 開始|start
+op1=>operation: try: validateAge(15)|process
+cond1=>condition: age < 0 ?|condition
+op2=>operation: throw
+IllegalArgumentException|error
+cond2=>condition: age < 18 ?|condition
+op3=>operation: throw
+ArithmeticException|error
+op4=>operation: println: 有効な年齢|output
+op5=>operation: catch: 例外処理|process
+e=>end: 終了|end
+
+st->op1->cond1
+cond1(yes)->op2->op5->e
+cond1(no)->cond2
+cond2(yes)->op3->op5->e
+cond2(no)->op4->e`).drawSVG('flow-throws', flowOpts);
+    </script>
 </body>
 </html>
