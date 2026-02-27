@@ -12,17 +12,22 @@ const navData = {
         text: "Java基礎"
     },
     chapters: [
-        { href: "1java-overview.html", num: "1", text: "Javaの概要" },
-        { href: "2java-datatype.html", num: "2", text: "基本データ型と文字列" },
-        { href: "3java-operator.html", num: "3", text: "演算子と条件分岐" },
-        { href: "4java-loop.html", num: "4", text: "繰り返しと制御文" },
-        { href: "5java-class.html", num: "5", text: "クラスとインスタンス" },
-        { href: "6java-inheritance.html", num: "6", text: "継承" },
-        { href: "7java-abstract.html", num: "7", text: "抽象クラス" },
-        { href: "8java-interface.html", num: "8", text: "インタフェース" },
-        { href: "9java-polymorphism.html", num: "9", text: "参照型の型変換とポリモーフィズム" },
-        { href: "10java-collection.html", num: "10", text: "コレクションフレームワーク" },
-        { href: "11java-exception.html", num: "11", text: "例外処理" }
+        { href: "1java-overview.html", num: "1", text: "Javaの概要と環境構築" },
+        { href: "2java-compile-package.html", num: "2", text: "コンパイル・パッケージ・インポート" },
+        { href: "3java-variable.html", num: "3", text: "変数・リテラル・データ型" },
+        { href: "4java-array.html", num: "4", text: "配列" },
+        { href: "5java-string.html", num: "5", text: "文字列の操作" },
+        { href: "6java-operator.html", num: "6", text: "演算子とデータの比較" },
+        { href: "7java-typecast.html", num: "7", text: "型変換とラッパークラス" },
+        { href: "8java-condition.html", num: "8", text: "条件分岐" },
+        { href: "9java-loop.html", num: "9", text: "繰り返しと制御文" },
+        { href: "10java-class.html", num: "10", text: "クラスの基本" },
+        { href: "11java-static.html", num: "11", text: "コンストラクタとstatic" },
+        { href: "12java-inheritance.html", num: "12", text: "継承" },
+        { href: "13java-abstract-interface.html", num: "13", text: "抽象クラスとインタフェース" },
+        { href: "14java-polymorphism.html", num: "14", text: "ポリモーフィズム" },
+        { href: "15java-collection.html", num: "15", text: "コレクションフレームワーク" },
+        { href: "16java-exception.html", num: "16", text: "例外処理" }
     ],
     categories: [
         { href: "../../index.html", text: "ダッシュボード" },

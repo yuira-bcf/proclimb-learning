@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第11章 コンストラクタとstatic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #0097A7;
+        --primary-dark: #00838F;
+        --primary-light: #E0F7FA;
+        --primary-lighter: #B2EBF2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-java.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">11</div>
+            <h1 class="chapter-title">コンストラクタとstatic</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">11-1</span><span>オブジェクトの初期化</span></li>
+                <li class="toc-item"><span class="toc-number">11-2</span><span>static変数とstaticメソッド</span></li>
+                <li class="toc-item"><span class="toc-number">11-3</span><span>オブジェクトの扱い</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 11-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 11-1</span>
+                <h2 class="section-title">オブジェクトの初期化</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>コンストラクタはオブジェクト生成時に自動的に呼ばれる特別なメソッドで、フィールドの初期化を担当します。適切なコンストラクタ設計により、「生成した時点で使える状態」のオブジェクトを保証できます。これは不正な状態のオブジェクトが存在することを防ぎます。</p>
+            </div>
+
+            <div class="figure">
+                <div class="figure-caption">コンストラクタによるオブジェクト生成の流れ</div>
+                <svg viewBox="0 0 720 200" style="max-width: 720px; width: 100%; height: auto;">
+                    <!-- クラス（設計図） -->
+                    <rect x="10" y="40" width="140" height="120" rx="12" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="2"/>
+                    <text x="80" y="72" text-anchor="middle" font-size="14" font-weight="700" fill="#0284c7">Person クラス</text>
+                    <text x="80" y="96" text-anchor="middle" font-size="12" fill="#64748b">name: String</text>
+                    <text x="80" y="114" text-anchor="middle" font-size="12" fill="#64748b">age: int</text>
+                    <text x="80" y="138" text-anchor="middle" font-size="11" fill="#64748b">introduce()</text>
+                    <!-- 矢印1 -->
+                    <line x1="155" y1="100" x2="195" y2="100" stroke="#0ea5e9" stroke-width="2" marker-end="url(#arrowBlue)"/>
+                    <!-- new キーワード -->
+                    <rect x="200" y="70" width="100" height="60" rx="30" fill="#0ea5e9" stroke="none"/>
+                    <text x="250" y="106" text-anchor="middle" font-size="15" font-weight="700" fill="white">new</text>
+                    <!-- 矢印2 -->
+                    <line x1="305" y1="100" x2="345" y2="100" stroke="#0ea5e9" stroke-width="2" marker-end="url(#arrowBlue)"/>
+                    <!-- コンストラクタ実行 -->
+                    <rect x="350" y="40" width="160" height="120" rx="12" fill="#ffedd5" stroke="#f97316" stroke-width="2"/>
+                    <text x="430" y="72" text-anchor="middle" font-size="14" font-weight="700" fill="#c2410c">コンストラクタ実行</text>
+                    <text x="430" y="98" text-anchor="middle" font-size="12" fill="#64748b">this.name = "田中"</text>
+                    <text x="430" y="118" text-anchor="middle" font-size="12" fill="#64748b">this.age = 25</text>
+                    <text x="430" y="148" text-anchor="middle" font-size="11" fill="#c2410c">フィールドを初期化</text>
+                    <!-- 矢印3 -->
+                    <line x1="515" y1="100" x2="555" y2="100" stroke="#f97316" stroke-width="2" marker-end="url(#arrowOrange)"/>
+                    <!-- オブジェクト（完成品） -->
+                    <rect x="560" y="40" width="150" height="120" rx="12" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                    <text x="635" y="72" text-anchor="middle" font-size="14" font-weight="700" fill="#065f46">Person オブジェクト</text>
+                    <text x="635" y="98" text-anchor="middle" font-size="12" fill="#064e3b">name = "田中"</text>
+                    <text x="635" y="118" text-anchor="middle" font-size="12" fill="#064e3b">age = 25</text>
+                    <text x="635" y="148" text-anchor="middle" font-size="11" fill="#065f46">すぐに使える状態</text>
+                    <!-- 矢印マーカー定義 -->
+                    <defs>
+                        <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 0 L 10 5 L 0 10 z" fill="#0ea5e9"/>
+                        </marker>
+                        <marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 0 L 10 5 L 0 10 z" fill="#f97316"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">11-1-1 コンストラクタ</h3>
+                <div class="prompt-box">
+                    <div class="prompt-box-header">
+                        <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                        <span class="prompt-box-title">プロンプト</span>
+                        <button class="prompt-copy-btn">コピー</button>
+                    </div>
+                    <div class="prompt-box-content">
+                        <pre><code>## 機能
+複数のコンストラクタを持つPersonクラスの動作を確認するサンプルプロジェクト
+
+## 生成先
+- ディレクトリ: chapter05
+- ファイル名: PersonConstructor.java
+
+## 実装要件
+- privateフィールドとしてnameとageを持つ
+- 引数付きコンストラクタで名前と年齢を初期化
+- デフォルトコンストラクタでデフォルト値を設定
+- this()を使って他のコンストラクタを呼び出す
+
+
+- mainメソッドを含め、System.out.printlnで各処理の実行結果を出力して動作確認できるようにする
+
+## 使用するJava構文
+- コンストラクタ（クラス名と同名、戻り値なし）
+- コンストラクタのオーバーロード
+- this()によるコンストラクタチェーン</code></pre>
+                    </div>
+                </div>
+                <div class="code-block">
+                    <div class="code-header"><span class="code-title">chapter05/PersonConstructor.java</span><span class="code-lang">Java</span></div>
+                    <pre class="code-content"><code>public class PersonConstructor {
+    private String name;
+    private int age;
+
+    // コンストラクタ（クラス名と同じ、戻り値なし）
+    public PersonConstructor(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    // デフォルトコンストラクタ
+    public PersonConstructor() {
+        this("Unknown", 0);  // 他のコンストラクタを呼び出し
+    }
+
+    public static void main(String[] args) {
+        PersonConstructor p1 = new PersonConstructor("田中", 25);
+        PersonConstructor p2 = new PersonConstructor();
+        System.out.println(p1.name + " / " + p1.age);  // 田中 / 25
+        System.out.println(p2.name + " / " + p2.age);  // Unknown / 0
+    }
+}</code></pre>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">play_circle</span></span><span class="info-box-title">new PersonConstructor("田中", 25) の実行手順</span></div>
+                    <div style="margin-top: 12px;">
+                        <div class="step-item">
+                            <div class="step-number-box">1</div>
+                            <div class="step-content">
+                                <div class="step-text"><strong>メモリ確保</strong> ― メモリ上にオブジェクトの領域が確保される</div>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number-box">2</div>
+                            <div class="step-content">
+                                <div class="step-text"><strong>引数を渡す</strong> ― <code>"田中"</code> と <code>25</code> がコンストラクタの引数 <code>name</code>, <code>age</code> に渡される</div>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number-box">3</div>
+                            <div class="step-content">
+                                <div class="step-text"><strong>フィールド初期化</strong> ― <code>this.name = "田中"</code>、<code>this.age = 25</code> でフィールドに値がセットされる</div>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number-box">4</div>
+                            <div class="step-content">
+                                <div class="step-text"><strong>参照を代入</strong> ― 完成したオブジェクトの参照が変数 <code>p1</code> に代入され、以降 <code>p1</code> を通じて操作できる</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="figure">
+                    <div class="figure-caption">this() によるコンストラクタチェーンの流れ</div>
+                    <svg viewBox="0 0 660 180" style="max-width: 660px; width: 100%; height: auto;">
+                        <!-- 呼び出し元 -->
+                        <rect x="10" y="50" width="180" height="80" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+                        <text x="100" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">new PersonConstructor()</text>
+                        <text x="100" y="100" text-anchor="middle" font-size="11" fill="#64748b">引数なしで呼び出し</text>
+                        <text x="100" y="118" text-anchor="middle" font-size="11" fill="#64748b">（デフォルトコンストラクタ）</text>
+                        <!-- 矢印1 -->
+                        <line x1="195" y1="90" x2="240" y2="90" stroke="#f97316" stroke-width="2" marker-end="url(#arrowChain)"/>
+                        <text x="218" y="80" text-anchor="middle" font-size="11" font-weight="600" fill="#f97316">this()</text>
+                        <!-- this() による委譲先 -->
+                        <rect x="245" y="30" width="200" height="120" rx="10" fill="#ffedd5" stroke="#f97316" stroke-width="2"/>
+                        <text x="345" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#c2410c">this("Unknown", 0)</text>
+                        <text x="345" y="82" text-anchor="middle" font-size="12" fill="#1e293b">↓</text>
+                        <text x="345" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#c2410c">PersonConstructor</text>
+                        <text x="345" y="122" text-anchor="middle" font-size="13" font-weight="700" fill="#c2410c">(String, int)</text>
+                        <text x="345" y="142" text-anchor="middle" font-size="11" fill="#64748b">引数付きコンストラクタが実行</text>
+                        <!-- 矢印2 -->
+                        <line x1="450" y1="90" x2="490" y2="90" stroke="#10b981" stroke-width="2" marker-end="url(#arrowChainG)"/>
+                        <!-- 結果 -->
+                        <rect x="495" y="50" width="155" height="80" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                        <text x="572" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">完成</text>
+                        <text x="572" y="100" text-anchor="middle" font-size="12" fill="#064e3b">name = "Unknown"</text>
+                        <text x="572" y="118" text-anchor="middle" font-size="12" fill="#064e3b">age = 0</text>
+                        <defs>
+                            <marker id="arrowChain" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#f97316"/>
+                            </marker>
+                            <marker id="arrowChainG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+
+                <div class="syntax-box">
+                    <div class="syntax-box-header">
+                        <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
+                        <span class="syntax-box-title">構文説明</span>
+                    </div>
+                    <div class="syntax-box-content">
+                        <div class="syntax-item">
+                            <h4>コンストラクタ</h4>
+                            <div class="syntax-pattern">public クラス名(引数リスト) { 初期化処理 }</div>
+                            <p>オブジェクト生成時に自動的に呼び出され、フィールドの初期化を行います。クラス名と同じ名前で、戻り値の型は書きません。</p>
+                        </div>
+                        <div class="syntax-item">
+                            <h4>コンストラクタのオーバーロード</h4>
+                            <div class="syntax-pattern">this(引数);</div>
+                            <p>同じクラス内の別のコンストラクタを呼び出します。this()はコンストラクタの最初の行に記述する必要があります。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">11-1-2 デフォルトコンストラクタ</h3>
+                <div class="info-box">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">lightbulb</span></span><span class="info-box-title">デフォルトコンストラクタ</span></div>
+                    <p>コンストラクタを1つも定義しない場合、Javaコンパイラが引数なしのデフォルトコンストラクタを自動生成します。ただし、1つでもコンストラクタを自分で定義すると、自動生成されなくなります。</p>
+                </div>
+                <div class="figure">
+                    <div class="figure-caption">デフォルトコンストラクタの自動生成ルール</div>
+                    <svg viewBox="0 0 640 260" style="max-width: 640px; width: 100%; height: auto;">
+                        <!-- 左: コンストラクタ未定義 -->
+                        <rect x="10" y="10" width="290" height="230" rx="12" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                        <text x="155" y="38" text-anchor="middle" font-size="14" font-weight="700" fill="#065f46">コンストラクタを定義しない場合</text>
+                        <rect x="30" y="52" width="250" height="72" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+                        <text x="45" y="72" font-size="12" fill="#64748b" font-family="monospace">public class Sample {</text>
+                        <text x="55" y="90" font-size="12" fill="#64748b" font-family="monospace">  private int value;</text>
+                        <text x="45" y="108" font-size="12" fill="#64748b" font-family="monospace">}</text>
+                        <text x="155" y="148" text-anchor="middle" font-size="13" fill="#1e293b">↓ コンパイラが自動生成</text>
+                        <rect x="30" y="160" width="250" height="56" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5" stroke-dasharray="6,3"/>
+                        <text x="45" y="182" font-size="12" fill="#065f46" font-family="monospace">public Sample() {</text>
+                        <text x="45" y="200" font-size="12" fill="#065f46" font-family="monospace">}  // 空のコンストラクタ</text>
+                        <text x="155" y="232" text-anchor="middle" font-size="12" font-weight="600" fill="#10b981">new Sample() が使える</text>
+                        <!-- 右: コンストラクタ定義済み -->
+                        <rect x="340" y="10" width="290" height="230" rx="12" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+                        <text x="485" y="38" text-anchor="middle" font-size="14" font-weight="700" fill="#991b1b">コンストラクタを定義した場合</text>
+                        <rect x="360" y="52" width="250" height="90" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+                        <text x="375" y="72" font-size="12" fill="#64748b" font-family="monospace">public class Sample {</text>
+                        <text x="385" y="90" font-size="12" fill="#64748b" font-family="monospace">  private int value;</text>
+                        <text x="385" y="108" font-size="12" fill="#991b1b" font-weight="600" font-family="monospace">  public Sample(int v) {</text>
+                        <text x="395" y="124" font-size="12" fill="#991b1b" font-weight="600" font-family="monospace">    this.value = v; }</text>
+                        <text x="375" y="140" font-size="12" fill="#64748b" font-family="monospace">}</text>
+                        <text x="485" y="170" text-anchor="middle" font-size="13" fill="#1e293b">↓ 自動生成されない</text>
+                        <text x="485" y="198" text-anchor="middle" font-size="12" fill="#991b1b">new Sample() はコンパイルエラー</text>
+                        <text x="485" y="218" text-anchor="middle" font-size="12" fill="#065f46">new Sample(10) は使える</text>
+                    </svg>
+                </div>
+                <div class="warning-box">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">warning</span></span><span class="info-box-title">よくあるミス</span></div>
+                    <p>引数付きコンストラクタを定義した後に <code>new Sample()</code> と引数なしで呼び出すとコンパイルエラーになります。引数なしでも生成したい場合は、デフォルトコンストラクタを明示的に定義してください。</p>
+                </div>
+            </div>
+
+            <!-- コラム：コンストラクタを使わない初期化 -->
+            <div class="column-box">
+                <span class="column-badge">Column</span>
+                <div class="column-title" style="margin-top: 8px;">なぜ「初期化」が必要なのか？</div>
+
+                <p style="margin-top: 16px;">まず、初期化をしないとどうなるか見てみましょう。</p>
+
+                <div class="code-block" style="margin: 16px 0;">
+                    <div class="code-header"><span class="code-title">初期化しないまま使うと…</span><span class="code-lang">Java</span></div>
+                    <pre class="code-content"><code>Person p = new Person();
+p.introduce();
+// → 「私はnull、0歳です」</code></pre>
+                </div>
+
+                <p>名前が <code>null</code>？ 0歳？ ― こんな人は存在しません。<br>しかしプログラムはエラーにならず<strong>おかしいデータのまま動き続けます。</strong>これが本当の怖さです。</p>
+
+                <div class="info-box" style="background: white; margin: 20px 0;">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">smartphone</span></span><span class="info-box-title">現実に置き換えて考えよう</span></div>
+                    <p>スマホを買って電源を入れると「言語」「Wi-Fi」「アカウント」の初期設定が始まります。もしこれをスキップできたら？ ― 言語は不明、通信もできない、アプリも使えない。<strong>使い物になりません。</strong></p>
+                    <p style="margin-top: 8px;">コンストラクタは、この<strong>「初期設定画面」</strong>のようなものです。<br>必要な情報を最初に入れないと先に進めないようにすることで、壊れた状態のオブジェクトが作られるのを防ぎます。</p>
+                </div>
+
+                <p><code>new Person("田中", 25)</code> ― 名前と年齢を渡さないとそもそも作れない。<br>だから「null、0歳」のような壊れた Person が世の中に出てきません。</p>
+
+                <p style="margin-top: 20px;">では、コンストラクタを使わずに初期化する方法と比べてみましょう。</p>
+
+                <div class="figure" style="margin: 20px 0;">
+                    <div class="figure-caption">コンストラクタなし vs コンストラクタあり ― 初期化の安全性の違い</div>
+                    <svg viewBox="0 0 700 370" style="max-width: 700px; width: 100%; height: auto;">
+                        <!-- ===== 左側：コンストラクタなし（危険） ===== -->
+                        <rect x="10" y="10" width="320" height="350" rx="14" fill="#fff5f5" stroke="#ef4444" stroke-width="2"/>
+                        <rect x="10" y="10" width="320" height="36" rx="14" fill="#ef4444"/>
+                        <rect x="10" y="32" width="320" height="14" fill="#ef4444"/>
+                        <text x="170" y="34" text-anchor="middle" font-size="14" font-weight="700" fill="white">コンストラクタを使わない場合</text>
+                        <!-- Step 1 -->
+                        <rect x="30" y="60" width="280" height="44" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+                        <circle cx="52" cy="82" r="12" fill="#64748b"/>
+                        <text x="52" y="87" text-anchor="middle" font-size="11" font-weight="700" fill="white">1</text>
+                        <text x="72" y="78" font-size="12" fill="#1e293b" font-family="monospace">Person p = new Person();</text>
+                        <text x="72" y="94" font-size="11" fill="#64748b">空のオブジェクトが生成される</text>
+                        <!-- 矢印 -->
+                        <text x="170" y="118" text-anchor="middle" font-size="14" fill="#64748b">↓</text>
+                        <!-- Step 2 -->
+                        <rect x="30" y="124" width="280" height="44" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+                        <circle cx="52" cy="146" r="12" fill="#64748b"/>
+                        <text x="52" y="151" text-anchor="middle" font-size="11" font-weight="700" fill="white">2</text>
+                        <text x="72" y="142" font-size="12" fill="#1e293b" font-family="monospace">p.name = "田中";</text>
+                        <text x="72" y="158" font-size="11" fill="#64748b">手動で代入（忘れる可能性あり）</text>
+                        <!-- 矢印 -->
+                        <text x="170" y="182" text-anchor="middle" font-size="14" fill="#64748b">↓</text>
+                        <!-- 忘れた場合の結果 -->
+                        <rect x="30" y="188" width="280" height="66" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                        <text x="170" y="210" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">代入を忘れると...</text>
+                        <text x="170" y="230" text-anchor="middle" font-size="12" font-family="monospace" fill="#991b1b">name = null, age = 0</text>
+                        <text x="170" y="246" text-anchor="middle" font-size="11" fill="#991b1b">→ NullPointerException の危険</text>
+                        <!-- 結論 -->
+                        <rect x="30" y="268" width="280" height="36" rx="8" fill="#fecaca" stroke="#ef4444" stroke-width="1"/>
+                        <text x="170" y="291" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">コンパイル時にミスを検出できない</text>
+                        <!-- バツ印 -->
+                        <circle cx="170" cy="330" r="16" fill="#ef4444"/>
+                        <text x="170" y="336" text-anchor="middle" font-size="18" font-weight="700" fill="white">✕</text>
+
+                        <!-- ===== 右側：コンストラクタあり（安全） ===== -->
+                        <rect x="370" y="10" width="320" height="350" rx="14" fill="#f0fdf4" stroke="#10b981" stroke-width="2"/>
+                        <rect x="370" y="10" width="320" height="36" rx="14" fill="#10b981"/>
+                        <rect x="370" y="32" width="320" height="14" fill="#10b981"/>
+                        <text x="530" y="34" text-anchor="middle" font-size="14" font-weight="700" fill="white">コンストラクタを使う場合</text>
+                        <!-- Step 1 -->
+                        <rect x="390" y="60" width="280" height="44" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+                        <circle cx="412" cy="82" r="12" fill="#10b981"/>
+                        <text x="412" y="87" text-anchor="middle" font-size="11" font-weight="700" fill="white">1</text>
+                        <text x="432" y="78" font-size="11" fill="#1e293b" font-family="monospace">new Person("田中", 25);</text>
+                        <text x="432" y="94" font-size="11" fill="#64748b">生成と初期化が同時に行われる</text>
+                        <!-- 矢印 -->
+                        <text x="530" y="118" text-anchor="middle" font-size="14" fill="#64748b">↓</text>
+                        <!-- Step 2 -->
+                        <rect x="390" y="124" width="280" height="44" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+                        <circle cx="412" cy="146" r="12" fill="#10b981"/>
+                        <text x="412" y="151" text-anchor="middle" font-size="11" font-weight="700" fill="white">2</text>
+                        <text x="432" y="142" font-size="12" fill="#1e293b">コンストラクタが自動実行</text>
+                        <text x="432" y="158" font-size="11" fill="#64748b">引数が足りないとコンパイルエラー</text>
+                        <!-- 矢印 -->
+                        <text x="530" y="182" text-anchor="middle" font-size="14" fill="#64748b">↓</text>
+                        <!-- 安全な結果 -->
+                        <rect x="390" y="188" width="280" height="66" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="1.5"/>
+                        <text x="530" y="210" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">必ず初期化済みの状態</text>
+                        <text x="530" y="230" text-anchor="middle" font-size="12" font-family="monospace" fill="#065f46">name = "田中", age = 25</text>
+                        <text x="530" y="246" text-anchor="middle" font-size="11" fill="#065f46">→ すぐに安全に使える</text>
+                        <!-- 結論 -->
+                        <rect x="390" y="268" width="280" height="36" rx="8" fill="#bbf7d0" stroke="#10b981" stroke-width="1"/>
+                        <text x="530" y="291" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">初期化忘れをコンパイル時に防止</text>
+                        <!-- マル印 -->
+                        <circle cx="530" cy="330" r="16" fill="#10b981"/>
+                        <text x="530" y="336" text-anchor="middle" font-size="18" font-weight="700" fill="white">◎</text>
+                    </svg>
+                </div>
+
+                <div class="code-block" style="margin: 16px 0;">
+                    <div class="code-header"><span class="code-title">コンストラクタを使わない初期化</span><span class="code-lang">Java</span></div>
+                    <pre class="code-content"><code>public class Person {
+    String name;  // publicまたはpackage-privateにする必要がある
+    int age;
+
+    void introduce() {
+        System.out.println("私は" + name + "、" + age + "歳です");
+    }
+}
+
+// 使用側：生成後に手動で値を代入
+Person p = new Person();
+p.name = "田中";
+p.age = 25;
+p.introduce();  // 私は田中、25歳です</code></pre>
+                </div>
+
+                <p>一見動きますが、<strong>代入を忘れるとどうなるでしょうか？</strong></p>
+
+                <div class="code-block" style="margin: 16px 0;">
+                    <div class="code-header"><span class="code-title">初期化し忘れた場合</span><span class="code-lang">Java</span></div>
+                    <pre class="code-content"><code>Person p = new Person();
+// nameとageを代入し忘れたまま使用...
+p.introduce();  // 私はnull、0歳です ← 意図しない動作！</code></pre>
+                </div>
+
+                <div class="info-box" style="background: white; margin: 16px 0;">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">lightbulb</span></span><span class="info-box-title">フィールドの初期値（初期化しない場合）</span></div>
+                    <table class="data-table" style="margin-top: 8px;">
+                        <thead>
+                            <tr><th>型</th><th>初期値</th><th>例</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>int, long など数値型</td><td><code>0</code></td><td>age → 0</td></tr>
+                            <tr><td>double, float</td><td><code>0.0</code></td><td>price → 0.0</td></tr>
+                            <tr><td>boolean</td><td><code>false</code></td><td>active → false</td></tr>
+                            <tr><td>String などオブジェクト型</td><td><code>null</code></td><td>name → null</td></tr>
+                        </tbody>
+                    </table>
+                    <p style="margin-top: 8px;"><code>null</code> のまま <code>name.length()</code> などを呼ぶと <strong>NullPointerException</strong>（実行時エラー）が発生します。</p>
+                </div>
+
+                <p>コンストラクタで初期化を強制すれば、<strong>「値が未設定のまま使ってしまう」ミスをコンパイル時に防げます。</strong>これがコンストラクタを使う最大のメリットです。</p>
+
+                <div class="code-block" style="margin: 16px 0 0;">
+                    <div class="code-header"><span class="code-title">コンストラクタで安全に初期化</span><span class="code-lang">Java</span></div>
+                    <pre class="code-content"><code>public class Person {
+    private String name;
+    private int age;
+
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+
+// 引数を渡さないとコンパイルエラー → 初期化忘れが起きない
+Person p = new Person("田中", 25);  // OK
+Person p2 = new Person();           // コンパイルエラー！</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 11-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 11-2</span>
+                <h2 class="section-title">static変数とstaticメソッド</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>staticメンバは「クラス全体で共有される」データや処理を定義します。全インスタンスで共通のカウンターや、ユーティリティメソッド（Math.max()など）の実装に使われます。ただし、staticの多用はテストしにくいコードになりやすいため、適切な使い分けが重要です。</p>
+            </div>
+
+            <div class="content-block">
+                <p><code>static</code>メンバはクラスに属し、インスタンスを作成せずにアクセスできます。</p>
+                <div class="prompt-box">
+                    <div class="prompt-box-header">
+                        <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                        <span class="prompt-box-title">プロンプト</span>
+                        <button class="prompt-copy-btn">コピー</button>
+                    </div>
+                    <div class="prompt-box-content">
+                        <pre><code>## 機能
+static変数とstaticメソッドを使ったカウンタークラスの動作を確認するサンプルプロジェクト
+
+## 生成先
+- ディレクトリ: chapter05
+- ファイル名: Counter.java
+
+## 実装要件
+- static変数countで全インスタンス共通のカウントを管理
+- コンストラクタでインスタンス生成時にcountを増加
+- staticメソッドgetCount()でカウント値を取得
+- クラス名から直接メソッドを呼び出す使用例も含める
+
+
+- mainメソッドを含め、System.out.printlnで各処理の実行結果を出力して動作確認できるようにする
+
+## 使用するJava構文
+- static変数（クラス変数）
+- staticメソッド（クラスメソッド）
+- クラス名.メソッド名()による呼び出し</code></pre>
+                    </div>
+                </div>
+                <div class="code-block">
+                    <div class="code-header"><span class="code-title">chapter05/Counter.java</span><span class="code-lang">Java</span></div>
+                    <pre class="code-content"><code>public class Counter {
+    private static int count = 0;  // クラス変数
+
+    public Counter() {
+        count++;  // インスタンス生成ごとにカウント
+    }
+
+    public static int getCount() {  // クラスメソッド
+        return count;
+    }
+
+    public static void main(String[] args) {
+        Counter c1 = new Counter();
+        Counter c2 = new Counter();
+        System.out.println(Counter.getCount());  // 2
+    }
+}</code></pre>
+                </div>
+                <div class="syntax-box">
+                    <div class="syntax-box-header">
+                        <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
+                        <span class="syntax-box-title">構文説明</span>
+                    </div>
+                    <div class="syntax-box-content">
+                        <div class="syntax-item">
+                            <h4>static変数（クラス変数）</h4>
+                            <div class="syntax-pattern">static 型 変数名;</div>
+                            <p>インスタンスではなくクラスに属する変数です。すべてのインスタンスで共有され、クラス名.変数名でアクセスできます。</p>
+                        </div>
+                        <div class="syntax-item">
+                            <h4>staticメソッド（クラスメソッド）</h4>
+                            <div class="syntax-pattern">public static 戻り値型 メソッド名() { }</div>
+                            <p>インスタンスを生成せずにクラス名.メソッド名()で呼び出せるメソッドです。staticメソッド内ではthisや非staticメンバにアクセスできません。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="warning-box">
+                    <div class="warning-box-header"><span class="warning-box-icon"><span class="material-icons">warning</span></span><span class="warning-box-title">staticメソッドの制限</span></div>
+                    <p>staticメソッド内では、thisキーワードや非staticメンバに直接アクセスできません。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 11-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 11-3</span>
+                <h2 class="section-title">オブジェクトの扱い</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Javaでは、基本データ型は「値」がコピーされますが、オブジェクトは「参照（アドレス）」がコピーされます。この違いを理解していないと、意図しないデータ変更が起きるバグの原因になります。また、ガベージコレクションの仕組みを知ることで、メモリ管理への理解が深まります。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">11-3-1 値のコピーと参照情報のコピー</h3>
+                <div class="prompt-box">
+                    <div class="prompt-box-header">
+                        <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                        <span class="prompt-box-title">プロンプト</span>
+                        <button class="prompt-copy-btn">コピー</button>
+                    </div>
+                    <div class="prompt-box-content">
+                        <pre><code>## 機能
+オブジェクトの参照コピーの動作を確認するサンプルプロジェクト
+
+## 生成先
+- ディレクトリ: chapter05
+- ファイル名: ReferenceDemo.java
+
+## 実装要件
+- Personオブジェクトを生成する
+- 別の変数に参照をコピーする
+- コピー先で値を変更するとコピー元も変わることを示す
+- 参照型の変数が同じオブジェクトを指すことを説明
+- 1ファイルで完結するよう、必要なクラスをすべて含める
+
+
+- mainメソッドを含め、System.out.printlnで各処理の実行結果を出力して動作確認できるようにする
+
+## 使用するJava構文
+- 参照型変数の代入
+- 同一オブジェクトへの複数参照
+- setterによる値の変更</code></pre>
+                    </div>
+                </div>
+                <div class="code-block">
+                    <div class="code-header"><span class="code-title">chapter05/ReferenceDemo.java</span><span class="code-lang">Java</span></div>
+                    <pre class="code-content"><code>class RefPerson {
+    private String name;
+    public RefPerson(String name) { this.name = name; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+}
+
+public class ReferenceDemo {
+    public static void main(String[] args) {
+        RefPerson p1 = new RefPerson("Alice");
+        RefPerson p2 = p1;  // 参照のコピー（同じオブジェクトを指す）
+
+        System.out.println("変更前 p1: " + p1.getName());  // Alice
+        p2.setName("Bob");
+        System.out.println("変更後 p1: " + p1.getName());  // Bob（p1も変更される）
+        System.out.println("p1 == p2: " + (p1 == p2));     // true（同じオブジェクト）
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">11-3-2 ガベージコレクション</h3>
+                <div class="content-block">
+                    <p>どこからも参照されなくなったオブジェクトは、ガベージコレクタによって自動的にメモリから解放されます。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題・解答 -->
+        <section class="section">
+            <div class="section-header"><span class="section-number">Exercise</span><h2 class="section-title">11章 練習問題</h2></div>
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>staticメソッド内で使用できないものはどれですか？</p>
+                        <ol type="A"><li>staticフィールド</li><li>this</li><li>ローカル変数</li><li>staticメソッド</li></ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-header"><span class="section-number">Answer</span><h2 class="section-title">11章 解説・解答</h2></div>
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content"><p>staticメソッドはインスタンスに属さないため、thisキーワードは使用できません。</p></div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="footer"><p>Java Silver 試験対策 教科書</p></footer>
+
+    <div class="page-nav">
+        <a href="10java-class.html" class="page-nav-btn prev"><span>&#8592;</span><div><div class="page-nav-label">前の章</div><div class="page-nav-title">第10章</div></div></a>
+        <a href="12java-inheritance.html" class="page-nav-btn next"><div><div class="page-nav-label">次の章</div><div class="page-nav-title">第12章</div></div><span>&#8594;</span></a>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const toggle = document.querySelector('.nav-toggle');
+            const menu = document.querySelector('.nav-menu');
+            toggle.classList.toggle('active');
+            menu.classList.toggle('active');
+        }
+        document.addEventListener('click', function(e) {
+            const nav = document.querySelector('.global-nav');
+            const toggle = document.querySelector('.nav-toggle');
+            const menu = document.querySelector('.nav-menu');
+            if (!nav.contains(e.target) && menu.classList.contains('active')) {
+                toggle.classList.remove('active');
+                menu.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

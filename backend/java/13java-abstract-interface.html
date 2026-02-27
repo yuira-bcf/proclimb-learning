@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第13章 抽象クラスとインタフェース</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #0097A7;
+        --primary-dark: #00838F;
+        --primary-light: #E0F7FA;
+        --primary-lighter: #B2EBF2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-java.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">13</div>
+            <h1 class="chapter-title">抽象クラスとインタフェース</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">13-1</span><span>抽象クラスと抽象メソッド</span></li>
+                <li class="toc-item"><span class="toc-number">13-2</span><span>インタフェースの作成と実装</span></li>
+                <li class="toc-item"><span class="toc-number">13-3</span><span>defaultメソッド（Java 8以降）</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 13-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 13-1</span>
+                <h2 class="section-title">抽象クラスと抽象メソッド</h2>
+            </div>
+
+            <!-- 概要 -->
+            <div class="intro-text">
+                <p>抽象クラスは「未完成の設計図」で、サブクラスに実装を強制します。共通の処理は親クラスで実装し、サブクラスごとに異なる処理は抽象メソッドとして宣言します。テンプレートメソッドパターンなど、設計パターンの基盤としても重要です。</p>
+            </div>
+
+            <!-- 説明 -->
+            <div class="content-block">
+                <p><code>abstract</code>クラスは直接<code>new</code>できません。抽象メソッド（本体のないメソッド）を含み、子クラスがそのメソッドを必ず実装する必要があります。通常のメソッドも持てるため、「共通処理は親で実装、個別処理は子に任せる」という設計ができます。</p>
+            </div>
+
+            <!-- 図解 -->
+            <div class="content-block">
+                <div class="figure" style="margin: 20px 0;">
+                    <div class="figure-caption">抽象クラス ― 「未完成の設計図」を子クラスが完成させる</div>
+                    <svg viewBox="0 0 700 400" style="max-width: 700px; width: 100%; height: auto;">
+                        <!-- ===== 抽象クラス Shape ===== -->
+                        <rect x="200" y="10" width="300" height="160" rx="14" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2.5" stroke-dasharray="8,4"/>
+                        <rect x="200" y="10" width="300" height="40" rx="14" fill="#8b5cf6"/>
+                        <rect x="200" y="36" width="300" height="14" fill="#8b5cf6"/>
+                        <text x="350" y="36" text-anchor="middle" font-size="14" font-weight="700" fill="white">abstract Shape（抽象クラス）</text>
+                        <text x="220" y="72" font-size="11" fill="#5b21b6">抽象メソッド（未実装）</text>
+                        <rect x="220" y="80" width="260" height="26" rx="6" fill="white" stroke="#ddd6fe" stroke-width="1"/>
+                        <text x="350" y="98" text-anchor="middle" font-size="12" fill="#7c3aed" font-family="monospace" font-style="italic">abstract double getArea();</text>
+                        <text x="220" y="126" font-size="11" fill="#5b21b6">通常メソッド（実装あり）</text>
+                        <rect x="220" y="134" width="260" height="26" rx="6" fill="white" stroke="#ddd6fe" stroke-width="1"/>
+                        <text x="350" y="152" text-anchor="middle" font-size="12" fill="#1e293b" font-family="monospace">void printColor() { ... }</text>
+
+                        <!-- ===== 点線ボーダーの注釈 ===== -->
+                        <rect x="530" y="56" width="160" height="50" rx="8" fill="#faf5ff" stroke="#c4b5fd" stroke-width="1"/>
+                        <text x="610" y="76" text-anchor="middle" font-size="11" fill="#7c3aed">点線 = 直接 new できない</text>
+                        <text x="610" y="94" text-anchor="middle" font-size="11" fill="#7c3aed">（未完成だから）</text>
+
+                        <!-- ===== extends 矢印 ===== -->
+                        <line x1="200" y1="170" x2="200" y2="210" stroke="#8b5cf6" stroke-width="2"/>
+                        <line x1="200" y1="210" x2="130" y2="210" stroke="#8b5cf6" stroke-width="2"/>
+                        <line x1="130" y1="210" x2="130" y2="250" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowAbst)"/>
+                        <line x1="500" y1="170" x2="500" y2="210" stroke="#8b5cf6" stroke-width="2"/>
+                        <line x1="500" y1="210" x2="570" y2="210" stroke="#8b5cf6" stroke-width="2"/>
+                        <line x1="570" y1="210" x2="570" y2="250" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrowAbst)"/>
+                        <text x="350" y="224" text-anchor="middle" font-size="11" font-weight="600" fill="#8b5cf6">extends（実装を完成させる）</text>
+
+                        <!-- ===== 具象クラス Circle ===== -->
+                        <rect x="10" y="250" width="260" height="140" rx="14" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                        <rect x="10" y="250" width="260" height="36" rx="14" fill="#10b981"/>
+                        <rect x="10" y="272" width="260" height="14" fill="#10b981"/>
+                        <text x="140" y="274" text-anchor="middle" font-size="14" font-weight="700" fill="white">Circle（具象クラス）</text>
+                        <text x="30" y="306" font-size="11" font-weight="600" fill="#065f46">抽象メソッドを実装</text>
+                        <rect x="30" y="314" width="220" height="26" rx="6" fill="white" stroke="#a7f3d0" stroke-width="1"/>
+                        <text x="140" y="332" text-anchor="middle" font-size="12" fill="#166534" font-family="monospace">π × r × r</text>
+                        <text x="30" y="358" font-size="11" fill="#64748b">printColor() も使える</text>
+                        <text x="30" y="376" font-size="11" fill="#64748b">（親から継承）</text>
+
+                        <!-- ===== 具象クラス Rectangle ===== -->
+                        <rect x="430" y="250" width="260" height="140" rx="14" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                        <rect x="430" y="250" width="260" height="36" rx="14" fill="#f59e0b"/>
+                        <rect x="430" y="272" width="260" height="14" fill="#f59e0b"/>
+                        <text x="560" y="274" text-anchor="middle" font-size="14" font-weight="700" fill="white">Rectangle（具象クラス）</text>
+                        <text x="450" y="306" font-size="11" font-weight="600" fill="#92400e">抽象メソッドを実装</text>
+                        <rect x="450" y="314" width="220" height="26" rx="6" fill="white" stroke="#fde68a" stroke-width="1"/>
+                        <text x="560" y="332" text-anchor="middle" font-size="12" fill="#92400e" font-family="monospace">width × height</text>
+                        <text x="450" y="358" font-size="11" fill="#64748b">printColor() も使える</text>
+                        <text x="450" y="376" font-size="11" fill="#64748b">（親から継承）</text>
+
+                        <defs>
+                            <marker id="arrowAbst" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- プロンプト -->
+            <div class="prompt-box">
+                <div class="prompt-box-header">
+                    <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                    <span class="prompt-box-title">プロンプト</span>
+                    <button class="prompt-copy-btn">コピー</button>
+                </div>
+                <div class="prompt-box-content">
+                    <pre><code>## 機能
+抽象クラスを使った図形クラスの階層の動作を確認するサンプルプロジェクト
+
+## 生成先
+- ディレクトリ: chapter13
+- ファイル名: AbstractDemo.java
+
+## 実装要件
+- 抽象クラスShapeを定義（abstract修飾子）
+- 抽象メソッドgetArea()を宣言（サブクラスで実装必須）
+- 通常のメソッドprintColor()も含める
+- 具象クラスCircleでShapeを継承しgetArea()を実装
+- 面積計算のロジックをCircleクラスで実装
+
+
+- mainメソッドを含め、System.out.printlnで各処理の実行結果を出力して動作確認できるようにする
+- 1ファイルで完結するよう、必要なクラスをすべて含める
+
+## 使用するJava構文
+- abstract クラス宣言
+- abstract メソッド宣言
+- 抽象クラスの継承と抽象メソッドの実装</code></pre>
+                </div>
+            </div>
+
+            <!-- ソースコード -->
+            <div class="code-block">
+                <div class="code-header"><span class="code-title">chapter13/AbstractDemo.java</span><span class="code-lang">Java</span></div>
+                <pre class="code-content"><code>abstract class Shape {
+    protected String color;
+
+    // 抽象メソッド（実装なし）
+    public abstract double getArea();
+
+    // 通常のメソッド
+    public void printColor() {
+        System.out.println("色: " + color);
+    }
+}
+
+class Circle extends Shape {
+    private double radius;
+
+    public Circle(double radius) {
+        this.radius = radius;
+    }
+
+    @Override
+    public double getArea() {
+        return Math.PI * radius * radius;
+    }
+}
+
+public class AbstractDemo {
+    public static void main(String[] args) {
+        Circle circle = new Circle(5.0);
+        System.out.println("面積: " + circle.getArea());
+        circle.color = "赤";
+        circle.printColor();  // 色: 赤
+    }
+}</code></pre>
+            </div>
+
+            <!-- 構文 -->
+            <div class="syntax-box">
+                <div class="syntax-box-header">
+                    <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
+                    <span class="syntax-box-title">構文説明</span>
+                </div>
+                <div class="syntax-box-content">
+                    <div class="syntax-item">
+                        <h4>抽象クラス（abstract class）</h4>
+                        <div class="syntax-pattern">public abstract class クラス名 { }</div>
+                        <p>abstractを付けたクラスは直接インスタンス化できません。共通の処理を定義し、サブクラスで具体的な実装を行うための「設計図」として使用します。</p>
+                    </div>
+                    <div class="syntax-item">
+                        <h4>抽象メソッド（abstract method）</h4>
+                        <div class="syntax-pattern">public abstract 戻り値型 メソッド名();</div>
+                        <p>abstractを付けたメソッドは本体を持たず、サブクラスで必ずオーバーライドして実装する必要があります。セミコロンで終わり、中括弧は書きません。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 実際のユースケース -->
+            <div class="info-box">
+                <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">work</span></span><span class="info-box-title">実際のユースケース</span></div>
+                <ul class="bullet-list">
+                    <li><strong>Spring の AbstractController</strong>：共通のリクエスト処理（認証チェック・ログ記録）を親クラスに実装し、各コントローラが抽象メソッド <code>handleRequest()</code> だけを実装する設計で使われます。</li>
+                    <li><strong>バッチ処理の共通フロー</strong>：抽象クラスで「データ取得→変換→保存」の流れを定義し、変換処理だけを子クラスで実装します。CSV 取り込み、API 連携など、複数のバッチ処理で共通の枠組みを再利用できます。</li>
+                    <li><strong>決済処理の設計</strong>：<code>abstract class Payment</code> で共通のバリデーションとログ処理を持ち、<code>CreditCardPayment</code>、<code>BankTransferPayment</code> が決済固有の処理を実装します。</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- セクション 13-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 13-2</span>
+                <h2 class="section-title">インタフェースの作成と実装</h2>
+            </div>
+
+            <!-- 概要 -->
+            <div class="intro-text">
+                <p>インタフェースは「契約」を定義します。実装クラスは、インタフェースで宣言されたメソッドを必ず実装しなければなりません。Javaは単一継承ですが、インタフェースは複数実装できるため、柔軟な設計が可能です。Spring BootのRepository、Serviceなどもインタフェースを活用しています。</p>
+            </div>
+
+            <!-- 説明 -->
+            <div class="content-block">
+                <p>インタフェースには<code>interface</code>キーワードで「何ができるか」だけを宣言します。実装クラスは<code>implements</code>で受け取り、宣言されたメソッドをすべて実装します。クラスの継承（extends）は1つだけですが、インタフェースは複数同時に実装できます。</p>
+            </div>
+
+            <!-- 図解 -->
+            <div class="content-block">
+                <div class="figure" style="margin: 20px 0;">
+                    <div class="figure-caption">インタフェース ― 「契約」を複数実装できる</div>
+                    <svg viewBox="0 0 700 380" style="max-width: 700px; width: 100%; height: auto;">
+                        <!-- ===== interface Printable ===== -->
+                        <rect x="30" y="10" width="220" height="90" rx="14" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="2" stroke-dasharray="6,4"/>
+                        <rect x="30" y="10" width="220" height="34" rx="14" fill="#0ea5e9"/>
+                        <rect x="30" y="30" width="220" height="14" fill="#0ea5e9"/>
+                        <text x="140" y="32" text-anchor="middle" font-size="12" font-weight="700" fill="white">&lt;&lt;interface&gt;&gt; Printable</text>
+                        <rect x="48" y="56" width="184" height="26" rx="6" fill="white" stroke="#bae6fd" stroke-width="1"/>
+                        <text x="140" y="74" text-anchor="middle" font-size="12" fill="#0284c7" font-family="monospace" font-style="italic">void print();</text>
+
+                        <!-- ===== interface Saveable ===== -->
+                        <rect x="450" y="10" width="220" height="90" rx="14" fill="#fdf2f8" stroke="#ec4899" stroke-width="2" stroke-dasharray="6,4"/>
+                        <rect x="450" y="10" width="220" height="34" rx="14" fill="#ec4899"/>
+                        <rect x="450" y="30" width="220" height="14" fill="#ec4899"/>
+                        <text x="560" y="32" text-anchor="middle" font-size="12" font-weight="700" fill="white">&lt;&lt;interface&gt;&gt; Saveable</text>
+                        <rect x="468" y="56" width="184" height="26" rx="6" fill="white" stroke="#fbcfe8" stroke-width="1"/>
+                        <text x="560" y="74" text-anchor="middle" font-size="12" fill="#be185d" font-family="monospace" font-style="italic">void save();</text>
+
+                        <!-- ===== implements 矢印 ===== -->
+                        <line x1="140" y1="100" x2="140" y2="140" stroke="#0ea5e9" stroke-width="2"/>
+                        <line x1="140" y1="140" x2="350" y2="140" stroke="#64748b" stroke-width="2"/>
+                        <line x1="560" y1="100" x2="560" y2="140" stroke="#ec4899" stroke-width="2"/>
+                        <line x1="560" y1="140" x2="350" y2="140" stroke="#64748b" stroke-width="2"/>
+                        <line x1="350" y1="140" x2="350" y2="170" stroke="#64748b" stroke-width="2" marker-end="url(#arrowIface)"/>
+                        <rect x="290" y="126" width="120" height="22" rx="6" fill="#f1f5f9"/>
+                        <text x="350" y="142" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">implements</text>
+
+                        <!-- ===== Document クラス ===== -->
+                        <rect x="170" y="170" width="360" height="130" rx="14" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                        <rect x="170" y="170" width="360" height="36" rx="14" fill="#f59e0b"/>
+                        <rect x="170" y="192" width="360" height="14" fill="#f59e0b"/>
+                        <text x="350" y="194" text-anchor="middle" font-size="14" font-weight="700" fill="white">Document（実装クラス）</text>
+                        <rect x="190" y="218" width="150" height="26" rx="6" fill="white" stroke="#bae6fd" stroke-width="1"/>
+                        <text x="265" y="236" text-anchor="middle" font-size="12" fill="#0284c7" font-family="monospace">@Override print()</text>
+                        <rect x="360" y="218" width="150" height="26" rx="6" fill="white" stroke="#fbcfe8" stroke-width="1"/>
+                        <text x="435" y="236" text-anchor="middle" font-size="12" fill="#be185d" font-family="monospace">@Override save()</text>
+                        <text x="350" y="276" text-anchor="middle" font-size="11" fill="#92400e">両方のインタフェースの「契約」を満たしている</text>
+
+                        <!-- ===== 比較表 ===== -->
+                        <rect x="40" y="320" width="280" height="50" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+                        <text x="180" y="342" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">extends（継承）</text>
+                        <text x="180" y="360" text-anchor="middle" font-size="11" fill="#1e40af">1つのクラスだけ継承可能</text>
+
+                        <rect x="380" y="320" width="280" height="50" rx="10" fill="#fdf2f8" stroke="#f9a8d4" stroke-width="1.5"/>
+                        <text x="520" y="342" text-anchor="middle" font-size="12" font-weight="700" fill="#be185d">implements（実装）</text>
+                        <text x="520" y="360" text-anchor="middle" font-size="11" fill="#831843">複数のインタフェースを実装可能</text>
+
+                        <defs>
+                            <marker id="arrowIface" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- プロンプト -->
+            <div class="prompt-box">
+                <div class="prompt-box-header">
+                    <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                    <span class="prompt-box-title">プロンプト</span>
+                    <button class="prompt-copy-btn">コピー</button>
+                </div>
+                <div class="prompt-box-content">
+                    <pre><code>## 機能
+複数のインタフェースを実装したドキュメントクラスの動作を確認するサンプルプロジェクト
+
+## 生成先
+- ディレクトリ: chapter13
+- ファイル名: InterfaceDemo.java
+
+## 実装要件
+- Printableインタフェースにprint()メソッドを宣言
+- Saveableインタフェースにsave()メソッドを宣言
+- Documentクラスで両方のインタフェースを実装（implements）
+- 各インタフェースのメソッドを@Overrideで実装
+
+
+- mainメソッドを含め、System.out.printlnで各処理の実行結果を出力して動作確認できるようにする
+- 1ファイルで完結するよう、必要なクラスをすべて含める
+
+## 使用するJava構文
+- interface キーワード
+- implements による実装
+- 複数インタフェースの実装（カンマ区切り）</code></pre>
+                </div>
+            </div>
+
+            <!-- ソースコード -->
+            <div class="code-block">
+                <div class="code-header"><span class="code-title">chapter13/InterfaceDemo.java</span><span class="code-lang">Java</span></div>
+                <pre class="code-content"><code>interface Printable {
+    void print();  // 抽象メソッド（public abstract省略可）
+}
+
+interface Saveable {
+    void save();
+}
+
+// 複数のインタフェースを実装可能
+class Document implements Printable, Saveable {
+    @Override
+    public void print() {
+        System.out.println("印刷中...");
+    }
+
+    @Override
+    public void save() {
+        System.out.println("保存中...");
+    }
+}
+
+public class InterfaceDemo {
+    public static void main(String[] args) {
+        Document doc = new Document();
+        doc.print();  // 印刷中...
+        doc.save();   // 保存中...
+    }
+}</code></pre>
+            </div>
+
+            <!-- 構文 -->
+            <div class="syntax-box">
+                <div class="syntax-box-header">
+                    <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
+                    <span class="syntax-box-title">構文説明</span>
+                </div>
+                <div class="syntax-box-content">
+                    <div class="syntax-item">
+                        <h4>インターフェース（interface）</h4>
+                        <div class="syntax-pattern">public interface インターフェース名 { }</div>
+                        <p>クラスが実装すべきメソッドの「契約」を定義します。メソッドは暗黙的にpublic abstractです。フィールドはpublic static finalとなります。</p>
+                    </div>
+                    <div class="syntax-item">
+                        <h4>implements</h4>
+                        <div class="syntax-pattern">class クラス名 implements インターフェース1,
+                         インターフェース2 { }</div>
+                        <p>implementsキーワードでインターフェースを実装します。複数のインターフェースをカンマ区切りで指定でき、すべてのメソッドを実装する必要があります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 13-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 13-3</span>
+                <h2 class="section-title">defaultメソッド（Java 8以降）</h2>
+            </div>
+
+            <!-- 説明 -->
+            <div class="content-block">
+                <p>Java 8以降、インタフェースに<code>default</code>キーワードで「デフォルト実装」を持つメソッドを定義できるようになりました。実装クラスはオーバーライドしなくてもそのまま使えます。また、<code>static</code>メソッドも定義でき、ユーティリティメソッドの提供に便利です。</p>
+            </div>
+
+            <!-- プロンプト -->
+            <div class="prompt-box">
+                <div class="prompt-box-header">
+                    <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                    <span class="prompt-box-title">プロンプト</span>
+                    <button class="prompt-copy-btn">コピー</button>
+                </div>
+                <div class="prompt-box-content">
+                    <pre><code>## 機能
+defaultメソッドとstaticメソッドを持つインタフェースの動作を確認するサンプルプロジェクト
+
+## 生成先
+- ディレクトリ: chapter13
+- ファイル名: DefaultMethodDemo.java
+
+## 実装要件
+- Greetingインタフェースを定義
+- defaultメソッドsayHello()を実装付きで定義
+- staticメソッドprintVersion()を定義
+- 実装クラスでオーバーライドしなくても使えることを示す
+
+
+- mainメソッドを含め、System.out.printlnで各処理の実行結果を出力して動作確認できるようにする
+- 1ファイルで完結するよう、必要なクラスをすべて含める
+
+## 使用するJava構文
+- default メソッド（Java 8以降）
+- static メソッド（インタフェース内）
+- インタフェースでのデフォルト実装</code></pre>
+                </div>
+            </div>
+
+            <!-- ソースコード -->
+            <div class="code-block">
+                <div class="code-header"><span class="code-title">chapter13/DefaultMethodDemo.java</span><span class="code-lang">Java</span></div>
+                <pre class="code-content"><code>public class DefaultMethodDemo {
+    public static void main(String[] args) {
+        public interface Greeting {
+            default void sayHello() {
+                System.out.println("Hello!");
+            }
+
+            static void printVersion() {
+                System.out.println("Version 1.0");
+            }
+        }
+    }
+}</code></pre>
+            </div>
+
+            <!-- 構文 -->
+            <div class="syntax-box">
+                <div class="syntax-box-header">
+                    <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
+                    <span class="syntax-box-title">構文説明</span>
+                </div>
+                <div class="syntax-box-content">
+                    <div class="syntax-item">
+                        <h4>defaultメソッド（Java 8以降）</h4>
+                        <div class="syntax-pattern">default 戻り値型 メソッド名() { 処理 }</div>
+                        <p>インターフェースにデフォルトの実装を持つメソッドを定義できます。実装クラスはオーバーライドしなくても使用可能です。</p>
+                    </div>
+                    <div class="syntax-item">
+                        <h4>staticメソッド（インターフェース内）</h4>
+                        <div class="syntax-pattern">static 戻り値型 メソッド名() { 処理 }</div>
+                        <p>インターフェース名.メソッド名()で呼び出せるstaticメソッドを定義できます。ユーティリティメソッドの定義に便利です。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 実際のユースケース -->
+            <div class="info-box">
+                <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">work</span></span><span class="info-box-title">実際のユースケース</span></div>
+                <ul class="bullet-list">
+                    <li><strong>Spring Boot の Service 層</strong>：<code>UserService</code> インタフェースを定義し、<code>UserServiceImpl</code> で実装します。テスト時にはモック実装に差し替えられるため、テスタブルな設計になります。</li>
+                    <li><strong>Spring Data JPA の Repository</strong>：<code>JpaRepository&lt;User, Long&gt;</code> インタフェースを継承するだけで、CRUD メソッドが自動的に利用可能になります。実装クラスを書く必要がありません。</li>
+                    <li><strong>通知システムの設計</strong>：<code>Notifiable</code> インタフェースで <code>send()</code> を宣言し、<code>EmailNotifier</code>、<code>SlackNotifier</code>、<code>SmsNotifier</code> がそれぞれ実装します。通知手段を追加する際も既存コードを変更せずに済みます。</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+
+    <div class="page-nav">
+        <a href="12java-inheritance.html" class="page-nav-btn prev"><span>&#8592;</span><div><div class="page-nav-label">前の章</div><div class="page-nav-title">第12章</div></div></a>
+        <a href="14java-polymorphism.html" class="page-nav-btn next"><div><div class="page-nav-label">次の章</div><div class="page-nav-title">第14章</div></div><span>&#8594;</span></a>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const toggle = document.querySelector('.nav-toggle');
+            const menu = document.querySelector('.nav-menu');
+            toggle.classList.toggle('active');
+            menu.classList.toggle('active');
+        }
+        document.addEventListener('click', function(e) {
+            const nav = document.querySelector('.global-nav');
+            const toggle = document.querySelector('.nav-toggle');
+            const menu = document.querySelector('.nav-menu');
+            if (!nav.contains(e.target) && menu.classList.contains('active')) {
+                toggle.classList.remove('active');
+                menu.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

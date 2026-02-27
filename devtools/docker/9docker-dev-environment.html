@@ -194,6 +194,30 @@
             <div class="subsection">
                 <h3 class="subsection-title">2.1 Spring Boot用Dockerfile</h3>
                 <div class="content-block">
+                    <div class="prompt-box">
+                        <div class="prompt-box-header">
+                            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                            <span class="prompt-box-title">プロンプト</span>
+                            <button class="prompt-copy-btn">コピー</button>
+                        </div>
+                        <div class="prompt-box-content">
+                            <pre><code>## 機能
+Spring Boot アプリケーション用の開発用Dockerfileを作成
+
+## 生成先
+- ファイル名: Dockerfile
+
+## 実装要件
+- ベースイメージは eclipse-temurin:21-jdk を使用
+- 作業ディレクトリは /app
+- Gradle Wrapper をコピーし実行権限を付与
+- build.gradle / settings.gradle を先にコピーして依存関係を事前ダウンロード（レイヤーキャッシュ活用）
+- src ディレクトリをコピー
+- ポート 8080 を公開
+- CMD で ./gradlew bootRun --no-daemon を実行（DevToolsによるホットリロード対応）</code></pre>
+                        </div>
+                    </div>
+
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-title">Dockerfile（開発用）</span>
@@ -227,6 +251,46 @@ CMD ["./gradlew", "bootRun", "--no-daemon"]</code></pre>
             <div class="subsection">
                 <h3 class="subsection-title">2.2 docker-compose.ymlの作成</h3>
                 <div class="content-block">
+                    <div class="prompt-box">
+                        <div class="prompt-box-header">
+                            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                            <span class="prompt-box-title">プロンプト</span>
+                            <button class="prompt-copy-btn">コピー</button>
+                        </div>
+                        <div class="prompt-box-content">
+                            <pre><code>## 機能
+Spring Boot + MySQL + Adminer の開発環境を docker-compose.yml で構成
+
+## 生成先
+- ファイル名: docker-compose.yml
+
+## 実装要件
+### app サービス（Spring Boot）
+- Dockerfile からビルド
+- ポート 8080（API）と 5005（リモートデバッグ）を公開
+- ./src を /app/src にバインドマウント（ソースコード同期）
+- gradle-cache ボリュームで Gradle キャッシュを永続化
+- 環境変数で SPRING_DATASOURCE_URL, USERNAME, PASSWORD を設定（DB接続先は db:3306）
+- JAVA_TOOL_OPTIONS で JDWP リモートデバッグを有効化（ポート5005）
+- depends_on で db の healthcheck 完了を待つ
+
+### db サービス（MySQL 8.0）
+- image: mysql:8.0
+- MYSQL_ROOT_PASSWORD, MYSQL_DATABASE を環境変数で設定
+- mysql-data ボリュームでデータ永続化
+- ./db/init.sql を /docker-entrypoint-initdb.d/ にマウント（初期データ投入）
+- mysqladmin ping による healthcheck を設定
+
+### adminer サービス（DB管理ツール）
+- image: adminer
+- ホストの 8081 をコンテナの 8080 にマッピング
+- db サービスに依存
+
+### volumes
+- mysql-data, gradle-cache を定義</code></pre>
+                        </div>
+                    </div>
+
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-title">docker-compose.yml（Spring Boot開発環境）</span>
@@ -308,6 +372,30 @@ volumes:
             <div class="subsection">
                 <h3 class="subsection-title">3.1 MySQLの設定</h3>
                 <div class="content-block">
+                    <div class="prompt-box">
+                        <div class="prompt-box-header">
+                            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                            <span class="prompt-box-title">プロンプト</span>
+                            <button class="prompt-copy-btn">コピー</button>
+                        </div>
+                        <div class="prompt-box-content">
+                            <pre><code>## 機能
+MySQL コンテナの初期化用SQLファイルを作成
+
+## 生成先
+- ディレクトリ: db
+- ファイル名: init.sql
+
+## 実装要件
+- users テーブルを作成（CREATE TABLE IF NOT EXISTS）
+  - id: BIGINT AUTO_INCREMENT PRIMARY KEY
+  - name: VARCHAR(100) NOT NULL
+  - email: VARCHAR(255) UNIQUE NOT NULL
+  - created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- テストデータとして3件のユーザーを INSERT（日本語の名前とメールアドレス）</code></pre>
+                        </div>
+                    </div>
+
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-title">db/init.sql（初期化SQL）</span>
@@ -334,6 +422,33 @@ INSERT INTO users (name, email) VALUES
             <div class="subsection">
                 <h3 class="subsection-title">3.2 PostgreSQLの設定</h3>
                 <div class="content-block">
+                    <div class="prompt-box">
+                        <div class="prompt-box-header">
+                            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                            <span class="prompt-box-title">プロンプト</span>
+                            <button class="prompt-copy-btn">コピー</button>
+                        </div>
+                        <div class="prompt-box-content">
+                            <pre><code>## 機能
+PostgreSQL の Docker Compose 設定を作成
+
+## 生成先
+- ファイル名: docker-compose.yml
+
+## 実装要件
+### postgres サービス
+- image: postgres:16-alpine
+- 環境変数で POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD を設定
+- ポート 5432 を公開
+- pg-data ボリュームで /var/lib/postgresql/data を永続化
+- ./db/init.sql を /docker-entrypoint-initdb.d/01-init.sql にマウント
+- pg_isready による healthcheck を設定（interval: 10s, timeout: 5s, retries: 5）
+
+### volumes
+- pg-data を定義</code></pre>
+                        </div>
+                    </div>
+
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-title">PostgreSQLのDocker Compose設定</span>
@@ -406,6 +521,33 @@ docker compose exec db mysql -uroot -psecret myapp</code></pre>
             <div class="subsection">
                 <h3 class="subsection-title">4.1 Spring Boot DevToolsによるホットリロード</h3>
                 <div class="content-block">
+                    <div class="prompt-box">
+                        <div class="prompt-box-header">
+                            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                            <span class="prompt-box-title">プロンプト</span>
+                            <button class="prompt-copy-btn">コピー</button>
+                        </div>
+                        <div class="prompt-box-content">
+                            <pre><code>## 機能
+Spring Boot の build.gradle に DevTools とホットリロード設定を追加
+
+## 対象ファイル
+- build.gradle（dependencies ブロック）
+- src/main/resources/application.properties
+
+## 実装要件
+### build.gradle
+- developmentOnly で spring-boot-devtools を追加
+- spring-boot-starter-web, spring-boot-starter-data-jpa を implementation
+- mysql-connector-j を runtimeOnly
+
+### application.properties
+- spring.devtools.remote.restart.enabled=true
+- spring.devtools.restart.poll-interval=2s
+- spring.devtools.restart.quiet-period=1s</code></pre>
+                        </div>
+                    </div>
+
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-title">build.gradle にDevToolsを追加</span>
@@ -437,6 +579,36 @@ spring.devtools.restart.quiet-period=1s</code></pre>
             <div class="subsection">
                 <h3 class="subsection-title">4.2 Node.jsのホットリロード</h3>
                 <div class="content-block">
+                    <div class="prompt-box">
+                        <div class="prompt-box-header">
+                            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                            <span class="prompt-box-title">プロンプト</span>
+                            <button class="prompt-copy-btn">コピー</button>
+                        </div>
+                        <div class="prompt-box-content">
+                            <pre><code>## 機能
+Node.js アプリケーション用のホットリロード対応 docker-compose.yml を作成
+
+## 生成先
+- ファイル名: docker-compose.yml
+
+## 実装要件
+### webapp サービス
+- image: node:20-alpine
+- working_dir: /app
+- command: npm run dev
+- ポート 3000 を公開
+- ./src を /app/src にバインドマウント（ソースコード同期）
+- ./package.json を /app/package.json にマウント
+- node_modules ボリュームで依存パッケージを永続化
+- 環境変数 CHOKIDAR_USEPOLLING=true と WATCHPACK_POLLING=true を設定
+  （Docker 環境でのファイル監視ポーリングモード対応）
+
+### volumes
+- node_modules を定義</code></pre>
+                        </div>
+                    </div>
+
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-title">Node.js用docker-compose.yml（ホットリロード対応）</span>
@@ -512,6 +684,38 @@ volumes:
             <div class="subsection">
                 <h3 class="subsection-title">5.1 Dev Container設定の作成</h3>
                 <div class="content-block">
+                    <div class="prompt-box">
+                        <div class="prompt-box-header">
+                            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                            <span class="prompt-box-title">プロンプト</span>
+                            <button class="prompt-copy-btn">コピー</button>
+                        </div>
+                        <div class="prompt-box-content">
+                            <pre><code>## 機能
+VSCode Dev Containers 用の設定ファイルを作成
+
+## 生成先
+- ディレクトリ: .devcontainer
+- ファイル名: devcontainer.json
+
+## 実装要件
+- name: "Spring Boot Dev"
+- dockerComposeFile: "../docker-compose.yml" を参照
+- service: "app"（接続先コンテナ）
+- workspaceFolder: "/app"
+- VSCode 拡張機能を自動インストール
+  - vscjava.vscode-java-pack（Java開発パック）
+  - vmware.vscode-spring-boot（Spring Boot支援）
+  - vscjava.vscode-spring-initializr（Spring Initializr）
+  - humao.rest-client（REST APIテスト）
+- java.home を /opt/java/openjdk に設定
+- editor.formatOnSave を true に設定
+- postCreateCommand で ./gradlew dependencies --no-daemon を実行
+- forwardPorts: [8080, 5005, 3306, 8081]
+- SPRING_PROFILES_ACTIVE=dev を remoteEnv に設定</code></pre>
+                        </div>
+                    </div>
+
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-title">.devcontainer/devcontainer.json</span>
