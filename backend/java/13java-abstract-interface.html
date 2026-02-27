@@ -378,6 +378,31 @@ public class InterfaceDemo {
                     </div>
                 </div>
             </div>
+
+            <!-- 抽象クラス vs インタフェース比較 -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 0 0 32px 0;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                    <span class="material-icons" style="color: #0097A7;">compare_arrows</span>
+                    <span style="font-size: 16px; font-weight: 700; color: #1e293b;">抽象クラス vs インタフェース ― 使い分けの指針</span>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>比較項目</th><th>抽象クラス（abstract class）</th><th>インタフェース（interface）</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>キーワード</td><td><code>abstract class</code></td><td><code>interface</code></td></tr>
+                        <tr><td>多重継承/実装</td><td>1つだけ（単一継承）</td><td><strong>複数実装可能</strong></td></tr>
+                        <tr><td>コンストラクタ</td><td>持てる</td><td>持てない</td></tr>
+                        <tr><td>フィールド</td><td>インスタンス変数を持てる</td><td>定数のみ（public static final）</td></tr>
+                        <tr><td>メソッド</td><td>抽象メソッド＋通常メソッド</td><td>抽象メソッド＋default/staticメソッド</td></tr>
+                        <tr><td>アクセス修飾子</td><td>すべて使える</td><td>メソッドは暗黙的にpublic</td></tr>
+                        <tr><td>使いどころ</td><td>「is-a」＋共通処理がある場合</td><td>「can-do」機能の契約を定義する場合</td></tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 12px; padding: 10px 14px; background: #dbeafe; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <span style="font-size: 13px; color: #1e40af;"><strong>迷ったらインタフェースを優先。</strong>Java は単一継承のため、抽象クラスを使うと継承枠を1つ消費します。共通の状態（フィールド）を持たせる必要がなければインタフェースを選びましょう。</span>
+                </div>
+            </div>
         </section>
 
         <!-- セクション 13-3 -->
@@ -427,19 +452,114 @@ defaultメソッドとstaticメソッドを持つインタフェースの動作�
             <!-- ソースコード -->
             <div class="code-block">
                 <div class="code-header"><span class="code-title">chapter13/DefaultMethodDemo.java</span><span class="code-lang">Java</span></div>
-                <pre class="code-content"><code>public class DefaultMethodDemo {
-    public static void main(String[] args) {
-        public interface Greeting {
-            default void sayHello() {
-                System.out.println("Hello!");
-            }
+                <pre class="code-content"><code>interface Greeting {
+    // defaultメソッド（実装あり）
+    default void sayHello() {
+        System.out.println("Hello!");
+    }
 
-            static void printVersion() {
-                System.out.println("Version 1.0");
-            }
-        }
+    // staticメソッド
+    static void printVersion() {
+        System.out.println("Version 1.0");
+    }
+}
+
+// オーバーライドしなくてもdefaultメソッドが使える
+class JapaneseGreeting implements Greeting {
+    // sayHello()をオーバーライドしない → defaultがそのまま使われる
+}
+
+// オーバーライドして独自の動作にもできる
+class CustomGreeting implements Greeting {
+    @Override
+    public void sayHello() {
+        System.out.println("こんにちは！");
+    }
+}
+
+public class DefaultMethodDemo {
+    public static void main(String[] args) {
+        JapaneseGreeting g1 = new JapaneseGreeting();
+        g1.sayHello();  // Hello!（defaultメソッドがそのまま使われる）
+
+        CustomGreeting g2 = new CustomGreeting();
+        g2.sayHello();  // こんにちは！（オーバーライドした処理）
+
+        Greeting.printVersion();  // Version 1.0（staticメソッド）
     }
 }</code></pre>
+            </div>
+
+            <!-- defaultメソッド図解 -->
+            <div class="content-block">
+                <div class="figure" style="margin: 20px 0;">
+                    <div class="figure-caption">defaultメソッド ― オーバーライドしなければデフォルト実装が使われる</div>
+                    <svg viewBox="0 0 700 420" style="max-width: 700px; width: 100%; height: auto;">
+                        <defs>
+                            <marker id="arrowDefault" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+                            </marker>
+                        </defs>
+
+                        <!-- ===== Interface Greeting（紫・点線） ===== -->
+                        <rect x="175" y="10" width="350" height="110" rx="14" fill="#f3e8ff" stroke="#a855f7" stroke-width="2.5" stroke-dasharray="8,4"/>
+                        <rect x="175" y="10" width="350" height="36" rx="14" fill="#a855f7"/>
+                        <rect x="175" y="32" width="350" height="14" fill="#a855f7"/>
+                        <text x="350" y="34" text-anchor="middle" font-size="13" font-weight="700" fill="white">&lt;&lt;interface&gt;&gt; Greeting</text>
+                        <rect x="195" y="58" width="310" height="26" rx="6" fill="white" stroke="#d8b4fe" stroke-width="1"/>
+                        <text x="350" y="76" text-anchor="middle" font-size="12" fill="#7c3aed" font-family="monospace">default void sayHello() { "Hello!" }</text>
+                        <rect x="195" y="90" width="310" height="22" rx="6" fill="white" stroke="#d8b4fe" stroke-width="1"/>
+                        <text x="350" y="106" text-anchor="middle" font-size="11" fill="#7c3aed" font-family="monospace">static void printVersion() { ... }</text>
+
+                        <!-- ===== implements 矢印（左） ===== -->
+                        <line x1="260" y1="120" x2="260" y2="160" stroke="#64748b" stroke-width="2"/>
+                        <line x1="260" y1="160" x2="140" y2="160" stroke="#64748b" stroke-width="2"/>
+                        <line x1="140" y1="160" x2="140" y2="190" stroke="#64748b" stroke-width="2" marker-end="url(#arrowDefault)"/>
+                        <text x="200" y="155" text-anchor="middle" font-size="10" font-weight="600" fill="#64748b">implements</text>
+
+                        <!-- ===== implements 矢印（右） ===== -->
+                        <line x1="440" y1="120" x2="440" y2="160" stroke="#64748b" stroke-width="2"/>
+                        <line x1="440" y1="160" x2="560" y2="160" stroke="#64748b" stroke-width="2"/>
+                        <line x1="560" y1="160" x2="560" y2="190" stroke="#64748b" stroke-width="2" marker-end="url(#arrowDefault)"/>
+                        <text x="500" y="155" text-anchor="middle" font-size="10" font-weight="600" fill="#64748b">implements</text>
+
+                        <!-- ===== JapaneseGreeting（緑）左側 ===== -->
+                        <rect x="20" y="195" width="240" height="70" rx="14" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+                        <rect x="20" y="195" width="240" height="32" rx="14" fill="#22c55e"/>
+                        <rect x="20" y="215" width="240" height="12" fill="#22c55e"/>
+                        <text x="140" y="216" text-anchor="middle" font-size="12" font-weight="700" fill="white">JapaneseGreeting</text>
+                        <text x="140" y="248" text-anchor="middle" font-size="11" fill="#166534">オーバーライドなし</text>
+
+                        <!-- ===== CustomGreeting（黄色）右側 ===== -->
+                        <rect x="440" y="195" width="240" height="70" rx="14" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                        <rect x="440" y="195" width="240" height="32" rx="14" fill="#f59e0b"/>
+                        <rect x="440" y="215" width="240" height="12" fill="#f59e0b"/>
+                        <text x="560" y="216" text-anchor="middle" font-size="12" font-weight="700" fill="white">CustomGreeting</text>
+                        <text x="560" y="248" text-anchor="middle" font-size="11" fill="#92400e">@Override sayHello()</text>
+
+                        <!-- ===== 下矢印（左） ===== -->
+                        <line x1="140" y1="265" x2="140" y2="310" stroke="#22c55e" stroke-width="2" marker-end="url(#arrowDefault)"/>
+
+                        <!-- ===== 下矢印（右） ===== -->
+                        <line x1="560" y1="265" x2="560" y2="310" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowDefault)"/>
+
+                        <!-- ===== 出力結果（左：緑） ===== -->
+                        <rect x="40" y="315" width="200" height="50" rx="10" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+                        <text x="140" y="336" text-anchor="middle" font-size="11" font-weight="600" fill="#166534">出力</text>
+                        <text x="140" y="354" text-anchor="middle" font-size="14" font-weight="700" fill="#15803d" font-family="monospace">"Hello!"</text>
+
+                        <!-- ===== 出力結果（右：黄色） ===== -->
+                        <rect x="460" y="315" width="200" height="50" rx="10" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+                        <text x="560" y="336" text-anchor="middle" font-size="11" font-weight="600" fill="#92400e">出力</text>
+                        <text x="560" y="354" text-anchor="middle" font-size="14" font-weight="700" fill="#b45309" font-family="monospace">"こんにちは！"</text>
+
+                        <!-- ===== 説明ラベル ===== -->
+                        <rect x="50" y="376" width="180" height="32" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+                        <text x="140" y="397" text-anchor="middle" font-size="11" fill="#1e40af">default実装がそのまま使われる</text>
+                        <rect x="470" y="376" width="180" height="32" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+                        <text x="560" y="397" text-anchor="middle" font-size="11" fill="#92400e">オーバーライドした処理が実行</text>
+                    </svg>
+                </div>
             </div>
 
             <!-- 構文 -->
@@ -470,6 +590,62 @@ defaultメソッドとstaticメソッドを持つインタフェースの動作�
                     <li><strong>Spring Data JPA の Repository</strong>：<code>JpaRepository&lt;User, Long&gt;</code> インタフェースを継承するだけで、CRUD メソッドが自動的に利用可能になります。実装クラスを書く必要がありません。</li>
                     <li><strong>通知システムの設計</strong>：<code>Notifiable</code> インタフェースで <code>send()</code> を宣言し、<code>EmailNotifier</code>、<code>SlackNotifier</code>、<code>SmsNotifier</code> がそれぞれ実装します。通知手段を追加する際も既存コードを変更せずに済みます。</li>
                 </ul>
+            </div>
+        </section>
+
+        <!-- 練習問題・解答 -->
+        <section class="section">
+            <div class="section-header"><span class="section-number">Exercise</span><h2 class="section-title">13章 練習問題</h2></div>
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>抽象クラスについて正しいものはどれですか？</p>
+                        <ol type="A"><li>抽象クラスは直接インスタンス化できる</li><li>抽象クラスは通常のメソッド（実装あり）を持つことができる</li><li>抽象メソッドには処理の本体（中括弧）を書く</li><li>1つのクラスは複数の抽象クラスを継承できる</li></ol>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>インタフェースについて正しいものはどれですか？</p>
+                        <ol type="A"><li>インタフェースはコンストラクタを持てる</li><li>インタフェースのメソッドはデフォルトでprivateである</li><li>1つのクラスは複数のインタフェースを実装できる</li><li>インタフェースはインスタンス変数を持てる</li></ol>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>次のコードの出力結果はどれですか？</p>
+                        <div class="code-block" style="margin: 12px 0;">
+                            <pre class="code-content"><code>interface Calculator {
+    default int calc(int a, int b) { return a + b; }
+}
+class MyCalc implements Calculator {
+    @Override
+    public int calc(int a, int b) { return a * b; }
+}
+// 実行: System.out.println(new MyCalc().calc(3, 4));</code></pre>
+                        </div>
+                        <ol type="A"><li>7</li><li>12</li><li>コンパイルエラー</li><li>実行時エラー</li></ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-header"><span class="section-number">Answer</span><h2 class="section-title">13章 解説・解答</h2></div>
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content"><p>抽象クラスは直接newできない（Aは誤り）。通常のメソッド（実装あり）と抽象メソッド（実装なし）の両方を持てる。抽象メソッドにはセミコロンで終わり中括弧は書かない（Cは誤り）。Javaは単一継承のため複数の抽象クラスは継承できない（Dは誤り）。</p></div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: C</div>
+                    <div class="answer-content"><p>Javaは複数のインタフェースを同時に実装（implements）できる。インタフェースにコンストラクタはない（Aは誤り）。メソッドはデフォルトでpublic（Bは誤り）。フィールドはpublic static final（定数）のみでインスタンス変数は持てない（Dは誤り）。</p></div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: B</div>
+                    <div class="answer-content"><p>MyCalcがcalc()をオーバーライドしているため、defaultメソッドのa+bではなく、オーバーライドしたa*bが実行される。3x4=12。defaultメソッドはオーバーライドされなかった場合のみ使われる。</p></div>
+                </div>
             </div>
         </section>
     </div>
