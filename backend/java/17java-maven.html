@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第17章 Mavenの基礎</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #0097A7;
+        --primary-dark: #00838F;
+        --primary-light: #E0F7FA;
+        --primary-lighter: #B2EBF2;
+      }
+      body { padding-top: 48px; }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+            <!-- グローバルナビゲーション -->
+            <nav class="global-nav"></nav>
+            <script src="../../shared/js/nav-java.js"></script>
+
+
+    <div class="container">
+        <!-- ヘッダー -->
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">17</div>
+            <h1 class="chapter-title">Mavenの基礎</h1>
+        </header>
+
+        <!-- 目次 -->
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">17-1</span><span>Mavenとは</span></li>
+                <li class="toc-item"><span class="toc-number">17-2</span><span>Mavenプロジェクトの構成</span></li>
+                <li class="toc-item"><span class="toc-number">17-3</span><span>Mavenコマンドとビルドライフサイクル</span></li>
+                <li class="toc-item"><span class="toc-number">17-4</span><span>依存関係の管理</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 17-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 17-1</span>
+                <h2 class="section-title">Mavenとは</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Apache Mavenは、Javaプロジェクトの<strong>ビルド・依存関係管理・プロジェクト構成</strong>を自動化するツールです。手動で<code>javac</code>を実行してコンパイルしたり、ライブラリのJARファイルを自分で配置する必要がなくなり、チーム開発や大規模プロジェクトで不可欠な存在です。</p>
+            </div>
+
+            <!-- 1.1 なぜMavenを使うのか -->
+            <div class="subsection">
+                <h3 class="subsection-title">1.1 なぜMavenを使うのか</h3>
+
+                <div class="content-block">
+                    <p>第2章で学んだ手動コンパイルとMavenの違いを比較してみましょう。</p>
+
+                    <!-- 手動 vs Maven 比較図 -->
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #0097A7;">compare_arrows</span>
+                            手動コンパイル vs Maven
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #991b1b; font-size: 0.9rem; margin-bottom: 12px;">手動コンパイル</div>
+                                <div style="font-size: 0.8rem; color: #7f1d1d; line-height: 1.8;">
+                                    <div>javac で1ファイルずつコンパイル</div>
+                                    <div>JARファイルを手動で配置</div>
+                                    <div>クラスパスを毎回指定</div>
+                                    <div>テスト実行も手動</div>
+                                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #fca5a5; font-weight: 600;">プロジェクトが大きくなると破綻</div>
+                                </div>
+                            </div>
+                            <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #166534; font-size: 0.9rem; margin-bottom: 12px;">Maven</div>
+                                <div style="font-size: 0.8rem; color: #14532d; line-height: 1.8;">
+                                    <div><code>mvn compile</code> で一括コンパイル</div>
+                                    <div>pom.xml に書くだけで自動ダウンロード</div>
+                                    <div>クラスパスは自動設定</div>
+                                    <div><code>mvn test</code> でテスト一括実行</div>
+                                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #86efac; font-weight: 600;">大規模プロジェクトでも統一管理</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.2 Mavenの3つの役割 -->
+            <div class="subsection">
+                <h3 class="subsection-title">1.2 Mavenの3つの役割</h3>
+
+                <div class="content-block">
+                    <!-- 3つの役割図解 -->
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div style="background: #dbeafe; border-radius: 12px; padding: 20px; text-align: center; border-left: 5px solid #3b82f6;">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">&#128230;</div>
+                                <div style="font-weight: 700; color: #1e40af; font-size: 0.9rem; margin-bottom: 8px;">ビルド自動化</div>
+                                <div style="font-size: 0.78rem; color: #1e3a5f; line-height: 1.6;">コンパイル → テスト → パッケージングを1コマンドで実行</div>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 20px; text-align: center; border-left: 5px solid #22c55e;">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">&#128279;</div>
+                                <div style="font-weight: 700; color: #166534; font-size: 0.9rem; margin-bottom: 8px;">依存関係管理</div>
+                                <div style="font-size: 0.78rem; color: #14532d; line-height: 1.6;">ライブラリの自動ダウンロード・バージョン管理</div>
+                            </div>
+                            <div style="background: #fef3c7; border-radius: 12px; padding: 20px; text-align: center; border-left: 5px solid #f59e0b;">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">&#128193;</div>
+                                <div style="font-weight: 700; color: #92400e; font-size: 0.9rem; margin-bottom: 8px;">プロジェクト構成の標準化</div>
+                                <div style="font-size: 0.78rem; color: #78350f; line-height: 1.6;">決められたディレクトリ構造でチーム開発を統一</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.3 Mavenのインストール -->
+            <div class="subsection">
+                <h3 class="subsection-title">1.3 Mavenのインストール</h3>
+
+                <div class="content-block">
+                    <p>Mavenを使用するにはJDKが必要です（第1章で設定済み）。</p>
+
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #0097A7;">build</span>
+                            Mavenインストール手順
+                        </h4>
+
+                        <div style="display: flex; gap: 14px; margin-bottom: 20px; align-items: flex-start;">
+                            <div style="background: #0097A7; color: white; border-radius: 50%; min-width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0;">1</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; color: #00695c; margin-bottom: 6px; font-size: 0.95rem;">ダウンロード</div>
+                                <p style="margin: 0; font-size: 0.85rem; color: #475569;">Apache Maven公式サイトからバイナリ（Binary zip archive）をダウンロードします。</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 14px; margin-bottom: 20px; align-items: flex-start;">
+                            <div style="background: #0097A7; color: white; border-radius: 50%; min-width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0;">2</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; color: #00695c; margin-bottom: 6px; font-size: 0.95rem;">展開と環境変数の設定</div>
+                                <div style="background: #1e293b; border-radius: 10px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; line-height: 1.8;">
+                                    <div style="color: #94a3b8; font-size: 0.7rem;">Windows: 環境変数に追加</div>
+                                    <div style="color: #e2e8f0;"><span style="color: #fbbf24;">MAVEN_HOME</span> = <span style="color: #86efac;">C:\apache-maven-3.9.9</span></div>
+                                    <div style="color: #e2e8f0;"><span style="color: #fbbf24;">PATH</span> += <span style="color: #86efac;">%MAVEN_HOME%\bin</span></div>
+                                    <div style="border-top: 1px solid #334155; margin: 10px 0;"></div>
+                                    <div style="color: #94a3b8; font-size: 0.7rem;">macOS (Homebrew)</div>
+                                    <div style="color: #e2e8f0;">$ <span style="color: #86efac;">brew install maven</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 14px; align-items: flex-start;">
+                            <div style="background: #0097A7; color: white; border-radius: 50%; min-width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0;">3</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; color: #00695c; margin-bottom: 6px; font-size: 0.95rem;">インストール確認</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">バージョン確認コマンド</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code>$ mvn --version
+Apache Maven 3.9.9
+Maven home: /usr/local/Cellar/maven/3.9.9/libexec
+Java version: 21.0.1, vendor: Oracle Corporation
+Default locale: ja_JP, platform encoding: UTF-8</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">IDEでの利用</span>
+                        </div>
+                        <p>IntelliJ IDEAやEclipseにはMavenが内蔵されているため、IDE経由で利用する場合は別途インストールが不要な場合もあります。ただし、コマンドラインで使えるようにしておくとCI/CD環境でも活用できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 17-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 17-2</span>
+                <h2 class="section-title">Mavenプロジェクトの構成</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Mavenは「<strong>Convention over Configuration（設定より規約）</strong>」の思想に基づいています。プロジェクトのディレクトリ構造が標準化されているため、どのMavenプロジェクトを開いても同じ構造を期待できます。</p>
+            </div>
+
+            <!-- 2.1 標準ディレクトリ構造 -->
+            <div class="subsection">
+                <h3 class="subsection-title">2.1 標準ディレクトリ構造</h3>
+
+                <div class="content-block">
+                    <!-- ディレクトリ構造図解 -->
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #0097A7;">folder_open</span>
+                            Mavenプロジェクト標準構造
+                        </h4>
+                        <div style="background: #1e293b; border-radius: 10px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 2.0;">
+                            <div style="color: #e2e8f0;">my-app/</div>
+                            <div style="color: #fbbf24;">├── pom.xml <span style="color: #94a3b8; font-size: 0.7rem;">← プロジェクト設定ファイル（Mavenの心臓部）</span></div>
+                            <div style="color: #e2e8f0;">├── src/</div>
+                            <div style="color: #86efac;">│   ├── main/</div>
+                            <div style="color: #86efac;">│   │   ├── java/ <span style="color: #94a3b8; font-size: 0.7rem;">← 本番用Javaソースコード</span></div>
+                            <div style="color: #86efac;">│   │   │   └── com/example/app/</div>
+                            <div style="color: #86efac;">│   │   │       └── App.java</div>
+                            <div style="color: #86efac;">│   │   └── resources/ <span style="color: #94a3b8; font-size: 0.7rem;">← 設定ファイル・リソース</span></div>
+                            <div style="color: #67e8f9;">│   └── test/</div>
+                            <div style="color: #67e8f9;">│       ├── java/ <span style="color: #94a3b8; font-size: 0.7rem;">← テスト用Javaソースコード</span></div>
+                            <div style="color: #67e8f9;">│       │   └── com/example/app/</div>
+                            <div style="color: #67e8f9;">│       │       └── AppTest.java</div>
+                            <div style="color: #67e8f9;">│       └── resources/ <span style="color: #94a3b8; font-size: 0.7rem;">← テスト用リソース</span></div>
+                            <div style="color: #c084fc;">└── target/ <span style="color: #94a3b8; font-size: 0.7rem;">← ビルド成果物（自動生成、gitignore対象）</span></div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-top: 16px; font-size: 0.75rem;">
+                            <div style="background: #fef3c7; border-radius: 6px; padding: 8px 12px;">
+                                <strong style="color: #92400e;">pom.xml</strong><br><span style="color: #64748b;">プロジェクト設定の中核</span>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 6px; padding: 8px 12px;">
+                                <strong style="color: #166534;">src/main/java</strong><br><span style="color: #64748b;">本番コードの配置先</span>
+                            </div>
+                            <div style="background: #e0f7fa; border-radius: 6px; padding: 8px 12px;">
+                                <strong style="color: #00695c;">src/test/java</strong><br><span style="color: #64748b;">テストコードの配置先</span>
+                            </div>
+                            <div style="background: #f3e8ff; border-radius: 6px; padding: 8px 12px;">
+                                <strong style="color: #7e22ce;">target/</strong><br><span style="color: #64748b;">コンパイル済みファイル等</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2.2 プロジェクトの作成 -->
+            <div class="subsection">
+                <h3 class="subsection-title">2.2 プロジェクトの作成</h3>
+
+                <div class="content-block">
+                    <p>Mavenのアーキタイプ（テンプレート）機能を使ってプロジェクトの雛形を生成できます。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Mavenプロジェクトの生成</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># アーキタイプからプロジェクトを生成
+$ mvn archetype:generate \
+    -DgroupId=com.example \
+    -DartifactId=my-app \
+    -DarchetypeArtifactId=maven-archetype-quickstart \
+    -DarchetypeVersion=1.5 \
+    -DinteractiveMode=false
+
+# 生成されたプロジェクトに移動
+$ cd my-app</code></pre>
+                    </div>
+
+                    <div class="syntax-box">
+                        <div class="syntax-box-header">
+                            <span class="syntax-box-icon"><span class="material-icons">menu_book</span></span>
+                            <span class="syntax-box-title">パラメータ説明</span>
+                        </div>
+                        <div class="syntax-box-content">
+                            <div class="syntax-item">
+                                <h4>groupId</h4>
+                                <div class="syntax-pattern">-DgroupId=com.example</div>
+                                <p>プロジェクトを一意に識別するグループ名です。通常は組織のドメインを逆にした形式を使います。Javaのパッケージ名の基盤になります。</p>
+                            </div>
+                            <div class="syntax-item">
+                                <h4>artifactId</h4>
+                                <div class="syntax-pattern">-DartifactId=my-app</div>
+                                <p>プロジェクト名（成果物名）です。生成されるJARファイルの名前にも使われます。ディレクトリ名としても使用されます。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2.3 pom.xmlの基本 -->
+            <div class="subsection">
+                <h3 class="subsection-title">2.3 pom.xmlの基本</h3>
+
+                <div class="content-block">
+                    <p><strong>POM（Project Object Model）</strong>は、Mavenプロジェクトの設定をすべて記述するXMLファイルです。</p>
+
+                    <div class="prompt-box">
+                        <div class="prompt-box-header">
+                            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                            <span class="prompt-box-title">プロンプト</span>
+                            <button class="prompt-copy-btn">コピー</button>
+                        </div>
+                        <div class="prompt-box-content">
+                            <pre><code>## 機能
+Mavenプロジェクトのpomファイルとメインクラスを生成
+
+## 生成先
+- ディレクトリ: chapter17/my-app
+- ファイル名: pom.xml, src/main/java/com/example/app/App.java
+
+## 実装要件
+- groupIdは com.example、artifactIdは my-app、バージョンは 1.0-SNAPSHOT
+- Java 21を使用（maven.compiler.source / target）
+- maven-compiler-plugin 3.13.0を設定
+- App.javaにmainメソッドを作成し「Hello Maven!」を出力
+- mainメソッドを含め、System.out.printlnで各処理の実行結果を出力して動作確認できるようにする
+
+## 使用する技術
+- Maven pom.xml (modelVersion 4.0.0)
+- maven-compiler-plugin
+- properties要素でJavaバージョンを指定</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">chapter17/my-app/pom.xml</span>
+                            <span class="code-lang">XML</span>
+                        </div>
+                        <pre class="code-content"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;!-- プロジェクト座標（GAV） --&gt;
+    &lt;groupId&gt;com.example&lt;/groupId&gt;
+    &lt;artifactId&gt;my-app&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;packaging&gt;jar&lt;/packaging&gt;
+
+    &lt;!-- プロパティ --&gt;
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;21&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;21&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+    &lt;/properties&gt;
+
+    &lt;!-- 依存関係 --&gt;
+    &lt;dependencies&gt;
+        &lt;!-- この後のセクションで追加します --&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;</code></pre>
+                    </div>
+
+                    <!-- GAV座標の図解 -->
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #0097A7;">pin_drop</span>
+                            GAV座標 ── ライブラリの住所
+                        </h4>
+                        <p style="font-size: 0.85rem; color: #475569; margin: 0 0 16px 0;">Mavenでは<strong>groupId・artifactId・version</strong>の3つの値でライブラリを一意に特定します。これを「座標（Coordinates）」と呼びます。</p>
+                        <div style="display: flex; justify-content: center;">
+                            <div style="background: #1e293b; border-radius: 10px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 2.0; max-width: 500px; width: 100%;">
+                                <div style="color: #94a3b8; font-size: 0.7rem;">例: Spring Boot Starter Web</div>
+                                <div style="color: #e2e8f0;"><span style="color: #fbbf24;">groupId</span>    : <span style="color: #86efac;">org.springframework.boot</span></div>
+                                <div style="color: #e2e8f0;"><span style="color: #67e8f9;">artifactId</span> : <span style="color: #86efac;">spring-boot-starter-web</span></div>
+                                <div style="color: #e2e8f0;"><span style="color: #c084fc;">version</span>    : <span style="color: #86efac;">3.4.3</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">chapter17/my-app/src/main/java/com/example/app/App.java</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>package com.example.app;
+
+public class App {
+    public static void main(String[] args) {
+        System.out.println("Hello Maven!");
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 17-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 17-3</span>
+                <h2 class="section-title">Mavenコマンドとビルドライフサイクル</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Mavenには「<strong>ビルドライフサイクル</strong>」という、ビルド工程を段階的に実行する仕組みがあります。各フェーズは順番に実行され、後のフェーズを指定するとそれ以前のフェーズも自動的に実行されます。</p>
+            </div>
+
+            <!-- 3.1 主要なMavenコマンド -->
+            <div class="subsection">
+                <h3 class="subsection-title">3.1 主要なMavenコマンド</h3>
+
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>コマンド</th>
+                                <th>説明</th>
+                                <th>生成先</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>mvn compile</code></td>
+                                <td>src/main/java をコンパイル</td>
+                                <td>target/classes/</td>
+                            </tr>
+                            <tr>
+                                <td><code>mvn test</code></td>
+                                <td>テストをコンパイルして実行</td>
+                                <td>target/test-classes/</td>
+                            </tr>
+                            <tr>
+                                <td><code>mvn package</code></td>
+                                <td>JAR/WARファイルを生成</td>
+                                <td>target/my-app-1.0.jar</td>
+                            </tr>
+                            <tr>
+                                <td><code>mvn clean</code></td>
+                                <td>target/ フォルダを削除</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td><code>mvn install</code></td>
+                                <td>ローカルリポジトリにインストール</td>
+                                <td>~/.m2/repository/</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">ビルドと実行</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code># コンパイル
+$ mvn compile
+
+# コンパイルしたクラスを実行
+$ mvn exec:java -Dexec.mainClass="com.example.app.App"
+Hello Maven!
+
+# クリーンしてからパッケージング（よく使う組み合わせ）
+$ mvn clean package
+
+# 生成されたJARを実行
+$ java -jar target/my-app-1.0-SNAPSHOT.jar</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3.2 ビルドライフサイクル -->
+            <div class="subsection">
+                <h3 class="subsection-title">3.2 ビルドライフサイクル</h3>
+
+                <div class="content-block">
+                    <!-- ライフサイクル図解 -->
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #0097A7;">autorenew</span>
+                            デフォルトライフサイクル ── フェーズの流れ
+                        </h4>
+                        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px;">
+                            <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 10px; padding: 12px 16px; text-align: center; min-width: 100px;">
+                                <div style="font-weight: 700; color: #1e40af; font-size: 0.85rem;">validate</div>
+                                <div style="font-size: 0.68rem; color: #3b82f6;">検証</div>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 1.2rem; font-weight: 700;">→</div>
+                            <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 10px; padding: 12px 16px; text-align: center; min-width: 100px;">
+                                <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">compile</div>
+                                <div style="font-size: 0.68rem; color: #16a34a;">コンパイル</div>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 1.2rem; font-weight: 700;">→</div>
+                            <div style="background: #e0f7fa; border: 2px solid #0097A7; border-radius: 10px; padding: 12px 16px; text-align: center; min-width: 100px;">
+                                <div style="font-weight: 700; color: #00695c; font-size: 0.85rem;">test</div>
+                                <div style="font-size: 0.68rem; color: #0097A7;">テスト実行</div>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 1.2rem; font-weight: 700;">→</div>
+                            <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 12px 16px; text-align: center; min-width: 100px;">
+                                <div style="font-weight: 700; color: #92400e; font-size: 0.85rem;">package</div>
+                                <div style="font-size: 0.68rem; color: #b45309;">JAR/WAR生成</div>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 1.2rem; font-weight: 700;">→</div>
+                            <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 10px; padding: 12px 16px; text-align: center; min-width: 100px;">
+                                <div style="font-weight: 700; color: #7e22ce; font-size: 0.85rem;">install</div>
+                                <div style="font-size: 0.68rem; color: #9333ea;">ローカル配置</div>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 1.2rem; font-weight: 700;">→</div>
+                            <div style="background: #fce7f3; border: 2px solid #ec4899; border-radius: 10px; padding: 12px 16px; text-align: center; min-width: 100px;">
+                                <div style="font-weight: 700; color: #9d174d; font-size: 0.85rem;">deploy</div>
+                                <div style="font-size: 0.68rem; color: #db2777;">リモート配置</div>
+                            </div>
+                        </div>
+
+                        <div style="background: #e0f7fa; border: 1px solid #80deea; border-radius: 8px; padding: 12px 16px; margin-top: 16px;">
+                            <p style="margin: 0; color: #00695c; font-size: 0.8rem; line-height: 1.7;">
+                                <strong>ポイント:</strong> <code>mvn package</code> を実行すると、validate → compile → test → package の順に<strong>自動的にすべて実行</strong>されます。つまり、テストが失敗するとパッケージングされません。
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">cleanライフサイクル</span>
+                        </div>
+                        <p><code>mvn clean</code>はデフォルトライフサイクルとは別の「cleanライフサイクル」に属します。そのため<code>mvn clean package</code>のように組み合わせて使うことで、古い成果物を削除してから新たにビルドできます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 17-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 17-4</span>
+                <h2 class="section-title">依存関係の管理</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Mavenの最大の利点の一つが<strong>依存関係（Dependency）の自動管理</strong>です。pom.xmlに使いたいライブラリを記述するだけで、Maven Central Repositoryから自動的にダウンロードされます。</p>
+            </div>
+
+            <!-- 4.1 依存関係の追加 -->
+            <div class="subsection">
+                <h3 class="subsection-title">4.1 依存関係の追加</h3>
+
+                <div class="content-block">
+                    <p>テスティングフレームワーク「JUnit 5」を例に、依存関係を追加してみましょう。</p>
+
+                    <div class="prompt-box">
+                        <div class="prompt-box-header">
+                            <span class="prompt-box-icon"><span class="material-icons">chat</span></span>
+                            <span class="prompt-box-title">プロンプト</span>
+                            <button class="prompt-copy-btn">コピー</button>
+                        </div>
+                        <div class="prompt-box-content">
+                            <pre><code>## 機能
+JUnit 5を使用するMavenプロジェクトのpom.xmlとテストクラスを生成
+
+## 生成先
+- ディレクトリ: chapter17/my-app
+- ファイル名: pom.xml, src/test/java/com/example/app/AppTest.java
+
+## 実装要件
+- 既存のpom.xmlにJUnit Jupiter 5.11.4を追加（scopeはtest）
+- maven-surefire-plugin 3.5.2を設定
+- AppTest.javaでApp.javaの動作を検証する簡単なテストを作成
+- @Test、assertEquals を使用
+
+## 使用する技術
+- JUnit Jupiter API (org.junit.jupiter:junit-jupiter)
+- maven-surefire-plugin
+- @Test アノテーション</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">pom.xml に依存関係を追加</span>
+                            <span class="code-lang">XML</span>
+                        </div>
+                        <pre class="code-content"><code>&lt;dependencies&gt;
+    &lt;!-- JUnit 5 --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+        &lt;artifactId&gt;junit-jupiter&lt;/artifactId&gt;
+        &lt;version&gt;5.11.4&lt;/version&gt;
+        &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+
+&lt;build&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;
+            &lt;version&gt;3.5.2&lt;/version&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/build&gt;</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">chapter17/my-app/src/test/java/com/example/app/AppTest.java</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>package com.example.app;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class AppTest {
+
+    @Test
+    void testGreeting() {
+        String expected = "Hello Maven!";
+        String actual = "Hello Maven!";
+        assertEquals(expected, actual, "挨拶メッセージが一致すること");
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">テストの実行</span>
+                            <span class="code-lang">Terminal</span>
+                        </div>
+                        <pre class="code-content"><code>$ mvn test
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.example.app.AppTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO] -------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] -------------------------------------------------------</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4.2 scopeの種類 -->
+            <div class="subsection">
+                <h3 class="subsection-title">4.2 scopeの種類</h3>
+
+                <div class="content-block">
+                    <p><code>&lt;scope&gt;</code>は、依存ライブラリがどのタイミングで使用されるかを指定します。</p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>scope</th>
+                                <th>コンパイル時</th>
+                                <th>テスト時</th>
+                                <th>実行時</th>
+                                <th>用途例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>compile</code></td>
+                                <td>&#9989;</td>
+                                <td>&#9989;</td>
+                                <td>&#9989;</td>
+                                <td>デフォルト。通常のライブラリ</td>
+                            </tr>
+                            <tr>
+                                <td><code>test</code></td>
+                                <td>-</td>
+                                <td>&#9989;</td>
+                                <td>-</td>
+                                <td>JUnit、Mockito</td>
+                            </tr>
+                            <tr>
+                                <td><code>provided</code></td>
+                                <td>&#9989;</td>
+                                <td>&#9989;</td>
+                                <td>-</td>
+                                <td>Servlet API（サーバー側で提供）</td>
+                            </tr>
+                            <tr>
+                                <td><code>runtime</code></td>
+                                <td>-</td>
+                                <td>&#9989;</td>
+                                <td>&#9989;</td>
+                                <td>JDBCドライバ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="warning-box">
+                        <div class="warning-box-header">
+                            <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+                            <span class="warning-box-title">scopeを省略すると</span>
+                        </div>
+                        <p>scopeを指定しない場合は<code>compile</code>がデフォルトとなり、すべてのフェーズでクラスパスに追加されます。テスト専用のライブラリには必ず<code>&lt;scope&gt;test&lt;/scope&gt;</code>を指定しましょう。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4.3 依存関係の仕組み -->
+            <div class="subsection">
+                <h3 class="subsection-title">4.3 依存関係の仕組み</h3>
+
+                <div class="content-block">
+                    <!-- 依存関係解決の図解 -->
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #0097A7;">cloud_download</span>
+                            Mavenの依存関係解決フロー
+                        </h4>
+                        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px;">
+                            <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 16px; text-align: center; min-width: 120px;">
+                                <div style="font-size: 1.2rem; margin-bottom: 4px;">&#128196;</div>
+                                <div style="font-weight: 700; color: #1e40af; font-size: 0.8rem;">pom.xml</div>
+                                <div style="font-size: 0.68rem; color: #3b82f6;">依存を宣言</div>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 1.2rem; font-weight: 700;">→</div>
+                            <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 16px; text-align: center; min-width: 120px;">
+                                <div style="font-size: 1.2rem; margin-bottom: 4px;">&#128187;</div>
+                                <div style="font-weight: 700; color: #92400e; font-size: 0.8rem;">ローカルリポジトリ</div>
+                                <div style="font-size: 0.68rem; color: #b45309;">~/.m2/repository/</div>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 1.2rem; font-weight: 700;">→</div>
+                            <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 16px; text-align: center; min-width: 120px;">
+                                <div style="font-size: 1.2rem; margin-bottom: 4px;">&#127760;</div>
+                                <div style="font-weight: 700; color: #166534; font-size: 0.8rem;">Maven Central</div>
+                                <div style="font-size: 0.68rem; color: #16a34a;">リモートリポジトリ</div>
+                            </div>
+                        </div>
+                        <div style="background: #e0f7fa; border: 1px solid #80deea; border-radius: 8px; padding: 12px 16px; margin-top: 16px;">
+                            <p style="margin: 0; color: #00695c; font-size: 0.8rem; line-height: 1.7;">
+                                <strong>ポイント:</strong> Mavenはまずローカルリポジトリ（<code>~/.m2/repository/</code>）を検索し、見つからなければMaven Centralからダウンロードしてキャッシュします。2回目以降はローカルから高速に読み込まれます。
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">推移的依存関係</span>
+                        </div>
+                        <p>Mavenは<strong>推移的依存関係（transitive dependency）</strong>を自動解決します。例えば、Spring Boot Starter Webを追加すると、それが依存するSpring MVC、Tomcat、Jackson等も自動的にダウンロードされます。<code>mvn dependency:tree</code>コマンドで依存関係ツリーを確認できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">17章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Mavenの標準ディレクトリ構造で、本番用Javaソースコードを配置する場所として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li><code>src/java/main/</code></li>
+                            <li><code>src/main/java/</code></li>
+                            <li><code>main/src/java/</code></li>
+                            <li><code>java/src/main/</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p><code>mvn package</code>を実行したとき、自動的に実行されるフェーズの順序として正しいものはどれですか？</p>
+                        <ol type="A">
+                            <li>package → compile → test</li>
+                            <li>compile → test → package</li>
+                            <li>test → compile → package</li>
+                            <li>compile → package → test</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>JUnit 5のような、テスト時のみ使用するライブラリのdependencyに指定すべきscopeはどれですか？</p>
+                        <ol type="A">
+                            <li><code>compile</code></li>
+                            <li><code>runtime</code></li>
+                            <li><code>test</code></li>
+                            <li><code>provided</code></li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">17章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: B</div>
+                    <div class="answer-content">
+                        <p>Mavenの規約では、本番用のJavaソースコードは<code>src/main/java/</code>に配置します。テスト用は<code>src/test/java/</code>です。この標準構造に従うことで、追加の設定なしにMavenがソースコードを認識できます。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p>Mavenのデフォルトライフサイクルでは、validate → compile → test → package の順にフェーズが実行されます。後のフェーズを指定すると、それ以前のフェーズもすべて自動的に実行されます。つまり<code>mvn package</code>でテストも自動的に行われます。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: C</div>
+                    <div class="answer-content">
+                        <p>テスト時のみ必要なライブラリには<code>&lt;scope&gt;test&lt;/scope&gt;</code>を指定します。これにより、JUnitのクラスは本番のクラスパスには含まれず、テスト実行時にのみ使用されます。成果物のJARファイルのサイズも削減できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="16java-exception.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第16章</div>
+            </div>
+        </a>
+    </div>
+
+    <!-- 共通フッター -->
+    <footer class="global-footer"></footer>
+    <script src="../../shared/footer.js"></script>
+
+    <script>
+        // ハンバーガーメニュー外クリックで閉じる
+        document.addEventListener('click', function(e) {
+            const header = document.querySelector('.global-header');
+            const nav = document.querySelector('.tutorial-nav');
+            const toggle = document.querySelector('.header-nav-toggle');
+
+            if (header && nav && toggle &&
+                !header.contains(e.target) && !nav.contains(e.target) &&
+                nav.classList.contains('active')) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

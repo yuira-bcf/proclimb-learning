@@ -27,7 +27,8 @@ const navData = {
         { href: "13java-abstract-interface.html", num: "13", text: "抽象クラスとインタフェース" },
         { href: "14java-polymorphism.html", num: "14", text: "ポリモーフィズム" },
         { href: "15java-collection.html", num: "15", text: "コレクションフレームワーク" },
-        { href: "16java-exception.html", num: "16", text: "例外処理" }
+        { href: "16java-exception.html", num: "16", text: "例外処理" },
+        { href: "17java-maven.html", num: "17", text: "Mavenの基礎" }
     ],
     categories: [
         { href: "../../index.html", text: "ダッシュボード" },
