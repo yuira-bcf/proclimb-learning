@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>第16章 アノテーションとコンポーネントスキャン - Spring基礎</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css" />
+    <style>
+        :root {
+            --primary: #0097A7;
+            --primary-dark: #00838F;
+            --primary-light: #E0F7FA;
+            --primary-lighter: #B2EBF2;
+        }
+        .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-spring.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge">Chapter</div>
+            <div class="chapter-number">16</div>
+            <h1 class="chapter-title">アノテーションとコンポーネントスキャン</h1>
+            <p class="chapter-subtitle">Springがクラスを自動で見つけて管理する仕組み</p>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title">この章で学ぶこと</h2>
+            <ul class="toc-list">
+                <li><a href="#section1"><span class="toc-number">16-1</span>アノテーションとは？</a></li>
+                <li><a href="#section2"><span class="toc-number">16-2</span>主要アノテーション一覧</a></li>
+                <li><a href="#section3"><span class="toc-number">16-3</span>コンポーネントスキャンの仕組み</a></li>
+                <li><a href="#section4"><span class="toc-number">16-4</span>Bean登録とDIの流れ</a></li>
+            </ul>
+        </nav>
+
+        <!-- ==================== Section 16-1 ==================== -->
+        <section class="section" id="section1">
+            <div class="section-header">
+                <span class="section-number">16-1</span>
+                <h2 class="section-title">アノテーションとは？</h2>
+            </div>
+
+            <div class="intro-box">
+                <p>アノテーション（Annotation）とは、Javaのクラスやメソッドに<strong>「目印」を付ける仕組み</strong>です。<code>@</code> から始まる記述で、Springはこの目印を読み取ってクラスの役割を自動で判断します。</p>
+            </div>
+
+            <!-- アノテーションのイメージ図 -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <h3 style="margin: 0 0 20px 0; color: #334155; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+                    <span class="material-icons" style="color: #0097A7;">label</span> アノテーション = クラスに貼る「ラベル」
+                </h3>
+
+                <div style="display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <!-- アノテーションなし -->
+                    <div style="text-align: center;">
+                        <div style="background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px; padding: 20px 24px; min-width: 160px;">
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #64748b;">public class</div>
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 700; color: #334155;">TodoService</div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.8rem; color: #94a3b8;">ただのJavaクラス</div>
+                        <div style="font-size: 0.75rem; color: #dc2626;">Springは認識しない</div>
+                    </div>
+
+                    <div style="color: #94a3b8; font-size: 2rem;">→</div>
+
+                    <!-- アノテーションあり -->
+                    <div style="text-align: center;">
+                        <div style="background: white; border: 2px solid #0097A7; border-radius: 8px; padding: 20px 24px; min-width: 160px; position: relative;">
+                            <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #0097A7; color: white; padding: 2px 12px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 600;">@Service</div>
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #64748b; margin-top: 4px;">public class</div>
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 700; color: #334155;">TodoService</div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.8rem; color: #0097A7; font-weight: 600;">Springが管理するBean</div>
+                        <div style="font-size: 0.75rem; color: #16a34a;">Springが自動で認識する</div>
+                    </div>
+                </div>
+
+                <div style="background: #E0F7FA; border: 1px solid #B2EBF2; border-radius: 8px; padding: 12px 16px;">
+                    <p style="margin: 0; color: #00695C; font-size: 0.85rem; line-height: 1.7;">
+                        <strong>ポイント:</strong> アノテーションを付けることで、Springが<strong>「このクラスはサービス層の処理を担当するクラスだ」</strong>と認識し、自動でインスタンスを生成・管理してくれます。これにより <code style="background: #B2EBF2; padding: 2px 6px; border-radius: 4px;">new TodoService()</code> を書く必要がなくなります。
+                    </p>
+                </div>
+            </div>
+
+            <!-- アノテーションの書き方 -->
+            <div class="subsection">
+                <h3 class="subsection-title">アノテーションの基本構文</h3>
+                <p>アノテーションはクラスやメソッドの<strong>直前の行</strong>に記述します。</p>
+
+                <div style="background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden;">
+                    <div style="background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <div style="display: flex; gap: 6px;">
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f56;"></span>
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e;"></span>
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #27ca40;"></span>
+                        </div>
+                        <span style="color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace;">アノテーションの記述位置</span>
+                    </div>
+                    <div style="padding: 16px; overflow-x: auto;">
+                        <pre style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8; color: #e2e8f0;"><span style="color: #fbbf24;">@Controller</span>                     <span style="color: #94a3b8;">// ← クラスに付けるアノテーション</span>
+<span style="color: #c084fc;">public class</span> <span style="color: #67e8f9;">TodoController</span> {
+
+    <span style="color: #fbbf24;">@GetMapping</span>(<span style="color: #86efac;">"/todo"</span>)        <span style="color: #94a3b8;">// ← メソッドに付けるアノテーション</span>
+    <span style="color: #c084fc;">public</span> String list(Model model) {
+        <span style="color: #c084fc;">return</span> <span style="color: #86efac;">"todo/list"</span>;
+    }
+}</pre>
+                    </div>
+                </div>
+
+                <div class="hint-box">
+                    <div class="hint-box-title">
+                        <span class="material-icons" style="font-size: 20px;">info</span>
+                        アノテーションの種類
+                    </div>
+                    <ul style="margin: 12px 0; padding-left: 24px; line-height: 2;">
+                        <li><strong>クラスに付けるもの</strong> — <code>@Controller</code>, <code>@Service</code>, <code>@Repository</code>, <code>@Component</code></li>
+                        <li><strong>メソッドに付けるもの</strong> — <code>@GetMapping</code>, <code>@PostMapping</code>, <code>@Transactional</code></li>
+                        <li><strong>引数に付けるもの</strong> — <code>@PathVariable</code>, <code>@RequestParam</code></li>
+                        <li><strong>フィールドに付けるもの</strong> — <code>@Autowired</code>, <code>@NotBlank</code></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== Section 16-2 ==================== -->
+        <section class="section" id="section2">
+            <div class="section-header">
+                <span class="section-number">16-2</span>
+                <h2 class="section-title">主要アノテーション一覧</h2>
+            </div>
+
+            <div class="intro-box">
+                <p>Spring Boot開発で使う主要なアノテーションを、<strong>役割別</strong>に整理します。</p>
+            </div>
+
+            <!-- クラス登録系アノテーション -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <h3 style="margin: 0 0 20px 0; color: #334155; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+                    <span class="material-icons" style="color: #0097A7;">layers</span> Bean登録アノテーション ── Springに管理させるクラスの目印
+                </h3>
+
+                <!-- 4つのアノテーション -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
+
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; padding: 16px;">
+                        <div style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #1e40af; font-size: 1rem; margin-bottom: 8px;">@Controller</div>
+                        <div style="font-size: 0.85rem; color: #334155; line-height: 1.6; margin-bottom: 8px;">画面のリクエストを受け取り、テンプレートを返すクラス</div>
+                        <div style="background: white; border-radius: 4px; padding: 8px; font-size: 0.75rem; color: #64748b;">例: TodoController</div>
+                    </div>
+
+                    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 16px;">
+                        <div style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #92400e; font-size: 1rem; margin-bottom: 8px;">@Service</div>
+                        <div style="font-size: 0.85rem; color: #334155; line-height: 1.6; margin-bottom: 8px;">ビジネスロジック（業務処理）を担当するクラス</div>
+                        <div style="background: white; border-radius: 4px; padding: 8px; font-size: 0.75rem; color: #64748b;">例: TodoService</div>
+                    </div>
+
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 8px; padding: 16px;">
+                        <div style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #166534; font-size: 1rem; margin-bottom: 8px;">@Repository</div>
+                        <div style="font-size: 0.85rem; color: #334155; line-height: 1.6; margin-bottom: 8px;">データベースアクセスを担当するクラス</div>
+                        <div style="background: white; border-radius: 4px; padding: 8px; font-size: 0.75rem; color: #64748b;">例: TodoRepository</div>
+                    </div>
+
+                    <div style="background: #f1f5f9; border: 2px solid #94a3b8; border-radius: 8px; padding: 16px;">
+                        <div style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #475569; font-size: 1rem; margin-bottom: 8px;">@Component</div>
+                        <div style="font-size: 0.85rem; color: #334155; line-height: 1.6; margin-bottom: 8px;">上記3つに該当しない汎用クラス</div>
+                        <div style="background: white; border-radius: 4px; padding: 8px; font-size: 0.75rem; color: #64748b;">例: FileUploadHelper</div>
+                    </div>
+                </div>
+
+                <!-- 関係図 -->
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+                    <div style="font-weight: 700; color: #334155; margin-bottom: 16px; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                        <span class="material-icons" style="font-size: 1.1rem; color: #6366f1;">account_tree</span> 4つのアノテーションの関係
+                    </div>
+                    <div style="text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+                        <div style="background: #f1f5f9; border: 2px solid #94a3b8; border-radius: 8px; padding: 12px; display: inline-block; margin-bottom: 12px;">
+                            <span style="font-weight: 700; color: #475569;">@Component</span>
+                            <span style="color: #94a3b8; font-size: 0.75rem;">（親・汎用）</span>
+                        </div>
+                        <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="color: #94a3b8;">┌────────</span>
+                            <span style="color: #94a3b8;">┼────────</span>
+                            <span style="color: #94a3b8;">┐</span>
+                        </div>
+                        <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+                            <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; padding: 8px 16px;">
+                                <span style="font-weight: 700; color: #1e40af;">@Controller</span>
+                            </div>
+                            <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 8px 16px;">
+                                <span style="font-weight: 700; color: #92400e;">@Service</span>
+                            </div>
+                            <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 8px; padding: 8px 16px;">
+                                <span style="font-weight: 700; color: #166534;">@Repository</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 8px; font-size: 0.8rem; color: #64748b; line-height: 1.7;">
+                        <code>@Controller</code>, <code>@Service</code>, <code>@Repository</code> はすべて内部的に <code>@Component</code> を含んでいます。機能は同じですが、<strong>クラスの役割を明確にする</strong>ために使い分けます。
+                    </div>
+                </div>
+            </div>
+
+            <!-- リクエストマッピング系 -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <h3 style="margin: 0 0 20px 0; color: #334155; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+                    <span class="material-icons" style="color: #0097A7;">http</span> リクエストマッピング系アノテーション
+                </h3>
+
+                <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e2e8f0;">
+                                <th style="text-align: left; padding: 8px 12px; color: #334155;">アノテーション</th>
+                                <th style="text-align: left; padding: 8px 12px; color: #334155;">HTTPメソッド</th>
+                                <th style="text-align: left; padding: 8px 12px; color: #334155;">用途</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 8px 12px;"><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">@GetMapping</code></td>
+                                <td style="padding: 8px 12px; color: #3b82f6; font-weight: 600;">GET</td>
+                                <td style="padding: 8px 12px; color: #334155;">画面表示・データ取得（読み取り専用）</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 8px 12px;"><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">@PostMapping</code></td>
+                                <td style="padding: 8px 12px; color: #22c55e; font-weight: 600;">POST</td>
+                                <td style="padding: 8px 12px; color: #334155;">データ登録・更新・削除（データ変更）</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 8px 12px;"><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">@RequestMapping</code></td>
+                                <td style="padding: 8px 12px; color: #64748b;">全て</td>
+                                <td style="padding: 8px 12px; color: #334155;">クラス全体のベースURLを設定</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 12px;"><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">@PathVariable</code></td>
+                                <td style="padding: 8px 12px; color: #64748b;">-</td>
+                                <td style="padding: 8px 12px; color: #334155;">URLの <code>{id}</code> をメソッド引数にマッピング</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- GETとPOSTの使い分け図解 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; padding: 16px;">
+                        <div style="font-weight: 700; color: #1e40af; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                            <span class="material-icons" style="font-size: 1rem;">visibility</span> @GetMapping（見る）
+                        </div>
+                        <div style="font-size: 0.8rem; color: #334155; line-height: 1.6;">
+                            <div style="background: white; border-radius: 4px; padding: 6px 10px; margin-bottom: 4px;">一覧画面を表示</div>
+                            <div style="background: white; border-radius: 4px; padding: 6px 10px; margin-bottom: 4px;">編集画面を表示</div>
+                            <div style="background: white; border-radius: 4px; padding: 6px 10px;">詳細画面を表示</div>
+                        </div>
+                    </div>
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 8px; padding: 16px;">
+                        <div style="font-weight: 700; color: #166534; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                            <span class="material-icons" style="font-size: 1rem;">edit</span> @PostMapping（変える）
+                        </div>
+                        <div style="font-size: 0.8rem; color: #334155; line-height: 1.6;">
+                            <div style="background: white; border-radius: 4px; padding: 6px 10px; margin-bottom: 4px;">データを新規登録</div>
+                            <div style="background: white; border-radius: 4px; padding: 6px 10px; margin-bottom: 4px;">データを更新保存</div>
+                            <div style="background: white; border-radius: 4px; padding: 6px 10px;">データを削除</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DI・Lombok系 -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <h3 style="margin: 0 0 20px 0; color: #334155; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+                    <span class="material-icons" style="color: #0097A7;">build</span> DI・Lombok・トランザクション系
+                </h3>
+
+                <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e2e8f0;">
+                                <th style="text-align: left; padding: 8px 12px; color: #334155;">アノテーション</th>
+                                <th style="text-align: left; padding: 8px 12px; color: #334155;">付与先</th>
+                                <th style="text-align: left; padding: 8px 12px; color: #334155;">役割</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 8px 12px;"><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">@Autowired</code></td>
+                                <td style="padding: 8px 12px; color: #64748b;">フィールド</td>
+                                <td style="padding: 8px 12px; color: #334155;">Springが管理するBeanを自動で注入（DI）</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 8px 12px;"><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">@RequiredArgsConstructor</code></td>
+                                <td style="padding: 8px 12px; color: #64748b;">クラス</td>
+                                <td style="padding: 8px 12px; color: #334155;">finalフィールドのコンストラクタを自動生成（推奨のDI方法）</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 8px 12px;"><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">@Data</code></td>
+                                <td style="padding: 8px 12px; color: #64748b;">クラス</td>
+                                <td style="padding: 8px 12px; color: #334155;">getter/setter/toString等を自動生成（Lombok）</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 12px;"><code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">@Transactional</code></td>
+                                <td style="padding: 8px 12px; color: #64748b;">メソッド</td>
+                                <td style="padding: 8px 12px; color: #334155;">DB操作をトランザクション管理。エラー時に自動ロールバック</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== Section 16-3 ==================== -->
+        <section class="section" id="section3">
+            <div class="section-header">
+                <span class="section-number">16-3</span>
+                <h2 class="section-title">コンポーネントスキャンの仕組み</h2>
+            </div>
+
+            <div class="intro-box">
+                <p>コンポーネントスキャンとは、Springがアプリケーション起動時に<strong>パッケージ内のクラスを自動で探索</strong>し、アノテーションが付いたクラスをBeanとして登録する仕組みです。</p>
+            </div>
+
+            <!-- コンポーネントスキャンの流れ図 -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <h3 style="margin: 0 0 20px 0; color: #334155; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+                    <span class="material-icons" style="color: #0097A7;">search</span> コンポーネントスキャンの動作 ── 起動時に何が起きるか
+                </h3>
+
+                <!-- STEP 1 -->
+                <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px;">
+                    <div style="background: #0097A7; color: white; min-width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0;">1</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: #334155; margin-bottom: 8px;">アプリケーション起動</div>
+                        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; font-size: 0.85rem; color: #334155;">
+                            <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed;">@SpringBootApplication</code> が付いたメインクラスを起動すると、Springはそのクラスの<strong>同じパッケージ以下</strong>を自動スキャンします。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2 -->
+                <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px;">
+                    <div style="background: #0097A7; color: white; min-width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0;">2</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: #334155; margin-bottom: 8px;">クラスを探索</div>
+                        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+                            <div style="font-size: 0.85rem; color: #334155; margin-bottom: 12px;">パッケージ内の全クラスをチェックし、アノテーションが付いたクラスを発見します。</div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
+                                <!-- 発見される -->
+                                <div style="background: #dcfce7; border: 1px solid #22c55e; border-radius: 6px; padding: 10px;">
+                                    <div style="color: #16a34a; font-weight: 600; margin-bottom: 6px;">発見される</div>
+                                    <div><span style="color: #7c3aed;">@Controller</span> TodoController</div>
+                                    <div><span style="color: #7c3aed;">@Service</span> TodoService</div>
+                                    <div><span style="color: #7c3aed;">@Repository</span> TodoRepository</div>
+                                </div>
+                                <!-- 無視される -->
+                                <div style="background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; padding: 10px;">
+                                    <div style="color: #dc2626; font-weight: 600; margin-bottom: 6px;">無視される</div>
+                                    <div style="color: #64748b;">Todo <span style="font-size: 0.7rem;">(Entityクラス)</span></div>
+                                    <div style="color: #64748b;">TodoForm <span style="font-size: 0.7rem;">(フォームクラス)</span></div>
+                                    <div style="color: #64748b;">Utils <span style="font-size: 0.7rem;">(アノテーションなし)</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3 -->
+                <div style="display: flex; align-items: flex-start; gap: 16px;">
+                    <div style="background: #0097A7; color: white; min-width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0;">3</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: #334155; margin-bottom: 8px;">Beanとして登録</div>
+                        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; font-size: 0.85rem; color: #334155;">
+                            発見されたクラスのインスタンスを<strong>自動で生成</strong>し、Spring の <strong>DIコンテナ</strong>（Bean の保管庫）に登録します。以降はSpringが管理し、必要な場所に自動で注入してくれます。
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #E0F7FA; border: 1px solid #B2EBF2; border-radius: 8px; padding: 12px 16px; margin-top: 20px;">
+                    <p style="margin: 0; color: #00695C; font-size: 0.8rem; line-height: 1.7;">
+                        <strong>重要:</strong> <code style="background: #B2EBF2; padding: 2px 6px; border-radius: 4px;">@SpringBootApplication</code> は内部に <code style="background: #B2EBF2; padding: 2px 6px; border-radius: 4px;">@ComponentScan</code> を含んでいます。そのため、メインクラスと<strong>同じパッケージまたはそのサブパッケージ</strong>に置いたクラスが自動でスキャン対象になります。別パッケージに置くと認識されないので注意してください。
+                    </p>
+                </div>
+            </div>
+
+            <!-- パッケージ構成図 -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <h3 style="margin: 0 0 20px 0; color: #334155; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+                    <span class="material-icons" style="color: #0097A7;">folder</span> スキャン対象のパッケージ構成
+                </h3>
+
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 2.2;">
+                    <div style="color: #334155;">
+                        <span style="color: #64748b;">com.example.webapp/</span>
+                    </div>
+                    <div style="padding-left: 24px;">
+                        <span style="background: #fef3c7; padding: 2px 8px; border-radius: 4px; color: #92400e;">WebappApplication.java</span>
+                        <span style="color: #94a3b8; font-size: 0.75rem;"> ← @SpringBootApplication（起点）</span>
+                    </div>
+                    <div style="padding-left: 24px; color: #64748b;">
+                        controller/
+                    </div>
+                    <div style="padding-left: 48px;">
+                        <span style="background: #dbeafe; padding: 2px 8px; border-radius: 4px; color: #1e40af;">TodoController.java</span>
+                        <span style="color: #16a34a; font-size: 0.75rem;"> @Controller</span>
+                    </div>
+                    <div style="padding-left: 24px; color: #64748b;">
+                        service/
+                    </div>
+                    <div style="padding-left: 48px;">
+                        <span style="background: #fef3c7; padding: 2px 8px; border-radius: 4px; color: #92400e;">TodoService.java</span>
+                        <span style="color: #16a34a; font-size: 0.75rem;"> @Service</span>
+                    </div>
+                    <div style="padding-left: 24px; color: #64748b;">
+                        repository/
+                    </div>
+                    <div style="padding-left: 48px;">
+                        <span style="background: #dcfce7; padding: 2px 8px; border-radius: 4px; color: #166534;">TodoRepository.java</span>
+                        <span style="color: #16a34a; font-size: 0.75rem;"> @Repository</span>
+                    </div>
+                    <div style="padding-left: 24px; color: #64748b;">
+                        entity/
+                    </div>
+                    <div style="padding-left: 48px;">
+                        <span style="color: #94a3b8;">Todo.java</span>
+                        <span style="color: #94a3b8; font-size: 0.75rem;"> （アノテーションなし＝Beanではない）</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== Section 16-4 ==================== -->
+        <section class="section" id="section4">
+            <div class="section-header">
+                <span class="section-number">16-4</span>
+                <h2 class="section-title">Bean登録とDIの流れ</h2>
+            </div>
+
+            <div class="intro-box">
+                <p>コンポーネントスキャンでBeanが登録された後、Springは<strong>DI（依存性注入）</strong>によって、Beanを必要なクラスに自動でセットします。</p>
+            </div>
+
+            <!-- DI全体フロー図 -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <h3 style="margin: 0 0 20px 0; color: #334155; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+                    <span class="material-icons" style="color: #0097A7;">sync_alt</span> DIコンテナの動作 ── Beanの登録から注入まで
+                </h3>
+
+                <div style="display: flex; align-items: stretch; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;">
+
+                    <!-- スキャン -->
+                    <div style="background: #E0F7FA; border: 2px solid #0097A7; border-radius: 8px; padding: 16px; min-width: 160px; flex: 1; max-width: 200px; text-align: center;">
+                        <span class="material-icons" style="font-size: 2rem; color: #0097A7;">search</span>
+                        <div style="font-weight: 700; color: #00695C; margin-top: 8px;">コンポーネントスキャン</div>
+                        <div style="font-size: 0.75rem; color: #00838F; margin-top: 4px;">@付きクラスを発見</div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; color: #94a3b8; font-size: 2rem;">→</div>
+
+                    <!-- DIコンテナ -->
+                    <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 8px; padding: 16px; min-width: 200px; flex: 1.5; max-width: 280px; text-align: center;">
+                        <span class="material-icons" style="font-size: 2rem; color: #7c3aed;">inventory_2</span>
+                        <div style="font-weight: 700; color: #7e22ce; margin-top: 8px;">DIコンテナ（Beanの保管庫）</div>
+                        <div style="background: white; border-radius: 6px; padding: 8px; margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; text-align: left;">
+                            <div>TodoController</div>
+                            <div>TodoService</div>
+                            <div>TodoRepository</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; color: #94a3b8; font-size: 2rem;">→</div>
+
+                    <!-- DI -->
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 8px; padding: 16px; min-width: 160px; flex: 1; max-width: 200px; text-align: center;">
+                        <span class="material-icons" style="font-size: 2rem; color: #16a34a;">input</span>
+                        <div style="font-weight: 700; color: #166534; margin-top: 8px;">DI（自動注入）</div>
+                        <div style="font-size: 0.75rem; color: #15803d; margin-top: 4px;">必要な場所にセット</div>
+                    </div>
+                </div>
+
+                <!-- DIのコード例 -->
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+                    <div style="font-weight: 700; color: #334155; margin-bottom: 12px; font-size: 0.9rem;">コードで見るDI ── ServiceをControllerに注入</div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <!-- 従来の書き方 -->
+                        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px;">
+                            <div style="font-weight: 600; color: #dc2626; margin-bottom: 8px; font-size: 0.85rem;">従来のJava（手動で生成）</div>
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.8; color: #334155;">
+                                <div style="color: #94a3b8;">// 自分でnewする</div>
+                                <div>TodoService service</div>
+                                <div style="padding-left: 8px;">= <span style="color: #dc2626; font-weight: 700;">new</span> TodoService();</div>
+                            </div>
+                        </div>
+
+                        <!-- SpringのDI -->
+                        <div style="background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 12px;">
+                            <div style="font-weight: 600; color: #16a34a; margin-bottom: 8px; font-size: 0.85rem;">Spring DI（自動で注入）</div>
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.8; color: #334155;">
+                                <div><span style="color: #7c3aed;">@RequiredArgsConstructor</span></div>
+                                <div>public class TodoController {</div>
+                                <div style="padding-left: 8px;"><span style="color: #16a34a; font-weight: 700;">private final</span> TodoService service;</div>
+                                <div style="padding-left: 8px; color: #94a3b8;">// ← Springが自動でセット！</div>
+                                <div>}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3層構造とDI -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 24px 0;">
+                <h3 style="margin: 0 0 20px 0; color: #334155; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+                    <span class="material-icons" style="color: #0097A7;">layers</span> 3層アーキテクチャとDIの関係
+                </h3>
+
+                <div style="display: flex; align-items: stretch; justify-content: center; gap: 16px; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+
+                    <!-- Controller -->
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; padding: 16px; min-width: 200px; flex: 1; max-width: 260px;">
+                        <div style="font-weight: 700; color: #1e40af; margin-bottom: 10px; text-align: center; font-size: 0.9rem;">Controller層</div>
+                        <div style="background: white; border-radius: 6px; padding: 12px; font-size: 0.75rem; line-height: 2;">
+                            <div style="color: #7c3aed; font-weight: 600;">@Controller</div>
+                            <div style="color: #7c3aed; font-weight: 600;">@RequiredArgsConstructor</div>
+                            <div style="border-top: 1px dashed #e2e8f0; margin: 4px 0; padding-top: 4px;">
+                                <span style="color: #16a34a;">private final</span> TodoService service;
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 8px; font-size: 0.7rem; color: #3b82f6; font-weight: 600;">リクエストを受け取る</div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 50px;">
+                        <div style="font-size: 0.65rem; color: #64748b; text-align: center;">DIで注入</div>
+                        <div style="color: #94a3b8; font-size: 2rem; line-height: 1;">→</div>
+                    </div>
+
+                    <!-- Service -->
+                    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 16px; min-width: 200px; flex: 1; max-width: 260px;">
+                        <div style="font-weight: 700; color: #92400e; margin-bottom: 10px; text-align: center; font-size: 0.9rem;">Service層</div>
+                        <div style="background: white; border-radius: 6px; padding: 12px; font-size: 0.75rem; line-height: 2;">
+                            <div style="color: #7c3aed; font-weight: 600;">@Service</div>
+                            <div style="color: #7c3aed; font-weight: 600;">@RequiredArgsConstructor</div>
+                            <div style="border-top: 1px dashed #e2e8f0; margin: 4px 0; padding-top: 4px;">
+                                <span style="color: #16a34a;">private final</span> TodoMapper mapper;
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 8px; font-size: 0.7rem; color: #b45309; font-weight: 600;">ビジネスロジックを実行</div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 50px;">
+                        <div style="font-size: 0.65rem; color: #64748b; text-align: center;">DIで注入</div>
+                        <div style="color: #94a3b8; font-size: 2rem; line-height: 1;">→</div>
+                    </div>
+
+                    <!-- Repository -->
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 8px; padding: 16px; min-width: 200px; flex: 1; max-width: 260px;">
+                        <div style="font-weight: 700; color: #166534; margin-bottom: 10px; text-align: center; font-size: 0.9rem;">Repository層</div>
+                        <div style="background: white; border-radius: 6px; padding: 12px; font-size: 0.75rem; line-height: 2;">
+                            <div style="color: #7c3aed; font-weight: 600;">@Repository</div>
+                            <div style="border-top: 1px dashed #e2e8f0; margin: 4px 0; padding-top: 4px;">
+                                findAll() / findById()
+                            </div>
+                            <div>insert() / update() / delete()</div>
+                        </div>
+                        <div style="text-align: center; margin-top: 8px; font-size: 0.7rem; color: #16a34a; font-weight: 600;">DBアクセスを担当</div>
+                    </div>
+                </div>
+
+                <div style="background: #E0F7FA; border: 1px solid #B2EBF2; border-radius: 8px; padding: 12px 16px; margin-top: 20px;">
+                    <p style="margin: 0; color: #00695C; font-size: 0.8rem; line-height: 1.7;">
+                        <strong>まとめ:</strong> Springのアノテーションとコンポーネントスキャンにより、<strong>クラスに目印を付けるだけ</strong>でSpringが自動でインスタンス生成・管理・注入を行ってくれます。開発者は <code style="background: #B2EBF2; padding: 2px 6px; border-radius: 4px;">new</code> を書く必要がなく、各層の役割に集中してコードを書くことができます。
+                    </p>
+                </div>
+            </div>
+
+            <!-- 確認ポイント -->
+            <div class="hint-box">
+                <div class="hint-box-title">
+                    <span class="material-icons" style="font-size: 20px;">check_circle</span>
+                    この章の確認ポイント
+                </div>
+                <ul style="margin: 12px 0; padding-left: 24px; line-height: 2;">
+                    <li><code>@Controller</code>, <code>@Service</code>, <code>@Repository</code> の違いを説明できる</li>
+                    <li><code>@GetMapping</code> と <code>@PostMapping</code> の使い分けがわかる</li>
+                    <li>コンポーネントスキャンがどのタイミングで動くか理解している</li>
+                    <li>DIコンテナの役割と <code>@RequiredArgsConstructor</code> の仕組みがわかる</li>
+                    <li>3層アーキテクチャ（Controller → Service → Repository）の流れが説明できる</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- フッター -->
+        <footer class="chapter-footer">
+            <div class="chapter-footer-title">お疲れさまでした！</div>
+            <p style="color: var(--text-muted); margin-bottom: 24px">
+                第16章「アノテーションとコンポーネントスキャン」の学習が完了しました。
+            </p>
+            <div style="background: #f8fafc; padding: 24px; border-radius: 12px; margin-top: 24px">
+                <h4 style="margin-bottom: 16px; color: var(--text-dark)">この章で学んだこと</h4>
+                <div style="display: grid; gap: 12px; text-align: left">
+                    <div style="display: flex; align-items: center; gap: 12px">
+                        <span style="color: var(--accent-green); font-size: 20px">&#10003;</span>
+                        <span>アノテーションはクラスに「役割の目印」を付ける仕組み</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px">
+                        <span style="color: var(--accent-green); font-size: 20px">&#10003;</span>
+                        <span>@Controller / @Service / @Repository の使い分け</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px">
+                        <span style="color: var(--accent-green); font-size: 20px">&#10003;</span>
+                        <span>コンポーネントスキャンによるBean自動登録の仕組み</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px">
+                        <span style="color: var(--accent-green); font-size: 20px">&#10003;</span>
+                        <span>DIコンテナによる依存性の自動注入</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div class="page-nav">
+        <a href="15-spring-security-tutorial.html" class="page-nav-btn prev">
+            <span>&larr;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第15章</div>
+            </div>
+        </a>
+    </div>
+
+    <footer class="footer">
+        <p>Spring Framework 入門チュートリアル</p>
+    </footer>
+</body>
+</html>

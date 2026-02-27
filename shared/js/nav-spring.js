@@ -26,7 +26,8 @@ const navData = {
         { href: "12service-tutorial.html", num: "12", text: "サービス層" },
         { href: "13_application_layer.html", num: "13", text: "アプリケーション層" },
         { href: "14_validation.html", num: "14", text: "バリデーション（応用）" },
-        { href: "15-spring-security-tutorial.html", num: "15", text: "Spring Security" }
+        { href: "15-spring-security-tutorial.html", num: "15", text: "Spring Security" },
+        { href: "16-annotation-component-scan.html", num: "16", text: "アノテーションとコンポーネントスキャン" }
     ],
     categories: [
         { href: "../../index.html", text: "ダッシュボード" },
