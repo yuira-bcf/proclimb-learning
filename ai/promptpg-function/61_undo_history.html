@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>便利機能61 操作履歴・Undo</title>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" href="../promptpg-step/style.css" />
+        <style>
+  :root {
+    --primary: #AF52DE;
+    --primary-dark: #9333EA;
+    --primary-light: #FAF5FF;
+    --primary-lighter: #E9D5FF;
+  }
+  .nav-category-links { display: none; }
+</style>
+        <style>
+            .download-btn { background: #22c55e; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-left: auto; }
+            .code-header { display: flex; align-items: center; justify-content: space-between; }
+            .level-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: #fdf2f8; color: #be185d; margin-right: 8px; }
+        </style>
+    </head>
+    <body>
+        <nav class="global-nav">
+            <div class="nav-container">
+                <a href="01_extends-todo.html" class="nav-logo"><span class="nav-logo-icon"><span class="material-icons" style="font-size:1.2rem">eco</span></span><span>機能追加</span></a>
+                <button class="nav-toggle" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+                <div class="nav-menu">
+                    <div class="nav-menu-title"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#3b82f6">menu_book</span> 初級レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="01_extends-todo.html" class="nav-link"><span class="nav-chapter-num">1</span><span>機能追加提案</span></a></li>
+                        <li class="nav-item"><a href="02_validation.html" class="nav-link"><span class="nav-chapter-num">2</span><span>入力バリデーション</span></a></li>
+                        <li class="nav-item"><a href="03_status.html" class="nav-link"><span class="nav-chapter-num">3</span><span>完了/未完了ステータス</span></a></li>
+                        <li class="nav-item"><a href="04_search.html" class="nav-link"><span class="nav-chapter-num">4</span><span>検索機能</span></a></li>
+                        <li class="nav-item"><a href="05_sort.html" class="nav-link"><span class="nav-chapter-num">5</span><span>ソート機能</span></a></li>
+                        <li class="nav-item"><a href="06_delete_dialog.html" class="nav-link"><span class="nav-chapter-num">6</span><span>削除確認ダイアログ</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#22c55e">menu_book</span> 中級レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="07_pagination.html" class="nav-link"><span class="nav-chapter-num">7</span><span>ページネーション</span></a></li>
+                        <li class="nav-item"><a href="08_priority.html" class="nav-link"><span class="nav-chapter-num">8</span><span>優先度設定</span></a></li>
+                        <li class="nav-item"><a href="09_category.html" class="nav-link"><span class="nav-chapter-num">9</span><span>カテゴリ分類</span></a></li>
+                        <li class="nav-item"><a href="10_deadline.html" class="nav-link"><span class="nav-chapter-num">10</span><span>期限アラート</span></a></li>
+                        <li class="nav-item"><a href="11_bulk_delete.html" class="nav-link"><span class="nav-chapter-num">11</span><span>一括削除</span></a></li>
+                        <li class="nav-item"><a href="12_csv_export.html" class="nav-link"><span class="nav-chapter-num">12</span><span>CSV出力</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#ef4444">menu_book</span> 上級レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="13_login.html" class="nav-link"><span class="nav-chapter-num">13</span><span>ログイン認証</span></a></li>
+                        <li class="nav-item"><a href="14_user_todo.html" class="nav-link"><span class="nav-chapter-num">14</span><span>ユーザー別ToDo</span></a></li>
+                        <li class="nav-item"><a href="15_role.html" class="nav-link"><span class="nav-chapter-num">15</span><span>ロール別権限</span></a></li>
+                        <li class="nav-item"><a href="16_user_crud.html" class="nav-link"><span class="nav-chapter-num">16</span><span>ユーザー管理CRUD</span></a></li>
+                        <li class="nav-item"><a href="17_rest_api.html" class="nav-link"><span class="nav-chapter-num">17</span><span>REST API</span></a></li>
+                        <li class="nav-item"><a href="18_exception.html" class="nav-link"><span class="nav-chapter-num">18</span><span>例外ハンドリング</span></a></li>
+                        <li class="nav-item"><a href="19_aop.html" class="nav-link"><span class="nav-chapter-num">19</span><span>AOP</span></a></li>
+                        <li class="nav-item"><a href="20_transaction.html" class="nav-link"><span class="nav-chapter-num">20</span><span>トランザクション</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#f97316">menu_book</span> 発展レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="21_file_upload.html" class="nav-link"><span class="nav-chapter-num">21</span><span>ファイル添付</span></a></li>
+                        <li class="nav-item"><a href="22_i18n.html" class="nav-link"><span class="nav-chapter-num">22</span><span>国際化</span></a></li>
+                        <li class="nav-item"><a href="23_unit_test.html" class="nav-link"><span class="nav-chapter-num">23</span><span>単体テスト</span></a></li>
+                        <li class="nav-item"><a href="24_async.html" class="nav-link"><span class="nav-chapter-num">24</span><span>非同期処理</span></a></li>
+                        <li class="nav-item"><a href="25_mail.html" class="nav-link"><span class="nav-chapter-num">25</span><span>メール通知</span></a></li>
+                        <li class="nav-item"><a href="26_audit_log.html" class="nav-link"><span class="nav-chapter-num">26</span><span>監査ログ</span></a></li>
+                        <li class="nav-item"><a href="27_javadoc.html" class="nav-link"><span class="nav-chapter-num">27</span><span>Javadoc</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#ea580c">menu_book</span> 効率化</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="28_subtask.html" class="nav-link"><span class="nav-chapter-num">28</span><span>サブタスク</span></a></li>
+                        <li class="nav-item"><a href="29_template_todo.html" class="nav-link"><span class="nav-chapter-num">29</span><span>テンプレートToDo</span></a></li>
+                        <li class="nav-item"><a href="30_dnd_sort.html" class="nav-link"><span class="nav-chapter-num">30</span><span>D&amp;D並び替え</span></a></li>
+                        <li class="nav-item"><a href="31_duplicate.html" class="nav-link"><span class="nav-chapter-num">31</span><span>タスク複製</span></a></li>
+                        <li class="nav-item"><a href="32_bulk_status.html" class="nav-link"><span class="nav-chapter-num">32</span><span>一括ステータス変更</span></a></li>
+                        <li class="nav-item"><a href="33_tag_autocomplete.html" class="nav-link"><span class="nav-chapter-num">33</span><span>タグ補完</span></a></li>
+                        <li class="nav-item"><a href="34_quick_input.html" class="nav-link"><span class="nav-chapter-num">34</span><span>クイック入力</span></a></li>
+                        <li class="nav-item"><a href="35_shortcut_key.html" class="nav-link"><span class="nav-chapter-num">35</span><span>ショートカット</span></a></li>
+                        <li class="nav-item"><a href="36_smart_date.html" class="nav-link"><span class="nav-chapter-num">36</span><span>日付パース</span></a></li>
+                        <li class="nav-item"><a href="37_dependency.html" class="nav-link"><span class="nav-chapter-num">37</span><span>依存タスク</span></a></li>
+                        <li class="nav-item"><a href="38_task_merge.html" class="nav-link"><span class="nav-chapter-num">38</span><span>タスクマージ</span></a></li>
+                        <li class="nav-item"><a href="39_csv_import.html" class="nav-link"><span class="nav-chapter-num">39</span><span>CSVインポート</span></a></li>
+                        <li class="nav-item"><a href="40_estimate_time.html" class="nav-link"><span class="nav-chapter-num">40</span><span>見積もり時間</span></a></li>
+                        <li class="nav-item"><a href="41_archive.html" class="nav-link"><span class="nav-chapter-num">41</span><span>アーカイブ</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#0891b2">menu_book</span> 可視化</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="42_dashboard_view.html" class="nav-link"><span class="nav-chapter-num">42</span><span>ダッシュボード</span></a></li>
+                        <li class="nav-item"><a href="43_calendar_view.html" class="nav-link"><span class="nav-chapter-num">43</span><span>カレンダー</span></a></li>
+                        <li class="nav-item"><a href="44_kanban.html" class="nav-link"><span class="nav-chapter-num">44</span><span>カンバン</span></a></li>
+                        <li class="nav-item"><a href="45_progress_bar.html" class="nav-link"><span class="nav-chapter-num">45</span><span>進捗バー</span></a></li>
+                        <li class="nav-item"><a href="46_activity_feed.html" class="nav-link"><span class="nav-chapter-num">46</span><span>アクティビティ</span></a></li>
+                        <li class="nav-item"><a href="47_heatmap.html" class="nav-link"><span class="nav-chapter-num">47</span><span>ヒートマップ</span></a></li>
+                        <li class="nav-item"><a href="48_burndown_chart.html" class="nav-link"><span class="nav-chapter-num">48</span><span>バーンダウン</span></a></li>
+                        <li class="nav-item"><a href="49_pie_chart.html" class="nav-link"><span class="nav-chapter-num">49</span><span>円グラフ</span></a></li>
+                        <li class="nav-item"><a href="50_countdown.html" class="nav-link"><span class="nav-chapter-num">50</span><span>カウントダウン</span></a></li>
+                        <li class="nav-item"><a href="51_user_ranking.html" class="nav-link"><span class="nav-chapter-num">51</span><span>ランキング</span></a></li>
+                        <li class="nav-item"><a href="52_weekly_report.html" class="nav-link"><span class="nav-chapter-num">52</span><span>週次レポート</span></a></li>
+                        <li class="nav-item"><a href="53_tag_cloud.html" class="nav-link"><span class="nav-chapter-num">53</span><span>タグクラウド</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#db2777">menu_book</span> 便利機能</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="54_favorite.html" class="nav-link"><span class="nav-chapter-num">54</span><span>お気に入り</span></a></li>
+                        <li class="nav-item"><a href="55_markdown_memo.html" class="nav-link"><span class="nav-chapter-num">55</span><span>Markdownメモ</span></a></li>
+                        <li class="nav-item"><a href="56_dark_mode.html" class="nav-link"><span class="nav-chapter-num">56</span><span>ダークモード</span></a></li>
+                        <li class="nav-item"><a href="57_browser_notification.html" class="nav-link"><span class="nav-chapter-num">57</span><span>通知</span></a></li>
+                        <li class="nav-item"><a href="58_pdf_excel.html" class="nav-link"><span class="nav-chapter-num">58</span><span>PDF/Excel</span></a></li>
+                        <li class="nav-item"><a href="59_task_share.html" class="nav-link"><span class="nav-chapter-num">59</span><span>タスク共有</span></a></li>
+                        <li class="nav-item"><a href="60_webhook.html" class="nav-link"><span class="nav-chapter-num">60</span><span>Webhook</span></a></li>
+                        <li class="nav-item"><a href="61_undo_history.html" class="nav-link active"><span class="nav-chapter-num">61</span><span>履歴・Undo</span></a></li>
+                        <li class="nav-item"><a href="62_richtext.html" class="nav-link"><span class="nav-chapter-num">62</span><span>リッチテキスト</span></a></li>
+                        <li class="nav-item"><a href="63_label_color.html" class="nav-link"><span class="nav-chapter-num">63</span><span>ラベル色</span></a></li>
+                        <li class="nav-item"><a href="64_multi_view.html" class="nav-link"><span class="nav-chapter-num">64</span><span>ビュー切替</span></a></li>
+                        <li class="nav-item"><a href="65_saved_search.html" class="nav-link"><span class="nav-chapter-num">65</span><span>検索保存</span></a></li>
+                        <li class="nav-item"><a href="66_sse_realtime.html" class="nav-link"><span class="nav-chapter-num">66</span><span>SSEリアルタイム</span></a></li>
+                        <li class="nav-item"><a href="67_two_factor_auth.html" class="nav-link"><span class="nav-chapter-num">67</span><span>二要素認証</span></a></li>
+                        <li class="nav-item"><a href="68_api_key_auth.html" class="nav-link"><span class="nav-chapter-num">68</span><span>APIキー認証</span></a></li>
+                        <li class="nav-item"><a href="69_url_share.html" class="nav-link"><span class="nav-chapter-num">69</span><span>URL共有</span></a></li>
+                        <li class="nav-item"><a href="70_voice_input.html" class="nav-link"><span class="nav-chapter-num">70</span><span>音声入力</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#65a30d">menu_book</span> ゲーミフィケーション</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="71_gamification.html" class="nav-link"><span class="nav-chapter-num">71</span><span>ポイント/レベル</span></a></li>
+                        <li class="nav-item"><a href="72_streak_badge.html" class="nav-link"><span class="nav-chapter-num">72</span><span>連続達成バッジ</span></a></li>
+                        <li class="nav-item"><a href="73_team_challenge.html" class="nav-link"><span class="nav-chapter-num">73</span><span>チームチャレンジ</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle">link</span> 関連教材</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="../../backend/java/index.html" class="nav-link"><span>Java基礎</span></a></li>
+                        <li class="nav-item"><a href="../../backend/spring/index.html" class="nav-link"><span>Spring入門</span></a></li>
+                        <li class="nav-item"><a href="../promptpg-step/index.html" class="nav-link"><span>プロンプトPG</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <header class="chapter-header">
+                <div class="chapter-badge"><span class="level-badge" style="background: #fdf2f8; color: #be185d;">便利機能</span><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#db2777">menu_book</span> Convenience</div>
+                <div class="chapter-number">61</div>
+                <h1 class="chapter-title">操作履歴・Undo</h1>
+            </header>
+
+            <nav class="toc">
+                <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+                <ul class="toc-list">
+                    <li class="toc-item"><span class="toc-number">61-1</span><span>操作履歴テーブル設計</span></li>
+                    <li class="toc-item"><span class="toc-number">61-2</span><span>変更前後データの保存</span></li>
+                    <li class="toc-item"><span class="toc-number">61-3</span><span>Undoコントローラー</span></li>
+                    <li class="toc-item"><span class="toc-number">61-4</span><span>操作履歴タイムライン</span></li>
+                </ul>
+            </nav>
+
+            <section class="section">
+                <div class="section-header"><span class="section-number">Section 61-1</span><h2 class="section-title">操作履歴テーブル設計</h2></div>
+                <div class="intro-text"><p>タスクに対する全ての操作を記録する<strong>操作履歴テーブル</strong>を設計します。操作の種類、対象タスク、変更前後のデータをJSON形式で保存し、Undoに必要な情報を保持します。</p></div>
+                <div class="module-list">
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">history</span></div><div class="module-content"><h4>操作履歴テーブル</h4><p>操作種別、対象ID、変更前後のデータを記録</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">data_object</span></div><div class="module-content"><h4>JSON形式保存</h4><p>変更前後のデータをJSON文字列として保存</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">undo</span></div><div class="module-content"><h4>Undo可能判定</h4><p>操作から一定時間内のみUndoを許可</p></div></div>
+                </div>
+                <div class="code-block" id="history-schema">
+                    <div class="code-header"><span class="code-title">schema.sql（操作履歴テーブル）</span><button class="download-btn" onclick="downloadCode('history-schema', 'schema_history.sql')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button></div>
+                    <div class="code-content">
+                        <pre><code>CREATE TABLE operation_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    operation_type VARCHAR(30) NOT NULL,  -- CREATE, UPDATE, DELETE, STATUS_CHANGE
+    target_table VARCHAR(50) NOT NULL,    -- 'todo'
+    target_id INT NOT NULL,
+    before_data JSON,                     -- 変更前データ（JSON）
+    after_data JSON,                      -- 変更後データ（JSON）
+    is_undone BOOLEAN DEFAULT FALSE,      -- Undo済みフラグ
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);</code></pre>
+                    </div>
+                </div>
+                <div class="code-block" id="history-entity">
+                    <div class="code-header"><span class="code-title">OperationHistory.java（エンティティ）</span><button class="download-btn" onclick="downloadCode('history-entity', 'OperationHistory.java')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button></div>
+                    <div class="code-content">
+                        <pre><code>import java.time.LocalDateTime;
+
+public class OperationHistory {
+    private Integer id;
+    private Integer userId;
+    private String operationType;   // CREATE, UPDATE, DELETE
+    private String targetTable;     // "todo"
+    private Integer targetId;
+    private String beforeData;      // JSON文字列
+    private String afterData;       // JSON文字列
+    private boolean undone;
+    private LocalDateTime createdAt;
+    // getter/setter
+}</code></pre>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">lightbulb</span></span><span class="info-box-title">JSON型カラムの利点</span></div>
+                    <p>変更前後のデータをJSON形式で保存することで、タスクの<strong>どのフィールドが変更されたか</strong>を後から特定できます。また、テーブル構造が変わっても履歴データに影響しません。</p>
+                </div>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #3b82f6;">account_tree</span>
+                        処理フロー: 操作履歴・Undo機能
+                    </h4>
+                    <div style="display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start;">
+                        <div style="background: #3b82f6; color: white; border-radius: 50%; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">1</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: #1e40af; margin-bottom: 6px; font-size: 0.85rem;">operation_history テーブル設計</div>
+                            <div style="background: #1e293b; border-radius: 8px; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;">CREATE TABLE operation_history (<br>  user_id INT, operation_type VARCHAR(30),<br>  before_data JSON, after_data JSON,<br>  is_undone BOOLEAN DEFAULT FALSE<br>);</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start;">
+                        <div style="background: #f59e0b; color: white; border-radius: 50%; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">2</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: #92400e; margin-bottom: 6px; font-size: 0.85rem;">サービス層でCRUD操作をキャプチャ + JSON保存</div>
+                            <div style="background: #1e293b; border-radius: 8px; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;">Todo before = todoMapper.findById(id); // 変更前データ取得<br>todoMapper.update(newData);<br>historyService.record(userId, "UPDATE", "todo", id, before, newData);</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start;">
+                        <div style="background: #22c55e; color: white; border-radius: 50%; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">3</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: #166534; margin-bottom: 6px; font-size: 0.85rem;">UndoService.undo(historyId) で逆操作実行</div>
+                            <div style="background: #1e293b; border-radius: 8px; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;">// UPDATE → beforeDataで上書き<br>Todo before = objectMapper.readValue(history.getBeforeData(), Todo.class);<br>todoMapper.update(before);<br>// DELETE → beforeDataで再INSERT</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start;">
+                        <div style="background: #a855f7; color: white; border-radius: 50%; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">4</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: #6b21a8; margin-bottom: 6px; font-size: 0.85rem;">最近の操作リスト表示（タイムラインUI）</div>
+                            <div style="background: #1e293b; border-radius: 8px; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;">// 5分以内 &amp;&amp; 未Undoの操作にUndoボタン表示<br>th:if="${!h.undone and h.undoable}"</div>
+                        </div>
+                    </div>
+                    <div style="background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 8px; padding: 12px 16px; margin-top: 20px;">
+                        <p style="margin: 0; color: #5b21b6; font-size: 0.8rem; line-height: 1.7;"><strong>ポイント:</strong> ObjectMapperでbefore/afterをJSONシリアライズし、Undo時にデシリアライズして復元します。5分の時間制限とis_undoneフラグで安全性を担保しています。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-header"><span class="section-number">Section 61-2</span><h2 class="section-title">変更前後データの保存</h2></div>
+                <div class="intro-text"><p>タスクの更新・削除時に<strong>変更前のデータ</strong>をJSON化して履歴テーブルに保存します。ObjectMapperを使ってJavaオブジェクトをJSON文字列に変換します。</p></div>
+                <div class="module-list">
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">compare_arrows</span></div><div class="module-content"><h4>Before/After記録</h4><p>更新前のデータを取得してからDB更新を実行</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">transform</span></div><div class="module-content"><h4>ObjectMapper変換</h4><p>JavaオブジェクトをJSON文字列にシリアライズ</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">layers</span></div><div class="module-content"><h4>サービス層で記録</h4><p>トランザクション内で更新と履歴保存を一括実行</p></div></div>
+                </div>
+                <div class="code-block" id="history-service">
+                    <div class="code-header"><span class="code-title">HistoryService.java（履歴記録）</span><button class="download-btn" onclick="downloadCode('history-service', 'HistoryService.java')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button></div>
+                    <div class="code-content">
+                        <pre><code>import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Service;
+
+@Service
+public class HistoryService {
+
+    private final HistoryMapper historyMapper;
+    private final ObjectMapper objectMapper;
+
+    public HistoryService(HistoryMapper historyMapper,
+                           ObjectMapper objectMapper) {
+        this.historyMapper = historyMapper;
+        this.objectMapper = objectMapper;
+    }
+
+    /**
+     * 操作履歴を記録する
+     */
+    public void record(Integer userId, String operationType,
+                        String targetTable, Integer targetId,
+                        Object before, Object after) {
+        try {
+            OperationHistory history = new OperationHistory();
+            history.setUserId(userId);
+            history.setOperationType(operationType);
+            history.setTargetTable(targetTable);
+            history.setTargetId(targetId);
+            history.setBeforeData(before != null
+                ? objectMapper.writeValueAsString(before) : null);
+            history.setAfterData(after != null
+                ? objectMapper.writeValueAsString(after) : null);
+            historyMapper.insert(history);
+        } catch (Exception e) {
+            // 履歴記録の失敗でビジネスロジックを止めない
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="code-block" id="todo-service-history">
+                    <div class="code-header"><span class="code-title">TodoService.java（履歴記録付き更新）</span><button class="download-btn" onclick="downloadCode('todo-service-history', 'TodoService_history.java')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button></div>
+                    <div class="code-content">
+                        <pre><code>@Service
+public class TodoService {
+
+    private final TodoMapper todoMapper;
+    private final HistoryService historyService;
+
+    @Transactional
+    public void updateTodo(Todo newData, Integer userId) {
+        // 変更前データを取得
+        Todo before = todoMapper.findById(newData.getId());
+
+        // DB更新
+        todoMapper.update(newData);
+
+        // 操作履歴を記録
+        historyService.record(userId, "UPDATE",
+            "todo", newData.getId(), before, newData);
+    }
+
+    @Transactional
+    public void deleteTodo(Integer todoId, Integer userId) {
+        // 削除前データを取得（Undo用）
+        Todo before = todoMapper.findById(todoId);
+
+        todoMapper.deleteById(todoId);
+
+        // 削除の履歴を記録（afterはnull）
+        historyService.record(userId, "DELETE",
+            "todo", todoId, before, null);
+    }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">lightbulb</span></span><span class="info-box-title">履歴記録のエラーハンドリング</span></div>
+                    <p>履歴記録が失敗しても本来の操作（更新・削除）は正常に完了させるべきです。try-catchで例外を吸収し、ログに記録する設計にしています。</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-header"><span class="section-number">Section 61-3</span><h2 class="section-title">Undoコントローラー</h2></div>
+                <div class="intro-text"><p>操作履歴の<code>beforeData</code>を使って、直前の操作を<strong>取り消す（Undo）</strong>コントローラーを実装します。Undo可能な期間を制限し、安全に元に戻します。</p></div>
+                <div class="module-list">
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">undo</span></div><div class="module-content"><h4>Undo処理</h4><p>beforeDataからオブジェクトを復元してDBを更新</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">timer</span></div><div class="module-content"><h4>時間制限</h4><p>操作から5分以内のみUndoを許可</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">replay</span></div><div class="module-content"><h4>復元ロジック</h4><p>UPDATE→beforeDataで上書き、DELETE→再INSERT</p></div></div>
+                </div>
+                <div class="code-block" id="undo-controller">
+                    <div class="code-header"><span class="code-title">UndoController.java</span><button class="download-btn" onclick="downloadCode('undo-controller', 'UndoController.java')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button></div>
+                    <div class="code-content">
+                        <pre><code>import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/undo")
+public class UndoController {
+
+    private static final int UNDO_LIMIT_MINUTES = 5;
+
+    private final HistoryMapper historyMapper;
+    private final TodoMapper todoMapper;
+    private final ObjectMapper objectMapper;
+
+    public UndoController(HistoryMapper historyMapper,
+                           TodoMapper todoMapper,
+                           ObjectMapper objectMapper) {
+        this.historyMapper = historyMapper;
+        this.todoMapper = todoMapper;
+        this.objectMapper = objectMapper;
+    }
+
+    @PostMapping("/{historyId}")
+    public Map&lt;String, Object&gt; undo(@PathVariable Integer historyId) {
+        OperationHistory history = historyMapper.findById(historyId);
+
+        // Undo可能かチェック
+        if (history == null || history.isUndone()) {
+            return Map.of("success", false,
+                "message", "この操作は取り消せません");
+        }
+
+        LocalDateTime limit = LocalDateTime.now()
+            .minusMinutes(UNDO_LIMIT_MINUTES);
+        if (history.getCreatedAt().isBefore(limit)) {
+            return Map.of("success", false,
+                "message", "Undo可能な時間を過ぎています（5分以内）");
+        }
+
+        try {
+            switch (history.getOperationType()) {
+                case "UPDATE":
+                    // 変更前データで上書き
+                    Todo before = objectMapper.readValue(
+                        history.getBeforeData(), Todo.class);
+                    todoMapper.update(before);
+                    break;
+                case "DELETE":
+                    // 削除されたデータを再INSERT
+                    Todo deleted = objectMapper.readValue(
+                        history.getBeforeData(), Todo.class);
+                    todoMapper.insert(deleted);
+                    break;
+            }
+
+            // Undo済みフラグを立てる
+            historyMapper.markAsUndone(historyId);
+
+            return Map.of("success", true,
+                "message", "操作を取り消しました");
+
+        } catch (Exception e) {
+            return Map.of("success", false,
+                "message", "Undoに失敗しました: " + e.getMessage());
+        }
+    }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">lightbulb</span></span><span class="info-box-title">Undoの時間制限</span></div>
+                    <p>Undoを無制限に許可するとデータの整合性が崩れるリスクがあります。<strong>5分以内</strong>など時間制限を設けることで、「うっかり操作」の取り消しに限定しています。</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-header"><span class="section-number">Section 61-4</span><h2 class="section-title">操作履歴タイムライン</h2></div>
+                <div class="intro-text"><p>操作履歴を<strong>タイムライン形式</strong>で表示し、「いつ」「誰が」「何を」したかを一覧で確認できるUIを実装します。各操作にUndoボタンを配置します。</p></div>
+                <div class="module-list">
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">timeline</span></div><div class="module-content"><h4>タイムラインUI</h4><p>操作履歴を時系列で見やすく表示</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">filter_list</span></div><div class="module-content"><h4>フィルタリング</h4><p>操作種別やタスクで履歴を絞り込み</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">undo</span></div><div class="module-content"><h4>インラインUndo</h4><p>各履歴項目にUndoボタンを配置</p></div></div>
+                </div>
+                <div class="code-block" id="history-timeline-html">
+                    <div class="code-header"><span class="code-title">history.html（タイムライン表示）</span><button class="download-btn" onclick="downloadCode('history-timeline-html', 'history-timeline.html')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button></div>
+                    <div class="code-content">
+                        <pre><code>&lt;div class="history-timeline"&gt;
+    &lt;h2&gt;操作履歴&lt;/h2&gt;
+
+    &lt;div th:each="h : ${histories}" class="timeline-item"&gt;
+        &lt;div class="timeline-dot"
+             th:classappend="${h.operationType == 'CREATE' ? 'dot-green' :
+                               h.operationType == 'DELETE' ? 'dot-red' :
+                               'dot-blue'}"&gt;&lt;/div&gt;
+        &lt;div class="timeline-content"&gt;
+            &lt;div class="timeline-header"&gt;
+                &lt;span class="timeline-action"
+                      th:text="${h.operationType == 'CREATE' ? '作成' :
+                                 h.operationType == 'UPDATE' ? '更新' :
+                                 h.operationType == 'DELETE' ? '削除' :
+                                 h.operationType}"&gt;&lt;/span&gt;
+                &lt;span class="timeline-time"
+                      th:text="${#temporals.format(h.createdAt,
+                          'yyyy/MM/dd HH:mm')}"&gt;&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;p class="timeline-desc"&gt;
+                タスク #&lt;span th:text="${h.targetId}"&gt;&lt;/span&gt;
+            &lt;/p&gt;
+
+            &lt;!-- Undoボタン（5分以内&amp;未Undo） --&gt;
+            &lt;button th:if="${!h.undone and h.undoable}"
+                    class="btn btn-sm btn-outline"
+                    th:onclick="'undoAction(' + ${h.id} + ')'"&gt;
+                &lt;span class="material-icons"
+                      style="font-size:14px"&gt;undo&lt;/span&gt;
+                元に戻す
+            &lt;/button&gt;
+            &lt;span th:if="${h.undone}" class="badge badge-secondary"&gt;
+                取り消し済み&lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                    </div>
+                </div>
+                <div class="code-block" id="history-timeline-js">
+                    <div class="code-header"><span class="code-title">history.js（Undo実行）</span><button class="download-btn" onclick="downloadCode('history-timeline-js', 'history.js')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button></div>
+                    <div class="code-content">
+                        <pre><code>async function undoAction(historyId) {
+    if (!confirm('この操作を元に戻しますか？')) return;
+
+    const response = await fetch(`/api/undo/${historyId}`, {
+        method: 'POST'
+    });
+    const result = await response.json();
+
+    if (result.success) {
+        alert(result.message);
+        location.reload(); // ページをリロードして反映
+    } else {
+        alert('エラー: ' + result.message);
+    }
+}</code></pre>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">lightbulb</span></span><span class="info-box-title">操作直後のUndoトースト</span></div>
+                    <p>操作の直後に画面下部に「操作を取り消す」ボタン付きのトースト通知を表示するのも効果的です。<br>Gmailの「送信取り消し」のようなUXで、ユーザーが素早くUndoできます。</p>
+                </div>
+            </section>
+
+            <!-- 期待する画面イメージ -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #22c55e;">preview</span>
+                    期待する画面イメージ
+                </h4>
+                <div style="background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <div style="background: #334155; padding: 8px 16px; display: flex; align-items: center; gap: 8px;">
+                        <div style="display: flex; gap: 6px;">
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f56;"></span>
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e;"></span>
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #27ca40;"></span>
+                        </div>
+                        <div style="flex: 1; background: #1e293b; border-radius: 6px; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #94a3b8;">
+                            http://localhost:8080/todos/history
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 24px;">
+                        <h2 style="margin: 0 0 20px 0; font-size: 1.2rem; color: #1e293b;">操作履歴</h2>
+                        <!-- タイムライン -->
+                        <div style="border-left: 3px solid #e2e8f0; margin-left: 16px; padding-left: 24px;">
+                            <!-- 項目1: 更新（Undo可能） -->
+                            <div style="position: relative; margin-bottom: 24px;">
+                                <div style="position: absolute; left: -33px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; border: 3px solid white; box-shadow: 0 0 0 2px #3b82f6;"></div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <span style="font-weight: 600; color: #3b82f6; font-size: 0.85rem;">更新</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8;">2025/01/15 14:32</span>
+                                </div>
+                                <p style="margin: 0 0 8px 0; font-size: 0.85rem; color: #475569;">タスク #3 「DB設計レビュー」のステータスを変更</p>
+                                <button style="padding: 4px 12px; background: white; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <span class="material-icons" style="font-size: 14px;">undo</span> 元に戻す
+                                </button>
+                            </div>
+                            <!-- 項目2: 削除（Undo可能） -->
+                            <div style="position: relative; margin-bottom: 24px;">
+                                <div style="position: absolute; left: -33px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #ef4444; border: 3px solid white; box-shadow: 0 0 0 2px #ef4444;"></div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <span style="font-weight: 600; color: #ef4444; font-size: 0.85rem;">削除</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8;">2025/01/15 14:28</span>
+                                </div>
+                                <p style="margin: 0 0 8px 0; font-size: 0.85rem; color: #475569;">タスク #5 「買い物リスト」を削除</p>
+                                <button style="padding: 4px 12px; background: white; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <span class="material-icons" style="font-size: 14px;">undo</span> 元に戻す
+                                </button>
+                            </div>
+                            <!-- 項目3: 作成 -->
+                            <div style="position: relative; margin-bottom: 24px;">
+                                <div style="position: absolute; left: -33px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #22c55e; border: 3px solid white; box-shadow: 0 0 0 2px #22c55e;"></div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <span style="font-weight: 600; color: #22c55e; font-size: 0.85rem;">作成</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8;">2025/01/15 10:15</span>
+                                </div>
+                                <p style="margin: 0; font-size: 0.85rem; color: #475569;">タスク #6 「週次ミーティング準備」を作成</p>
+                            </div>
+                            <!-- 項目4: Undo済み -->
+                            <div style="position: relative; margin-bottom: 8px;">
+                                <div style="position: absolute; left: -33px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; border: 3px solid white; box-shadow: 0 0 0 2px #cbd5e1;"></div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <span style="font-weight: 600; color: #94a3b8; font-size: 0.85rem;">更新</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8;">2025/01/15 09:50</span>
+                                </div>
+                                <p style="margin: 0 0 8px 0; font-size: 0.85rem; color: #94a3b8;">タスク #2 「レポート作成」の優先度を変更</p>
+                                <span style="padding: 2px 8px; background: #f1f5f9; color: #94a3b8; border-radius: 12px; font-size: 0.7rem;">取り消し済み</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; font-size: 0.8rem; color: #64748b; line-height: 1.6;">
+                    <span class="material-icons" style="font-size: 1rem; vertical-align: text-bottom; color: #22c55e;">check_circle</span>
+                    タイムライン形式で操作履歴を表示し、5分以内の操作には「元に戻す」ボタンが表示されます。Undo済みの操作はグレーアウトされます。
+                </div>
+            </div>
+
+            <!-- AIプロンプト例 -->
+            <section class="section" style="background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 12px; color: white; margin-top: 2rem;">
+                <div class="section-header" style="border-color: rgba(255,255,255,0.3);"><span class="section-number" style="background: rgba(0,0,0,0.2); color: white;"><span class="material-icons" style="font-size: 1rem; vertical-align: middle;">smart_toy</span> AI</span><h2 class="section-title" style="color: white;">AIプログラミング</h2></div>
+                <div class="intro-text"><p style="color: rgba(0,0,0,0.9);">以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、この機能を実装できます。</p></div>
+                <div class="code-block" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);">
+                    <div class="code-header"><span class="code-title" style="color: #a5f3fc;"><span class="material-icons" style="font-size:1rem;vertical-align:middle">edit_note</span> 基本プロンプト</span></div>
+                    <div class="code-content"><pre style="color: #e2e8f0; background: transparent;"><code>Spring Boot 3.xのToDoアプリに操作履歴・Undo機能を追加してください。
+
+【要件】
+- operation_historyテーブルで操作種別・変更前後データ(JSON)を記録
+- タスクの更新・削除時に変更前データを保存
+- /api/undo/{historyId}でUndoを実行（5分以内制限）
+- タイムライン形式の操作履歴画面（Undoボタン付き）
+
+【技術スタック】
+- Spring Boot 3.x + MyBatis
+- JSON型カラム（MySQL）
+- ObjectMapper（Java↔JSON変換）
+- @Transactional（更新+履歴保存の一括実行）</code></pre></div>
+                </div>
+                <div class="code-block" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); margin-top: 1rem;">
+                    <div class="code-header"><span class="code-title" style="color: #a5f3fc;"><span class="material-icons" style="font-size:1rem;vertical-align:middle">gps_fixed</span> ステップ別プロンプト</span></div>
+                    <div class="code-content"><pre style="color: #e2e8f0; background: transparent;"><code># Step 1: 操作履歴テーブル
+operation_historyテーブルを作成してください。操作種別、対象テーブル、対象ID、変更前後のJSON、Undo済みフラグを含めてください。
+
+# Step 2: 変更前後データの保存
+TodoServiceの更新・削除メソッドで変更前のデータをObjectMapperでJSON化し、HistoryServiceで履歴テーブルに保存する仕組みを作成してください。
+
+# Step 3: Undoコントローラー
+/api/undo/{historyId}でUndoを実行するRESTコントローラーを作成してください。5分以内制限と二重Undo防止を含めてください。
+
+# Step 4: タイムラインUI
+操作履歴をタイムライン形式で表示するThymeleafテンプレートを作成し、各項目にUndoボタンを配置してください。</code></pre></div>
+                </div>
+                <div class="info-box" style="background: rgba(0,0,0,0.1); border-color: rgba(255,255,255,0.3);">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">lightbulb</span></span><span class="info-box-title" style="color: white;">プロンプトのコツ</span></div>
+                    <p style="color: rgba(255,255,255,0.9);">「変更前データのJSON化にはObjectMapperを使い、履歴記録が失敗してもメインの操作は止めないようにしてください」のように、エラーハンドリング方針を明示すると安全な実装が得られます。</p>
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer"><p>Spring Framework 入門チュートリアル - 便利機能</p></footer>
+
+        <div class="page-nav">
+            <a href="60_webhook.html" class="page-nav-btn prev"><span>←</span><div><div class="page-nav-label">前の機能</div><div class="page-nav-title">Webhook連携</div></div></a>
+            <a href="62_richtext.html" class="page-nav-btn next"><div><div class="page-nav-label">次の機能</div><div class="page-nav-title">リッチテキストエディタ</div></div><span>→</span></a>
+        </div>
+
+        <script>
+            function toggleMenu() { document.querySelector(".nav-toggle").classList.toggle("active"); document.querySelector(".nav-menu").classList.toggle("active"); }
+            function downloadCode(id, filename) { const el = document.getElementById(id); const code = el.querySelector('code') || el.querySelector('pre'); const blob = new Blob([code.textContent], {type:'text/plain;charset=utf-8'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url); }
+        </script>
+    </body>
+</html>

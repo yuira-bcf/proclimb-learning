@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>効率化38 タスクマージ</title>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" href="../promptpg-step/style.css" />
+        <style>
+  :root {
+    --primary: #ea580c;
+    --primary-dark: #c2410c;
+    --primary-light: #fff7ed;
+    --primary-lighter: #ffedd5;
+  }
+  .nav-category-links { display: none; }
+</style>
+        <style>
+            .download-btn { background: #22c55e; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-left: auto; }
+            .code-header { display: flex; align-items: center; justify-content: space-between; }
+            .level-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        </style>
+    </head>
+    <body>
+        <nav class="global-nav">
+            <div class="nav-container">
+                <a href="01_extends-todo.html" class="nav-logo"><span class="nav-logo-icon"><span class="material-icons" style="font-size:1.2rem">eco</span></span><span>機能追加</span></a>
+                <button class="nav-toggle" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+                <div class="nav-menu">
+                    <div class="nav-menu-title"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#3b82f6">menu_book</span> 初級レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="01_extends-todo.html" class="nav-link"><span class="nav-chapter-num">1</span><span>機能追加提案</span></a></li>
+                        <li class="nav-item"><a href="02_validation.html" class="nav-link"><span class="nav-chapter-num">2</span><span>入力バリデーション</span></a></li>
+                        <li class="nav-item"><a href="03_status.html" class="nav-link"><span class="nav-chapter-num">3</span><span>完了/未完了ステータス</span></a></li>
+                        <li class="nav-item"><a href="04_search.html" class="nav-link"><span class="nav-chapter-num">4</span><span>検索機能</span></a></li>
+                        <li class="nav-item"><a href="05_sort.html" class="nav-link"><span class="nav-chapter-num">5</span><span>ソート機能</span></a></li>
+                        <li class="nav-item"><a href="06_delete_dialog.html" class="nav-link"><span class="nav-chapter-num">6</span><span>削除確認ダイアログ</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#22c55e">menu_book</span> 中級レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="07_pagination.html" class="nav-link"><span class="nav-chapter-num">7</span><span>ページネーション</span></a></li>
+                        <li class="nav-item"><a href="08_priority.html" class="nav-link"><span class="nav-chapter-num">8</span><span>優先度設定</span></a></li>
+                        <li class="nav-item"><a href="09_category.html" class="nav-link"><span class="nav-chapter-num">9</span><span>カテゴリ分類</span></a></li>
+                        <li class="nav-item"><a href="10_deadline.html" class="nav-link"><span class="nav-chapter-num">10</span><span>期限アラート</span></a></li>
+                        <li class="nav-item"><a href="11_bulk_delete.html" class="nav-link"><span class="nav-chapter-num">11</span><span>一括削除</span></a></li>
+                        <li class="nav-item"><a href="12_csv_export.html" class="nav-link"><span class="nav-chapter-num">12</span><span>CSV出力</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#ef4444">menu_book</span> 上級レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="13_login.html" class="nav-link"><span class="nav-chapter-num">13</span><span>ログイン認証</span></a></li>
+                        <li class="nav-item"><a href="14_user_todo.html" class="nav-link"><span class="nav-chapter-num">14</span><span>ユーザー別ToDo</span></a></li>
+                        <li class="nav-item"><a href="15_role.html" class="nav-link"><span class="nav-chapter-num">15</span><span>ロール別権限</span></a></li>
+                        <li class="nav-item"><a href="16_user_crud.html" class="nav-link"><span class="nav-chapter-num">16</span><span>ユーザー管理CRUD</span></a></li>
+                        <li class="nav-item"><a href="17_rest_api.html" class="nav-link"><span class="nav-chapter-num">17</span><span>REST API</span></a></li>
+                        <li class="nav-item"><a href="18_exception.html" class="nav-link"><span class="nav-chapter-num">18</span><span>例外ハンドリング</span></a></li>
+                        <li class="nav-item"><a href="19_aop.html" class="nav-link"><span class="nav-chapter-num">19</span><span>AOP</span></a></li>
+                        <li class="nav-item"><a href="20_transaction.html" class="nav-link"><span class="nav-chapter-num">20</span><span>トランザクション</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#f97316">menu_book</span> 発展レベル</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="21_file_upload.html" class="nav-link"><span class="nav-chapter-num">21</span><span>ファイル添付</span></a></li>
+                        <li class="nav-item"><a href="22_i18n.html" class="nav-link"><span class="nav-chapter-num">22</span><span>国際化</span></a></li>
+                        <li class="nav-item"><a href="23_unit_test.html" class="nav-link"><span class="nav-chapter-num">23</span><span>単体テスト</span></a></li>
+                        <li class="nav-item"><a href="24_async.html" class="nav-link"><span class="nav-chapter-num">24</span><span>非同期処理</span></a></li>
+                        <li class="nav-item"><a href="25_mail.html" class="nav-link"><span class="nav-chapter-num">25</span><span>メール通知</span></a></li>
+                        <li class="nav-item"><a href="26_audit_log.html" class="nav-link"><span class="nav-chapter-num">26</span><span>監査ログ</span></a></li>
+                        <li class="nav-item"><a href="27_javadoc.html" class="nav-link"><span class="nav-chapter-num">27</span><span>Javadoc</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#ea580c">menu_book</span> 効率化</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="28_subtask.html" class="nav-link"><span class="nav-chapter-num">28</span><span>サブタスク</span></a></li>
+                        <li class="nav-item"><a href="29_template_todo.html" class="nav-link"><span class="nav-chapter-num">29</span><span>テンプレートToDo</span></a></li>
+                        <li class="nav-item"><a href="30_dnd_sort.html" class="nav-link"><span class="nav-chapter-num">30</span><span>D&amp;D並び替え</span></a></li>
+                        <li class="nav-item"><a href="31_duplicate.html" class="nav-link"><span class="nav-chapter-num">31</span><span>タスク複製</span></a></li>
+                        <li class="nav-item"><a href="32_bulk_status.html" class="nav-link"><span class="nav-chapter-num">32</span><span>一括ステータス変更</span></a></li>
+                        <li class="nav-item"><a href="33_tag_autocomplete.html" class="nav-link"><span class="nav-chapter-num">33</span><span>タグ補完</span></a></li>
+                        <li class="nav-item"><a href="34_quick_input.html" class="nav-link"><span class="nav-chapter-num">34</span><span>クイック入力</span></a></li>
+                        <li class="nav-item"><a href="35_shortcut_key.html" class="nav-link"><span class="nav-chapter-num">35</span><span>ショートカット</span></a></li>
+                        <li class="nav-item"><a href="36_smart_date.html" class="nav-link"><span class="nav-chapter-num">36</span><span>日付パース</span></a></li>
+                        <li class="nav-item"><a href="37_dependency.html" class="nav-link"><span class="nav-chapter-num">37</span><span>依存タスク</span></a></li>
+                        <li class="nav-item"><a href="38_task_merge.html" class="nav-link active"><span class="nav-chapter-num">38</span><span>タスクマージ</span></a></li>
+                        <li class="nav-item"><a href="39_csv_import.html" class="nav-link"><span class="nav-chapter-num">39</span><span>CSVインポート</span></a></li>
+                        <li class="nav-item"><a href="40_estimate_time.html" class="nav-link"><span class="nav-chapter-num">40</span><span>見積もり時間</span></a></li>
+                        <li class="nav-item"><a href="41_archive.html" class="nav-link"><span class="nav-chapter-num">41</span><span>アーカイブ</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#0891b2">menu_book</span> 可視化</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="42_dashboard_view.html" class="nav-link"><span class="nav-chapter-num">42</span><span>ダッシュボード</span></a></li>
+                        <li class="nav-item"><a href="43_calendar_view.html" class="nav-link"><span class="nav-chapter-num">43</span><span>カレンダー</span></a></li>
+                        <li class="nav-item"><a href="44_kanban.html" class="nav-link"><span class="nav-chapter-num">44</span><span>カンバン</span></a></li>
+                        <li class="nav-item"><a href="45_progress_bar.html" class="nav-link"><span class="nav-chapter-num">45</span><span>進捗バー</span></a></li>
+                        <li class="nav-item"><a href="46_activity_feed.html" class="nav-link"><span class="nav-chapter-num">46</span><span>アクティビティ</span></a></li>
+                        <li class="nav-item"><a href="47_heatmap.html" class="nav-link"><span class="nav-chapter-num">47</span><span>ヒートマップ</span></a></li>
+                        <li class="nav-item"><a href="48_burndown_chart.html" class="nav-link"><span class="nav-chapter-num">48</span><span>バーンダウン</span></a></li>
+                        <li class="nav-item"><a href="49_pie_chart.html" class="nav-link"><span class="nav-chapter-num">49</span><span>円グラフ</span></a></li>
+                        <li class="nav-item"><a href="50_countdown.html" class="nav-link"><span class="nav-chapter-num">50</span><span>カウントダウン</span></a></li>
+                        <li class="nav-item"><a href="51_user_ranking.html" class="nav-link"><span class="nav-chapter-num">51</span><span>ランキング</span></a></li>
+                        <li class="nav-item"><a href="52_weekly_report.html" class="nav-link"><span class="nav-chapter-num">52</span><span>週次レポート</span></a></li>
+                        <li class="nav-item"><a href="53_tag_cloud.html" class="nav-link"><span class="nav-chapter-num">53</span><span>タグクラウド</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#db2777">menu_book</span> 便利機能</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="54_favorite.html" class="nav-link"><span class="nav-chapter-num">54</span><span>お気に入り</span></a></li>
+                        <li class="nav-item"><a href="55_markdown_memo.html" class="nav-link"><span class="nav-chapter-num">55</span><span>Markdownメモ</span></a></li>
+                        <li class="nav-item"><a href="56_dark_mode.html" class="nav-link"><span class="nav-chapter-num">56</span><span>ダークモード</span></a></li>
+                        <li class="nav-item"><a href="57_browser_notification.html" class="nav-link"><span class="nav-chapter-num">57</span><span>通知</span></a></li>
+                        <li class="nav-item"><a href="58_pdf_excel.html" class="nav-link"><span class="nav-chapter-num">58</span><span>PDF/Excel</span></a></li>
+                        <li class="nav-item"><a href="59_task_share.html" class="nav-link"><span class="nav-chapter-num">59</span><span>タスク共有</span></a></li>
+                        <li class="nav-item"><a href="60_webhook.html" class="nav-link"><span class="nav-chapter-num">60</span><span>Webhook</span></a></li>
+                        <li class="nav-item"><a href="61_undo_history.html" class="nav-link"><span class="nav-chapter-num">61</span><span>履歴・Undo</span></a></li>
+                        <li class="nav-item"><a href="62_richtext.html" class="nav-link"><span class="nav-chapter-num">62</span><span>リッチテキスト</span></a></li>
+                        <li class="nav-item"><a href="63_label_color.html" class="nav-link"><span class="nav-chapter-num">63</span><span>ラベル色</span></a></li>
+                        <li class="nav-item"><a href="64_multi_view.html" class="nav-link"><span class="nav-chapter-num">64</span><span>ビュー切替</span></a></li>
+                        <li class="nav-item"><a href="65_saved_search.html" class="nav-link"><span class="nav-chapter-num">65</span><span>検索保存</span></a></li>
+                        <li class="nav-item"><a href="66_sse_realtime.html" class="nav-link"><span class="nav-chapter-num">66</span><span>SSEリアルタイム</span></a></li>
+                        <li class="nav-item"><a href="67_two_factor_auth.html" class="nav-link"><span class="nav-chapter-num">67</span><span>二要素認証</span></a></li>
+                        <li class="nav-item"><a href="68_api_key_auth.html" class="nav-link"><span class="nav-chapter-num">68</span><span>APIキー認証</span></a></li>
+                        <li class="nav-item"><a href="69_url_share.html" class="nav-link"><span class="nav-chapter-num">69</span><span>URL共有</span></a></li>
+                        <li class="nav-item"><a href="70_voice_input.html" class="nav-link"><span class="nav-chapter-num">70</span><span>音声入力</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#65a30d">menu_book</span> ゲーミフィケーション</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="71_gamification.html" class="nav-link"><span class="nav-chapter-num">71</span><span>ポイント/レベル</span></a></li>
+                        <li class="nav-item"><a href="72_streak_badge.html" class="nav-link"><span class="nav-chapter-num">72</span><span>連続達成バッジ</span></a></li>
+                        <li class="nav-item"><a href="73_team_challenge.html" class="nav-link"><span class="nav-chapter-num">73</span><span>チームチャレンジ</span></a></li>
+                    </ul>
+                    <div class="nav-menu-title" style="margin-top: 1rem;"><span class="material-icons" style="font-size:1rem;vertical-align:middle">link</span> 関連教材</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="../../backend/java/index.html" class="nav-link"><span>Java基礎</span></a></li>
+                        <li class="nav-item"><a href="../../backend/spring/index.html" class="nav-link"><span>Spring入門</span></a></li>
+                        <li class="nav-item"><a href="../promptpg-step/index.html" class="nav-link"><span>プロンプトPG</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <header class="chapter-header">
+                <div class="chapter-badge"><span class="level-badge" style="background: #fff7ed; color: #c2410c;">効率化</span><span class="material-icons" style="font-size:1rem;vertical-align:middle;color:#ea580c">menu_book</span> Efficiency</div>
+                <div class="chapter-number">38</div>
+                <h1 class="chapter-title">タスクマージ</h1>
+            </header>
+
+            <nav class="toc">
+                <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+                <ul class="toc-list">
+                    <li class="toc-item"><span class="toc-number">38-1</span><span>マージ対象選択UI</span></li>
+                    <li class="toc-item"><span class="toc-number">38-2</span><span>データ統合ロジック</span></li>
+                    <li class="toc-item"><span class="toc-number">38-3</span><span>関連データの付け替え</span></li>
+                    <li class="toc-item"><span class="toc-number">38-4</span><span>マージ履歴の記録</span></li>
+                </ul>
+            </nav>
+
+            <!-- Section 38-1 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 38-1</span>
+                    <h2 class="section-title">マージ対象選択UI</h2>
+                </div>
+                <div class="intro-text">
+                    <p>重複するタスクや関連の深いタスクを1つに統合する<strong>マージ機能</strong>のUIを実装します。マージ先（残すタスク）とマージ元（統合されるタスク）を選択する画面を作成します。</p>
+                </div>
+
+                <div class="module-list">
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">merge_type</span></div><div class="module-content"><h4>マージ先/元の選択</h4><p>どちらのタスクを残すかをユーザーが選択</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">compare_arrows</span></div><div class="module-content"><h4>プレビュー表示</h4><p>マージ前後の状態を並べて確認</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">warning</span></div><div class="module-content"><h4>確認ダイアログ</h4><p>不可逆操作のため確認ステップを挟む</p></div></div>
+                </div>
+
+                <div class="code-block" id="merge-form-html">
+                    <div class="code-header">
+                        <span class="code-title">merge.html（マージ画面）</span>
+                        <button class="download-btn" onclick="downloadCode('merge-form-html', 'merge.html')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+    &lt;title&gt;タスクマージ&lt;/title&gt;
+    &lt;link rel="stylesheet" th:href="@{/css/style.css}"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;タスクマージ&lt;/h1&gt;
+    &lt;p class="info"&gt;マージ元のタスクはマージ先に統合され、削除されます。&lt;/p&gt;
+
+    &lt;form th:action="@{/todo/merge}" method="post"
+          onsubmit="return confirm('マージすると元に戻せません。実行しますか？')"&gt;
+
+        &lt;div class="merge-columns"&gt;
+            &lt;!-- マージ先（残すタスク） --&gt;
+            &lt;div class="merge-target"&gt;
+                &lt;h3&gt;マージ先（残す）&lt;/h3&gt;
+                &lt;select name="targetId" required&gt;
+                    &lt;option value=""&gt;タスクを選択...&lt;/option&gt;
+                    &lt;option th:each="task : ${tasks}"
+                            th:value="${task.id}"
+                            th:text="${'#' + task.id + ' ' + task.title}"&gt;
+                    &lt;/option&gt;
+                &lt;/select&gt;
+            &lt;/div&gt;
+
+            &lt;div class="merge-arrow"&gt;
+                &lt;span class="material-icons"&gt;arrow_back&lt;/span&gt;
+            &lt;/div&gt;
+
+            &lt;!-- マージ元（統合されるタスク） --&gt;
+            &lt;div class="merge-source"&gt;
+                &lt;h3&gt;マージ元（削除される）&lt;/h3&gt;
+                &lt;select name="sourceId" required&gt;
+                    &lt;option value=""&gt;タスクを選択...&lt;/option&gt;
+                    &lt;option th:each="task : ${tasks}"
+                            th:value="${task.id}"
+                            th:text="${'#' + task.id + ' ' + task.title}"&gt;
+                    &lt;/option&gt;
+                &lt;/select&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;button type="submit" class="btn btn-danger"&gt;
+            マージ実行
+        &lt;/button&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    </div>
+                </div>
+
+                <div class="code-block" id="merge-controller-show">
+                    <div class="code-header">
+                        <span class="code-title">TaskMergeController.java（マージ画面表示）</span>
+                        <button class="download-btn" onclick="downloadCode('merge-controller-show', 'TaskMergeController.java')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+@RequestMapping("/todo/merge")
+public class TaskMergeController {
+
+    private final TaskMergeService mergeService;
+    private final TodoMapper todoMapper;
+
+    public TaskMergeController(TaskMergeService mergeService,
+                               TodoMapper todoMapper) {
+        this.mergeService = mergeService;
+        this.todoMapper = todoMapper;
+    }
+
+    @GetMapping
+    public String showMergeForm(Model model) {
+        model.addAttribute("tasks", todoMapper.findAll());
+        return "merge";
+    }
+
+    @PostMapping
+    public String merge(@RequestParam Integer targetId,
+                        @RequestParam Integer sourceId,
+                        RedirectAttributes redirectAttributes) {
+        if (targetId.equals(sourceId)) {
+            redirectAttributes.addFlashAttribute("error",
+                "同じタスクは選択できません");
+            return "redirect:/todo/merge";
+        }
+
+        mergeService.merge(targetId, sourceId);
+        redirectAttributes.addFlashAttribute("message",
+            "タスクをマージしました");
+        return "redirect:/todo/" + targetId;
+    }
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-header"><span class="warning-box-icon"><span class="material-icons">warning</span></span><span class="warning-box-title">不可逆操作</span></div>
+                    <p>マージ操作は元に戻せない破壊的な操作です。<code>confirm()</code>ダイアログに加え、マージ後のプレビュー表示を実装することで、誤操作を防止します。</p>
+                </div>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #3b82f6;">account_tree</span>
+                        処理フロー: タスクマージ機能
+                    </h4>
+                    <div style="display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start;">
+                        <div style="background: #3b82f6; color: white; border-radius: 50%; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">1</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: #1e40af; margin-bottom: 6px; font-size: 0.85rem;">マージ元タスク複数選択 + マージ先タスク指定</div>
+                            <div style="background: #1e293b; border-radius: 8px; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;">
+                                &lt;select name=<span style="color: #fde68a;">"targetId"</span>&gt; + &lt;select name=<span style="color: #fde68a;">"sourceId"</span>&gt;
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start;">
+                        <div style="background: #f59e0b; color: white; border-radius: 50%; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">2</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: #92400e; margin-bottom: 6px; font-size: 0.85rem;">TaskMergeService.merge() でデータ統合（説明文連結・優先度・期限）</div>
+                            <div style="background: #1e293b; border-radius: 8px; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;">
+                                <span style="color: #7dd3fc;">mergeTextFields</span>(target, source); <span style="color: #64748b;">// 説明文を連結</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start;">
+                        <div style="background: #22c55e; color: white; border-radius: 50%; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">3</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: #166534; margin-bottom: 6px; font-size: 0.85rem;">サブタスク・タグ・依存関係をマージ先に付け替え</div>
+                            <div style="background: #1e293b; border-radius: 8px; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;">
+                                <span style="color: #7dd3fc;">reassociateData</span>(targetId, sourceId); <span style="color: #64748b;">// 関連データ移管</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start;">
+                        <div style="background: #a855f7; color: white; border-radius: 50%; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">4</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: #6b21a8; margin-bottom: 6px; font-size: 0.85rem;">マージ元を削除 + 履歴記録</div>
+                            <div style="background: #1e293b; border-radius: 8px; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;">
+                                <span style="color: #7dd3fc;">saveMergeHistory</span>(targetId, sourceId); todoMapper.<span style="color: #7dd3fc;">deleteById</span>(sourceId);
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 8px; padding: 12px 16px; margin-top: 20px;">
+                        <p style="margin: 0; color: #5b21b6; font-size: 0.8rem; line-height: 1.7;"><strong>ポイント:</strong> @Transactionalで全操作を1トランザクションにまとめ、途中エラー時は全てロールバック。自己依存が発生した場合は自動削除。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 38-2 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 38-2</span>
+                    <h2 class="section-title">データ統合ロジック</h2>
+                </div>
+                <div class="intro-text">
+                    <p>マージ元タスクの<strong>説明文やメモ</strong>をマージ先タスクに統合するロジックを実装します。テキスト情報を連結し、重要な情報を失わないようにします。</p>
+                </div>
+
+                <div class="module-list">
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">text_fields</span></div><div class="module-content"><h4>説明文の連結</h4><p>マージ元の説明文をマージ先に追記</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">low_priority</span></div><div class="module-content"><h4>優先度の統合</h4><p>より高い優先度を採用</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">event</span></div><div class="module-content"><h4>期限の統合</h4><p>より早い期限を採用</p></div></div>
+                </div>
+
+                <div class="code-block" id="merge-service">
+                    <div class="code-header">
+                        <span class="code-title">TaskMergeService.java（マージロジック）</span>
+                        <button class="download-btn" onclick="downloadCode('merge-service', 'TaskMergeService.java')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class TaskMergeService {
+
+    private final TodoMapper todoMapper;
+    private final SubtaskMapper subtaskMapper;
+    private final TaskDependencyMapper dependencyMapper;
+    private final MergeHistoryMapper mergeHistoryMapper;
+
+    public TaskMergeService(TodoMapper todoMapper,
+                            SubtaskMapper subtaskMapper,
+                            TaskDependencyMapper dependencyMapper,
+                            MergeHistoryMapper mergeHistoryMapper) {
+        this.todoMapper = todoMapper;
+        this.subtaskMapper = subtaskMapper;
+        this.dependencyMapper = dependencyMapper;
+        this.mergeHistoryMapper = mergeHistoryMapper;
+    }
+
+    /**
+     * タスクをマージする
+     * @param targetId マージ先（残すタスク）のID
+     * @param sourceId マージ元（削除するタスク）のID
+     */
+    @Transactional
+    public void merge(Integer targetId, Integer sourceId) {
+        Todo target = todoMapper.findById(targetId);
+        Todo source = todoMapper.findById(sourceId);
+
+        // 1. テキスト情報の統合
+        mergeTextFields(target, source);
+
+        // 2. 優先度の統合（高い方を採用）
+        if (source.getPriority() > target.getPriority()) {
+            target.setPriority(source.getPriority());
+        }
+
+        // 3. 期限の統合（早い方を採用）
+        if (source.getDeadline() != null) {
+            if (target.getDeadline() == null ||
+                source.getDeadline().isBefore(target.getDeadline())) {
+                target.setDeadline(source.getDeadline());
+            }
+        }
+
+        // 4. 関連データの付け替え
+        reassociateData(targetId, sourceId);
+
+        // 5. マージ先を更新
+        todoMapper.update(target);
+
+        // 6. マージ履歴を記録
+        saveMergeHistory(targetId, sourceId, source.getTitle());
+
+        // 7. マージ元を削除
+        todoMapper.deleteById(sourceId);
+    }
+
+    private void mergeTextFields(Todo target, Todo source) {
+        // 説明文の連結
+        if (source.getDescription() != null
+                &amp;&amp; !source.getDescription().isBlank()) {
+            String merged = (target.getDescription() != null
+                ? target.getDescription() : "")
+                + "\n\n--- マージ元 (#" + source.getId()
+                + ": " + source.getTitle() + ") ---\n"
+                + source.getDescription();
+            target.setDescription(merged.trim());
+        }
+    }
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">lightbulb</span></span><span class="info-box-title">@Transactionalの重要性</span></div>
+                    <p>マージ処理は複数テーブルにまたがる操作のため、<code>@Transactional</code>で全体を1つのトランザクションにまとめます。途中でエラーが発生した場合は全てロールバックされ、データの整合性が保たれます。</p>
+                </div>
+            </section>
+
+            <!-- Section 38-3 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 38-3</span>
+                    <h2 class="section-title">関連データの付け替え</h2>
+                </div>
+                <div class="intro-text">
+                    <p>マージ元タスクに紐づく<strong>サブタスク・タグ・依存関係</strong>などの関連データを、マージ先タスクに付け替える処理を実装します。</p>
+                </div>
+
+                <div class="module-list">
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">subdirectory_arrow_right</span></div><div class="module-content"><h4>サブタスク移管</h4><p>マージ元のサブタスクをマージ先に付け替え</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">label</span></div><div class="module-content"><h4>タグの統合</h4><p>重複を除いてタグを統合</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">link</span></div><div class="module-content"><h4>依存関係の移管</h4><p>依存関係をマージ先に付け替え</p></div></div>
+                </div>
+
+                <div class="code-block" id="reassociate-data">
+                    <div class="code-header">
+                        <span class="code-title">TaskMergeService.java（関連データの付け替え）</span>
+                        <button class="download-btn" onclick="downloadCode('reassociate-data', 'TaskMergeService_reassociate.java')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>/**
+ * 関連データをマージ元からマージ先に付け替え
+ */
+private void reassociateData(Integer targetId, Integer sourceId) {
+    // サブタスクの付け替え
+    subtaskMapper.updateParentId(sourceId, targetId);
+
+    // タグの統合（重複除外）
+    List&lt;Integer&gt; targetTagIds = todoMapper.findTagIds(targetId);
+    List&lt;Integer&gt; sourceTagIds = todoMapper.findTagIds(sourceId);
+    for (Integer tagId : sourceTagIds) {
+        if (!targetTagIds.contains(tagId)) {
+            todoMapper.insertTodoTag(targetId, tagId);
+        }
+    }
+
+    // 依存関係の付け替え（マージ元→マージ先）
+    dependencyMapper.replacePredecessor(sourceId, targetId);
+    dependencyMapper.replaceSuccessor(sourceId, targetId);
+    // 自己依存が発生した場合は削除
+    dependencyMapper.deleteSelfReference(targetId);
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="code-block" id="reassociate-mapper">
+                    <div class="code-header">
+                        <span class="code-title">Mapper.xml（付け替えSQL）</span>
+                        <button class="download-btn" onclick="downloadCode('reassociate-mapper', 'Mapper_reassociate.xml')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>&lt;!-- SubtaskMapper.xml --&gt;
+&lt;update id="updateParentId"&gt;
+    UPDATE subtask
+    SET parent_id = #{newParentId}
+    WHERE parent_id = #{oldParentId}
+&lt;/update&gt;
+
+&lt;!-- TaskDependencyMapper.xml --&gt;
+&lt;update id="replacePredecessor"&gt;
+    UPDATE task_dependencies
+    SET predecessor_id = #{newId}
+    WHERE predecessor_id = #{oldId}
+      AND successor_id != #{newId}
+&lt;/update&gt;
+
+&lt;update id="replaceSuccessor"&gt;
+    UPDATE task_dependencies
+    SET successor_id = #{newId}
+    WHERE successor_id = #{oldId}
+      AND predecessor_id != #{newId}
+&lt;/update&gt;
+
+&lt;delete id="deleteSelfReference"&gt;
+    DELETE FROM task_dependencies
+    WHERE predecessor_id = #{taskId}
+      AND successor_id = #{taskId}
+&lt;/delete&gt;</code></pre>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-header"><span class="warning-box-icon"><span class="material-icons">warning</span></span><span class="warning-box-title">自己依存の防止</span></div>
+                    <p>依存関係を付け替えると、マージ先タスクが自分自身に依存する状態が発生する可能性があります。付け替え後に<code>deleteSelfReference</code>で自己依存レコードを削除してください。</p>
+                </div>
+            </section>
+
+            <!-- Section 38-4 -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-number">Section 38-4</span>
+                    <h2 class="section-title">マージ履歴の記録</h2>
+                </div>
+                <div class="intro-text">
+                    <p>マージ操作の<strong>履歴</strong>をテーブルに記録し、いつ・どのタスクがマージされたかを追跡できるようにします。監査やトラブルシューティングに役立ちます。</p>
+                </div>
+
+                <div class="module-list">
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">history</span></div><div class="module-content"><h4>履歴テーブル</h4><p>マージ先/元ID、タイトル、実行日時を記録</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">visibility</span></div><div class="module-content"><h4>履歴表示</h4><p>タスク詳細画面にマージ履歴を一覧表示</p></div></div>
+                    <div class="module-item"><div class="module-icon"><span class="material-icons">person</span></div><div class="module-content"><h4>実行者の記録</h4><p>マージを実行したユーザー情報も記録</p></div></div>
+                </div>
+
+                <div class="code-block" id="merge-history-schema">
+                    <div class="code-header">
+                        <span class="code-title">schema.sql（マージ履歴テーブル）</span>
+                        <button class="download-btn" onclick="downloadCode('merge-history-schema', 'schema_merge_history.sql')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>CREATE TABLE merge_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    target_id INT NOT NULL,
+    source_id INT NOT NULL,
+    source_title VARCHAR(255) NOT NULL,
+    merged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    merged_by VARCHAR(50),
+    FOREIGN KEY (target_id) REFERENCES todo(id)
+);</code></pre>
+                    </div>
+                </div>
+
+                <div class="code-block" id="merge-history-mapper">
+                    <div class="code-header">
+                        <span class="code-title">MergeHistoryMapper.java / .xml</span>
+                        <button class="download-btn" onclick="downloadCode('merge-history-mapper', 'MergeHistoryMapper.java')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>// --- MergeHistoryMapper.java ---
+@Mapper
+public interface MergeHistoryMapper {
+
+    void insert(@Param("targetId") Integer targetId,
+                @Param("sourceId") Integer sourceId,
+                @Param("sourceTitle") String sourceTitle,
+                @Param("mergedBy") String mergedBy);
+
+    List&lt;MergeHistory&gt; findByTargetId(
+        @Param("targetId") Integer targetId);
+}
+
+// --- MergeHistoryMapper.xml ---
+&lt;insert id="insert"&gt;
+    INSERT INTO merge_history
+        (target_id, source_id, source_title, merged_by)
+    VALUES
+        (#{targetId}, #{sourceId}, #{sourceTitle}, #{mergedBy})
+&lt;/insert&gt;
+
+&lt;select id="findByTargetId" resultType="MergeHistory"&gt;
+    SELECT id, target_id, source_id, source_title,
+           merged_at, merged_by
+    FROM merge_history
+    WHERE target_id = #{targetId}
+    ORDER BY merged_at DESC
+&lt;/select&gt;</code></pre>
+                    </div>
+                </div>
+
+                <div class="code-block" id="merge-history-display">
+                    <div class="code-header">
+                        <span class="code-title">todo-detail.html（マージ履歴表示）</span>
+                        <button class="download-btn" onclick="downloadCode('merge-history-display', 'todo-detail-merge-history.html')"><span class="material-icons" style="font-size:14px;vertical-align:middle">download</span> ダウンロード</button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code>&lt;!-- マージ履歴セクション --&gt;
+&lt;div th:if="${!mergeHistory.isEmpty()}" class="merge-history"&gt;
+    &lt;h3&gt;マージ履歴&lt;/h3&gt;
+    &lt;ul class="history-list"&gt;
+        &lt;li th:each="h : ${mergeHistory}"&gt;
+            &lt;span class="material-icons" style="font-size:1rem;
+                color:#ea580c"&gt;merge_type&lt;/span&gt;
+            タスク #&lt;span th:text="${h.sourceId}"&gt;&lt;/span&gt;
+            「&lt;span th:text="${h.sourceTitle}"&gt;&lt;/span&gt;」を統合
+            &lt;span class="timestamp"
+                  th:text="${#temporals.format(h.mergedAt,
+                      'yyyy/MM/dd HH:mm')}"&gt;&lt;/span&gt;
+            &lt;span class="merged-by"
+                  th:text="${h.mergedBy}"&gt;&lt;/span&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-header"><span class="info-box-icon"><span class="material-icons">lightbulb</span></span><span class="info-box-title">マージ元の情報保持</span></div>
+                    <p>マージ元タスクは削除されるため、<code>source_title</code>を履歴テーブルに保存しています。これにより、削除後もどのタスクがマージされたかを確認できます。</p>
+                </div>
+            </section>
+
+            <!-- 期待する画面イメージ -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #22c55e;">preview</span>
+                    期待する画面イメージ
+                </h4>
+                <div style="background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <div style="background: #334155; padding: 8px 16px; display: flex; align-items: center; gap: 8px;">
+                        <div style="display: flex; gap: 6px;">
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f56;"></span>
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e;"></span>
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #27ca40;"></span>
+                        </div>
+                        <div style="flex: 1; background: #1e293b; border-radius: 6px; padding: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #94a3b8;">
+                            http://localhost:8080/todos/merge
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 24px;">
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">タスクマージ</div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 16px;">マージ元のタスクはマージ先に統合され、削除されます。</div>
+                        <!-- マージ先/元の選択 -->
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                            <!-- マージ先 -->
+                            <div style="flex: 1; border: 2px solid #22c55e; border-radius: 10px; padding: 14px;">
+                                <div style="font-size: 0.7rem; font-weight: 600; color: #22c55e; margin-bottom: 6px;">マージ先（残す）</div>
+                                <div style="padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.8rem; color: #334155; background: #f8fafc;">#1 企画書を作成する</div>
+                                <div style="margin-top: 8px; font-size: 0.7rem; color: #64748b;">
+                                    <div>優先度: <span style="color: #dc2626; font-weight: 600;">HIGH</span></div>
+                                    <div>期限: 2026-03-10</div>
+                                    <div>タグ: 仕事, 企画</div>
+                                </div>
+                            </div>
+                            <!-- 矢印 -->
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                                <span class="material-icons" style="color: #ea580c; font-size: 24px;">arrow_back</span>
+                                <span style="font-size: 0.65rem; color: #ea580c; font-weight: 600;">統合</span>
+                            </div>
+                            <!-- マージ元 -->
+                            <div style="flex: 1; border: 2px solid #ef4444; border-radius: 10px; padding: 14px; background: #fef2f2;">
+                                <div style="font-size: 0.7rem; font-weight: 600; color: #ef4444; margin-bottom: 6px;">マージ元（削除される）</div>
+                                <div style="padding: 6px 10px; border: 1px solid #fca5a5; border-radius: 6px; font-size: 0.8rem; color: #991b1b; background: white;">#5 企画書ドラフト作成</div>
+                                <div style="margin-top: 8px; font-size: 0.7rem; color: #64748b;">
+                                    <div>優先度: MEDIUM</div>
+                                    <div>期限: 2026-03-15</div>
+                                    <div>タグ: 仕事, ドラフト</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- マージプレビュー -->
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;">
+                            <div style="font-size: 0.7rem; font-weight: 600; color: #166534; margin-bottom: 4px;">マージ後プレビュー</div>
+                            <div style="font-size: 0.75rem; color: #334155; line-height: 1.5;">
+                                優先度: HIGH（高い方を採用） / 期限: 2026-03-10（早い方を採用）<br>
+                                タグ: 仕事, 企画, ドラフト（統合）
+                            </div>
+                        </div>
+                        <div style="background: #ef4444; color: white; padding: 8px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; display: inline-block;">マージ実行</div>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; font-size: 0.8rem; color: #64748b; line-height: 1.6;">
+                    <span class="material-icons" style="font-size: 1rem; vertical-align: text-bottom; color: #22c55e;">check_circle</span>
+                    マージ先（緑枠）とマージ元（赤枠）を選択し、統合後のプレビューを確認してからマージを実行します。サブタスク・タグ・依存関係も自動的に付け替えられます。
+                </div>
+            </div>
+
+            <!-- AIプロンプト例 -->
+            <section class="section" style="background: linear-gradient(135deg, #4285F4 0%, #9B72CB 50%, #D96570 100%); border-radius: 12px; color: white; margin-top: 2rem;">
+                <div class="section-header" style="border-color: rgba(255,255,255,0.3);">
+                    <span class="section-number" style="background: rgba(0,0,0,0.2); color: white;"><span class="material-icons" style="font-size: 1rem; vertical-align: middle;">smart_toy</span> AI</span>
+                    <h2 class="section-title" style="color: white;">AIプログラミング</h2>
+                </div>
+                <div class="intro-text">
+                    <p style="color: rgba(0,0,0,0.9);">以下のプロンプトをAIアシスタント（Claude、ChatGPT等）に入力することで、この機能を実装できます。</p>
+                </div>
+                <div class="code-block" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);">
+                    <div class="code-header">
+                        <span class="code-title" style="color: #a5f3fc;"><span class="material-icons" style="font-size:1rem;vertical-align:middle">edit_note</span> 基本プロンプト</span>
+                    </div>
+                    <div class="code-content">
+                        <pre style="color: #e2e8f0; background: transparent;"><code>Spring Boot 3.xのToDoアプリに重複タスクを統合するマージ機能を追加してください。
+
+【要件】
+- マージ先（残す）とマージ元（削除される）を選択するUI
+- 説明文の連結、優先度は高い方・期限は早い方を採用
+- サブタスク・タグ・依存関係をマージ先に付け替え
+- merge_historyテーブルにマージ履歴を記録
+- @Transactionalでデータ整合性を保証
+
+【技術スタック】
+- Spring Boot 3.x + MyBatis
+- Thymeleaf
+- @Transactional</code></pre>
+                    </div>
+                </div>
+                <div class="code-block" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); margin-top: 1rem;">
+                    <div class="code-header">
+                        <span class="code-title" style="color: #a5f3fc;"><span class="material-icons" style="font-size:1rem;vertical-align:middle">gps_fixed</span> ステップ別プロンプト</span>
+                    </div>
+                    <div class="code-content">
+                        <pre style="color: #e2e8f0; background: transparent;"><code># Step 1: マージ画面
+マージ先とマージ元のタスクをセレクトボックスで選択する画面を作成してください。確認ダイアログ付きにしてください。
+
+# Step 2: データ統合ロジック
+マージ元の説明文をマージ先に追記、優先度は高い方を採用、期限は早い方を採用するServiceメソッドを実装してください。
+
+# Step 3: 関連データの付け替え
+サブタスク・タグ・依存関係をマージ元からマージ先に移管するSQLを作成してください。自己依存が発生した場合は削除してください。
+
+# Step 4: マージ履歴
+merge_historyテーブルを作成し、マージ実行時に履歴を記録してください。タスク詳細画面に履歴を表示してください。</code></pre>
+                    </div>
+                </div>
+                <div class="info-box" style="background: rgba(0,0,0,0.1); border-color: rgba(255,255,255,0.3);">
+                    <div class="info-box-header">
+                        <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                        <span class="info-box-title" style="color: white;">プロンプトのコツ</span>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.9);">
+                        「依存関係の付け替えで自己依存が発生した場合は自動削除してください」のように、<br>
+                        データ整合性の問題を具体的に指摘すると、堅牢な実装が得られます。
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer"><p>Spring Framework 入門チュートリアル - 効率化</p></footer>
+
+        <div class="page-nav">
+            <a href="37_dependency.html" class="page-nav-btn prev"><span>←</span><div><div class="page-nav-label">前の機能</div><div class="page-nav-title">依存タスク</div></div></a>
+            <a href="39_csv_import.html" class="page-nav-btn next"><div><div class="page-nav-label">次の機能</div><div class="page-nav-title">CSVインポート</div></div><span>→</span></a>
+        </div>
+
+        <script>
+            function toggleMenu() { document.querySelector(".nav-toggle").classList.toggle("active"); document.querySelector(".nav-menu").classList.toggle("active"); }
+            function downloadCode(id, filename) { const el = document.getElementById(id); const code = el.querySelector('code') || el.querySelector('pre'); const blob = new Blob([code.textContent], {type:'text/plain;charset=utf-8'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url); }
+        </script>
+    </body>
+</html>
