@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第1章 MVCと3層アーキテクチャ - デザインパターン入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-design-pattern.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">1</div>
+            <h1 class="chapter-title">MVCと3層アーキテクチャ</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">1-1</span><span>なぜパターンを学ぶのか</span></li>
+                <li class="toc-item"><span class="toc-number">1-2</span><span>MVCの3つの役割</span></li>
+                <li class="toc-item"><span class="toc-number">1-3</span><span>Spring BootでのMVC実装</span></li>
+            </ul>
+        </nav>
+
+        <!-- Section 1-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-1</span>
+                <h2 class="section-title">なぜパターンを学ぶのか</h2>
+            </div>
+            <div class="intro-text">
+                <p>デザインパターンとは、ソフトウェア開発で繰り返し現れる設計上の課題に対する「定番の解決策」です。パターンを知っていると、コードの見通しが良くなり、チームでの開発やAIプロンプトの精度が大幅に向上します。</p>
+            </div>
+
+            <h3 class="subsection-title">1-1-1 デザインパターンとは</h3>
+            <p>デザインパターンは1994年にGoF（Gang of Four）が書籍『Design Patterns』で23のパターンを体系化したことで広く知られるようになりました。しかし、本コースではGoFの全パターンを暗記するのではなく、<strong>Spring Boot開発で実際に頻出するパターン</strong>に絞って学びます。</p>
+
+            <div class="highlight-box" style="background: #f3e8ff; border-left: 4px solid #a855f7;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #7e22ce;">lightbulb</span> 本コースで扱うパターン</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li><strong>構造系</strong>：MVC、Repository、DTO、Facade、Decorator</li>
+                    <li><strong>生成系</strong>：Factory Method、Builder</li>
+                    <li><strong>振る舞い系</strong>：Strategy、State、Observer、Command、Template Method</li>
+                    <li><strong>Spring固有</strong>：DI/IoC、AOP、Front Controller</li>
+                </ul>
+            </div>
+
+            <h3 class="subsection-title">1-1-2 パターン名がプロンプトの精度を上げる</h3>
+            <p>AIにコード生成を依頼する際、パターン名を知っているかどうかで出力品質に大きな差が出ます。以下はプロンプトの比較例です。</p>
+
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">compare</span>
+                    プロンプト比較: パターン名なし vs パターン名あり
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 12px; padding: 16px;">
+                        <div style="font-weight: 700; color: #991b1b; margin-bottom: 8px; font-size: 0.9rem;">パターン名なし</div>
+                        <p style="font-size: 0.85rem; color: #374151; margin: 0; font-style: italic;">"ユーザー情報を取得してHTMLに表示するSpring Bootのコードを書いて"</p>
+                        <p style="font-size: 0.8rem; color: #991b1b; margin: 8px 0 0 0;">結果: 1ファイルにDB接続・ビジネスロジック・表示処理が混在した「神クラス」が生成される</p>
+                    </div>
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 16px;">
+                        <div style="font-weight: 700; color: #166534; margin-bottom: 8px; font-size: 0.9rem;">パターン名あり</div>
+                        <p style="font-size: 0.85rem; color: #374151; margin: 0; font-style: italic;">"MVC + 3層アーキテクチャで、Controller→Service→Repositoryに分離したユーザー一覧機能を作って"</p>
+                        <p style="font-size: 0.8rem; color: #166534; margin: 8px 0 0 0;">結果: 各層が適切に分離された保守性の高いコードが生成される</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">1-1-3 学習のロードマップ</h3>
+            <p>本コースは以下の順で学びます。まずMVCと3層構造で全体像を把握し、個々のパターンを深掘りした後、最後に総合演習で定着させます。</p>
+            <div class="highlight-box" style="background: #dbeafe; border-left: 4px solid #3b82f6;">
+                <p class="no-margin"><strong>学習順序</strong></p>
+                <p style="font-size: 0.9rem; margin: 8px 0 0 0;">第1章 MVC基礎 → 第2章 Repository/DTO → 第3章 Factory → 第4章 Strategy/State → 第5章 Observer/Command → 第6章 構造パターン → 第7章 Spring固有 → 第8章 総合演習</p>
+            </div>
+        </section>
+
+        <!-- Section 1-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-2</span>
+                <h2 class="section-title">MVCの3つの役割</h2>
+            </div>
+            <div class="intro-text">
+                <p>MVCはModel-View-Controllerの略で、アプリケーションを3つの役割に分離するアーキテクチャパターンです。Spring Bootでは、さらにService層とRepository層を加えた「3層アーキテクチャ」として実装します。</p>
+            </div>
+
+            <h3 class="subsection-title">1-2-1 Model / View / Controllerとは</h3>
+            <p>MVCの各要素には明確な責務があります。</p>
+
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">account_tree</span>
+                    MVCの3つの役割
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 8px;"><span class="material-icons" style="font-size: 2rem; color: #1e40af;">language</span></div>
+                        <div style="font-weight: 700; color: #1e40af; font-size: 1rem;">View</div>
+                        <p style="font-size: 0.8rem; color: #1e40af; margin: 8px 0 0 0;">画面の表示を担当<br>Thymeleaf, HTML, CSS</p>
+                    </div>
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 8px;"><span class="material-icons" style="font-size: 2rem; color: #166534;">swap_horiz</span></div>
+                        <div style="font-weight: 700; color: #166534; font-size: 1rem;">Controller</div>
+                        <p style="font-size: 0.8rem; color: #166534; margin: 8px 0 0 0;">リクエストの受付と振り分け<br>@Controller, @RequestMapping</p>
+                    </div>
+                    <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 8px;"><span class="material-icons" style="font-size: 2rem; color: #7e22ce;">storage</span></div>
+                        <div style="font-weight: 700; color: #7e22ce; font-size: 1rem;">Model</div>
+                        <p style="font-size: 0.8rem; color: #7e22ce; margin: 8px 0 0 0;">データとビジネスロジック<br>Entity, Service, Repository</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">1-2-2 3層アーキテクチャとの関係</h3>
+            <p>Spring Bootの実プロジェクトでは、MVCのModel部分をさらに<strong>Service層</strong>と<strong>Repository層</strong>に分離し、3層アーキテクチャとして構成します。</p>
+
+            <!-- SVG Diagram: Controller→Service→Repository flow -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">layers</span>
+                    3層アーキテクチャの全体像
+                </h4>
+                <svg viewBox="0 0 700 320" style="max-width: 700px; width: 100%; height: auto; display: block; margin: 0 auto;">
+                    <!-- Browser -->
+                    <rect x="20" y="20" width="120" height="60" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+                    <text x="80" y="45" text-anchor="middle" font-size="12" fill="#475569" font-weight="600">ブラウザ</text>
+                    <text x="80" y="62" text-anchor="middle" font-size="10" fill="#94a3b8">(ユーザー)</text>
+
+                    <!-- Arrow -->
+                    <line x1="140" y1="50" x2="185" y2="50" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+
+                    <!-- Controller Layer -->
+                    <rect x="190" y="15" width="140" height="70" rx="12" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+                    <text x="260" y="40" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">Controller層</text>
+                    <text x="260" y="58" text-anchor="middle" font-size="9" fill="#166534">@Controller</text>
+                    <text x="260" y="72" text-anchor="middle" font-size="9" fill="#166534">リクエスト受付・振り分け</text>
+
+                    <!-- Arrow -->
+                    <line x1="330" y1="50" x2="375" y2="50" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+
+                    <!-- Service Layer -->
+                    <rect x="380" y="15" width="140" height="70" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                    <text x="450" y="40" text-anchor="middle" font-size="11" fill="#1e40af" font-weight="700">Service層</text>
+                    <text x="450" y="58" text-anchor="middle" font-size="9" fill="#1e40af">@Service</text>
+                    <text x="450" y="72" text-anchor="middle" font-size="9" fill="#1e40af">ビジネスロジック</text>
+
+                    <!-- Arrow -->
+                    <line x1="520" y1="50" x2="565" y2="50" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+
+                    <!-- Repository Layer -->
+                    <rect x="570" y="15" width="120" height="70" rx="12" fill="#f3e8ff" stroke="#a855f7" stroke-width="2"/>
+                    <text x="630" y="40" text-anchor="middle" font-size="11" fill="#7e22ce" font-weight="700">Repository層</text>
+                    <text x="630" y="58" text-anchor="middle" font-size="9" fill="#7e22ce">@Repository</text>
+                    <text x="630" y="72" text-anchor="middle" font-size="9" fill="#7e22ce">データアクセス</text>
+
+                    <!-- DB -->
+                    <line x1="630" y1="85" x2="630" y2="115" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+                    <ellipse cx="630" cy="130" rx="50" ry="15" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="630" y="134" text-anchor="middle" font-size="10" fill="#92400e" font-weight="600">Database</text>
+
+                    <!-- View -->
+                    <line x1="260" y1="85" x2="260" y2="180" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+                    <rect x="190" y="190" width="140" height="55" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="260" y="212" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">View層</text>
+                    <text x="260" y="230" text-anchor="middle" font-size="9" fill="#92400e">Thymeleaf テンプレート</text>
+
+                    <!-- Legend -->
+                    <rect x="20" y="270" width="660" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                    <text x="40" y="295" font-size="10" fill="#64748b">リクエスト: ブラウザ → Controller → Service → Repository → DB</text>
+                    <text x="40" y="305" font-size="10" fill="#64748b">レスポンス: DB → Repository → Service → Controller → View → ブラウザ</text>
+
+                    <defs>
+                        <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <h3 class="subsection-title">1-2-3 各層の責務ルール</h3>
+            <p>3層アーキテクチャでは「上位層は下位層のみを呼び出す」という一方向の依存ルールがあります。</p>
+            <div class="highlight-box" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #92400e;">warning</span> 守るべきルール</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li><strong>Controller</strong>はServiceを呼ぶ。直接Repositoryを呼んではいけない。</li>
+                    <li><strong>Service</strong>はRepositoryを呼ぶ。Controllerの情報（HttpServletRequestなど）に依存しない。</li>
+                    <li><strong>Repository</strong>はDBアクセスのみ。ビジネスロジックを持たない。</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 1-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-3</span>
+                <h2 class="section-title">Spring BootでのMVC実装</h2>
+            </div>
+            <div class="intro-text">
+                <p>ここでは「ユーザー一覧を表示する」機能を題材に、Spring BootでのMVC + 3層アーキテクチャの実装を見ていきましょう。</p>
+            </div>
+
+            <h3 class="subsection-title">1-3-1 Controllerの実装</h3>
+            <p>Controllerはブラウザからのリクエストを受け取り、Serviceを呼び出して結果をViewに渡します。<code>@Controller</code>アノテーションと<code>@GetMapping</code>でURLマッピングを行います。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>UserController.java</span>
+                </div>
+                <pre><code>@Controller
+@RequestMapping("/users")
+public class UserController {
+
+    private final UserService userService;
+
+    // コンストラクタインジェクション
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping
+    public String list(Model model) {
+        // Serviceからデータを取得してModelに詰める
+        List&lt;UserDto&gt; users = userService.findAll();
+        model.addAttribute("users", users);
+        return "user/list";  // Viewのテンプレート名
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">1-3-2 Serviceの実装</h3>
+            <p>Service層はビジネスロジックを担当します。Controllerから呼ばれ、必要に応じてRepositoryにデータの取得や保存を依頼します。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>UserService.java</span>
+                </div>
+                <pre><code>@Service
+public class UserService {
+
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public List&lt;UserDto&gt; findAll() {
+        // RepositoryからEntityを取得
+        List&lt;User&gt; entities = userRepository.findAll();
+
+        // EntityをDTOに変換して返す
+        return entities.stream()
+                .map(e -&gt; new UserDto(e.getId(), e.getName(), e.getEmail()))
+                .collect(Collectors.toList());
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">1-3-3 Repositoryの実装</h3>
+            <p>Repository層はデータベースとのやり取りを担当します。Spring Data JPAを使えば、インターフェースを定義するだけで基本的なCRUD操作が自動生成されます。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>UserRepository.java</span>
+                </div>
+                <pre><code>@Repository
+public interface UserRepository extends JpaRepository&lt;User, Long&gt; {
+    // JpaRepositoryを継承するだけで
+    // findAll(), findById(), save(), deleteById() などが使える
+
+    // カスタムクエリの追加も可能
+    List&lt;User&gt; findByNameContaining(String keyword);
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">1-3-4 ファイル構成のベストプラクティス</h3>
+            <p>Spring Bootプロジェクトでは、以下のようなパッケージ構成が推奨されます。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>パッケージ構成例</span>
+                </div>
+                <pre><code>com.example.app/
+├── controller/
+│   └── UserController.java     ← リクエスト受付
+├── service/
+│   └── UserService.java        ← ビジネスロジック
+├── repository/
+│   └── UserRepository.java     ← データアクセス
+├── entity/
+│   └── User.java               ← DBテーブル対応
+├── dto/
+│   └── UserDto.java            ← 画面用データ
+└── Application.java            ← エントリポイント</code></pre>
+            </div>
+        </section>
+
+        <!-- Exercise Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">1章 練習問題</h2>
+            </div>
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Spring Bootの3層アーキテクチャにおいて、<strong>ビジネスロジック</strong>（例：税込価格の計算）を記述すべき層はどれですか。</p>
+                        <p>A. Controller層 &nbsp; B. Service層 &nbsp; C. Repository層 &nbsp; D. View層</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>以下のコードは3層アーキテクチャのルールに違反しています。どの部分が問題で、どのように修正すべきか説明してください。</p>
+                        <div class="code-block">
+                            <pre><code>@Controller
+public class OrderController {
+    @Autowired
+    private OrderRepository orderRepository; // 直接Repositoryを利用
+
+    @GetMapping("/orders")
+    public String list(Model model) {
+        model.addAttribute("orders", orderRepository.findAll());
+        return "order/list";
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>MVCパターンにおけるControllerの役割として<strong>適切でないもの</strong>を選んでください。</p>
+                        <p>A. ブラウザからのリクエストを受け取る<br>
+                           B. 表示するViewテンプレートを決定する<br>
+                           C. データベースに直接SQLを発行する<br>
+                           D. Modelにデータを詰めてViewに渡す</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Answer Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">1章 解説・解答</h2>
+            </div>
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正解: B. Service層</strong></p>
+                        <p>ビジネスロジック（税込計算、割引適用、在庫チェックなど）はService層に記述します。Controller層はリクエストの受付と振り分けのみ、Repository層はデータベースアクセスのみを担当します。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q2 解答</div>
+                    <div class="answer-content">
+                        <p><strong>問題点：ControllerがRepositoryを直接呼んでいる</strong></p>
+                        <p>3層アーキテクチャのルールでは、ControllerはServiceのみを呼び出し、Repositoryには直接アクセスしません。正しい実装は以下のとおりです。</p>
+                        <div class="code-block">
+                            <pre><code>@Controller
+public class OrderController {
+    private final OrderService orderService; // Serviceを注入
+
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
+    }
+
+    @GetMapping("/orders")
+    public String list(Model model) {
+        model.addAttribute("orders", orderService.findAll());
+        return "order/list";
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q3 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正解: C. データベースに直接SQLを発行する</strong></p>
+                        <p>データベースへの直接アクセスはRepository層の責務です。Controllerはリクエストの受付（A）、Viewの決定（B）、Modelへのデータ受け渡し（D）を担当しますが、データベースに直接触れてはいけません。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="index.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div><div class="page-nav-label">目次</div><div class="page-nav-title">トップページ</div></div>
+        </a>
+        <a href="2dp-repository-dto.html" class="page-nav-btn next">
+            <div><div class="page-nav-label">次の章</div><div class="page-nav-title">第2章 Repository/DTOパターン</div></div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

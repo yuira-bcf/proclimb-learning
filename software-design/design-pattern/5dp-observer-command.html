@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第5章 Observer/Commandパターン - デザインパターン入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-design-pattern.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">5</div>
+            <h1 class="chapter-title">Observer/Commandパターン</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">5-1</span><span>イベント駆動の考え方</span></li>
+                <li class="toc-item"><span class="toc-number">5-2</span><span>Observer（Spring Event）</span></li>
+                <li class="toc-item"><span class="toc-number">5-3</span><span>Commandパターン</span></li>
+            </ul>
+        </nav>
+
+        <!-- Section 5-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-1</span>
+                <h2 class="section-title">イベント駆動の考え方</h2>
+            </div>
+            <div class="intro-text">
+                <p>イベント駆動とは、「何かが起きた」というイベント（出来事）を通知し、それに反応する処理を実行するアーキテクチャスタイルです。Observerパターンは、この考え方の基盤となるパターンです。</p>
+            </div>
+
+            <h3 class="subsection-title">5-1-1 直接呼び出しの問題</h3>
+            <p>注文確定時に「在庫更新」「メール送信」「ポイント付与」を行う場合を考えましょう。直接呼び出しでは、処理が増えるたびにOrderServiceの修正が必要です。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>直接呼び出しの問題</span>
+                </div>
+                <pre><code>@Service
+public class OrderService {
+    private final StockService stockService;
+    private final MailService mailService;
+    private final PointService pointService;
+    // 処理が増えるたびにフィールドと依存が増える...
+
+    public void confirmOrder(Order order) {
+        order.confirm();
+        stockService.decreaseStock(order);    // 在庫更新
+        mailService.sendConfirmMail(order);   // メール送信
+        pointService.addPoints(order);        // ポイント付与
+        // ログ記録、分析データ送信...まだまだ増える
+    }
+}</code></pre>
+            </div>
+
+            <div class="highlight-box" style="background: #fef2f2; border-left: 4px solid #fca5a5;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #991b1b;">error</span> 問題点</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li>OrderServiceが多数のサービスに依存し、肥大化する</li>
+                    <li>後続処理を追加するたびにOrderServiceを修正する必要がある</li>
+                    <li>後続処理の1つが失敗すると、全体に影響する</li>
+                </ul>
+            </div>
+
+            <h3 class="subsection-title">5-1-2 イベント駆動のメリット</h3>
+            <p>イベント駆動にすると、OrderServiceは「注文が確定した」というイベントを発行するだけで、後続処理の追加や変更を気にしなくてよくなります。</p>
+
+            <!-- SVG diagram of Observer pattern -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">notifications_active</span>
+                    イベント駆動のイメージ
+                </h4>
+                <svg viewBox="0 0 660 280" style="max-width: 660px; width: 100%; height: auto; display: block; margin: 0 auto;">
+                    <!-- OrderService (Publisher) -->
+                    <rect x="20" y="100" width="160" height="70" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                    <text x="100" y="125" text-anchor="middle" font-size="12" fill="#1e40af" font-weight="700">OrderService</text>
+                    <text x="100" y="145" text-anchor="middle" font-size="9" fill="#1e40af">「注文確定イベント」を発行</text>
+                    <text x="100" y="160" text-anchor="middle" font-size="9" fill="#3b82f6" font-style="italic">Publisher</text>
+
+                    <!-- Event -->
+                    <rect x="230" y="110" width="150" height="50" rx="25" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="305" y="135" text-anchor="middle" font-size="11" fill="#92400e" font-weight="600">OrderConfirmedEvent</text>
+                    <text x="305" y="150" text-anchor="middle" font-size="9" fill="#92400e">イベントオブジェクト</text>
+
+                    <!-- Arrows from OrderService to Event -->
+                    <line x1="180" y1="135" x2="228" y2="135" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowObs)"/>
+
+                    <!-- Arrows from Event to Listeners -->
+                    <line x1="380" y1="120" x2="440" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowObs)"/>
+                    <line x1="380" y1="135" x2="440" y2="135" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowObs)"/>
+                    <line x1="380" y1="150" x2="440" y2="215" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowObs)"/>
+
+                    <!-- StockListener -->
+                    <rect x="445" y="20" width="190" height="55" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+                    <text x="540" y="43" text-anchor="middle" font-size="11" fill="#166534" font-weight="600">StockEventListener</text>
+                    <text x="540" y="60" text-anchor="middle" font-size="9" fill="#166534">在庫を減らす</text>
+
+                    <!-- MailListener -->
+                    <rect x="445" y="105" width="190" height="55" rx="10" fill="#f3e8ff" stroke="#a855f7" stroke-width="2"/>
+                    <text x="540" y="128" text-anchor="middle" font-size="11" fill="#7e22ce" font-weight="600">MailEventListener</text>
+                    <text x="540" y="145" text-anchor="middle" font-size="9" fill="#7e22ce">確認メールを送信</text>
+
+                    <!-- PointListener -->
+                    <rect x="445" y="190" width="190" height="55" rx="10" fill="#fef2f2" stroke="#fca5a5" stroke-width="2"/>
+                    <text x="540" y="213" text-anchor="middle" font-size="11" fill="#991b1b" font-weight="600">PointEventListener</text>
+                    <text x="540" y="230" text-anchor="middle" font-size="9" fill="#991b1b">ポイントを付与</text>
+
+                    <defs>
+                        <marker id="arrowObs" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Section 5-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-2</span>
+                <h2 class="section-title">Observer（Spring Event）</h2>
+            </div>
+            <div class="intro-text">
+                <p>Spring Bootには<code>ApplicationEventPublisher</code>と<code>@EventListener</code>という仕組みが標準搭載されており、Observerパターンをシンプルに実装できます。</p>
+            </div>
+
+            <h3 class="subsection-title">5-2-1 イベントクラスの定義</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>OrderConfirmedEvent.java</span>
+                </div>
+                <pre><code>public class OrderConfirmedEvent {
+
+    private final Long orderId;
+    private final String customerEmail;
+    private final int totalAmount;
+    private final LocalDateTime confirmedAt;
+
+    public OrderConfirmedEvent(Long orderId, String customerEmail,
+                                int totalAmount) {
+        this.orderId = orderId;
+        this.customerEmail = customerEmail;
+        this.totalAmount = totalAmount;
+        this.confirmedAt = LocalDateTime.now();
+    }
+
+    // getter省略
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">5-2-2 イベントの発行（Publisher）</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>OrderService.java（イベント発行版）</span>
+                </div>
+                <pre><code>@Service
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
+    public OrderService(OrderRepository orderRepository,
+                        ApplicationEventPublisher eventPublisher) {
+        this.orderRepository = orderRepository;
+        this.eventPublisher = eventPublisher;
+    }
+
+    @Transactional
+    public void confirmOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -&gt; new RuntimeException("注文が見つかりません"));
+
+        order.confirm();
+        orderRepository.save(order);
+
+        // イベントを発行するだけ（後続処理を知らなくてよい）
+        eventPublisher.publishEvent(
+            new OrderConfirmedEvent(
+                order.getId(),
+                order.getCustomerEmail(),
+                order.getTotalAmount()
+            )
+        );
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">5-2-3 イベントリスナーの実装</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>各種EventListener</span>
+                </div>
+                <pre><code>@Component
+public class StockEventListener {
+
+    private final StockService stockService;
+
+    public StockEventListener(StockService stockService) {
+        this.stockService = stockService;
+    }
+
+    @EventListener
+    public void handleOrderConfirmed(OrderConfirmedEvent event) {
+        stockService.decreaseStock(event.getOrderId());
+        System.out.println("在庫を更新しました: 注文ID=" + event.getOrderId());
+    }
+}
+
+@Component
+public class MailEventListener {
+
+    private final MailService mailService;
+
+    public MailEventListener(MailService mailService) {
+        this.mailService = mailService;
+    }
+
+    @EventListener
+    public void handleOrderConfirmed(OrderConfirmedEvent event) {
+        mailService.sendConfirmationMail(
+            event.getCustomerEmail(),
+            event.getOrderId()
+        );
+    }
+}
+
+@Component
+public class PointEventListener {
+
+    @EventListener
+    public void handleOrderConfirmed(OrderConfirmedEvent event) {
+        int points = (int)(event.getTotalAmount() * 0.01);
+        System.out.println("ポイント付与: " + points + "pt");
+    }
+}</code></pre>
+            </div>
+
+            <div class="highlight-box" style="background: #dcfce7; border-left: 4px solid #22c55e;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #166534;">check_circle</span> Spring Eventのポイント</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li>新しい後続処理を追加するときは、新しい<code>@EventListener</code>クラスを作るだけ</li>
+                    <li>OrderServiceの修正は一切不要（Open-Closed原則）</li>
+                    <li><code>@Async</code>を併用すると非同期で実行できる</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 5-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-3</span>
+                <h2 class="section-title">Commandパターン</h2>
+            </div>
+            <div class="intro-text">
+                <p>Commandパターンは、操作（リクエスト）をオブジェクトとしてカプセル化するパターンです。操作の記録、取り消し（Undo）、キューイングなどが実現できます。</p>
+            </div>
+
+            <h3 class="subsection-title">5-3-1 Commandパターンの構造</h3>
+
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">schema</span>
+                    Commandパターンの構成要素
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 14px; text-align: center;">
+                        <div style="font-weight: 700; color: #1e40af; font-size: 0.9rem;">Command</div>
+                        <p style="font-size: 0.8rem; color: #1e40af; margin: 6px 0 0 0;">操作をインターフェースとして定義<br><code>execute()</code> / <code>undo()</code></p>
+                    </div>
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 14px; text-align: center;">
+                        <div style="font-weight: 700; color: #166534; font-size: 0.9rem;">ConcreteCommand</div>
+                        <p style="font-size: 0.8rem; color: #166534; margin: 6px 0 0 0;">具体的な操作の実装<br>実行に必要なデータを保持</p>
+                    </div>
+                    <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 14px; text-align: center;">
+                        <div style="font-weight: 700; color: #7e22ce; font-size: 0.9rem;">Invoker</div>
+                        <p style="font-size: 0.8rem; color: #7e22ce; margin: 6px 0 0 0;">Commandを受け取り実行<br>履歴の管理も担当</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">5-3-2 Commandの実装例（在庫操作）</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>StockCommand.java / IncreaseStockCommand.java</span>
+                </div>
+                <pre><code>// Commandインターフェース
+public interface StockCommand {
+    void execute();
+    void undo();
+    String getDescription();
+}
+
+// 在庫追加コマンド
+public class IncreaseStockCommand implements StockCommand {
+    private final Product product;
+    private final int quantity;
+
+    public IncreaseStockCommand(Product product, int quantity) {
+        this.product = product;
+        this.quantity = quantity;
+    }
+
+    @Override
+    public void execute() {
+        product.setStock(product.getStock() + quantity);
+        System.out.println(product.getName() + ": +" + quantity + "個 追加");
+    }
+
+    @Override
+    public void undo() {
+        product.setStock(product.getStock() - quantity);
+        System.out.println(product.getName() + ": " + quantity + "個 取消");
+    }
+
+    @Override
+    public String getDescription() {
+        return product.getName() + " に " + quantity + " 個追加";
+    }
+}
+
+// 在庫削減コマンド
+public class DecreaseStockCommand implements StockCommand {
+    private final Product product;
+    private final int quantity;
+
+    public DecreaseStockCommand(Product product, int quantity) {
+        this.product = product;
+        this.quantity = quantity;
+    }
+
+    @Override
+    public void execute() {
+        product.setStock(product.getStock() - quantity);
+    }
+
+    @Override
+    public void undo() {
+        product.setStock(product.getStock() + quantity);
+    }
+
+    @Override
+    public String getDescription() {
+        return product.getName() + " から " + quantity + " 個削減";
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">5-3-3 Invoker（履歴管理付き）</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>StockCommandInvoker.java</span>
+                </div>
+                <pre><code>public class StockCommandInvoker {
+
+    private final Deque&lt;StockCommand&gt; history = new ArrayDeque&lt;&gt;();
+
+    public void executeCommand(StockCommand command) {
+        command.execute();
+        history.push(command);  // 履歴に追加
+    }
+
+    public void undoLast() {
+        if (history.isEmpty()) {
+            System.out.println("取り消す操作がありません");
+            return;
+        }
+        StockCommand lastCommand = history.pop();
+        lastCommand.undo();
+        System.out.println("取消: " + lastCommand.getDescription());
+    }
+
+    public void printHistory() {
+        System.out.println("=== 操作履歴 ===");
+        history.forEach(cmd -&gt; System.out.println("  " + cmd.getDescription()));
+    }
+}
+
+// 使用例
+StockCommandInvoker invoker = new StockCommandInvoker();
+invoker.executeCommand(new IncreaseStockCommand(productA, 100));
+invoker.executeCommand(new DecreaseStockCommand(productA, 30));
+invoker.undoLast();  // 30個削減を取り消し → 在庫が元に戻る</code></pre>
+            </div>
+        </section>
+
+        <!-- Exercise Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">5章 練習問題</h2>
+            </div>
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Spring Eventを使ったObserverパターンにおいて、新しい後続処理（例: 注文確定時のSlack通知）を追加するために必要な作業を選んでください。</p>
+                        <p>A. OrderServiceにSlackServiceの依存を追加し、confirmOrderメソッドを修正する<br>
+                           B. 新しい@EventListenerクラスを作成するだけでよい<br>
+                           C. OrderConfirmedEventクラスにSlack通知用フィールドを追加する<br>
+                           D. ApplicationEventPublisherを再設定する</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>Commandパターンで <code>undo()</code> メソッドを実装するために、ConcreteCommandクラスが保持すべき情報は何ですか。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>以下の要件では、Observer/Commandのどちらが適切ですか。理由も述べてください。</p>
+                        <p>「管理画面での操作（商品追加・価格変更・在庫修正）を履歴として記録し、誤操作時に1つずつ元に戻したい。」</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Answer Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">5章 解説・解答</h2>
+            </div>
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正解: B. 新しい@EventListenerクラスを作成するだけでよい</strong></p>
+                        <p>これがObserverパターン（Spring Event）の最大のメリットです。イベント発行側（OrderService）を修正せず、新しいリスナーを追加するだけで後続処理を拡張できます。Open-Closed原則に従った設計です。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q2 解答</div>
+                    <div class="answer-content">
+                        <p>undo()を実装するためには、<strong>操作対象</strong>と<strong>操作内容（実行前の状態または操作の逆を算出するための情報）</strong>を保持する必要があります。例えば在庫追加コマンドなら「対象の商品（Product）」と「追加した数量（quantity）」を保持します。undo時は保持した数量を逆方向に適用（追加した分を減らす）することで元に戻せます。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q3 解答</div>
+                    <div class="answer-content">
+                        <p><strong>Commandパターンが適切。</strong></p>
+                        <p>この要件のポイントは「操作の履歴記録」と「元に戻す（Undo）」です。Commandパターンは操作をオブジェクトとしてカプセル化し、履歴管理とUndoを自然に実現できます。Observerパターンはイベント通知には適していますが、操作の取り消し機能は持っていません。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="4dp-strategy-state.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div><div class="page-nav-label">前の章</div><div class="page-nav-title">第4章 Strategy/Stateパターン</div></div>
+        </a>
+        <a href="6dp-structural.html" class="page-nav-btn next">
+            <div><div class="page-nav-label">次の章</div><div class="page-nav-title">第6章 Builder/Facade/Decorator</div></div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

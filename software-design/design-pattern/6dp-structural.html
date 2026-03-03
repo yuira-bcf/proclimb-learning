@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第6章 Builder/Facade/Decoratorパターン - デザインパターン入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-design-pattern.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">6</div>
+            <h1 class="chapter-title">Builder/Facade/Decoratorパターン</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">6-1</span><span>Builderパターン</span></li>
+                <li class="toc-item"><span class="toc-number">6-2</span><span>Facadeパターン</span></li>
+                <li class="toc-item"><span class="toc-number">6-3</span><span>Decoratorパターン</span></li>
+            </ul>
+        </nav>
+
+        <!-- Section 6-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-1</span>
+                <h2 class="section-title">Builderパターン</h2>
+            </div>
+            <div class="intro-text">
+                <p>Builderパターンは、複雑なオブジェクトの組み立て手順を分離し、段階的に構築するパターンです。コンストラクタの引数が多い場合や、オプション項目がある場合に特に有効です。</p>
+            </div>
+
+            <h3 class="subsection-title">6-1-1 コンストラクタ引数の爆発問題</h3>
+            <p>商品オブジェクトに多数のフィールドがある場合、コンストラクタの引数が増え、順番を間違えやすくなります。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>引数が多すぎるコンストラクタ</span>
+                </div>
+                <pre><code>// どの引数が何を意味するか分かりにくい...
+Product product = new Product(
+    "ノートPC", 89800, "electronics", 50, "高性能ノートPC",
+    true, 1.5, "made in Japan", null, null
+);</code></pre>
+            </div>
+
+            <h3 class="subsection-title">6-1-2 Builderによる段階的構築</h3>
+            <p>Builderパターンでは、メソッドチェーンで可読性高くオブジェクトを構築します。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>Product.java（Builderパターン）</span>
+                </div>
+                <pre><code>public class Product {
+    private final String name;
+    private final int price;
+    private final String category;
+    private final int stock;
+    private final String description;
+    private final boolean featured;
+
+    // privateコンストラクタ（Builderからのみ生成可能）
+    private Product(Builder builder) {
+        this.name = builder.name;
+        this.price = builder.price;
+        this.category = builder.category;
+        this.stock = builder.stock;
+        this.description = builder.description;
+        this.featured = builder.featured;
+    }
+
+    // staticなBuilderクラス
+    public static class Builder {
+        // 必須パラメータ
+        private final String name;
+        private final int price;
+
+        // オプションパラメータ（デフォルト値あり）
+        private String category = "general";
+        private int stock = 0;
+        private String description = "";
+        private boolean featured = false;
+
+        public Builder(String name, int price) {
+            this.name = name;
+            this.price = price;
+        }
+
+        public Builder category(String category) {
+            this.category = category;
+            return this;
+        }
+
+        public Builder stock(int stock) {
+            this.stock = stock;
+            return this;
+        }
+
+        public Builder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public Builder featured(boolean featured) {
+            this.featured = featured;
+            return this;
+        }
+
+        public Product build() {
+            return new Product(this);
+        }
+    }
+}</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>Builderの使用例</span>
+                </div>
+                <pre><code>// 可読性が高く、オプション項目も柔軟に指定できる
+Product product = new Product.Builder("ノートPC", 89800)
+        .category("electronics")
+        .stock(50)
+        .description("高性能ノートPC")
+        .featured(true)
+        .build();</code></pre>
+            </div>
+
+            <h3 class="subsection-title">6-1-3 Lombok @Builderによる簡略化</h3>
+            <p>Lombokライブラリを使えば、<code>@Builder</code>アノテーション1つでBuilderパターンを自動生成できます。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>Lombok @Builder</span>
+                </div>
+                <pre><code>@Builder
+@Getter
+public class Product {
+    private String name;
+    private int price;
+    @Builder.Default private String category = "general";
+    @Builder.Default private int stock = 0;
+    private String description;
+    @Builder.Default private boolean featured = false;
+}
+
+// 使い方は同じ
+Product product = Product.builder()
+        .name("ノートPC")
+        .price(89800)
+        .category("electronics")
+        .stock(50)
+        .build();</code></pre>
+            </div>
+
+            <!-- CSS diagram for Builder -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">construction</span>
+                    Builderパターンの流れ
+                </h4>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 12px 16px; text-align: center;">
+                        <div style="font-weight: 700; color: #1e40af; font-size: 0.85rem;">Builder生成</div>
+                        <div style="font-size: 0.75rem; color: #1e40af;">必須パラメータ指定</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 1.2rem;">&#8594;</div>
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 12px 16px; text-align: center;">
+                        <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">メソッドチェーン</div>
+                        <div style="font-size: 0.75rem; color: #166534;">オプション項目を設定</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 1.2rem;">&#8594;</div>
+                    <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 12px 16px; text-align: center;">
+                        <div style="font-weight: 700; color: #7e22ce; font-size: 0.85rem;">build()</div>
+                        <div style="font-size: 0.75rem; color: #7e22ce;">オブジェクトを生成</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-2</span>
+                <h2 class="section-title">Facadeパターン</h2>
+            </div>
+            <div class="intro-text">
+                <p>Facadeパターンは、複数のサブシステムへの操作を1つの統合窓口にまとめるパターンです。「注文処理」のように複数サービスを横断する処理をシンプルなAPIとして提供します。</p>
+            </div>
+
+            <h3 class="subsection-title">6-2-1 Facadeが解決する問題</h3>
+            <p>ECサイトの注文処理では、在庫確認・決済・メール送信・ポイント付与など複数のサービスを順番に呼ぶ必要があります。Controllerがこれらを直接呼ぶと複雑になります。</p>
+
+            <!-- CSS diagram for Facade -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">door_front</span>
+                    Facadeパターンの構造
+                </h4>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 12px 24px; text-align: center;">
+                        <div style="font-weight: 700; color: #1e40af; font-size: 0.9rem;">Controller</div>
+                        <div style="font-size: 0.8rem; color: #1e40af;">orderFacade.placeOrder(dto) だけ呼ぶ</div>
+                    </div>
+                    <div style="color: #94a3b8;">&#9660;</div>
+                    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 14px 28px; text-align: center;">
+                        <div style="font-weight: 700; color: #92400e; font-size: 1rem;">OrderFacade（統合窓口）</div>
+                        <div style="font-size: 0.8rem; color: #92400e;">複数サービスの呼び出し順序を管理</div>
+                    </div>
+                    <div style="color: #94a3b8;">&#9660;</div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                        <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 10px; padding: 8px 14px; text-align: center;">
+                            <div style="font-weight: 600; color: #166534; font-size: 0.8rem;">StockService</div>
+                        </div>
+                        <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 10px; padding: 8px 14px; text-align: center;">
+                            <div style="font-weight: 600; color: #7e22ce; font-size: 0.8rem;">PaymentService</div>
+                        </div>
+                        <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 10px; padding: 8px 14px; text-align: center;">
+                            <div style="font-weight: 600; color: #991b1b; font-size: 0.8rem;">MailService</div>
+                        </div>
+                        <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 10px; padding: 8px 14px; text-align: center;">
+                            <div style="font-weight: 600; color: #1e40af; font-size: 0.8rem;">PointService</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">6-2-2 Facadeの実装</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>OrderFacade.java</span>
+                </div>
+                <pre><code>@Service
+public class OrderFacade {
+
+    private final StockService stockService;
+    private final PaymentService paymentService;
+    private final MailService mailService;
+    private final PointService pointService;
+    private final OrderRepository orderRepository;
+
+    public OrderFacade(StockService stockService,
+                       PaymentService paymentService,
+                       MailService mailService,
+                       PointService pointService,
+                       OrderRepository orderRepository) {
+        this.stockService = stockService;
+        this.paymentService = paymentService;
+        this.mailService = mailService;
+        this.pointService = pointService;
+        this.orderRepository = orderRepository;
+    }
+
+    @Transactional
+    public OrderResult placeOrder(OrderRequest request) {
+        // 1. 在庫確認
+        stockService.checkAndReserve(request.getItems());
+
+        // 2. 決済処理
+        PaymentResult payment = paymentService.process(
+            request.getPaymentMethod(), request.getTotalAmount()
+        );
+
+        // 3. 注文保存
+        Order order = Order.builder()
+                .customerId(request.getCustomerId())
+                .items(request.getItems())
+                .totalAmount(request.getTotalAmount())
+                .paymentId(payment.getPaymentId())
+                .build();
+        orderRepository.save(order);
+
+        // 4. メール送信
+        mailService.sendOrderConfirmation(order);
+
+        // 5. ポイント付与
+        pointService.addPoints(request.getCustomerId(),
+                               request.getTotalAmount());
+
+        return new OrderResult(order.getId(), "注文完了");
+    }
+}</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>OrderController.java（Facade利用側）</span>
+                </div>
+                <pre><code>@Controller
+public class OrderController {
+    private final OrderFacade orderFacade;  // Facadeだけに依存
+
+    public OrderController(OrderFacade orderFacade) {
+        this.orderFacade = orderFacade;
+    }
+
+    @PostMapping("/orders")
+    public String placeOrder(@ModelAttribute OrderRequest request, Model model) {
+        OrderResult result = orderFacade.placeOrder(request);
+        model.addAttribute("result", result);
+        return "order/complete";
+    }
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- Section 6-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-3</span>
+                <h2 class="section-title">Decoratorパターン</h2>
+            </div>
+            <div class="intro-text">
+                <p>Decoratorパターンは、既存のオブジェクトに動的に機能を追加するパターンです。継承を使わずに、ラッピングによって機能を重ね掛けできます。</p>
+            </div>
+
+            <h3 class="subsection-title">6-3-1 Decoratorの考え方</h3>
+            <p>コーヒーショップを例に考えましょう。ベースのコーヒーに「ミルク追加」「シロップ追加」「ホイップ追加」をトッピングとして重ね掛けできます。</p>
+
+            <!-- CSS diagram for Decorator -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">layers</span>
+                    Decoratorの重ね掛けイメージ
+                </h4>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 10px 16px; text-align: center;">
+                        <div style="font-weight: 700; color: #92400e; font-size: 0.85rem;">BasePrice</div>
+                        <div style="font-size: 0.75rem; color: #92400e;">基本料金: 10,000</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 1.2rem;">&#8594;</div>
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 10px 16px; text-align: center;">
+                        <div style="font-weight: 700; color: #1e40af; font-size: 0.85rem;">TaxDecorator</div>
+                        <div style="font-size: 0.75rem; color: #1e40af;">+10%消費税</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 1.2rem;">&#8594;</div>
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 10px 16px; text-align: center;">
+                        <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">DiscountDecorator</div>
+                        <div style="font-size: 0.75rem; color: #166534;">-会員割引5%</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 1.2rem;">&#8594;</div>
+                    <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 10px 16px; text-align: center;">
+                        <div style="font-weight: 700; color: #7e22ce; font-size: 0.85rem;">最終価格</div>
+                        <div style="font-size: 0.75rem; color: #7e22ce;">10,450円</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">6-3-2 Decoratorの実装（料金計算）</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>PriceCalculator.java（インターフェース + 実装）</span>
+                </div>
+                <pre><code>// 共通インターフェース
+public interface PriceCalculator {
+    int calculate(int basePrice);
+    String getDescription();
+}
+
+// ベース（何もしない）
+public class BasePriceCalculator implements PriceCalculator {
+    @Override
+    public int calculate(int basePrice) {
+        return basePrice;
+    }
+    @Override
+    public String getDescription() {
+        return "基本価格";
+    }
+}
+
+// Decoratorの抽象クラス
+public abstract class PriceDecorator implements PriceCalculator {
+    protected final PriceCalculator wrapped;
+
+    public PriceDecorator(PriceCalculator wrapped) {
+        this.wrapped = wrapped;
+    }
+}
+
+// 消費税Decorator
+public class TaxDecorator extends PriceDecorator {
+    private final double taxRate;
+
+    public TaxDecorator(PriceCalculator wrapped, double taxRate) {
+        super(wrapped);
+        this.taxRate = taxRate;
+    }
+
+    @Override
+    public int calculate(int basePrice) {
+        int subtotal = wrapped.calculate(basePrice);
+        return (int)(subtotal * (1 + taxRate));
+    }
+
+    @Override
+    public String getDescription() {
+        return wrapped.getDescription() + " + 消費税";
+    }
+}
+
+// 割引Decorator
+public class DiscountDecorator extends PriceDecorator {
+    private final double discountRate;
+
+    public DiscountDecorator(PriceCalculator wrapped, double discountRate) {
+        super(wrapped);
+        this.discountRate = discountRate;
+    }
+
+    @Override
+    public int calculate(int basePrice) {
+        int subtotal = wrapped.calculate(basePrice);
+        return (int)(subtotal * (1 - discountRate));
+    }
+
+    @Override
+    public String getDescription() {
+        return wrapped.getDescription() + " - 割引";
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">6-3-3 Decoratorの組み合わせ</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>Decoratorの組み合わせ例</span>
+                </div>
+                <pre><code>// 基本 → 消費税10% → 会員割引5%
+PriceCalculator calculator = new BasePriceCalculator();
+calculator = new TaxDecorator(calculator, 0.10);
+calculator = new DiscountDecorator(calculator, 0.05);
+
+int finalPrice = calculator.calculate(10000);
+// 10000 → 11000(税込) → 10450(割引後)
+
+System.out.println(calculator.getDescription());
+// "基本価格 + 消費税 - 割引"
+
+System.out.println("最終価格: " + finalPrice);
+// "最終価格: 10450"</code></pre>
+            </div>
+        </section>
+
+        <!-- Exercise Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">6章 練習問題</h2>
+            </div>
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Builderパターンを適用すべき場面として最も適切なものはどれですか。</p>
+                        <p>A. アルゴリズムを実行時に切り替えたい<br>
+                           B. オブジェクトのコンストラクタ引数が多く、オプション項目がある<br>
+                           C. 複数のサービスへの呼び出しを1つにまとめたい<br>
+                           D. オブジェクトに動的に機能を追加したい</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>Facadeパターンの「統合窓口」の役割を1文で説明してください。また、FacadeとServiceの違いは何ですか。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>以下の要件で適用すべきパターンはBuilder、Facade、Decoratorのどれですか。理由も述べてください。</p>
+                        <p>「ログ出力処理に、環境に応じてタイムスタンプ付与・JSON整形・ファイル書き出しの機能を自由に組み合わせて追加したい。」</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Answer Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">6章 解説・解答</h2>
+            </div>
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正解: B. オブジェクトのコンストラクタ引数が多く、オプション項目がある</strong></p>
+                        <p>Builderパターンは「生成」に関するパターンで、複雑なオブジェクトの段階的構築を可読性高く行うためのものです。AはStrategy、CはFacade、DはDecoratorの場面です。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q2 解答</div>
+                    <div class="answer-content">
+                        <p>Facadeの統合窓口は、<strong>複数のサブシステム（Service）への操作手順をカプセル化し、利用側にシンプルなAPIを提供するクラス</strong>です。</p>
+                        <p>Serviceとの違いは、Serviceが1つのドメイン領域のビジネスロジックを担うのに対し、Facadeは複数のServiceを横断的に組み合わせる「オーケストレーター」の役割を持つ点です。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q3 解答</div>
+                    <div class="answer-content">
+                        <p><strong>Decoratorパターンが適切。</strong></p>
+                        <p>「機能を自由に組み合わせて追加したい」という要件はDecoratorの典型的な適用場面です。ベースのログ出力にタイムスタンプDecorator、JSON整形Decorator、ファイル書き出しDecoratorを重ね掛けすることで、環境に応じた柔軟な組み合わせが実現できます。継承では全組み合わせ分のサブクラスが必要になり、クラス爆発が起こります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="5dp-observer-command.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div><div class="page-nav-label">前の章</div><div class="page-nav-title">第5章 Observer/Commandパターン</div></div>
+        </a>
+        <a href="7dp-spring-patterns.html" class="page-nav-btn next">
+            <div><div class="page-nav-label">次の章</div><div class="page-nav-title">第7章 Spring固有パターン</div></div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

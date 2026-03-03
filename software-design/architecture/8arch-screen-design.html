@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第8章 画面設計 - アーキテクチャ基礎</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-architecture.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">8</div>
+            <h1 class="chapter-title">画面設計</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">8-1</span><span>画面設計書とは</span></li>
+                <li class="toc-item"><span class="toc-number">8-2</span><span>ワイヤーフレーム</span></li>
+                <li class="toc-item"><span class="toc-number">8-3</span><span>画面遷移図</span></li>
+                <li class="toc-item"><span class="toc-number">8-4</span><span>入力項目定義</span></li>
+                <li class="toc-item"><span class="toc-number">8-5</span><span>バリデーション設計</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 8-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 8-1</span>
+                <h2 class="section-title">画面設計書とは</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>画面設計書は「何を・どこに・どう表示し、ユーザーが何を操作できるか」を定義するドキュメントです。開発者・デザイナー・クライアント間の認識を揃える、最も重要な設計成果物の1つです。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">8-1-1 画面設計書の構成要素</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">description</span>
+                            画面設計書に含めるもの
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div style="background: #dbeafe; border-radius: 10px; padding: 14px;">
+                                <div style="font-weight: 700; color: #3b82f6; font-size: 0.9rem; margin-bottom: 4px;">1. 画面一覧</div>
+                                <div style="font-size: 0.8rem; color: #334155;">全画面のID・名前・概要を一覧化</div>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 10px; padding: 14px;">
+                                <div style="font-weight: 700; color: #22c55e; font-size: 0.9rem; margin-bottom: 4px;">2. 画面遷移図</div>
+                                <div style="font-size: 0.8rem; color: #334155;">画面間の遷移と条件を図示</div>
+                            </div>
+                            <div style="background: #fef3c7; border-radius: 10px; padding: 14px;">
+                                <div style="font-weight: 700; color: #f59e0b; font-size: 0.9rem; margin-bottom: 4px;">3. ワイヤーフレーム</div>
+                                <div style="font-size: 0.8rem; color: #334155;">各画面のレイアウト設計図</div>
+                            </div>
+                            <div style="background: #f3e8ff; border-radius: 10px; padding: 14px;">
+                                <div style="font-weight: 700; color: #a855f7; font-size: 0.9rem; margin-bottom: 4px;">4. 項目定義</div>
+                                <div style="font-size: 0.8rem; color: #334155;">入力項目の型・桁数・バリデーション</div>
+                            </div>
+                            <div style="background: #fef2f2; border-radius: 10px; padding: 14px;">
+                                <div style="font-weight: 700; color: #ef4444; font-size: 0.9rem; margin-bottom: 4px;">5. イベント定義</div>
+                                <div style="font-size: 0.8rem; color: #334155;">ボタンクリック時の動作を定義</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">8-1-2 画面一覧の例</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>画面ID</th>
+                                <th>画面名</th>
+                                <th>URL</th>
+                                <th>認証</th>
+                                <th>概要</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>SCR-001</td>
+                                <td>ログイン画面</td>
+                                <td>/login</td>
+                                <td>不要</td>
+                                <td>メールアドレスとパスワードで認証</td>
+                            </tr>
+                            <tr>
+                                <td>SCR-002</td>
+                                <td>商品一覧画面</td>
+                                <td>/products</td>
+                                <td>不要</td>
+                                <td>商品の検索・フィルタリング・一覧表示</td>
+                            </tr>
+                            <tr>
+                                <td>SCR-003</td>
+                                <td>商品詳細画面</td>
+                                <td>/products/{id}</td>
+                                <td>不要</td>
+                                <td>商品情報の詳細表示、カート追加</td>
+                            </tr>
+                            <tr>
+                                <td>SCR-004</td>
+                                <td>カート画面</td>
+                                <td>/cart</td>
+                                <td>必要</td>
+                                <td>カート内容の確認・数量変更・削除</td>
+                            </tr>
+                            <tr>
+                                <td>SCR-005</td>
+                                <td>注文確認画面</td>
+                                <td>/checkout</td>
+                                <td>必要</td>
+                                <td>配送先・支払方法の確認、注文確定</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 8-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 8-2</span>
+                <h2 class="section-title">ワイヤーフレーム</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>ワイヤーフレームは、画面の「骨格」を示す設計図です。色やフォントは使わず、レイアウトと情報の配置に集中します。「何を、どこに、どのサイズで配置するか」が一目で分かることが目的です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">8-2-1 ログイン画面のワイヤーフレーム</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">web</span>
+                            SCR-001: ログイン画面 ワイヤーフレーム
+                        </h4>
+                        <div style="max-width: 400px; margin: 0 auto; background: white; border: 2px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
+                            <!-- ヘッダー -->
+                            <div style="background: #e2e8f0; padding: 12px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #cbd5e1;">
+                                <div style="width: 24px; height: 24px; background: #94a3b8; border-radius: 4px;"></div>
+                                <div style="font-size: 0.8rem; color: #64748b; font-weight: 600;">EC Shop</div>
+                            </div>
+                            <!-- ログインフォーム -->
+                            <div style="padding: 40px 32px;">
+                                <div style="text-align: center; margin-bottom: 24px;">
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #334155;">ログイン</div>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px;">メールアドレス</div>
+                                    <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; background: #f8fafc; font-size: 0.8rem; color: #94a3b8;">user@example.com</div>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 4px;">パスワード</div>
+                                    <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; background: #f8fafc; font-size: 0.8rem; color: #94a3b8;">********</div>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <div style="background: #334155; color: white; text-align: center; padding: 10px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">ログイン</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.75rem; color: #3b82f6; text-decoration: underline;">パスワードを忘れた方はこちら</div>
+                                </div>
+                                <div style="border-top: 1px solid #e2e8f0; margin-top: 20px; padding-top: 16px; text-align: center;">
+                                    <div style="font-size: 0.75rem; color: #64748b;">アカウントをお持ちでない方</div>
+                                    <div style="font-size: 0.8rem; color: #3b82f6; text-decoration: underline; margin-top: 4px;">新規登録</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">8-2-2 商品一覧画面のワイヤーフレーム</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">view_module</span>
+                            SCR-002: 商品一覧画面 ワイヤーフレーム
+                        </h4>
+                        <div style="max-width: 600px; margin: 0 auto; background: white; border: 2px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
+                            <!-- ヘッダー -->
+                            <div style="background: #e2e8f0; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #cbd5e1;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 20px; height: 20px; background: #94a3b8; border-radius: 4px;"></div>
+                                    <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">EC Shop</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; color: #94a3b8; min-width: 150px;">検索...</div>
+                                    <span class="material-icons" style="color: #94a3b8; font-size: 18px;">shopping_cart</span>
+                                    <span class="material-icons" style="color: #94a3b8; font-size: 18px;">person</span>
+                                </div>
+                            </div>
+                            <!-- フィルタ -->
+                            <div style="padding: 12px 16px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span style="font-size: 0.7rem; color: #64748b;">カテゴリ:</span>
+                                <div style="background: #334155; color: white; padding: 3px 10px; border-radius: 100px; font-size: 0.65rem;">すべて</div>
+                                <div style="background: white; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 100px; font-size: 0.65rem; color: #64748b;">PC</div>
+                                <div style="background: white; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 100px; font-size: 0.65rem; color: #64748b;">周辺機器</div>
+                                <div style="margin-left: auto; font-size: 0.65rem; color: #64748b;">並び替え: 新着順 ▼</div>
+                            </div>
+                            <!-- 商品グリッド -->
+                            <div style="padding: 16px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                                <div style="border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                                    <div style="background: #e2e8f0; height: 70px; display: flex; align-items: center; justify-content: center;"><span class="material-icons" style="color: #94a3b8;">image</span></div>
+                                    <div style="padding: 8px;">
+                                        <div style="font-size: 0.7rem; font-weight: 600; color: #334155;">商品名A</div>
+                                        <div style="font-size: 0.75rem; font-weight: 700; color: #ef4444;">&#165;12,800</div>
+                                    </div>
+                                </div>
+                                <div style="border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                                    <div style="background: #e2e8f0; height: 70px; display: flex; align-items: center; justify-content: center;"><span class="material-icons" style="color: #94a3b8;">image</span></div>
+                                    <div style="padding: 8px;">
+                                        <div style="font-size: 0.7rem; font-weight: 600; color: #334155;">商品名B</div>
+                                        <div style="font-size: 0.75rem; font-weight: 700; color: #ef4444;">&#165;8,500</div>
+                                    </div>
+                                </div>
+                                <div style="border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                                    <div style="background: #e2e8f0; height: 70px; display: flex; align-items: center; justify-content: center;"><span class="material-icons" style="color: #94a3b8;">image</span></div>
+                                    <div style="padding: 8px;">
+                                        <div style="font-size: 0.7rem; font-weight: 600; color: #334155;">商品名C</div>
+                                        <div style="font-size: 0.75rem; font-weight: 700; color: #ef4444;">&#165;24,000</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ページネーション -->
+                            <div style="padding: 12px 16px; text-align: center; border-top: 1px solid #e2e8f0; display: flex; justify-content: center; gap: 4px;">
+                                <div style="width: 28px; height: 28px; background: #334155; color: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem;">1</div>
+                                <div style="width: 28px; height: 28px; border: 1px solid #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #64748b;">2</div>
+                                <div style="width: 28px; height: 28px; border: 1px solid #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #64748b;">3</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 8-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 8-3</span>
+                <h2 class="section-title">画面遷移図</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>画面遷移図は、ユーザーがどの画面からどの画面に移動できるかを図示したものです。遷移のトリガー（ボタン押下、リンク等）と条件（認証済み等）も合わせて記述します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">8-3-1 ECサイトの画面遷移図</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">account_tree</span>
+                            ECサイト 画面遷移図
+                        </h4>
+                        <svg viewBox="0 0 600 340" style="width: 100%; max-width: 600px; display: block; margin: 0 auto;">
+                            <!-- ログイン -->
+                            <rect x="10" y="20" width="120" height="40" rx="8" fill="#3b82f6"/>
+                            <text x="70" y="45" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="sans-serif">ログイン</text>
+
+                            <!-- 商品一覧 -->
+                            <rect x="180" y="20" width="120" height="40" rx="8" fill="#22c55e"/>
+                            <text x="240" y="45" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="sans-serif">商品一覧</text>
+
+                            <!-- 商品詳細 -->
+                            <rect x="350" y="20" width="120" height="40" rx="8" fill="#22c55e"/>
+                            <text x="410" y="45" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="sans-serif">商品詳細</text>
+
+                            <!-- カート -->
+                            <rect x="350" y="110" width="120" height="40" rx="8" fill="#f59e0b"/>
+                            <text x="410" y="135" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="sans-serif">カート</text>
+
+                            <!-- 注文確認 -->
+                            <rect x="350" y="200" width="120" height="40" rx="8" fill="#f59e0b"/>
+                            <text x="410" y="225" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="sans-serif">注文確認</text>
+
+                            <!-- 注文完了 -->
+                            <rect x="350" y="290" width="120" height="40" rx="8" fill="#a855f7"/>
+                            <text x="410" y="315" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="sans-serif">注文完了</text>
+
+                            <!-- 注文履歴 -->
+                            <rect x="180" y="290" width="120" height="40" rx="8" fill="#a855f7"/>
+                            <text x="240" y="315" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="sans-serif">注文履歴</text>
+
+                            <!-- 矢印とラベル -->
+                            <line x1="130" y1="40" x2="180" y2="40" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowScr)"/>
+                            <text x="155" y="34" text-anchor="middle" fill="#64748b" font-size="8">認証成功</text>
+
+                            <line x1="300" y1="40" x2="350" y2="40" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowScr)"/>
+                            <text x="325" y="34" text-anchor="middle" fill="#64748b" font-size="8">商品選択</text>
+
+                            <line x1="410" y1="60" x2="410" y2="110" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowScr)"/>
+                            <text x="440" y="88" fill="#64748b" font-size="8">カート追加</text>
+
+                            <line x1="410" y1="150" x2="410" y2="200" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowScr)"/>
+                            <text x="448" y="178" fill="#64748b" font-size="8">購入手続き</text>
+
+                            <line x1="410" y1="240" x2="410" y2="290" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowScr)"/>
+                            <text x="448" y="268" fill="#64748b" font-size="8">注文確定</text>
+
+                            <line x1="350" y1="310" x2="300" y2="310" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowScr)"/>
+                            <text x="325" y="304" text-anchor="middle" fill="#64748b" font-size="8">履歴を見る</text>
+
+                            <!-- 戻り矢印 -->
+                            <path d="M 350 130 Q 250 130, 240 60" fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4" marker-end="url(#arrowScr2)"/>
+                            <text x="280" y="105" fill="#94a3b8" font-size="7">買い物を続ける</text>
+
+                            <!-- 認証ガード -->
+                            <rect x="480" y="105" width="100" height="50" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1" stroke-dasharray="4"/>
+                            <text x="530" y="125" text-anchor="middle" fill="#ef4444" font-size="8" font-weight="600">認証ガード</text>
+                            <text x="530" y="140" text-anchor="middle" fill="#ef4444" font-size="7">未認証→ログインへ</text>
+
+                            <defs>
+                                <marker id="arrowScr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker>
+                                <marker id="arrowScr2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/></marker>
+                            </defs>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 8-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 8-4</span>
+                <h2 class="section-title">入力項目定義</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>各画面の入力フィールドについて、データ型・桁数・必須/任意・初期値・入力方法などを詳細に定義します。この定義は、フロント側のフォーム実装とバックエンド側のバリデーション実装の両方の基準になります。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">8-4-1 入力項目定義書の例</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">edit_note</span>
+                            SCR-005: 注文確認画面 入力項目定義
+                        </h4>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 700px;">
+                                <thead>
+                                    <tr style="background: #f1f5f9;">
+                                        <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">項目ID</th>
+                                        <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">項目名</th>
+                                        <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">入力方式</th>
+                                        <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">型</th>
+                                        <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">桁数</th>
+                                        <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">必須</th>
+                                        <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">バリデーション</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">F-001</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">お届け先 氏名</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">テキスト入力</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">文字列</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">1〜50文字</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;"><span style="color: #ef4444; font-weight: 600;">必須</span></td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">空白のみ不可</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">F-002</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">郵便番号</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">テキスト入力</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">文字列</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">7文字（固定）</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;"><span style="color: #ef4444; font-weight: 600;">必須</span></td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">半角数字7桁, 形式: 1234567</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">F-003</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">都道府県</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">プルダウン</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">文字列</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">-</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;"><span style="color: #ef4444; font-weight: 600;">必須</span></td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">47都道府県から選択</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">F-004</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">住所（番地以降）</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">テキスト入力</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">文字列</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">1〜200文字</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;"><span style="color: #ef4444; font-weight: 600;">必須</span></td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">F-005</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">電話番号</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">テキスト入力</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">文字列</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">10〜11桁</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;"><span style="color: #ef4444; font-weight: 600;">必須</span></td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">半角数字のみ, ハイフンなし</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">F-006</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">支払方法</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">ラジオボタン</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">文字列</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">-</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;"><span style="color: #ef4444; font-weight: 600;">必須</span></td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0;">CREDIT / BANK / CONVENIENCE</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 8-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 8-5</span>
+                <h2 class="section-title">バリデーション設計</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>バリデーション（入力検証）は、フロントエンド（即座にフィードバック）とバックエンド（セキュリティ保証）の両方で実装します。画面設計の段階でバリデーションルールを明確に定義しておくことが重要です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">8-5-1 フロントエンドとバックエンドのバリデーション</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">verified_user</span>
+                            バリデーションの二重防壁
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #dbeafe; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #3b82f6; margin-bottom: 8px;">フロントエンド</div>
+                                <ul style="font-size: 0.85rem; color: #334155; padding-left: 20px; margin: 0;">
+                                    <li>UX向上（リアルタイム表示）</li>
+                                    <li>サーバ負荷の軽減</li>
+                                    <li>HTML5の<code>required</code>, <code>pattern</code></li>
+                                    <li>JavaScriptによる即時チェック</li>
+                                </ul>
+                                <p style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">※ 開発者ツールで回避可能なため信頼しない</p>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 8px;">バックエンド（必須）</div>
+                                <ul style="font-size: 0.85rem; color: #334155; padding-left: 20px; margin: 0;">
+                                    <li>セキュリティの最終防壁</li>
+                                    <li>データ整合性の保証</li>
+                                    <li>Spring Validation（<code>@Valid</code>）</li>
+                                    <li>Bean Validationアノテーション</li>
+                                </ul>
+                                <p style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">※ 必ずサーバ側でチェックする</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">8-5-2 Spring Boot バリデーション実装</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">CheckoutForm.java（Bean Validation）</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>public class CheckoutForm {
+
+    @NotBlank(message = "氏名は必須です")
+    @Size(max = 50, message = "氏名は50文字以内で入力してください")
+    private String recipientName;
+
+    @NotBlank(message = "郵便番号は必須です")
+    @Pattern(regexp = "\\d{7}", message = "郵便番号は半角数字7桁で入力してください")
+    private String postalCode;
+
+    @NotBlank(message = "都道府県を選択してください")
+    private String prefecture;
+
+    @NotBlank(message = "住所は必須です")
+    @Size(max = 200, message = "住所は200文字以内で入力してください")
+    private String address;
+
+    @NotBlank(message = "電話番号は必須です")
+    @Pattern(regexp = "\\d{10,11}", message = "電話番号は半角数字10〜11桁で入力してください")
+    private String phoneNumber;
+
+    @NotNull(message = "支払方法を選択してください")
+    private PaymentMethod paymentMethod;
+}
+
+// Controllerでの利用
+@PostMapping("/checkout")
+public String checkout(@Valid @ModelAttribute CheckoutForm form,
+                       BindingResult result, Model model) {
+    if (result.hasErrors()) {
+        return "checkout";  // バリデーションエラー時は画面を再表示
+    }
+    orderService.placeOrder(form);
+    return "redirect:/order-complete";
+}</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">バリデーション設計のポイント</span>
+                        </div>
+                        <ul>
+                            <li>エラーメッセージは<strong>ユーザーが理解できる日本語</strong>で書く（「Pattern mismatch」はNG）</li>
+                            <li>フィールド単位のチェック（桁数、形式）と相関チェック（パスワード確認一致等）を分けて設計する</li>
+                            <li>画面設計書の段階でバリデーションルールを確定させると、フロント・バックの開発が並行で進められる</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">8章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>フロントエンドのバリデーションだけでは不十分な理由を、セキュリティの観点から説明してください。</p>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>「ユーザー登録画面」の以下の項目に対して、入力項目定義（型、桁数、必須/任意、バリデーション）を設計してください。</p>
+                        <ul>
+                            <li>ユーザー名</li>
+                            <li>メールアドレス</li>
+                            <li>パスワード</li>
+                            <li>パスワード確認</li>
+                            <li>利用規約への同意</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>Q2で設計した「ユーザー登録フォーム」のBean Validationアノテーションを使ったJavaのFormクラスを実装してください。パスワード確認の一致チェックも含めること。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">8章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答</div>
+                    <div class="answer-content">
+                        <p>フロントエンドのバリデーションはブラウザの開発者ツールで簡単に無効化できます。また、curlやPostman等のツールから直接APIを叩けば、フロントエンドのチェックは完全にバイパスされます。そのため、SQLインジェクションやXSS攻撃等を防ぐためにも、<strong>バックエンド側のバリデーションは必須</strong>です。フロントは「UX向上」、バックエンドは「セキュリティ保証」と役割が異なります。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答</div>
+                    <div class="answer-content">
+                        <table class="data-table">
+                            <thead><tr><th>項目名</th><th>型</th><th>桁数</th><th>必須</th><th>バリデーション</th></tr></thead>
+                            <tbody>
+                                <tr><td>ユーザー名</td><td>文字列</td><td>3〜20文字</td><td>必須</td><td>半角英数字とアンダースコアのみ</td></tr>
+                                <tr><td>メールアドレス</td><td>文字列</td><td>最大255文字</td><td>必須</td><td>メール形式、重複不可</td></tr>
+                                <tr><td>パスワード</td><td>文字列</td><td>8〜100文字</td><td>必須</td><td>英大文字・小文字・数字を各1文字以上含む</td></tr>
+                                <tr><td>パスワード確認</td><td>文字列</td><td>-</td><td>必須</td><td>パスワードと一致すること</td></tr>
+                                <tr><td>利用規約同意</td><td>真偽値</td><td>-</td><td>必須</td><td>trueであること</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答</div>
+                    <div class="answer-content">
+                        <div class="code-block">
+                            <pre class="code-content"><code>@PasswordMatch  // カスタムバリデーション（相関チェック）
+public class UserRegistrationForm {
+
+    @NotBlank(message = "ユーザー名は必須です")
+    @Size(min = 3, max = 20, message = "3〜20文字で入力してください")
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$",
+             message = "半角英数字とアンダースコアのみ使用できます")
+    private String username;
+
+    @NotBlank(message = "メールアドレスは必須です")
+    @Email(message = "正しいメール形式で入力してください")
+    @Size(max = 255)
+    private String email;
+
+    @NotBlank(message = "パスワードは必須です")
+    @Size(min = 8, max = 100, message = "8文字以上で入力してください")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
+             message = "英大文字・小文字・数字を各1文字以上含めてください")
+    private String password;
+
+    @NotBlank(message = "パスワード確認は必須です")
+    private String passwordConfirm;
+
+    @AssertTrue(message = "利用規約に同意してください")
+    private boolean agreeTerms;
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="7arch-db-practice.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第7章 DB設計の実践</div>
+            </div>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

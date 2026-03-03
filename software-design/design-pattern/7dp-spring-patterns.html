@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第7章 Spring固有パターン - デザインパターン入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-design-pattern.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">7</div>
+            <h1 class="chapter-title">Spring固有パターン</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">7-1</span><span>DI/IoC（制御の反転）</span></li>
+                <li class="toc-item"><span class="toc-number">7-2</span><span>AOP（@Transactional, @Aspect）</span></li>
+                <li class="toc-item"><span class="toc-number">7-3</span><span>Template Method</span></li>
+                <li class="toc-item"><span class="toc-number">7-4</span><span>Front Controller（DispatcherServlet）</span></li>
+            </ul>
+        </nav>
+
+        <!-- Section 7-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-1</span>
+                <h2 class="section-title">DI/IoC（制御の反転）</h2>
+            </div>
+            <div class="intro-text">
+                <p>DI（Dependency Injection / 依存性の注入）は、Spring Frameworkの最も重要な基盤技術です。オブジェクトの生成と依存関係の解決をフレームワーク（DIコンテナ）に任せることで、疎結合な設計を実現します。</p>
+            </div>
+
+            <h3 class="subsection-title">7-1-1 IoC（制御の反転）とは</h3>
+            <p>通常のプログラミングでは、自分のコードがライブラリを呼び出します（呼び出し側が制御権を持つ）。IoCでは、フレームワークが自分のコードを呼び出します（制御権がフレームワークに反転する）。</p>
+
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">compare</span>
+                    通常の制御 vs IoC
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 12px; padding: 16px;">
+                        <div style="font-weight: 700; color: #991b1b; margin-bottom: 8px; font-size: 0.9rem;">通常の制御</div>
+                        <p style="font-size: 0.85rem; color: #991b1b; margin: 0;">自分のコードがnewでオブジェクトを生成し、依存先を自分で管理する</p>
+                        <div class="code-block" style="margin-top: 8px;">
+                            <pre style="font-size: 0.8rem;"><code>UserService svc = new UserService(
+    new UserRepository()
+);</code></pre>
+                        </div>
+                    </div>
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 16px;">
+                        <div style="font-weight: 700; color: #166534; margin-bottom: 8px; font-size: 0.9rem;">IoC（Spring DI）</div>
+                        <p style="font-size: 0.85rem; color: #166534; margin: 0;">DIコンテナがオブジェクトを生成し、依存関係を自動で注入してくれる</p>
+                        <div class="code-block" style="margin-top: 8px;">
+                            <pre style="font-size: 0.8rem;"><code>@Service // Springが管理
+class UserService {
+    // 自動注入される
+    UserService(UserRepository repo) {}
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">7-1-2 DIコンテナの仕組み</h3>
+
+            <!-- SVG DI container diagram -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">inventory_2</span>
+                    Spring DIコンテナのイメージ
+                </h4>
+                <svg viewBox="0 0 640 260" style="max-width: 640px; width: 100%; height: auto; display: block; margin: 0 auto;">
+                    <!-- DI Container -->
+                    <rect x="20" y="20" width="600" height="220" rx="16" fill="none" stroke="#5856D6" stroke-width="2" stroke-dasharray="8,4"/>
+                    <text x="40" y="48" font-size="13" fill="#5856D6" font-weight="700">Spring DIコンテナ（ApplicationContext）</text>
+
+                    <!-- Beans -->
+                    <rect x="50" y="70" width="150" height="60" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+                    <text x="125" y="95" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">UserController</text>
+                    <text x="125" y="115" text-anchor="middle" font-size="9" fill="#166534">@Controller Bean</text>
+
+                    <rect x="245" y="70" width="150" height="60" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                    <text x="320" y="95" text-anchor="middle" font-size="11" fill="#1e40af" font-weight="700">UserService</text>
+                    <text x="320" y="115" text-anchor="middle" font-size="9" fill="#1e40af">@Service Bean</text>
+
+                    <rect x="440" y="70" width="150" height="60" rx="10" fill="#f3e8ff" stroke="#a855f7" stroke-width="2"/>
+                    <text x="515" y="95" text-anchor="middle" font-size="11" fill="#7e22ce" font-weight="700">UserRepository</text>
+                    <text x="515" y="115" text-anchor="middle" font-size="9" fill="#7e22ce">@Repository Bean</text>
+
+                    <!-- Injection arrows -->
+                    <line x1="200" y1="100" x2="243" y2="100" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowDI)"/>
+                    <line x1="395" y1="100" x2="438" y2="100" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowDI)"/>
+
+                    <!-- Injection labels -->
+                    <text x="222" y="90" text-anchor="middle" font-size="8" fill="#f59e0b" font-weight="600">注入</text>
+                    <text x="417" y="90" text-anchor="middle" font-size="8" fill="#f59e0b" font-weight="600">注入</text>
+
+                    <!-- Description -->
+                    <rect x="50" y="160" width="540" height="60" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+                    <text x="70" y="182" font-size="10" fill="#92400e" font-weight="600">DIコンテナが行うこと:</text>
+                    <text x="70" y="198" font-size="9" fill="#92400e">1. @Component系アノテーション付きクラスをスキャンしてBeanとして登録</text>
+                    <text x="70" y="212" font-size="9" fill="#92400e">2. コンストラクタの引数を見て、必要なBeanを自動で注入（ワイヤリング）</text>
+
+                    <defs>
+                        <marker id="arrowDI" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <h3 class="subsection-title">7-1-3 Bean定義の方法</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>アノテーションによるBean定義</span>
+                </div>
+                <pre><code>// 方法1: ステレオタイプアノテーション
+@Controller  // プレゼンテーション層
+@Service     // ビジネスロジック層
+@Repository  // データアクセス層
+@Component   // 汎用コンポーネント
+
+// 方法2: @Beanメソッド（外部ライブラリのクラスをBean化する場合）
+@Configuration
+public class AppConfig {
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
+
+// 注入方法（推奨: コンストラクタインジェクション）
+@Service
+public class UserService {
+    private final UserRepository userRepository;
+
+    // Springが自動でUserRepositoryのBeanを注入してくれる
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- Section 7-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-2</span>
+                <h2 class="section-title">AOP（@Transactional, @Aspect）</h2>
+            </div>
+            <div class="intro-text">
+                <p>AOP（Aspect-Oriented Programming / アスペクト指向プログラミング）は、ログ出力、トランザクション管理、セキュリティチェックなど、複数のクラスに横断的に適用する処理を「アスペクト」として分離する技術です。</p>
+            </div>
+
+            <h3 class="subsection-title">7-2-1 横断的関心事とは</h3>
+            <p>ビジネスロジックの本質とは関係ないが、多くのメソッドで必要になる処理を「横断的関心事」と呼びます。</p>
+
+            <div class="highlight-box" style="background: #dbeafe; border-left: 4px solid #3b82f6;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #1e40af;">info</span> 横断的関心事の例</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li><strong>トランザクション管理</strong>：DB操作の成功/失敗でcommit/rollback</li>
+                    <li><strong>ログ出力</strong>：メソッドの開始・終了・例外を記録</li>
+                    <li><strong>パフォーマンス計測</strong>：メソッドの実行時間を測定</li>
+                    <li><strong>認証・認可</strong>：権限チェック</li>
+                </ul>
+            </div>
+
+            <h3 class="subsection-title">7-2-2 @Transactionalの仕組み</h3>
+            <p><code>@Transactional</code>はSpring AOPの最も身近な利用例です。メソッドの開始時にトランザクションを開始し、正常終了でcommit、例外発生でrollbackします。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>@Transactionalの利用</span>
+                </div>
+                <pre><code>@Service
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final StockRepository stockRepository;
+
+    @Transactional  // このメソッド全体が1つのトランザクション
+    public void placeOrder(OrderRequest request) {
+        // 注文保存
+        Order order = new Order(request);
+        orderRepository.save(order);
+
+        // 在庫更新（ここで例外が起きたら注文保存もrollback）
+        stockRepository.decrease(request.getProductId(), request.getQuantity());
+    }
+    // メソッドが正常終了 → 自動でcommit
+    // 例外が発生 → 自動でrollback
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">7-2-3 カスタムAspectの作成</h3>
+            <p>自分でAspectを定義すれば、メソッドの実行前後に任意の処理を差し込めます。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>LoggingAspect.java</span>
+                </div>
+                <pre><code>@Aspect
+@Component
+public class LoggingAspect {
+
+    private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);
+
+    // Serviceパッケージの全メソッドに適用
+    @Around("execution(* com.example.app.service.*.*(..))")
+    public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
+        String methodName = joinPoint.getSignature().getName();
+
+        log.info("開始: {}", methodName);
+        long start = System.currentTimeMillis();
+
+        try {
+            Object result = joinPoint.proceed();  // 本来のメソッドを実行
+            long elapsed = System.currentTimeMillis() - start;
+            log.info("完了: {} ({}ms)", methodName, elapsed);
+            return result;
+        } catch (Exception e) {
+            log.error("エラー: {} - {}", methodName, e.getMessage());
+            throw e;
+        }
+    }
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- Section 7-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-3</span>
+                <h2 class="section-title">Template Method</h2>
+            </div>
+            <div class="intro-text">
+                <p>Template Methodパターンは、処理の骨格（テンプレート）を親クラスに定義し、具体的な処理ステップをサブクラスに委ねるパターンです。Spring内部の<code>JdbcTemplate</code>や<code>RestTemplate</code>がこのパターンを使っています。</p>
+            </div>
+
+            <h3 class="subsection-title">7-3-1 Template Methodの構造</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>データエクスポートのTemplate Method</span>
+                </div>
+                <pre><code>// 抽象クラスに処理の骨格を定義
+public abstract class DataExporter {
+
+    // テンプレートメソッド（処理の流れを固定）
+    public final void export(List&lt;Map&lt;String, Object&gt;&gt; data) {
+        String header = createHeader();
+        String body = createBody(data);
+        String footer = createFooter();
+        writeOutput(header + body + footer);
+    }
+
+    // サブクラスが実装する抽象メソッド
+    protected abstract String createHeader();
+    protected abstract String createBody(List&lt;Map&lt;String, Object&gt;&gt; data);
+    protected abstract String createFooter();
+
+    // 共通処理（オーバーライド可能）
+    protected void writeOutput(String content) {
+        System.out.println(content);
+    }
+}
+
+// CSV出力
+public class CsvExporter extends DataExporter {
+    @Override
+    protected String createHeader() { return "id,name,price\n"; }
+
+    @Override
+    protected String createBody(List&lt;Map&lt;String, Object&gt;&gt; data) {
+        StringBuilder sb = new StringBuilder();
+        for (Map&lt;String, Object&gt; row : data) {
+            sb.append(row.get("id")).append(",")
+              .append(row.get("name")).append(",")
+              .append(row.get("price")).append("\n");
+        }
+        return sb.toString();
+    }
+
+    @Override
+    protected String createFooter() { return ""; }
+}
+
+// JSON出力
+public class JsonExporter extends DataExporter {
+    @Override
+    protected String createHeader() { return "[\n"; }
+
+    @Override
+    protected String createBody(List&lt;Map&lt;String, Object&gt;&gt; data) {
+        // JSON変換ロジック
+        return new ObjectMapper().writeValueAsString(data);
+    }
+
+    @Override
+    protected String createFooter() { return "\n]"; }
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- Section 7-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-4</span>
+                <h2 class="section-title">Front Controller（DispatcherServlet）</h2>
+            </div>
+            <div class="intro-text">
+                <p>Front Controllerパターンは、全てのリクエストを1つの入口（エントリポイント）で受け取り、適切なハンドラに振り分けるパターンです。Spring MVCでは<code>DispatcherServlet</code>がこの役割を担います。</p>
+            </div>
+
+            <h3 class="subsection-title">7-4-1 DispatcherServletの処理フロー</h3>
+
+            <!-- SVG DispatcherServlet flow -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">route</span>
+                    DispatcherServletの処理フロー
+                </h4>
+                <svg viewBox="0 0 680 320" style="max-width: 680px; width: 100%; height: auto; display: block; margin: 0 auto;">
+                    <!-- Browser -->
+                    <rect x="10" y="130" width="100" height="50" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+                    <text x="60" y="155" text-anchor="middle" font-size="11" fill="#475569" font-weight="600">ブラウザ</text>
+                    <text x="60" y="170" text-anchor="middle" font-size="8" fill="#94a3b8">HTTP Request</text>
+
+                    <!-- Arrow -->
+                    <line x1="110" y1="155" x2="155" y2="155" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowDS)"/>
+                    <text x="133" y="148" text-anchor="middle" font-size="7" fill="#94a3b8">1</text>
+
+                    <!-- DispatcherServlet -->
+                    <rect x="160" y="110" width="150" height="90" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="235" y="138" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">DispatcherServlet</text>
+                    <text x="235" y="155" text-anchor="middle" font-size="8" fill="#92400e">Front Controller</text>
+                    <text x="235" y="170" text-anchor="middle" font-size="8" fill="#92400e">全リクエストの入口</text>
+                    <text x="235" y="185" text-anchor="middle" font-size="8" fill="#92400e">ハンドラの検索・実行</text>
+
+                    <!-- HandlerMapping -->
+                    <line x1="235" y1="110" x2="235" y2="45" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowDS)"/>
+                    <rect x="170" y="10" width="130" height="35" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="235" y="32" text-anchor="middle" font-size="9" fill="#1e40af" font-weight="600">HandlerMapping</text>
+                    <text x="180" y="55" font-size="7" fill="#3b82f6">2 URL→Controller検索</text>
+
+                    <!-- Controller -->
+                    <line x1="310" y1="145" x2="380" y2="100" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrowDS)"/>
+                    <rect x="385" y="70" width="120" height="50" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+                    <text x="445" y="92" text-anchor="middle" font-size="10" fill="#166534" font-weight="600">Controller</text>
+                    <text x="445" y="108" text-anchor="middle" font-size="8" fill="#166534">@GetMapping等</text>
+                    <text x="350" y="110" font-size="7" fill="#22c55e">3 実行</text>
+
+                    <!-- ModelAndView -->
+                    <line x1="445" y1="120" x2="445" y2="165" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arrowDS)"/>
+                    <rect x="380" y="170" width="130" height="40" rx="8" fill="#f3e8ff" stroke="#a855f7" stroke-width="1.5"/>
+                    <text x="445" y="195" text-anchor="middle" font-size="9" fill="#7e22ce" font-weight="600">ModelAndView</text>
+                    <text x="445" y="145" font-size="7" fill="#a855f7">4 結果返却</text>
+
+                    <!-- ViewResolver -->
+                    <line x1="445" y1="210" x2="445" y2="260" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrowDS)"/>
+                    <rect x="380" y="265" width="130" height="35" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                    <text x="445" y="288" text-anchor="middle" font-size="9" fill="#92400e" font-weight="600">ViewResolver</text>
+                    <text x="455" y="245" font-size="7" fill="#f59e0b">5 View解決</text>
+
+                    <!-- View -->
+                    <line x1="510" y1="282" x2="570" y2="282" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDS)"/>
+                    <rect x="575" y="260" width="90" height="45" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="620" y="280" text-anchor="middle" font-size="9" fill="#1e40af" font-weight="600">View</text>
+                    <text x="620" y="295" text-anchor="middle" font-size="8" fill="#1e40af">HTML生成</text>
+                    <text x="545" y="275" font-size="7" fill="#94a3b8">6</text>
+
+                    <!-- Response back -->
+                    <path d="M620,260 L620,155 L110,155" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowRed)"/>
+                    <text x="370" y="145" font-size="7" fill="#dc2626">7 HTML Response</text>
+
+                    <defs>
+                        <marker id="arrowDS" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                            <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+                        </marker>
+                        <marker id="arrowRed" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                            <polygon points="0 0, 8 3, 0 6" fill="#dc2626"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <h3 class="subsection-title">7-4-2 Front Controllerのメリット</h3>
+            <div class="highlight-box" style="background: #dcfce7; border-left: 4px solid #22c55e;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #166534;">check_circle</span> Front Controller（DispatcherServlet）のメリット</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li><strong>共通処理の一元化</strong>：認証、ログ、エラーハンドリングを1箇所で管理</li>
+                    <li><strong>URLルーティングの統一</strong>：HandlerMappingで@RequestMappingのURL解決を一元管理</li>
+                    <li><strong>フィルターの適用</strong>：CharacterEncodingFilter, CorsFilter等を全リクエストに適用</li>
+                    <li><strong>View技術の切り替え</strong>：ViewResolverを変えるだけでThymeleaf→JSP等に切替可能</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Exercise Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">7章 練習問題</h2>
+            </div>
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Spring Bootでコンストラクタインジェクションが推奨される理由を2つ挙げてください。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p><code>@Transactional</code>をメソッドに付けると、内部でどのような処理が自動で行われますか。正常時と例外発生時のそれぞれの動作を説明してください。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>DispatcherServletが担う「Front Controller」パターンの主な役割として<strong>誤っているもの</strong>を選んでください。</p>
+                        <p>A. 全てのHTTPリクエストを一元的に受け取る<br>
+                           B. HandlerMappingを使って適切なControllerを検索する<br>
+                           C. ビジネスロジックの実行を直接行う<br>
+                           D. ViewResolverを使ってレスポンスのView名を解決する</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Answer Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">7章 解説・解答</h2>
+            </div>
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1 解答</div>
+                    <div class="answer-content">
+                        <p><strong>1. 不変性の保証</strong>：コンストラクタで注入されたフィールドを<code>final</code>にできるため、実行中に依存先が差し替わるバグを防げます。</p>
+                        <p><strong>2. テストの容易さ</strong>：コンストラクタの引数でモックオブジェクトを渡すだけで単体テストが書けます。@Autowiredフィールドインジェクションではリフレクションが必要になります。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q2 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正常時</strong>：メソッドの開始前にトランザクションが開始（begin）され、メソッドが例外なく完了すると自動でコミット（commit）されます。</p>
+                        <p><strong>例外発生時</strong>：RuntimeException（非チェック例外）が発生すると、トランザクション全体がロールバック（rollback）されます。メソッド内で行ったDB操作は全て取り消されます。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q3 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正解: C. ビジネスロジックの実行を直接行う</strong></p>
+                        <p>DispatcherServlet（Front Controller）はリクエストの受付・振り分け・View解決を行いますが、ビジネスロジックは実行しません。ビジネスロジックの実行はControllerから呼ばれるService層の責務です。Front Controllerは「交通整理役」であり、実際の業務処理は行いません。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="6dp-structural.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div><div class="page-nav-label">前の章</div><div class="page-nav-title">第6章 Builder/Facade/Decorator</div></div>
+        </a>
+        <a href="8dp-practice.html" class="page-nav-btn next">
+            <div><div class="page-nav-label">次の章</div><div class="page-nav-title">第8章 総合演習</div></div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

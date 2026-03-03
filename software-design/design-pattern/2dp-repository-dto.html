@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第2章 Repository/DTOパターン - デザインパターン入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-design-pattern.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">2</div>
+            <h1 class="chapter-title">Repository/DTOパターン</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">2-1</span><span>データアクセスの抽象化</span></li>
+                <li class="toc-item"><span class="toc-number">2-2</span><span>Repositoryパターン</span></li>
+                <li class="toc-item"><span class="toc-number">2-3</span><span>DTOとEntityの使い分け</span></li>
+            </ul>
+        </nav>
+
+        <!-- Section 2-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 2-1</span>
+                <h2 class="section-title">データアクセスの抽象化</h2>
+            </div>
+            <div class="intro-text">
+                <p>アプリケーションが成長すると、データの取得方法や保存先が変わることがあります。Repositoryパターンは、データアクセスの詳細をビジネスロジックから隠蔽し、変更に強い設計を実現します。</p>
+            </div>
+
+            <h3 class="subsection-title">2-1-1 なぜデータアクセスを抽象化するのか</h3>
+            <p>ビジネスロジックの中にSQLやJDBC接続コードが直接書かれていると、以下の問題が発生します。</p>
+            <ul>
+                <li><strong>テストが困難</strong>：実際のDBに接続しないとテストできない</li>
+                <li><strong>DB変更時の影響範囲が広い</strong>：MySQL→PostgreSQLの変更がアプリ全体に波及する</li>
+                <li><strong>コードの重複</strong>：同じようなSQLが様々な場所にコピペされる</li>
+            </ul>
+
+            <h3 class="subsection-title">2-1-2 抽象化のイメージ</h3>
+            <p>Repositoryパターンでは「何のデータが欲しいか」だけをServiceに伝え、「どうやって取得するか」はRepositoryに任せます。</p>
+
+            <div class="highlight-box" style="background: #dbeafe; border-left: 4px solid #3b82f6;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #1e40af;">info</span> たとえ話</strong></p>
+                <p style="font-size: 0.9rem; margin: 8px 0 0 0;">レストランでメニューを選ぶとき、お客さん（Service）は「カレーください」と注文するだけで、厨房（Repository）がどの鍋を使い、どの手順で調理するかは気にしません。これがデータアクセスの抽象化です。</p>
+            </div>
+        </section>
+
+        <!-- Section 2-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 2-2</span>
+                <h2 class="section-title">Repositoryパターン</h2>
+            </div>
+            <div class="intro-text">
+                <p>Repositoryパターンは、データの永続化操作をインターフェースとして定義し、その実装をビジネスロジックから分離するパターンです。Spring Data JPAでは、このパターンが標準で組み込まれています。</p>
+            </div>
+
+            <h3 class="subsection-title">2-2-1 Spring Data JPAのRepository</h3>
+            <p>Spring Data JPAでは、<code>JpaRepository</code>を継承したインターフェースを定義するだけで、基本的なCRUD操作が自動的に提供されます。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>ProductRepository.java</span>
+                </div>
+                <pre><code>@Repository
+public interface ProductRepository extends JpaRepository&lt;Product, Long&gt; {
+
+    // メソッド名からSQLが自動生成される
+    List&lt;Product&gt; findByCategory(String category);
+
+    List&lt;Product&gt; findByPriceGreaterThan(int price);
+
+    // 複雑なクエリは@Queryで記述
+    @Query("SELECT p FROM Product p WHERE p.stock > 0 AND p.category = :cat")
+    List&lt;Product&gt; findAvailableByCategory(@Param("cat") String category);
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">2-2-2 自動生成されるメソッド一覧</h3>
+            <p><code>JpaRepository</code>を継承するだけで、以下のメソッドが使えます。</p>
+
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">table_chart</span>
+                    JpaRepositoryの主なメソッド
+                </h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="background: #f1f5f9;">
+                            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600;">メソッド</th>
+                            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600;">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;"><code>findAll()</code></td><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">全件取得</td></tr>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;"><code>findById(id)</code></td><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">IDで1件取得</td></tr>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;"><code>save(entity)</code></td><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">新規登録または更新</td></tr>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;"><code>deleteById(id)</code></td><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">IDで削除</td></tr>
+                        <tr><td style="padding: 8px 12px;"><code>count()</code></td><td style="padding: 8px 12px;">件数を取得</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="subsection-title">2-2-3 Entity（エンティティ）の定義</h3>
+            <p>Entityは、データベースのテーブルに1対1で対応するJavaクラスです。<code>@Entity</code>アノテーションを付け、各フィールドがテーブルのカラムに対応します。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>Product.java（Entity）</span>
+                </div>
+                <pre><code>@Entity
+@Table(name = "products")
+public class Product {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String name;
+
+    @Column(nullable = false)
+    private int price;
+
+    @Column(length = 50)
+    private String category;
+
+    private int stock;
+
+    // コンストラクタ、Getter、Setter
+    public Product() {}
+
+    public Product(String name, int price, String category, int stock) {
+        this.name = name;
+        this.price = price;
+        this.category = category;
+        this.stock = stock;
+    }
+
+    // getter/setter省略
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- Section 2-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 2-3</span>
+                <h2 class="section-title">DTOとEntityの使い分け</h2>
+            </div>
+            <div class="intro-text">
+                <p>DTO（Data Transfer Object）は、画面やAPIに必要なデータだけを詰め替えるオブジェクトです。Entityをそのまま画面に渡すと、不要な情報の漏洩やセキュリティリスクが生じます。</p>
+            </div>
+
+            <h3 class="subsection-title">2-3-1 なぜEntityをそのまま使わないのか</h3>
+            <p>Entityをそのままフロントエンドに渡すと、以下の問題があります。</p>
+            <ul>
+                <li><strong>情報漏洩</strong>：パスワードハッシュなど、表示不要なカラムも含まれる</li>
+                <li><strong>循環参照</strong>：JPA関連エンティティのJSON変換で無限ループが起きる</li>
+                <li><strong>画面仕様変更の影響</strong>：画面レイアウトの変更がEntityに波及する</li>
+            </ul>
+
+            <!-- CSS Diagram: Entity↔Repository↔DTO↔Controller data flow -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">sync_alt</span>
+                    Entity / DTO のデータフロー
+                </h4>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 90px;">
+                        <div style="font-weight: 700; color: #92400e; font-size: 0.85rem;">Database</div>
+                        <div style="font-size: 0.75rem; color: #92400e;">テーブル</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 1.2rem;">&#8596;</div>
+                    <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 90px;">
+                        <div style="font-weight: 700; color: #7e22ce; font-size: 0.85rem;">Entity</div>
+                        <div style="font-size: 0.75rem; color: #7e22ce;">DB構造と一致</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 1.2rem;">&#8596;</div>
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 100px;">
+                        <div style="font-weight: 700; color: #1e40af; font-size: 0.85rem;">Repository</div>
+                        <div style="font-size: 0.75rem; color: #1e40af;">Entityを操作</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 1.2rem;">&#8594;</div>
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 90px;">
+                        <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">Service</div>
+                        <div style="font-size: 0.75rem; color: #166534;">Entity→DTO変換</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 1.2rem;">&#8594;</div>
+                    <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 90px;">
+                        <div style="font-weight: 700; color: #991b1b; font-size: 0.85rem;">DTO</div>
+                        <div style="font-size: 0.75rem; color: #991b1b;">画面用データ</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 1.2rem;">&#8594;</div>
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 100px;">
+                        <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">Controller</div>
+                        <div style="font-size: 0.75rem; color: #166534;">DTOをViewに渡す</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">2-3-2 DTOクラスの実装</h3>
+            <p>DTOは画面に必要なフィールドだけを持つシンプルなクラスです。Entityのパスワードや内部ID、関連テーブルの情報をDTOには含めません。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>ProductDto.java</span>
+                </div>
+                <pre><code>public class ProductDto {
+
+    private Long id;
+    private String name;
+    private int price;
+    private String category;
+    private String priceDisplay;  // "¥1,200" のような表示用文字列
+
+    public ProductDto(Long id, String name, int price, String category) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.category = category;
+        this.priceDisplay = String.format("¥%,d", price);
+    }
+
+    // getter省略
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">2-3-3 Entity→DTO変換メソッド</h3>
+            <p>変換処理はService層に置くのが一般的です。専用のMapperクラスを作る方法もあります。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>ProductService.java（変換処理）</span>
+                </div>
+                <pre><code>@Service
+public class ProductService {
+
+    private final ProductRepository productRepository;
+
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
+
+    public List&lt;ProductDto&gt; findAll() {
+        return productRepository.findAll().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public ProductDto findById(Long id) {
+        Product entity = productRepository.findById(id)
+                .orElseThrow(() -&gt; new RuntimeException("商品が見つかりません"));
+        return toDto(entity);
+    }
+
+    // Entity → DTO 変換メソッド
+    private ProductDto toDto(Product entity) {
+        return new ProductDto(
+            entity.getId(),
+            entity.getName(),
+            entity.getPrice(),
+            entity.getCategory()
+        );
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">2-3-4 EntityとDTOの比較まとめ</h3>
+
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">compare_arrows</span>
+                    Entity vs DTO
+                </h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="background: #f1f5f9;">
+                            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600;">項目</th>
+                            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600;">Entity</th>
+                            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600;">DTO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">目的</td><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">DB構造のマッピング</td><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">画面/API用データの受け渡し</td></tr>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">フィールド</td><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">全カラムに対応</td><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">必要な項目のみ</td></tr>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">アノテーション</td><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">@Entity, @Column等</td><td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">なし（POJOまたはrecord）</td></tr>
+                        <tr><td style="padding: 8px 12px;">利用層</td><td style="padding: 8px 12px;">Repository ↔ Service</td><td style="padding: 8px 12px;">Service → Controller → View</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Exercise Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">2章 練習問題</h2>
+            </div>
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Repositoryパターンを採用する最大のメリットとして最も適切なものを選んでください。</p>
+                        <p>A. コード量が減る &nbsp; B. データアクセスの詳細をビジネスロジックから隠蔽できる &nbsp; C. SQLが不要になる &nbsp; D. Entityが不要になる</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>Userエンティティに <code>password</code>（パスワードハッシュ）と <code>loginCount</code>（内部管理用ログイン回数）フィールドがあります。ユーザー一覧画面用のDTOにこれらのフィールドを含めるべきですか。理由とともに答えてください。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>Entity→DTO の変換処理は、3層アーキテクチャのどの層に記述するのが適切ですか。</p>
+                        <p>A. Controller層 &nbsp; B. Service層 &nbsp; C. Repository層 &nbsp; D. View層</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Answer Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">2章 解説・解答</h2>
+            </div>
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正解: B. データアクセスの詳細をビジネスロジックから隠蔽できる</strong></p>
+                        <p>Repositoryパターンの核心は「抽象化」です。ビジネスロジック（Service層）はデータの取得方法を気にせず、必要なデータの種類だけを指定します。これにより、DB変更やテスト時のモック差し替えが容易になります。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q2 解答</div>
+                    <div class="answer-content">
+                        <p><strong>含めるべきではない。</strong></p>
+                        <p><code>password</code>はセキュリティ上の理由から画面に渡すべきではありません。万が一レスポンスに含まれるとパスワードハッシュが漏洩するリスクがあります。<code>loginCount</code>は画面に表示する必要がない内部管理用データなので、DTOには不要です。DTOは「画面に必要な情報だけ」を厳選して定義します。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q3 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正解: B. Service層</strong></p>
+                        <p>Entity→DTO変換はService層のメソッド内で行います。Repository層はEntityの永続化に専念し、Controller層はDTOを受け取ってViewに渡すだけです。変換ロジックをService層に集約することで、同じEntityから異なるDTOを生成する場合も管理しやすくなります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="1dp-mvc.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div><div class="page-nav-label">前の章</div><div class="page-nav-title">第1章 MVCと3層アーキテクチャ</div></div>
+        </a>
+        <a href="3dp-factory.html" class="page-nav-btn next">
+            <div><div class="page-nav-label">次の章</div><div class="page-nav-title">第3章 Factoryパターン</div></div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

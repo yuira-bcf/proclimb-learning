@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第1章 なぜ設計が重要か - アーキテクチャ基礎</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-architecture.js"></script>
+
+    <div class="container">
+        <!-- ヘッダー -->
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">1</div>
+            <h1 class="chapter-title">なぜ設計が重要か</h1>
+        </header>
+
+        <!-- 目次 -->
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">1-1</span><span>「動くコード」と「良いコード」</span></li>
+                <li class="toc-item"><span class="toc-number">1-2</span><span>技術的負債</span></li>
+                <li class="toc-item"><span class="toc-number">1-3</span><span>変更容易性・テスト容易性</span></li>
+                <li class="toc-item"><span class="toc-number">1-4</span><span>設計学習ロードマップ</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 1-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-1</span>
+                <h2 class="section-title">「動くコード」と「良いコード」</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>プログラミングを始めたばかりの頃は「とにかく動くこと」がゴールです。しかし実務では、コードは書いた後に何十回も読まれ、修正されます。「動くだけのコード」と「良いコード」の違いを理解することが、エンジニアとしての第一歩です。</p>
+            </div>
+
+            <!-- 1-1-1 -->
+            <div class="subsection">
+                <h3 class="subsection-title">1-1-1 動くコードの落とし穴</h3>
+                <div class="content-block">
+                    <p>以下の2つのコードはどちらも同じ結果を返します。しかし、チーム開発でメンテナンスするとき、どちらが扱いやすいでしょうか。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">悪い例: 全てが1つのメソッドに詰め込まれている</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>public class OrderProcessor {
+    public void process(String userId, String itemId, int qty) {
+        // ユーザー検証
+        Connection conn = DriverManager.getConnection("jdbc:mysql://...");
+        PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE id=?");
+        ps.setString(1, userId);
+        ResultSet rs = ps.executeQuery();
+        if (!rs.next()) throw new RuntimeException("User not found");
+        String email = rs.getString("email");
+
+        // 在庫チェック
+        ps = conn.prepareStatement("SELECT stock FROM items WHERE id=?");
+        ps.setString(1, itemId);
+        rs = ps.executeQuery();
+        rs.next();
+        int stock = rs.getInt("stock");
+        if (stock < qty) throw new RuntimeException("在庫不足");
+
+        // 注文作成 + メール送信 + ログ出力...
+        // さらに数百行が続く...
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">良い例: 責務が分離されている</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>public class OrderService {
+    private final UserRepository userRepo;
+    private final ItemRepository itemRepo;
+    private final OrderRepository orderRepo;
+    private final NotificationService notifier;
+
+    public OrderService(UserRepository userRepo, ItemRepository itemRepo,
+                        OrderRepository orderRepo, NotificationService notifier) {
+        this.userRepo = userRepo;
+        this.itemRepo = itemRepo;
+        this.orderRepo = orderRepo;
+        this.notifier = notifier;
+    }
+
+    public Order placeOrder(String userId, String itemId, int quantity) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+        Item item = itemRepo.findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException(itemId));
+
+        item.reduceStock(quantity);  // ドメインロジックをエンティティに
+        Order order = Order.create(user, item, quantity);
+
+        orderRepo.save(order);
+        notifier.sendOrderConfirmation(user, order);
+        return order;
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">読みやすさ = 保守しやすさ</span>
+                        </div>
+                        <p>良いコードの基準はシンプルです。「半年後の自分（または他のメンバー）が読んで、すぐ理解できるか？」。1つのメソッドが100行を超えたら危険信号です。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1-1-2 -->
+            <div class="subsection">
+                <h3 class="subsection-title">1-1-2 良いコードの4つの特徴</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">star</span>
+                            良いコードの4条件
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                            <div style="background: #dbeafe; border-radius: 12px; padding: 16px; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 8px;">&#128270;</div>
+                                <div style="font-weight: 700; color: #3b82f6; margin-bottom: 4px;">可読性</div>
+                                <div style="font-size: 0.85rem; color: #334155;">コードを読んで意図が分かる</div>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 8px;">&#9881;</div>
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 4px;">変更容易性</div>
+                                <div style="font-size: 0.85rem; color: #334155;">修正が局所的で済む</div>
+                            </div>
+                            <div style="background: #fef3c7; border-radius: 12px; padding: 16px; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 8px;">&#128300;</div>
+                                <div style="font-weight: 700; color: #f59e0b; margin-bottom: 4px;">テスト容易性</div>
+                                <div style="font-size: 0.85rem; color: #334155;">単体テストが書きやすい</div>
+                            </div>
+                            <div style="background: #f3e8ff; border-radius: 12px; padding: 16px; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 8px;">&#128640;</div>
+                                <div style="font-weight: 700; color: #a855f7; margin-bottom: 4px;">拡張容易性</div>
+                                <div style="font-size: 0.85rem; color: #334155;">新機能を追加しやすい</div>
+                            </div>
+                        </div>
+                    </div>
+                    <p>これらは相互に関連しています。責務が分離されたコードは読みやすく、変更しやすく、テストしやすく、拡張しやすいのです。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 1-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-2</span>
+                <h2 class="section-title">技術的負債</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>「技術的負債（Technical Debt）」とは、短期的な利便性を優先して生じた、将来の修正コストの蓄積です。借金のように利子がつき、放置するほど返済（リファクタリング）コストが膨れ上がります。</p>
+            </div>
+
+            <!-- 1-2-1 -->
+            <div class="subsection">
+                <h3 class="subsection-title">1-2-1 技術的負債の種類</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>種類</th>
+                                <th>例</th>
+                                <th>影響</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>意図的・慎重な負債</strong></td>
+                                <td>納期優先でリファクタリングを後回し</td>
+                                <td>計画的に返済可能</td>
+                            </tr>
+                            <tr>
+                                <td><strong>意図的・無謀な負債</strong></td>
+                                <td>「設計なんて不要」と突き進む</td>
+                                <td>返済困難、破綻リスク大</td>
+                            </tr>
+                            <tr>
+                                <td><strong>無意識・慎重な負債</strong></td>
+                                <td>当時のベストが後から不適切と判明</td>
+                                <td>学習で改善可能</td>
+                            </tr>
+                            <tr>
+                                <td><strong>無意識・無謀な負債</strong></td>
+                                <td>知識不足で悪い設計に気づかない</td>
+                                <td>最も危険、発見が遅れる</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 1-2-2 -->
+            <div class="subsection">
+                <h3 class="subsection-title">1-2-2 技術的負債の成長曲線</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">trending_up</span>
+                            技術的負債の成長曲線
+                        </h4>
+                        <svg viewBox="0 0 600 320" style="width: 100%; max-width: 600px; display: block; margin: 0 auto;">
+                            <!-- 軸 -->
+                            <line x1="60" y1="260" x2="560" y2="260" stroke="#94a3b8" stroke-width="2"/>
+                            <line x1="60" y1="260" x2="60" y2="30" stroke="#94a3b8" stroke-width="2"/>
+                            <!-- 軸ラベル -->
+                            <text x="310" y="295" text-anchor="middle" fill="#64748b" font-size="13" font-family="'Noto Sans JP', sans-serif">時間（月）</text>
+                            <text x="20" y="145" text-anchor="middle" fill="#64748b" font-size="13" font-family="'Noto Sans JP', sans-serif" transform="rotate(-90, 20, 145)">変更コスト</text>
+                            <!-- 設計なし: 急カーブ -->
+                            <path d="M 60 240 Q 200 230, 300 180 Q 400 100, 520 40" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="0"/>
+                            <text x="530" y="45" fill="#ef4444" font-size="12" font-weight="700" font-family="'Noto Sans JP', sans-serif">設計なし</text>
+                            <!-- 設計あり: 緩やかな直線 -->
+                            <path d="M 60 240 Q 200 230, 350 210 Q 450 195, 520 180" fill="none" stroke="#22c55e" stroke-width="3"/>
+                            <text x="530" y="185" fill="#22c55e" font-size="12" font-weight="700" font-family="'Noto Sans JP', sans-serif">設計あり</text>
+                            <!-- 目盛り -->
+                            <text x="60" y="278" text-anchor="middle" fill="#94a3b8" font-size="11">0</text>
+                            <text x="185" y="278" text-anchor="middle" fill="#94a3b8" font-size="11">6</text>
+                            <text x="310" y="278" text-anchor="middle" fill="#94a3b8" font-size="11">12</text>
+                            <text x="435" y="278" text-anchor="middle" fill="#94a3b8" font-size="11">18</text>
+                            <text x="560" y="278" text-anchor="middle" fill="#94a3b8" font-size="11">24</text>
+                            <!-- 交差ポイント -->
+                            <circle cx="180" cy="233" r="5" fill="#f59e0b"/>
+                            <text x="180" y="220" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600" font-family="'Noto Sans JP', sans-serif">損益分岐点</text>
+                        </svg>
+                        <p style="text-align: center; color: #64748b; font-size: 0.85rem; margin-top: 12px;">設計を怠ると、時間経過とともに変更コストが指数的に増大する</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1-2-3 -->
+            <div class="subsection">
+                <h3 class="subsection-title">1-2-3 実際の失敗事例</h3>
+                <div class="content-block">
+                    <div class="info-box" style="border-left-color: #ef4444;">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons" style="color: #ef4444;">warning</span></span>
+                            <span class="info-box-title">よくある技術的負債の例</span>
+                        </div>
+                        <ul>
+                            <li><strong>神クラス（God Class）</strong>: 1つのクラスに3,000行以上のコード。修正のたびに全体が壊れるリスク</li>
+                            <li><strong>コピペ地獄</strong>: 同じ処理が10箇所に散在。1箇所の修正漏れでバグが発生</li>
+                            <li><strong>テストなしのリリース</strong>: 「動いているから触らないで」が口癖のコードベース</li>
+                            <li><strong>密結合</strong>: DB変更でUI層まで修正が波及。1つの変更に3日かかる</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">compare_arrows</span>
+                            きれいな設計 vs 無秩序な設計
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 20px;">
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                                    <span class="material-icons" style="font-size: 20px;">check_circle</span>
+                                    きれいな設計
+                                </div>
+                                <svg viewBox="0 0 200 150" style="width: 100%; max-width: 200px; display: block; margin: 0 auto;">
+                                    <rect x="50" y="10" width="100" height="30" rx="6" fill="#3b82f6" opacity="0.8"/>
+                                    <text x="100" y="30" text-anchor="middle" fill="white" font-size="11" font-family="sans-serif">Controller</text>
+                                    <rect x="50" y="55" width="100" height="30" rx="6" fill="#22c55e" opacity="0.8"/>
+                                    <text x="100" y="75" text-anchor="middle" fill="white" font-size="11" font-family="sans-serif">Service</text>
+                                    <rect x="50" y="100" width="100" height="30" rx="6" fill="#a855f7" opacity="0.8"/>
+                                    <text x="100" y="120" text-anchor="middle" fill="white" font-size="11" font-family="sans-serif">Repository</text>
+                                    <line x1="100" y1="40" x2="100" y2="55" stroke="#64748b" stroke-width="2" marker-end="url(#arrow1)"/>
+                                    <line x1="100" y1="85" x2="100" y2="100" stroke="#64748b" stroke-width="2" marker-end="url(#arrow1)"/>
+                                    <defs><marker id="arrow1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker></defs>
+                                </svg>
+                                <p style="font-size: 0.8rem; color: #334155; text-align: center; margin-top: 8px;">層が明確で依存は一方向</p>
+                            </div>
+                            <div style="background: #fef2f2; border-radius: 12px; padding: 20px;">
+                                <div style="font-weight: 700; color: #ef4444; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                                    <span class="material-icons" style="font-size: 20px;">cancel</span>
+                                    無秩序な設計
+                                </div>
+                                <svg viewBox="0 0 200 150" style="width: 100%; max-width: 200px; display: block; margin: 0 auto;">
+                                    <rect x="10" y="10" width="70" height="30" rx="6" fill="#94a3b8"/>
+                                    <text x="45" y="30" text-anchor="middle" fill="white" font-size="10" font-family="sans-serif">ClassA</text>
+                                    <rect x="120" y="10" width="70" height="30" rx="6" fill="#94a3b8"/>
+                                    <text x="155" y="30" text-anchor="middle" fill="white" font-size="10" font-family="sans-serif">ClassB</text>
+                                    <rect x="10" y="60" width="70" height="30" rx="6" fill="#94a3b8"/>
+                                    <text x="45" y="80" text-anchor="middle" fill="white" font-size="10" font-family="sans-serif">ClassC</text>
+                                    <rect x="120" y="60" width="70" height="30" rx="6" fill="#94a3b8"/>
+                                    <text x="155" y="80" text-anchor="middle" fill="white" font-size="10" font-family="sans-serif">ClassD</text>
+                                    <rect x="65" y="110" width="70" height="30" rx="6" fill="#94a3b8"/>
+                                    <text x="100" y="130" text-anchor="middle" fill="white" font-size="10" font-family="sans-serif">ClassE</text>
+                                    <line x1="80" y1="25" x2="120" y2="25" stroke="#ef4444" stroke-width="1.5"/>
+                                    <line x1="45" y1="40" x2="45" y2="60" stroke="#ef4444" stroke-width="1.5"/>
+                                    <line x1="80" y1="75" x2="120" y2="75" stroke="#ef4444" stroke-width="1.5"/>
+                                    <line x1="155" y1="40" x2="155" y2="60" stroke="#ef4444" stroke-width="1.5"/>
+                                    <line x1="45" y1="40" x2="155" y2="60" stroke="#ef4444" stroke-width="1.5"/>
+                                    <line x1="155" y1="40" x2="45" y2="60" stroke="#ef4444" stroke-width="1.5"/>
+                                    <line x1="45" y1="90" x2="100" y2="110" stroke="#ef4444" stroke-width="1.5"/>
+                                    <line x1="155" y1="90" x2="100" y2="110" stroke="#ef4444" stroke-width="1.5"/>
+                                    <line x1="80" y1="25" x2="100" y2="110" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4"/>
+                                </svg>
+                                <p style="font-size: 0.8rem; color: #334155; text-align: center; margin-top: 8px;">全てが全てに依存している</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 1-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-3</span>
+                <h2 class="section-title">変更容易性・テスト容易性</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>ソフトウェアの価値は「変更できること」にあります。ビジネス要件は常に変化するため、変更に強い設計が求められます。そしてテスト容易性は、変更に対する安全ネットです。</p>
+            </div>
+
+            <!-- 1-3-1 -->
+            <div class="subsection">
+                <h3 class="subsection-title">1-3-1 変更容易性とは</h3>
+                <div class="content-block">
+                    <p>「変更容易性」とは、ある機能の修正が他の機能に影響を与えず、少ないコード変更で目的を達成できる性質です。鍵となる概念は<strong>疎結合（Loose Coupling）</strong>と<strong>高凝集（High Cohesion）</strong>です。</p>
+
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">settings_suggest</span>
+                            疎結合 と 高凝集
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #dbeafe; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #3b82f6; margin-bottom: 8px;">疎結合 (Loose Coupling)</div>
+                                <p style="font-size: 0.85rem; color: #334155; margin: 0;">モジュール間の依存関係が最小限。インタフェースを通じて連携し、実装の詳細を隠蔽する。</p>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 8px;">高凝集 (High Cohesion)</div>
+                                <p style="font-size: 0.85rem; color: #334155; margin: 0;">1つのモジュールが1つの責務に集中。関連するデータと処理がまとまっている。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">疎結合の実現: インタフェースによる抽象化</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// インタフェースで抽象化
+public interface NotificationSender {
+    void send(String to, String message);
+}
+
+// メール実装
+public class EmailSender implements NotificationSender {
+    @Override
+    public void send(String to, String message) {
+        // SMTP経由でメール送信
+    }
+}
+
+// Slack実装（後から追加しても既存コードに影響なし）
+public class SlackSender implements NotificationSender {
+    @Override
+    public void send(String to, String message) {
+        // Slack API経由で送信
+    }
+}
+
+// 利用側はインタフェースに依存
+public class OrderService {
+    private final NotificationSender sender;
+
+    public OrderService(NotificationSender sender) {
+        this.sender = sender;  // どの実装が来ても動作する
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1-3-2 -->
+            <div class="subsection">
+                <h3 class="subsection-title">1-3-2 テスト容易性とは</h3>
+                <div class="content-block">
+                    <p>テスト容易性が高いコードは、自動テストを書きやすく、変更した際に「壊れていないか」を即座に確認できます。テスト容易性の敵は<strong>密結合</strong>と<strong>グローバル状態</strong>です。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">テストしにくいコード vs テストしやすいコード</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// --- テストしにくい: 内部でnewしている ---
+public class ReportService {
+    public String generate() {
+        DatabaseConnection db = new DatabaseConnection(); // テスト時にDB不要でも接続
+        List&lt;Data&gt; data = db.query("SELECT ...");
+        return format(data);
+    }
+}
+
+// --- テストしやすい: 依存を外部から注入 ---
+public class ReportService {
+    private final DataRepository repository;
+
+    public ReportService(DataRepository repository) {
+        this.repository = repository;  // テスト時にモックを渡せる
+    }
+
+    public String generate() {
+        List&lt;Data&gt; data = repository.findAll();
+        return format(data);
+    }
+}
+
+// テストコード
+@Test
+void testGenerate() {
+    DataRepository mockRepo = mock(DataRepository.class);
+    when(mockRepo.findAll()).thenReturn(List.of(new Data("test")));
+    ReportService service = new ReportService(mockRepo);
+
+    String result = service.generate();
+    assertThat(result).contains("test");
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 1-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 1-4</span>
+                <h2 class="section-title">設計学習ロードマップ</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>設計スキルは一朝一夕では身につきません。段階的に学習し、実践を通じて体得していきましょう。この講座で扱う内容の全体像を示します。</p>
+            </div>
+
+            <!-- 1-4-1 -->
+            <div class="subsection">
+                <h3 class="subsection-title">1-4-1 本講座のロードマップ</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">route</span>
+                            アーキテクチャ基礎 全8章の学習フロー
+                        </h4>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #3b82f6; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">1</div>
+                                <div style="background: #dbeafe; border-radius: 8px; padding: 10px 16px; flex: 1;">
+                                    <strong>なぜ設計が重要か</strong>（本章）― 設計の必要性を理解する
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #3b82f6; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">2</div>
+                                <div style="background: #dbeafe; border-radius: 8px; padding: 10px 16px; flex: 1;">
+                                    <strong>SOLID原則</strong> ― オブジェクト指向設計の5大原則
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #22c55e; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">3</div>
+                                <div style="background: #dcfce7; border-radius: 8px; padding: 10px 16px; flex: 1;">
+                                    <strong>レイヤードアーキテクチャ</strong> ― アプリケーションの層構造
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #22c55e; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">4</div>
+                                <div style="background: #dcfce7; border-radius: 8px; padding: 10px 16px; flex: 1;">
+                                    <strong>DDD基礎</strong> ― ドメイン駆動設計の基本概念
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #f59e0b; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">5</div>
+                                <div style="background: #fef3c7; border-radius: 8px; padding: 10px 16px; flex: 1;">
+                                    <strong>REST API設計</strong> ― Web APIのインタフェース設計
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #a855f7; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">6</div>
+                                <div style="background: #f3e8ff; border-radius: 8px; padding: 10px 16px; flex: 1;">
+                                    <strong>DB設計の基礎</strong> ― 正規化・ER図・制約
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #a855f7; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">7</div>
+                                <div style="background: #f3e8ff; border-radius: 8px; padding: 10px 16px; flex: 1;">
+                                    <strong>DB設計の実践</strong> ― ECサイトのDB設計ケーススタディ
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #ef4444; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">8</div>
+                                <div style="background: #fef2f2; border-radius: 8px; padding: 10px 16px; flex: 1;">
+                                    <strong>画面設計</strong> ― ワイヤーフレーム・画面遷移・バリデーション
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1-4-2 -->
+            <div class="subsection">
+                <h3 class="subsection-title">1-4-2 設計スキルの身につけ方</h3>
+                <div class="content-block">
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">school</span></span>
+                            <span class="info-box-title">設計を学ぶ3ステップ</span>
+                        </div>
+                        <ol>
+                            <li><strong>原則を知る</strong>: SOLID原則やデザインパターンなど、先人の知恵を学ぶ</li>
+                            <li><strong>コードを読む</strong>: Spring BootやOSSのソースコードから良い設計を吸収する</li>
+                            <li><strong>リファクタリングする</strong>: 自分の書いたコードを改善する。Before/Afterで比較する</li>
+                        </ol>
+                    </div>
+                    <p>設計に「唯一の正解」はありません。トレードオフを理解し、状況に応じた判断ができるようになることが目標です。次章からは、具体的な設計原則「SOLID」を学んでいきましょう。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">1章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>以下のうち、「技術的負債」に該当するものをすべて選んでください。</p>
+                        <ol type="A">
+                            <li>納期に間に合わせるためにテストを書かずにリリースした</li>
+                            <li>要件どおりに正しく動くプログラムを書いた</li>
+                            <li>同じ処理を5つのクラスにコピペして実装した</li>
+                            <li>1つのクラスにDB操作・ビジネスロジック・画面描画を全て書いた</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>「疎結合」を実現するためにJavaで最もよく使われる仕組みはどれですか。</p>
+                        <ol type="A">
+                            <li>継承（extends）</li>
+                            <li>インタフェース（interface）</li>
+                            <li>static メソッド</li>
+                            <li>public フィールド</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>以下のコードがテストしにくい理由を説明し、改善案を述べてください。</p>
+                        <div class="code-block">
+                            <pre class="code-content"><code>public class PriceCalculator {
+    public int calculate(String productId) {
+        Product p = new ProductDao().findById(productId);
+        int tax = new TaxApi().getCurrentRate();
+        return p.getPrice() * (100 + tax) / 100;
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">1章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: A, C, D</div>
+                    <div class="answer-content">
+                        <p>A: テストを省略することは意図的な技術的負債です。C: コピペは重複コードを生み、修正漏れのリスクを高めます。D: 複数の責務を1クラスに詰め込むと変更のたびに広範囲に影響します。B: 正しく動くことは品質の一要素ですが、それだけでは負債とは言えません。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: B</div>
+                    <div class="answer-content">
+                        <p>インタフェースを使うことで、利用側は具体的な実装クラスに依存せず、抽象に依存できます。これにより実装の差し替えが容易になり、テスト時にモックを使うことも可能になります。継承は結合度が高くなりがちです。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答</div>
+                    <div class="answer-content">
+                        <p><strong>問題点:</strong> <code>ProductDao</code>と<code>TaxApi</code>をメソッド内部で直接newしているため、テスト時に実際のDBやAPIに接続してしまいます。</p>
+                        <p><strong>改善案:</strong> コンストラクタインジェクションで依存を外部から注入する。<code>ProductRepository</code>と<code>TaxService</code>のインタフェースを作成し、テスト時にはモックを渡せるようにします。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="index.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">トップ</div>
+                <div class="page-nav-title">目次</div>
+            </div>
+        </a>
+        <a href="2arch-solid.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第2章 SOLID原則</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

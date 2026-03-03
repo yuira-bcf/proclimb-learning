@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第4章 Strategy/Stateパターン - デザインパターン入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-design-pattern.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">4</div>
+            <h1 class="chapter-title">Strategy/Stateパターン</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">4-1</span><span>if-elseの肥大化問題</span></li>
+                <li class="toc-item"><span class="toc-number">4-2</span><span>Strategyパターン</span></li>
+                <li class="toc-item"><span class="toc-number">4-3</span><span>Stateパターン</span></li>
+            </ul>
+        </nav>
+
+        <!-- Section 4-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-1</span>
+                <h2 class="section-title">if-elseの肥大化問題</h2>
+            </div>
+            <div class="intro-text">
+                <p>条件分岐が増えるとコードが読みにくくなり、バグの温床になります。StrategyパターンとStateパターンは、if-else/switchの肥大化を解消する定番のテクニックです。</p>
+            </div>
+
+            <h3 class="subsection-title">4-1-1 よくある肥大化パターン</h3>
+            <p>ECサイトの割引計算を例に見てみましょう。会員種別によって割引率が異なります。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>肥大化したif-else文</span>
+                </div>
+                <pre><code>public int calculateDiscount(String memberType, int totalPrice) {
+    if (memberType.equals("normal")) {
+        // 通常会員: 割引なし
+        return totalPrice;
+    } else if (memberType.equals("silver")) {
+        // シルバー会員: 5%割引
+        return (int)(totalPrice * 0.95);
+    } else if (memberType.equals("gold")) {
+        // ゴールド会員: 10%割引 + ポイント2倍
+        int discounted = (int)(totalPrice * 0.90);
+        addBonusPoints(totalPrice, 2);
+        return discounted;
+    } else if (memberType.equals("platinum")) {
+        // プラチナ会員: 15%割引 + ポイント3倍 + 送料無料
+        int discounted = (int)(totalPrice * 0.85);
+        addBonusPoints(totalPrice, 3);
+        applyFreeShipping();
+        return discounted;
+    }
+    // セール時の特別割引を追加すると...さらに膨らむ
+    return totalPrice;
+}</code></pre>
+            </div>
+
+            <div class="highlight-box" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #92400e;">warning</span> 問題点</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li>会員種別が増えるたびにメソッドが肥大化する</li>
+                    <li>各分岐のロジックが密結合でテストしにくい</li>
+                    <li>「割引率」「ポイント倍率」「送料ルール」が1箇所に混在している</li>
+                </ul>
+            </div>
+
+            <h3 class="subsection-title">4-1-2 StrategyとStateの使い分け</h3>
+            <p>どちらもif-elseを解消するパターンですが、使い分けの基準があります。</p>
+
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">compare</span>
+                    Strategy vs State
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 16px;">
+                        <div style="font-weight: 700; color: #1e40af; margin-bottom: 8px;">Strategy</div>
+                        <p style="font-size: 0.85rem; color: #1e40af; margin: 0;">アルゴリズムを<strong>外部から選択して切り替える</strong></p>
+                        <p style="font-size: 0.8rem; color: #3b82f6; margin: 8px 0 0 0;">例: 割引計算方法を会員種別で選ぶ、ソートアルゴリズムを選ぶ</p>
+                    </div>
+                    <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 16px;">
+                        <div style="font-weight: 700; color: #7e22ce; margin-bottom: 8px;">State</div>
+                        <p style="font-size: 0.85rem; color: #7e22ce; margin: 0;">オブジェクトの<strong>内部状態に応じて振る舞いが自動で変わる</strong></p>
+                        <p style="font-size: 0.8rem; color: #a855f7; margin: 8px 0 0 0;">例: 注文ステータス（新規→確定→発送→完了）で許可される操作が変わる</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-2</span>
+                <h2 class="section-title">Strategyパターン</h2>
+            </div>
+            <div class="intro-text">
+                <p>Strategyパターンは、アルゴリズムをインターフェースとして切り出し、実行時に差し替え可能にするパターンです。割引計算の例でStrategyを適用してみましょう。</p>
+            </div>
+
+            <h3 class="subsection-title">4-2-1 インターフェースの定義</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>DiscountStrategy.java</span>
+                </div>
+                <pre><code>public interface DiscountStrategy {
+    int applyDiscount(int totalPrice);
+    String getMemberType();
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">4-2-2 各Strategyの実装</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>各会員種別の割引Strategy</span>
+                </div>
+                <pre><code>@Component("normal")
+public class NormalDiscount implements DiscountStrategy {
+    @Override
+    public int applyDiscount(int totalPrice) {
+        return totalPrice;  // 割引なし
+    }
+    @Override
+    public String getMemberType() { return "normal"; }
+}
+
+@Component("silver")
+public class SilverDiscount implements DiscountStrategy {
+    @Override
+    public int applyDiscount(int totalPrice) {
+        return (int)(totalPrice * 0.95);  // 5%割引
+    }
+    @Override
+    public String getMemberType() { return "silver"; }
+}
+
+@Component("gold")
+public class GoldDiscount implements DiscountStrategy {
+    @Override
+    public int applyDiscount(int totalPrice) {
+        return (int)(totalPrice * 0.90);  // 10%割引
+    }
+    @Override
+    public String getMemberType() { return "gold"; }
+}</code></pre>
+            </div>
+
+            <!-- CSS diagram for Strategy pattern -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">schema</span>
+                    Strategyパターンの構造
+                </h4>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 12px 24px; text-align: center;">
+                        <div style="font-weight: 700; color: #1e40af; font-size: 0.9rem;">DiscountStrategy（インターフェース）</div>
+                        <div style="font-size: 0.8rem; color: #1e40af;">+ applyDiscount(totalPrice): int</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.9rem;">&#9650; implements</div>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                        <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 10px; padding: 10px 14px; text-align: center; min-width: 120px;">
+                            <div style="font-weight: 600; color: #166534; font-size: 0.8rem;">NormalDiscount</div>
+                            <div style="font-size: 0.7rem; color: #166534;">割引なし</div>
+                        </div>
+                        <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 10px 14px; text-align: center; min-width: 120px;">
+                            <div style="font-weight: 600; color: #92400e; font-size: 0.8rem;">SilverDiscount</div>
+                            <div style="font-size: 0.7rem; color: #92400e;">5%割引</div>
+                        </div>
+                        <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 10px; padding: 10px 14px; text-align: center; min-width: 120px;">
+                            <div style="font-weight: 600; color: #7e22ce; font-size: 0.8rem;">GoldDiscount</div>
+                            <div style="font-size: 0.7rem; color: #7e22ce;">10%割引</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">4-2-3 Serviceでの利用</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>PricingService.java</span>
+                </div>
+                <pre><code>@Service
+public class PricingService {
+
+    private final Map&lt;String, DiscountStrategy&gt; strategies;
+
+    public PricingService(Map&lt;String, DiscountStrategy&gt; strategies) {
+        this.strategies = strategies;
+    }
+
+    public int calculateFinalPrice(String memberType, int totalPrice) {
+        DiscountStrategy strategy = strategies.get(memberType);
+        if (strategy == null) {
+            throw new IllegalArgumentException("未対応の会員種別: " + memberType);
+        }
+        return strategy.applyDiscount(totalPrice);
+    }
+}</code></pre>
+            </div>
+
+            <div class="highlight-box" style="background: #dcfce7; border-left: 4px solid #22c55e;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #166534;">check_circle</span> Strategyパターンのメリット</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li>新しい会員種別を追加する際、既存コードを修正せず新しいクラスを追加するだけ</li>
+                    <li>各割引ロジックを個別にテストできる</li>
+                    <li>if-else が完全に消える</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 4-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-3</span>
+                <h2 class="section-title">Stateパターン</h2>
+            </div>
+            <div class="intro-text">
+                <p>Stateパターンは、オブジェクトの「状態」ごとにクラスを作り、状態に応じた振る舞いの変化をif文なしで実現するパターンです。注文ステータスの管理を例に学びましょう。</p>
+            </div>
+
+            <h3 class="subsection-title">4-3-1 状態遷移図</h3>
+
+            <!-- State transition diagram -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">timeline</span>
+                    注文ステータスの状態遷移
+                </h4>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 50px; padding: 10px 20px; text-align: center;">
+                        <div style="font-weight: 700; color: #1e40af; font-size: 0.85rem;">NEW</div>
+                        <div style="font-size: 0.7rem; color: #1e40af;">新規注文</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.9rem;">→ confirm()</div>
+                    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 50px; padding: 10px 20px; text-align: center;">
+                        <div style="font-weight: 700; color: #92400e; font-size: 0.85rem;">CONFIRMED</div>
+                        <div style="font-size: 0.7rem; color: #92400e;">確定済み</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.9rem;">→ ship()</div>
+                    <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 50px; padding: 10px 20px; text-align: center;">
+                        <div style="font-weight: 700; color: #7e22ce; font-size: 0.85rem;">SHIPPED</div>
+                        <div style="font-size: 0.7rem; color: #7e22ce;">発送済み</div>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.9rem;">→ deliver()</div>
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 50px; padding: 10px 20px; text-align: center;">
+                        <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">DELIVERED</div>
+                        <div style="font-size: 0.7rem; color: #166534;">配達完了</div>
+                    </div>
+                </div>
+                <p style="text-align: center; font-size: 0.8rem; color: #64748b; margin: 12px 0 0 0;">各状態で許可される操作が異なる（例: SHIPPED状態でconfirm()は不可）</p>
+            </div>
+
+            <h3 class="subsection-title">4-3-2 Stateインターフェースと実装</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>OrderState.java（インターフェース）</span>
+                </div>
+                <pre><code>public interface OrderState {
+    OrderState confirm();
+    OrderState ship();
+    OrderState deliver();
+    OrderState cancel();
+    String getStatusName();
+}</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>NewOrderState.java / ConfirmedOrderState.java</span>
+                </div>
+                <pre><code>public class NewOrderState implements OrderState {
+    @Override
+    public OrderState confirm() {
+        System.out.println("注文を確定しました");
+        return new ConfirmedOrderState();  // 次の状態に遷移
+    }
+
+    @Override
+    public OrderState ship() {
+        throw new IllegalStateException("未確定の注文は発送できません");
+    }
+
+    @Override
+    public OrderState deliver() {
+        throw new IllegalStateException("未確定の注文は配達完了にできません");
+    }
+
+    @Override
+    public OrderState cancel() {
+        System.out.println("注文をキャンセルしました");
+        return new CancelledOrderState();
+    }
+
+    @Override
+    public String getStatusName() { return "NEW"; }
+}
+
+public class ConfirmedOrderState implements OrderState {
+    @Override
+    public OrderState confirm() {
+        throw new IllegalStateException("既に確定済みです");
+    }
+
+    @Override
+    public OrderState ship() {
+        System.out.println("注文を発送しました");
+        return new ShippedOrderState();
+    }
+
+    @Override
+    public OrderState deliver() {
+        throw new IllegalStateException("発送前に配達完了にはできません");
+    }
+
+    @Override
+    public OrderState cancel() {
+        System.out.println("確定済み注文をキャンセルしました");
+        return new CancelledOrderState();
+    }
+
+    @Override
+    public String getStatusName() { return "CONFIRMED"; }
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">4-3-3 コンテキストクラス</h3>
+            <p>注文（Order）は内部にStateオブジェクトを保持し、操作を委譲します。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>Order.java（コンテキスト）</span>
+                </div>
+                <pre><code>public class Order {
+    private OrderState state;
+
+    public Order() {
+        this.state = new NewOrderState();  // 初期状態
+    }
+
+    public void confirm() {
+        this.state = state.confirm();  // 状態遷移を委譲
+    }
+
+    public void ship() {
+        this.state = state.ship();
+    }
+
+    public void deliver() {
+        this.state = state.deliver();
+    }
+
+    public void cancel() {
+        this.state = state.cancel();
+    }
+
+    public String getStatus() {
+        return state.getStatusName();
+    }
+}
+
+// 使用例
+Order order = new Order();          // NEW
+order.confirm();                     // NEW → CONFIRMED
+order.ship();                        // CONFIRMED → SHIPPED
+order.deliver();                     // SHIPPED → DELIVERED</code></pre>
+            </div>
+        </section>
+
+        <!-- Exercise Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">4章 練習問題</h2>
+            </div>
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Strategyパターンを適用すべき場面として最も適切なものはどれですか。</p>
+                        <p>A. オブジェクトの内部状態に応じて振る舞いを自動的に変えたい<br>
+                           B. 同じ処理に対して複数のアルゴリズムを外部から選択して切り替えたい<br>
+                           C. オブジェクトの生成を専用クラスに委譲したい<br>
+                           D. イベント発生時に複数のリスナーに通知したい</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>Stateパターンで「SHIPPED（発送済み）」の状態のときに<code>confirm()</code>メソッドを呼ぶと何が起こるべきですか。その理由も説明してください。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>以下の要件では、StrategyとStateのどちらが適切ですか。理由も述べてください。</p>
+                        <p>「ブログ記事には「下書き」「公開中」「非公開」のステータスがあり、ステータスによって編集・削除・公開の可否が変わる。」</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Answer Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">4章 解説・解答</h2>
+            </div>
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正解: B. 同じ処理に対して複数のアルゴリズムを外部から選択して切り替えたい</strong></p>
+                        <p>Strategyパターンは「どのアルゴリズムを使うか」を利用側が選択するパターンです。Aは State、CはFactory、DはObserverパターンの場面です。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q2 解答</div>
+                    <div class="answer-content">
+                        <p><strong>IllegalStateExceptionがスローされるべき。</strong></p>
+                        <p>SHIPPED状態で<code>confirm()</code>を呼ぶのは不正な操作です。すでに確定・発送済みの注文を再度「確定」することは業務ロジックとして矛盾しています。Stateパターンでは各状態クラスが自身で許可されない操作を拒否（例外をスロー）することで、不正な状態遷移を防ぎます。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q3 解答</div>
+                    <div class="answer-content">
+                        <p><strong>Stateパターンが適切。</strong></p>
+                        <p>ブログ記事のステータスは「内部状態」であり、状態に応じて許可される操作が自動的に変わります（例：「下書き」では削除可能だが「公開中」では直接削除不可など）。これは「外部からアルゴリズムを選択する」Strategyではなく、「内部状態に応じて振る舞いが変わる」Stateパターンの典型的な適用場面です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="3dp-factory.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div><div class="page-nav-label">前の章</div><div class="page-nav-title">第3章 Factoryパターン</div></div>
+        </a>
+        <a href="5dp-observer-command.html" class="page-nav-btn next">
+            <div><div class="page-nav-label">次の章</div><div class="page-nav-title">第5章 Observer/Commandパターン</div></div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

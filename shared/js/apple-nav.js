@@ -17,6 +17,7 @@ const appleNavData = {
         { id: "devtools",  href: "index.html#devtools",  text: "環境構築" },
         { id: "ai",        href: "index.html#ai",        text: "AI・自動化" },
         { id: "design",    href: "index.html#design",    text: "デザイン" },
+        { id: "software-design", href: "index.html#software-design", text: "ソフトウェア設計" },
         { id: "business",  href: "index.html#business",  text: "ビジネス" },
         { id: "exercises", href: "index.html#exercises",  text: "総合演習" }
     ]

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第8章 総合演習 - デザインパターン入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-design-pattern.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">8</div>
+            <h1 class="chapter-title">総合演習</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">8-1</span><span>課題の概要</span></li>
+                <li class="toc-item"><span class="toc-number">8-2</span><span>Before: パターン未適用コード</span></li>
+                <li class="toc-item"><span class="toc-number">8-3</span><span>適用パターンの選定</span></li>
+                <li class="toc-item"><span class="toc-number">8-4</span><span>After: リファクタリング後</span></li>
+            </ul>
+        </nav>
+
+        <!-- Section 8-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 8-1</span>
+                <h2 class="section-title">課題の概要</h2>
+            </div>
+            <div class="intro-text">
+                <p>この章では、ECサイトの注文処理を題材に、これまで学んだデザインパターンを組み合わせてリファクタリングする総合演習に取り組みます。</p>
+            </div>
+
+            <h3 class="subsection-title">8-1-1 題材: ECサイトの注文処理</h3>
+            <p>あるECサイトの注文処理には以下の機能があります。</p>
+            <ul>
+                <li><strong>割引計算</strong>：会員種別（通常/シルバー/ゴールド）に応じた割引率を適用</li>
+                <li><strong>決済処理</strong>：支払い方法（クレジットカード/銀行振込/コンビニ払い）の切り替え</li>
+                <li><strong>通知送信</strong>：注文確定後にメール送信、在庫更新、ポイント付与を実行</li>
+            </ul>
+
+            <h3 class="subsection-title">8-1-2 リファクタリングの目標</h3>
+            <div class="highlight-box" style="background: #f3e8ff; border-left: 4px solid #a855f7;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #7e22ce;">flag</span> 目標</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li>新しい会員種別や支払い方法を追加するとき、既存コードの修正が不要になること</li>
+                    <li>注文確定後の後続処理を、OrderServiceを修正せず追加できること</li>
+                    <li>各処理を個別にテストできること</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 8-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 8-2</span>
+                <h2 class="section-title">Before: パターン未適用コード</h2>
+            </div>
+            <div class="intro-text">
+                <p>まず、パターンを適用していない「よくある初期実装」を見てみましょう。すべての処理がOrderServiceに集中しています。</p>
+            </div>
+
+            <h3 class="subsection-title">8-2-1 全部入りのOrderService</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>OrderService.java（Before: パターン未適用）</span>
+                </div>
+                <pre><code>@Service
+public class OrderService {
+
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private StockRepository stockRepository;
+    @Autowired private MailService mailService;
+    @Autowired private PointService pointService;
+
+    @Transactional
+    public OrderResult placeOrder(String memberType, String paymentMethod,
+                                   List&lt;OrderItem&gt; items) {
+        // 1. 合計金額の計算
+        int totalPrice = items.stream()
+                .mapToInt(item -&gt; item.getPrice() * item.getQuantity())
+                .sum();
+
+        // 2. 割引計算（if-else地獄）
+        int discountedPrice;
+        if (memberType.equals("normal")) {
+            discountedPrice = totalPrice;
+        } else if (memberType.equals("silver")) {
+            discountedPrice = (int)(totalPrice * 0.95);
+        } else if (memberType.equals("gold")) {
+            discountedPrice = (int)(totalPrice * 0.90);
+        } else {
+            discountedPrice = totalPrice;
+        }
+
+        // 3. 決済処理（if-else地獄）
+        if (paymentMethod.equals("credit")) {
+            // クレジットカード決済ロジック...
+            System.out.println("クレジットカード決済: " + discountedPrice);
+        } else if (paymentMethod.equals("bank")) {
+            // 銀行振込ロジック...
+            System.out.println("銀行振込: " + discountedPrice);
+        } else if (paymentMethod.equals("convenience")) {
+            // コンビニ払いロジック...
+            System.out.println("コンビニ払い: " + discountedPrice);
+        }
+
+        // 4. 注文保存
+        Order order = new Order();
+        order.setItems(items);
+        order.setTotalAmount(discountedPrice);
+        order.setPaymentMethod(paymentMethod);
+        order.setStatus("CONFIRMED");
+        orderRepository.save(order);
+
+        // 5. 後続処理（直接呼び出し → 追加のたびに修正が必要）
+        for (OrderItem item : items) {
+            stockRepository.decreaseStock(item.getProductId(), item.getQuantity());
+        }
+        mailService.sendConfirmationMail(order);
+        pointService.addPoints(order.getCustomerId(), discountedPrice);
+
+        return new OrderResult(order.getId(), "注文完了", discountedPrice);
+    }
+}</code></pre>
+            </div>
+
+            <div class="highlight-box" style="background: #fef2f2; border-left: 4px solid #fca5a5;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #991b1b;">error</span> このコードの問題点</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li><strong>if-else地獄</strong>：割引計算と決済処理にif-else分岐が大量にある</li>
+                    <li><strong>単一責任の原則違反</strong>：1つのServiceに割引・決済・通知・在庫管理が集中</li>
+                    <li><strong>拡張性の欠如</strong>：新しい会員種別や支払い方法の追加時にOrderServiceを修正する必要がある</li>
+                    <li><strong>テスト困難</strong>：全機能が密結合で個別テストが不可能</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 8-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 8-3</span>
+                <h2 class="section-title">適用パターンの選定</h2>
+            </div>
+            <div class="intro-text">
+                <p>問題点を分析し、適切なパターンを選定します。</p>
+            </div>
+
+            <h3 class="subsection-title">8-3-1 問題→パターンのマッピング</h3>
+
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">checklist</span>
+                    問題とパターンの対応表
+                </h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="background: #f1f5f9;">
+                            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600;">問題点</th>
+                            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600;">適用パターン</th>
+                            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600;">効果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">割引計算のif-else</td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;"><strong style="color: #1e40af;">Strategy</strong></td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">会員種別ごとにStrategyクラスを分離</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">決済処理のif-else</td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;"><strong style="color: #166534;">Factory + Strategy</strong></td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">Factoryで適切な決済Processorを生成</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">後続処理の直接呼び出し</td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;"><strong style="color: #7e22ce;">Observer (Spring Event)</strong></td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">イベント発行で疎結合に</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px;">DBアクセスの直接利用</td>
+                            <td style="padding: 10px 12px;"><strong style="color: #92400e;">Repository</strong></td>
+                            <td style="padding: 10px 12px;">データアクセスを抽象化</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="subsection-title">8-3-2 Before/Afterのアーキテクチャ比較</h3>
+
+            <!-- Before/After architecture comparison diagram -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">compare</span>
+                    アーキテクチャの変化
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- Before -->
+                    <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 12px; padding: 16px;">
+                        <div style="font-weight: 700; color: #991b1b; margin-bottom: 12px; text-align: center;">Before</div>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                            <div style="background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 8px 16px; font-size: 0.75rem; color: #991b1b; text-align: center; width: 90%;">
+                                <strong>OrderService（巨大クラス）</strong><br>
+                                割引計算 + 決済処理 + 在庫更新 + メール送信 + ポイント付与
+                            </div>
+                            <div style="color: #fca5a5;">&#9660;</div>
+                            <div style="background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 6px 12px; font-size: 0.7rem; color: #991b1b;">OrderRepository</div>
+                        </div>
+                    </div>
+                    <!-- After -->
+                    <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 16px;">
+                        <div style="font-weight: 700; color: #166534; margin-bottom: 12px; text-align: center;">After</div>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                            <div style="background: #bbf7d0; border: 1px solid #22c55e; border-radius: 8px; padding: 6px 12px; font-size: 0.7rem; color: #166534; text-align: center;">OrderService（スリム化）</div>
+                            <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;">
+                                <div style="background: #dbeafe; border: 1px solid #3b82f6; border-radius: 6px; padding: 4px 8px; font-size: 0.65rem; color: #1e40af;">Strategy</div>
+                                <div style="background: #f3e8ff; border: 1px solid #a855f7; border-radius: 6px; padding: 4px 8px; font-size: 0.65rem; color: #7e22ce;">Factory</div>
+                                <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 4px 8px; font-size: 0.65rem; color: #92400e;">Event</div>
+                            </div>
+                            <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;">
+                                <div style="background: #bbf7d0; border: 1px solid #22c55e; border-radius: 6px; padding: 4px 6px; font-size: 0.6rem; color: #166534;">StockListener</div>
+                                <div style="background: #bbf7d0; border: 1px solid #22c55e; border-radius: 6px; padding: 4px 6px; font-size: 0.6rem; color: #166534;">MailListener</div>
+                                <div style="background: #bbf7d0; border: 1px solid #22c55e; border-radius: 6px; padding: 4px 6px; font-size: 0.6rem; color: #166534;">PointListener</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 8-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 8-4</span>
+                <h2 class="section-title">After: リファクタリング後</h2>
+            </div>
+            <div class="intro-text">
+                <p>各パターンを適用して、OrderServiceをスリム化しましょう。</p>
+            </div>
+
+            <h3 class="subsection-title">8-4-1 割引計算のStrategy化</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>DiscountStrategy.java + 実装クラス</span>
+                </div>
+                <pre><code>public interface DiscountStrategy {
+    int applyDiscount(int totalPrice);
+}
+
+@Component("normal")
+public class NormalDiscount implements DiscountStrategy {
+    @Override
+    public int applyDiscount(int totalPrice) {
+        return totalPrice;
+    }
+}
+
+@Component("silver")
+public class SilverDiscount implements DiscountStrategy {
+    @Override
+    public int applyDiscount(int totalPrice) {
+        return (int)(totalPrice * 0.95);
+    }
+}
+
+@Component("gold")
+public class GoldDiscount implements DiscountStrategy {
+    @Override
+    public int applyDiscount(int totalPrice) {
+        return (int)(totalPrice * 0.90);
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">8-4-2 決済処理のFactory + Strategy化</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>PaymentProcessor.java + Factory</span>
+                </div>
+                <pre><code>public interface PaymentProcessor {
+    PaymentResult process(int amount, PaymentInfo info);
+}
+
+@Component("credit")
+public class CreditCardProcessor implements PaymentProcessor {
+    @Override
+    public PaymentResult process(int amount, PaymentInfo info) {
+        // クレジットカード決済の実装
+        System.out.println("クレジットカード決済: ¥" + amount);
+        return new PaymentResult(true, "CC-" + UUID.randomUUID());
+    }
+}
+
+@Component("bank")
+public class BankTransferProcessor implements PaymentProcessor {
+    @Override
+    public PaymentResult process(int amount, PaymentInfo info) {
+        System.out.println("銀行振込: ¥" + amount);
+        return new PaymentResult(true, "BK-" + UUID.randomUUID());
+    }
+}
+
+@Component("convenience")
+public class ConvenienceProcessor implements PaymentProcessor {
+    @Override
+    public PaymentResult process(int amount, PaymentInfo info) {
+        System.out.println("コンビニ払い: ¥" + amount);
+        return new PaymentResult(true, "CV-" + UUID.randomUUID());
+    }
+}
+
+// Factory（MapインジェクションでOCP準拠）
+@Component
+public class PaymentFactory {
+    private final Map&lt;String, PaymentProcessor&gt; processors;
+
+    public PaymentFactory(Map&lt;String, PaymentProcessor&gt; processors) {
+        this.processors = processors;
+    }
+
+    public PaymentProcessor getProcessor(String method) {
+        PaymentProcessor processor = processors.get(method);
+        if (processor == null) {
+            throw new IllegalArgumentException("未対応の決済方法: " + method);
+        }
+        return processor;
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">8-4-3 後続処理のObserver化（Spring Event）</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>OrderConfirmedEvent.java + EventListeners</span>
+                </div>
+                <pre><code>// イベントクラス
+public class OrderConfirmedEvent {
+    private final Long orderId;
+    private final Long customerId;
+    private final int totalAmount;
+    private final List&lt;OrderItem&gt; items;
+
+    public OrderConfirmedEvent(Long orderId, Long customerId,
+                                int totalAmount, List&lt;OrderItem&gt; items) {
+        this.orderId = orderId;
+        this.customerId = customerId;
+        this.totalAmount = totalAmount;
+        this.items = items;
+    }
+    // getter省略
+}
+
+// 在庫リスナー
+@Component
+public class StockEventListener {
+    private final StockRepository stockRepository;
+
+    public StockEventListener(StockRepository stockRepository) {
+        this.stockRepository = stockRepository;
+    }
+
+    @EventListener
+    public void onOrderConfirmed(OrderConfirmedEvent event) {
+        for (OrderItem item : event.getItems()) {
+            stockRepository.decreaseStock(item.getProductId(), item.getQuantity());
+        }
+    }
+}
+
+// メールリスナー
+@Component
+public class MailEventListener {
+    private final MailService mailService;
+
+    public MailEventListener(MailService mailService) {
+        this.mailService = mailService;
+    }
+
+    @EventListener
+    public void onOrderConfirmed(OrderConfirmedEvent event) {
+        mailService.sendConfirmationMail(event.getOrderId());
+    }
+}
+
+// ポイントリスナー
+@Component
+public class PointEventListener {
+    private final PointService pointService;
+
+    public PointEventListener(PointService pointService) {
+        this.pointService = pointService;
+    }
+
+    @EventListener
+    public void onOrderConfirmed(OrderConfirmedEvent event) {
+        int points = (int)(event.getTotalAmount() * 0.01);
+        pointService.addPoints(event.getCustomerId(), points);
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">8-4-4 リファクタリング後のOrderService</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>OrderService.java（After: パターン適用後）</span>
+                </div>
+                <pre><code>@Service
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final Map&lt;String, DiscountStrategy&gt; discountStrategies;
+    private final PaymentFactory paymentFactory;
+    private final ApplicationEventPublisher eventPublisher;
+
+    public OrderService(OrderRepository orderRepository,
+                        Map&lt;String, DiscountStrategy&gt; discountStrategies,
+                        PaymentFactory paymentFactory,
+                        ApplicationEventPublisher eventPublisher) {
+        this.orderRepository = orderRepository;
+        this.discountStrategies = discountStrategies;
+        this.paymentFactory = paymentFactory;
+        this.eventPublisher = eventPublisher;
+    }
+
+    @Transactional
+    public OrderResult placeOrder(OrderRequest request) {
+        // 1. 合計金額の計算
+        int totalPrice = request.getItems().stream()
+                .mapToInt(item -&gt; item.getPrice() * item.getQuantity())
+                .sum();
+
+        // 2. 割引計算（Strategy）
+        DiscountStrategy discount = discountStrategies.get(request.getMemberType());
+        int discountedPrice = discount.applyDiscount(totalPrice);
+
+        // 3. 決済処理（Factory + Strategy）
+        PaymentProcessor processor = paymentFactory.getProcessor(
+            request.getPaymentMethod()
+        );
+        PaymentResult payment = processor.process(discountedPrice,
+            request.getPaymentInfo());
+
+        // 4. 注文保存（Repository）
+        Order order = Order.builder()
+                .customerId(request.getCustomerId())
+                .items(request.getItems())
+                .totalAmount(discountedPrice)
+                .paymentId(payment.getTransactionId())
+                .status("CONFIRMED")
+                .build();
+        orderRepository.save(order);
+
+        // 5. イベント発行（Observer）→ 後続処理は知らなくてよい
+        eventPublisher.publishEvent(
+            new OrderConfirmedEvent(
+                order.getId(), request.getCustomerId(),
+                discountedPrice, request.getItems()
+            )
+        );
+
+        return new OrderResult(order.getId(), "注文完了", discountedPrice);
+    }
+}</code></pre>
+            </div>
+
+            <div class="highlight-box" style="background: #dcfce7; border-left: 4px solid #22c55e;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #166534;">check_circle</span> リファクタリングの成果</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li><strong>if-else完全消滅</strong>：割引も決済もMapベースの動的ディスパッチに</li>
+                    <li><strong>Open-Closed原則</strong>：新規追加は新クラス作成のみ、既存コード修正なし</li>
+                    <li><strong>疎結合</strong>：OrderServiceは後続処理（在庫・メール・ポイント）を知らない</li>
+                    <li><strong>テスト容易</strong>：各Strategy / Processor / Listener を個別にテスト可能</li>
+                </ul>
+            </div>
+
+            <h3 class="subsection-title">8-4-5 拡張シナリオ</h3>
+            <p>リファクタリング後は、以下の追加要件に既存コードの修正なしで対応できます。</p>
+
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">extension</span>
+                    拡張シナリオと必要な作業
+                </h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="background: #f1f5f9;">
+                            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600;">追加要件</th>
+                            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600;">必要な作業</th>
+                            <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600;">既存コードの修正</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">プラチナ会員の追加</td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">PlatinumDiscount クラスを作成</td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #166534; font-weight: 600;">なし</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">PayPay決済の追加</td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">PayPayProcessor クラスを作成</td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #166534; font-weight: 600;">なし</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">Slack通知の追加</td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">SlackEventListener クラスを作成</td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #166534; font-weight: 600;">なし</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px;">分析データ送信の追加</td>
+                            <td style="padding: 10px 12px;">AnalyticsEventListener クラスを作成</td>
+                            <td style="padding: 10px 12px; color: #166534; font-weight: 600;">なし</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Exercise Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">8章 練習問題</h2>
+            </div>
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>以下の要件に対して、どのデザインパターンを適用すべきか選んでください。</p>
+                        <p>「配送方法（通常配送/速達/コンビニ受取）に応じて配送料の計算ロジックが異なる。新しい配送方法の追加が頻繁にある。」</p>
+                        <p>A. Observer &nbsp; B. Factory &nbsp; C. Strategy &nbsp; D. Decorator</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>リファクタリング後のOrderServiceにおいて、<code>ApplicationEventPublisher</code>を使ってイベントを発行することの利点を2つ挙げてください。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>以下の要件に対して、適用すべきパターンの組み合わせを選んでください。</p>
+                        <p>「レポート生成システムで、出力形式（PDF/Excel/CSV）の切り替えと、レポート生成後の通知（メール/Slack）を行いたい。形式も通知先も今後追加される予定がある。」</p>
+                        <p>A. Factory + Observer &nbsp; B. Strategy + Decorator &nbsp; C. Builder + Facade &nbsp; D. State + Command</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Answer Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">8章 解説・解答</h2>
+            </div>
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正解: C. Strategy</strong></p>
+                        <p>配送方法ごとに計算ロジックが異なり、外部から選択して切り替える場面はStrategyパターンが適切です。各配送方法のクラスが<code>ShippingStrategy</code>インターフェースを実装し、MapインジェクションやFactoryと組み合わせて使います。新しい配送方法は新クラスを追加するだけで対応できます。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q2 解答</div>
+                    <div class="answer-content">
+                        <p><strong>1. 疎結合</strong>：OrderServiceは後続処理（在庫更新、メール送信、ポイント付与）のクラスを知らなくてよく、依存関係が切れます。OrderServiceのフィールドにStockServiceやMailServiceが不要になります。</p>
+                        <p><strong>2. 拡張性</strong>：新しい後続処理を追加する際、OrderServiceを修正する必要がありません。新しいEventListenerクラスを作成して@EventListenerメソッドを実装するだけで、自動的にイベントを受信できます（Open-Closed原則）。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q3 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正解: A. Factory + Observer</strong></p>
+                        <p><strong>Factory</strong>：出力形式（PDF/Excel/CSV）の切り替えにはFactoryパターンが適切です。<code>ReportGeneratorFactory</code>が形式に応じた<code>ReportGenerator</code>を返します。新形式の追加はクラスを追加するだけで済みます。</p>
+                        <p><strong>Observer</strong>：レポート生成後の通知はObserver（Spring Event）が適切です。「レポート生成完了」イベントを発行し、各通知リスナー（メール、Slack）が独立して受信します。通知先の追加は新しいリスナーを作るだけで済みます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="7dp-spring-patterns.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div><div class="page-nav-label">前の章</div><div class="page-nav-title">第7章 Spring固有パターン</div></div>
+        </a>
+        <a href="index.html" class="page-nav-btn next">
+            <div><div class="page-nav-label">目次に戻る</div><div class="page-nav-title">デザインパターン入門</div></div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

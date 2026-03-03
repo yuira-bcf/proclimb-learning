@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3章 機能仕様書の書き方 - 設計書駆動プロンプト開発</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+      .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; }
+      .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+      .code-dots { display: flex; gap: 6px; }
+      .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+      .code-dot.red { background: #ff5f56; }
+      .code-dot.yellow { background: #ffbd2e; }
+      .code-dot.green { background: #27ca40; }
+      .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+      .code-content { padding: 16px; overflow-x: auto; }
+      .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+      .prompt-card { background: linear-gradient(135deg, #5856D6 0%, #7B79E8 50%, #9B99F0 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+      .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+      .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; }
+      .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-doc-driven.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">3</div>
+            <h1 class="chapter-title">機能仕様書の書き方</h1>
+        </header>
+
+        <nav class="toc">
+            <h3>目次</h3>
+            <ul>
+                <li><a href="#section1">3-1. 機能仕様書とは</a></li>
+                <li><a href="#section2">3-2. ユースケース記述</a></li>
+                <li><a href="#section3">3-3. 画面一覧・機能一覧</a></li>
+                <li><a href="#section4">3-4. テンプレートの使い方</a></li>
+                <li><a href="#section5">3-5. プロンプトへの変換</a></li>
+                <li><a href="#exercises">練習問題</a></li>
+            </ul>
+        </nav>
+
+        <!-- Section 1 -->
+        <section id="section1" class="section">
+            <div class="section-header">
+                <span class="section-number">3-1</span>
+                <h2 class="section-title">機能仕様書とは</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>3-1-1. 要件定義書との違い</h3>
+                <p>要件定義書が<strong>「何を作るか」</strong>を定義するのに対し、機能仕様書は<strong>「どう動くか」</strong>を定義します。具体的には、ユーザーがどのような操作をし、システムがどう応答するかを詳細に記述します。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">compare_arrows</span> 要件定義書 vs 機能仕様書
+                    </h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div style="background: #dbeafe; border-radius: 12px; padding: 16px;">
+                            <p style="font-weight: 700; color: #1e40af; margin: 0 0 8px;"><span class="material-icons" style="font-size: 18px; vertical-align: middle;">assignment</span> 要件定義書</p>
+                            <p style="font-size: 0.85rem; color: #334155; margin: 0 0 8px;"><strong>What（何を作るか）</strong></p>
+                            <p style="font-size: 0.85rem; color: #334155; margin: 0;">例: 「タスクの追加ができる」</p>
+                        </div>
+                        <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                            <p style="font-weight: 700; color: #166534; margin: 0 0 8px;"><span class="material-icons" style="font-size: 18px; vertical-align: middle;">fact_check</span> 機能仕様書</p>
+                            <p style="font-size: 0.85rem; color: #334155; margin: 0 0 8px;"><strong>How（どう動くか）</strong></p>
+                            <p style="font-size: 0.85rem; color: #334155; margin: 0;">例: 「一覧画面で新規作成ボタンを押すと登録フォームが表示され、タイトル(必須・100文字以内)と説明を入力して登録ボタンを押すと一覧に戻る」</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>3-1-2. 機能仕様書に含まれる内容</h3>
+                <p>機能仕様書は以下の要素で構成されます。</p>
+                <ul>
+                    <li><strong>ユースケース一覧</strong>: システムの振る舞いを操作単位で定義</li>
+                    <li><strong>画面一覧</strong>: 必要な画面とURLの対応</li>
+                    <li><strong>画面遷移</strong>: 画面間の遷移ルール</li>
+                    <li><strong>ビジネスルール</strong>: バリデーションやデータの整合性ルール</li>
+                    <li><strong>メッセージ一覧</strong>: 成功・エラー時の表示メッセージ</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section id="section2" class="section">
+            <div class="section-header">
+                <span class="section-number">3-2</span>
+                <h2 class="section-title">ユースケース記述</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>3-2-1. ユースケースとは</h3>
+                <p>ユースケースは<strong>「ユーザーがシステムを使って達成する目標」</strong>を1つの単位として記述したものです。各ユースケースには、アクター（操作者）、事前条件、操作手順（フロー）、事後条件を記載します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>3-2-2. ユースケース一覧テーブル</h3>
+                <p>まず全体像を把握するために、ユースケースを一覧表で整理します。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">table_chart</span> 記入例: Todoアプリのユースケース一覧
+                    </h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="background: #22c55e; color: white;">
+                                    <th style="padding: 10px 14px; text-align: left;">UC-ID</th>
+                                    <th style="padding: 10px 14px; text-align: left;">ユースケース名</th>
+                                    <th style="padding: 10px 14px; text-align: left;">アクター</th>
+                                    <th style="padding: 10px 14px; text-align: left;">概要</th>
+                                    <th style="padding: 10px 14px; text-align: left;">優先度</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">UC-001</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスクを追加する</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">一般ユーザー</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">新規タスクを登録する</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">高</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">UC-002</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスク一覧を見る</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">一般ユーザー</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">全タスクを一覧表示する</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">高</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">UC-003</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスクを編集する</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">一般ユーザー</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">既存タスクを修正する</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">中</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">UC-004</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスクを削除する</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">一般ユーザー</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">不要なタスクを削除する</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">高</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; font-family: 'JetBrains Mono', monospace; font-weight: 600;">UC-005</td>
+                                    <td style="padding: 8px 14px;">タスクを完了にする</td>
+                                    <td style="padding: 8px 14px;">一般ユーザー</td>
+                                    <td style="padding: 8px 14px;">タスクの完了/未完了を切替</td>
+                                    <td style="padding: 8px 14px;">高</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>3-2-3. ユースケース詳細の書き方</h3>
+                <p>各ユースケースの詳細を<strong>正常系フロー・代替フロー・例外フロー</strong>の3つに分けて記述します。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">UC-001: タスクを追加する（詳細）</span>
+                    </div>
+                    <div class="code-content">
+<pre>### UC-001: タスクを追加する
+
+| 項目 | 内容 |
+|------|------|
+| アクター | 一般ユーザー |
+| 事前条件 | ユーザーがタスク一覧画面を表示している |
+| 事後条件 | 新しいタスクがDBに保存され一覧に表示される |
+
+**正常系フロー:**
+1. ユーザーが「新規作成」ボタンをクリックする
+2. システムがタスク登録フォームを表示する
+3. ユーザーがタイトル（必須）と説明（任意）を入力する
+4. ユーザーが「登録」ボタンをクリックする
+5. システムが入力値を検証する
+6. システムがタスクをDBに保存する
+7. システムがタスク一覧画面にリダイレクトし、
+   成功メッセージ「タスクを登録しました」を表示する
+
+**代替フロー:**
+- 5a. タイトルが未入力の場合
+  1. エラーメッセージ「タイトルは必須です」を表示
+  2. 入力済みの値を保持したままフォームを再表示
+  3. ステップ3に戻る
+- 5b. タイトルが100文字を超える場合
+  1. エラーメッセージ「100文字以内で入力してください」を表示
+  2. ステップ3に戻る
+
+**例外フロー:**
+- E1. サーバーエラーが発生した場合
+  1. エラーページを表示する</pre>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title"><span class="material-icons">lightbulb</span> なぜフローを3つに分けるのか</div>
+                    <div class="info-box-content">
+                        <p><strong>正常系</strong>はハッピーパス（すべてうまくいく場合）、<strong>代替フロー</strong>はユーザーの入力ミスなどの想定内の異常、<strong>例外フロー</strong>はシステム障害などの想定外の異常です。これを分けて書くことで、テストケースの抜け漏れを防げます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section id="section3" class="section">
+            <div class="section-header">
+                <span class="section-number">3-3</span>
+                <h2 class="section-title">画面一覧・機能一覧</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>3-3-1. 画面一覧テーブル</h3>
+                <p>画面一覧は、システムに必要な<strong>すべての画面</strong>とそのURLを一覧化したものです。</p>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="background: #5856D6; color: white;">
+                                <th style="padding: 10px 14px; text-align: left; border-radius: 8px 0 0 0;">画面ID</th>
+                                <th style="padding: 10px 14px; text-align: left;">画面名</th>
+                                <th style="padding: 10px 14px; text-align: left;">URL</th>
+                                <th style="padding: 10px 14px; text-align: left; border-radius: 0 8px 0 0;">概要</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">SCR-001</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスク一覧</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">/todos</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">全タスクを表形式で表示</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">SCR-002</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスク登録</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">/todos/new</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">新規タスク登録フォーム</td>
+                            </tr>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">SCR-003</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスク詳細</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">/todos/{id}</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスクの詳細表示</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 14px; font-family: 'JetBrains Mono', monospace;">SCR-004</td>
+                                <td style="padding: 8px 14px;">タスク編集</td>
+                                <td style="padding: 8px 14px; font-family: 'JetBrains Mono', monospace;">/todos/{id}/edit</td>
+                                <td style="padding: 8px 14px;">タスク編集フォーム</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>3-3-2. 画面遷移の記述</h3>
+                <p>画面遷移は、ユーザーがどの画面からどの画面に移動できるかを示します。Markdownでは矢印記法で簡潔に書けます。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">account_tree</span> Todoアプリ画面遷移図
+                    </h4>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 12px 24px; font-weight: 700; color: #1e40af;">SCR-001: タスク一覧</div>
+                        <div style="display: flex; gap: 40px; align-items: flex-start;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                <span style="color: #64748b; font-size: 0.8rem;">新規作成</span>
+                                <span style="color: #3b82f6; font-size: 1.2rem;">↓</span>
+                                <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 10px 20px; font-weight: 700; color: #166534; font-size: 0.9rem;">SCR-002: 登録</div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                <span style="color: #64748b; font-size: 0.8rem;">詳細リンク</span>
+                                <span style="color: #3b82f6; font-size: 1.2rem;">↓</span>
+                                <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 10px 20px; font-weight: 700; color: #6b21a8; font-size: 0.9rem;">SCR-003: 詳細</div>
+                                <span style="color: #a855f7; font-size: 0.8rem;">編集ボタン ↓</span>
+                                <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 10px 20px; font-weight: 700; color: #92400e; font-size: 0.9rem;">SCR-004: 編集</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>3-3-3. ビジネスルール</h3>
+                <p>ビジネスルールは、データの整合性やバリデーションに関する<strong>業務上のルール</strong>です。</p>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="background: #f59e0b; color: white;">
+                                <th style="padding: 10px 14px; text-align: left; border-radius: 8px 0 0 0;">ルールID</th>
+                                <th style="padding: 10px 14px; text-align: left;">ルール名</th>
+                                <th style="padding: 10px 14px; text-align: left;">説明</th>
+                                <th style="padding: 10px 14px; text-align: left; border-radius: 0 8px 0 0;">適用画面</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">BR-001</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タイトル必須</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスクのタイトルは空欄不可、1〜100文字</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-002, SCR-004</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">BR-002</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">説明文字数制限</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">説明は最大500文字</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-002, SCR-004</td>
+                            </tr>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 8px 14px; font-family: 'JetBrains Mono', monospace; font-weight: 600;">BR-003</td>
+                                <td style="padding: 8px 14px;">削除確認</td>
+                                <td style="padding: 8px 14px;">削除実行前に確認ダイアログを表示する</td>
+                                <td style="padding: 8px 14px;">SCR-001, SCR-003</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4 -->
+        <section id="section4" class="section">
+            <div class="section-header">
+                <span class="section-number">3-4</span>
+                <h2 class="section-title">テンプレートの使い方</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>3-4-1. functional-spec-template.md の構造</h3>
+                <p><code>templates/functional-spec-template.md</code> は、ユースケース一覧、ユースケース詳細、画面一覧、ビジネスルール、メッセージ一覧のセクションで構成されています。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">functional-spec-template.md（主要セクション）</span>
+                    </div>
+                    <div class="code-content">
+<pre># 機能仕様書: {プロジェクト名}
+
+## 2. ユースケース一覧
+| UC-ID | ユースケース名 | アクター | 概要 | 優先度 |
+|-------|---------------|---------|------|--------|
+| UC-001 | {名前} | {アクター} | {概要} | 高/中/低 |
+
+## 3. ユースケース詳細
+### UC-001: {ユースケース名}
+| 項目 | 内容 |
+|------|------|
+| アクター | {ユーザー種別} |
+| 事前条件 | {条件} |
+| 事後条件 | {条件} |
+
+**正常系フロー:**
+1. {ステップ1}
+2. {ステップ2}
+
+## 4. 画面一覧
+| 画面ID | 画面名 | URL | 概要 |
+|--------|--------|-----|------|
+
+## 6. ビジネスルール
+| ルールID | ルール名 | 説明 | 適用画面 |
+|----------|---------|------|----------|
+
+## 7. バリデーションルール
+| 項目名 | ルール | エラーメッセージ |
+|--------|--------|----------------|</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>3-4-2. テンプレート記入のポイント</h3>
+                <div class="info-box success">
+                    <div class="info-box-title"><span class="material-icons">check_circle</span> 記入のポイント</div>
+                    <div class="info-box-content">
+                        <ul>
+                            <li><strong>ユースケースIDは要件IDと対応させる</strong>: FR-001 に対して UC-001 が対応するように</li>
+                            <li><strong>画面IDも紐付ける</strong>: ユースケース内で「SCR-002が表示される」のように参照する</li>
+                            <li><strong>代替フローを忘れない</strong>: バリデーションエラー時の挙動は必ず記述する</li>
+                            <li><strong>メッセージは具体的に</strong>: 「エラーです」ではなく「タイトルは必須です」と書く</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="section5" class="section">
+            <div class="section-header">
+                <span class="section-number">3-5</span>
+                <h2 class="section-title">プロンプトへの変換</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>3-5-1. 機能仕様書からControllerの生成</h3>
+                <p>機能仕様書のユースケースと画面一覧は、<strong>Spring BootのControllerクラス</strong>を生成するプロンプトに直接使えます。</p>
+
+                <div class="prompt-card">
+                    <h4 style="color: white;"><span class="material-icons">smart_toy</span> 機能仕様書を使ったプロンプト例</h4>
+                    <div class="prompt-box">
+<pre>以下の機能仕様書に基づいて、Spring Boot + ThymeleafのControllerクラスを作成してください。
+
+## 画面一覧
+| 画面ID | 画面名 | URL | HTTPメソッド |
+|--------|--------|-----|-------------|
+| SCR-001 | タスク一覧 | /todos | GET |
+| SCR-002 | タスク登録 | /todos/new (GET) / /todos (POST) | GET, POST |
+| SCR-003 | タスク詳細 | /todos/{id} | GET |
+| SCR-004 | タスク編集 | /todos/{id}/edit (GET) / /todos/{id} (PUT) | GET, PUT |
+
+## ビジネスルール
+- BR-001: タイトル必須、1〜100文字
+- BR-002: 説明は最大500文字
+- BR-003: 削除前に確認ダイアログ表示
+
+## バリデーションエラー時
+- 入力値を保持してフォームを再表示
+- エラーメッセージをフィールド横に表示
+
+TodoControllerクラスを生成してください。</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>3-5-2. 設計書の組み合わせ</h3>
+                <p>実際のプロンプトでは、要件定義書と機能仕様書を組み合わせて使います。要件定義書で「全体像」を、機能仕様書で「詳細な振る舞い」を伝えることで、AIはより正確なコードを生成できます。</p>
+
+                <div class="info-box">
+                    <div class="info-box-title"><span class="material-icons">lightbulb</span> プロンプト構成のパターン</div>
+                    <div class="info-box-content">
+                        <p><strong>パターン: 全体 → 詳細</strong></p>
+                        <ol>
+                            <li>冒頭に指示文（「以下の仕様書に基づいて〇〇を作成してください」）</li>
+                            <li>要件定義書の技術スタック部分</li>
+                            <li>機能仕様書のユースケース・画面一覧</li>
+                            <li>末尾に出力形式の指定（「Controllerクラスを生成してください」）</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercises -->
+        <section id="exercises" class="section">
+            <div class="section-header">
+                <span class="section-number"><span class="material-icons">edit_note</span></span>
+                <h2 class="section-title">練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">1</div>
+                    <div class="exercise-content">
+                        <p>ユースケースの「正常系フロー」「代替フロー」「例外フロー」の違いを、それぞれ1文で説明してください。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">2</div>
+                    <div class="exercise-content">
+                        <p>「メモ帳アプリ」の画面一覧を、画面ID・画面名・URL・概要の4列テーブルで作成してください（最低4画面）。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">3</div>
+                    <div class="exercise-content">
+                        <p>UC-001「メモを新規作成する」のユースケース詳細を、正常系フロー（5ステップ以上）と代替フロー（1つ以上）で書いてください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <details style="margin-top: 24px;">
+                <summary style="cursor: pointer; font-weight: 700; color: var(--primary); padding: 12px; background: var(--primary-light); border-radius: 8px;">解答を表示</summary>
+                <div class="answer-list" style="margin-top: 16px;">
+                    <div class="answer-item">
+                        <div class="answer-header">問1の解答</div>
+                        <div class="answer-content">
+                            <p><strong>正常系フロー</strong>: すべてが正しく動作する場合（ハッピーパス）の操作手順。</p>
+                            <p><strong>代替フロー</strong>: ユーザーの入力ミスなど、想定内の異常が発生した場合の処理。</p>
+                            <p><strong>例外フロー</strong>: サーバー障害など、想定外の異常が発生した場合の処理。</p>
+                        </div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-header">問2の解答例</div>
+                        <div class="answer-content">
+                            <p>| SCR-001 | メモ一覧 | /memos | 全メモをタイトル一覧で表示 |</p>
+                            <p>| SCR-002 | メモ作成 | /memos/new | 新規メモ作成フォーム |</p>
+                            <p>| SCR-003 | メモ詳細 | /memos/{id} | メモの全文表示 |</p>
+                            <p>| SCR-004 | メモ編集 | /memos/{id}/edit | メモ編集フォーム |</p>
+                        </div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-header">問3の解答例</div>
+                        <div class="answer-content">
+                            <p><strong>正常系:</strong> (1)ユーザーがメモ一覧で「新規作成」をクリック (2)システムが作成フォームを表示 (3)ユーザーがタイトルと本文を入力 (4)「保存」をクリック (5)システムが入力値を検証 (6)システムがDBに保存 (7)一覧画面にリダイレクト</p>
+                            <p><strong>代替フロー:</strong> 5a. タイトル未入力の場合 → 「タイトルは必須です」を表示し、入力値を保持してフォームを再表示</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="2doc-requirements.html" class="page-nav-btn prev">
+            <span class="material-icons">arrow_back</span>
+            <div>
+                <div class="page-nav-label">Previous</div>
+                <div class="page-nav-title">要件定義書の書き方</div>
+            </div>
+        </a>
+        <a href="4doc-api-design.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">Next</div>
+                <div class="page-nav-title">API設計書の書き方</div>
+            </div>
+            <span class="material-icons">arrow_forward</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

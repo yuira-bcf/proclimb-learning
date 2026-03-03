@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第5章 DB設計書の書き方 - 設計書駆動プロンプト開発</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+      .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; }
+      .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+      .code-dots { display: flex; gap: 6px; }
+      .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+      .code-dot.red { background: #ff5f56; }
+      .code-dot.yellow { background: #ffbd2e; }
+      .code-dot.green { background: #27ca40; }
+      .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+      .code-content { padding: 16px; overflow-x: auto; }
+      .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+      .code-keyword { color: #c084fc; }
+      .code-string { color: #86efac; }
+      .code-comment { color: #94a3b8; }
+      .code-annotation { color: #fbbf24; }
+      .code-class { color: #67e8f9; }
+      .prompt-card { background: linear-gradient(135deg, #5856D6 0%, #7B79E8 50%, #9B99F0 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+      .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+      .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; }
+      .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-doc-driven.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">5</div>
+            <h1 class="chapter-title">DB設計書の書き方</h1>
+        </header>
+
+        <nav class="toc">
+            <h3>目次</h3>
+            <ul>
+                <li><a href="#section1">5-1. DB設計書の構成</a></li>
+                <li><a href="#section2">5-2. テーブル定義書</a></li>
+                <li><a href="#section3">5-3. ER図の記述</a></li>
+                <li><a href="#section4">5-4. 初期データ定義</a></li>
+                <li><a href="#section5">5-5. テンプレートからプロンプトへ</a></li>
+                <li><a href="#exercises">練習問題</a></li>
+            </ul>
+        </nav>
+
+        <!-- Section 1 -->
+        <section id="section1" class="section">
+            <div class="section-header">
+                <span class="section-number">5-1</span>
+                <h2 class="section-title">DB設計書の構成</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>5-1-1. DB設計書とは</h3>
+                <p>DB設計書は、<strong>データベースの構造（テーブル・カラム・リレーション）</strong>を定義するドキュメントです。どのデータをどのような型でどのテーブルに保存するかを正確に記述します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>5-1-2. DB設計書の主要セクション</h3>
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">storage</span> DB設計書の構成要素
+                    </h4>
+                    <div style="display: grid; gap: 10px;">
+                        <div style="display: flex; gap: 12px; align-items: center; background: #dbeafe; border-radius: 8px; padding: 10px 14px;">
+                            <span style="font-weight: 700; color: #3b82f6; min-width: 24px;">1</span>
+                            <span style="font-weight: 600;">テーブル一覧</span>
+                            <span style="font-size: 0.85rem; color: #475569; margin-left: auto;">システムで使う全テーブルの概要</span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #dcfce7; border-radius: 8px; padding: 10px 14px;">
+                            <span style="font-weight: 700; color: #22c55e; min-width: 24px;">2</span>
+                            <span style="font-weight: 600;">テーブル定義</span>
+                            <span style="font-size: 0.85rem; color: #475569; margin-left: auto;">カラム名・型・NULL可否・制約</span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #f3e8ff; border-radius: 8px; padding: 10px 14px;">
+                            <span style="font-weight: 700; color: #a855f7; min-width: 24px;">3</span>
+                            <span style="font-weight: 600;">ER図</span>
+                            <span style="font-size: 0.85rem; color: #475569; margin-left: auto;">テーブル間のリレーション</span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #fef3c7; border-radius: 8px; padding: 10px 14px;">
+                            <span style="font-weight: 700; color: #f59e0b; min-width: 24px;">4</span>
+                            <span style="font-weight: 600;">初期データ</span>
+                            <span style="font-size: 0.85rem; color: #475569; margin-left: auto;">シードデータ・マスタデータ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section id="section2" class="section">
+            <div class="section-header">
+                <span class="section-number">5-2</span>
+                <h2 class="section-title">テーブル定義書</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>5-2-1. テーブル定義の書き方</h3>
+                <p>テーブル定義は、各カラムの<strong>カラム名・論理名・型・長さ・NULL可否・デフォルト値・主キー</strong>を表で定義します。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #f59e0b;">table_view</span> todosテーブル定義
+                    </h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                            <thead>
+                                <tr style="background: #f59e0b; color: white;">
+                                    <th style="padding: 10px 12px; text-align: left;">#</th>
+                                    <th style="padding: 10px 12px; text-align: left;">カラム名</th>
+                                    <th style="padding: 10px 12px; text-align: left;">論理名</th>
+                                    <th style="padding: 10px 12px; text-align: left;">型</th>
+                                    <th style="padding: 10px 12px; text-align: left;">長さ</th>
+                                    <th style="padding: 10px 12px; text-align: left;">NULL</th>
+                                    <th style="padding: 10px 12px; text-align: left;">デフォルト</th>
+                                    <th style="padding: 10px 12px; text-align: left;">PK</th>
+                                    <th style="padding: 10px 12px; text-align: left;">備考</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">1</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">id</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">ID</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">BIGINT</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">-</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">NO</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">AUTO_INCREMENT</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;"><span style="color: #f59e0b; font-weight: 700;">YES</span></td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">主キー</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">2</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">title</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">タイトル</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">VARCHAR</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">100</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">NO</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">-</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">-</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">タスク名</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">3</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">description</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">説明</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">TEXT</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">-</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">YES</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">NULL</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">-</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">詳細説明</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">4</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">completed</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">完了フラグ</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">BOOLEAN</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">-</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">NO</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">false</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">-</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">完了状態</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">5</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">created_at</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">作成日時</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">DATETIME</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">-</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">NO</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">CURRENT_TIMESTAMP</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">-</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">自動設定</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 12px;">6</td>
+                                    <td style="padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-weight: 600;">updated_at</td>
+                                    <td style="padding: 8px 12px;">更新日時</td>
+                                    <td style="padding: 8px 12px; font-family: 'JetBrains Mono', monospace;">DATETIME</td>
+                                    <td style="padding: 8px 12px;">-</td>
+                                    <td style="padding: 8px 12px;">NO</td>
+                                    <td style="padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">CURRENT_TIMESTAMP</td>
+                                    <td style="padding: 8px 12px;">-</td>
+                                    <td style="padding: 8px 12px;">自動更新</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>5-2-2. データ型の選び方</h3>
+                <div class="info-box">
+                    <div class="info-box-title"><span class="material-icons">lightbulb</span> よく使うデータ型</div>
+                    <div class="info-box-content">
+                        <ul>
+                            <li><strong>BIGINT</strong>: 主キー（IDカラム）に使用</li>
+                            <li><strong>VARCHAR(N)</strong>: 文字数制限がある文字列（タイトル、名前など）</li>
+                            <li><strong>TEXT</strong>: 長い文字列（説明文、本文など）</li>
+                            <li><strong>BOOLEAN</strong>: true/falseの二値（フラグ系）</li>
+                            <li><strong>DATETIME</strong>: 日時情報（作成日時、更新日時）</li>
+                            <li><strong>INTEGER</strong>: 数値（数量、順序など）</li>
+                            <li><strong>DATE</strong>: 日付のみ（期限日など）</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section id="section3" class="section">
+            <div class="section-header">
+                <span class="section-number">5-3</span>
+                <h2 class="section-title">ER図の記述</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>5-3-1. ER図とは</h3>
+                <p>ER図（Entity-Relationship Diagram）は、<strong>テーブル間の関係</strong>を視覚的に表したものです。Markdownではテキストベースで簡易的に記述します。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #a855f7;">hub</span> Todoアプリ ER図（単一テーブル）
+                    </h4>
+                    <div style="display: flex; justify-content: center;">
+                        <div style="background: white; border: 2px solid #a855f7; border-radius: 12px; padding: 20px; min-width: 250px;">
+                            <div style="background: #a855f7; color: white; padding: 8px 16px; border-radius: 8px; text-align: center; font-weight: 700; margin-bottom: 12px;">todos</div>
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 2;">
+                                <div><span style="color: #f59e0b; font-weight: 700;">PK</span> id : BIGINT</div>
+                                <div>&nbsp;&nbsp;&nbsp; title : VARCHAR(100)</div>
+                                <div>&nbsp;&nbsp;&nbsp; description : TEXT</div>
+                                <div>&nbsp;&nbsp;&nbsp; completed : BOOLEAN</div>
+                                <div>&nbsp;&nbsp;&nbsp; created_at : DATETIME</div>
+                                <div>&nbsp;&nbsp;&nbsp; updated_at : DATETIME</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>5-3-2. 複数テーブルのリレーション</h3>
+                <p>テーブルが複数ある場合は、外部キー（FK）でリレーションを表現します。例えば、ユーザーとタスクの1対多（1:N）の関係は以下のようになります。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #a855f7;">hub</span> ER図: users と todos（1:N）
+                    </h4>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap;">
+                        <div style="background: white; border: 2px solid #3b82f6; border-radius: 12px; padding: 16px; min-width: 180px;">
+                            <div style="background: #3b82f6; color: white; padding: 6px 12px; border-radius: 8px; text-align: center; font-weight: 700; margin-bottom: 8px;">users</div>
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; line-height: 1.8;">
+                                <div><span style="color: #f59e0b; font-weight: 700;">PK</span> id</div>
+                                <div>&nbsp;&nbsp;&nbsp; username</div>
+                                <div>&nbsp;&nbsp;&nbsp; email</div>
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.8rem; color: #64748b;">1 : N</div>
+                            <div style="font-size: 1.5rem; color: #a855f7;">------→</div>
+                            <div style="font-size: 0.7rem; color: #64748b; font-family: 'JetBrains Mono', monospace;">user_id FK</div>
+                        </div>
+                        <div style="background: white; border: 2px solid #a855f7; border-radius: 12px; padding: 16px; min-width: 180px;">
+                            <div style="background: #a855f7; color: white; padding: 6px 12px; border-radius: 8px; text-align: center; font-weight: 700; margin-bottom: 8px;">todos</div>
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; line-height: 1.8;">
+                                <div><span style="color: #f59e0b; font-weight: 700;">PK</span> id</div>
+                                <div><span style="color: #3b82f6; font-weight: 700;">FK</span> user_id</div>
+                                <div>&nbsp;&nbsp;&nbsp; title</div>
+                                <div>&nbsp;&nbsp;&nbsp; completed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">Markdownでの記述例</span>
+                    </div>
+                    <div class="code-content">
+<pre>## ER図
+
++-------------------+        +-------------------+
+| users             |        | todos             |
++-------------------+        +-------------------+
+| PK id             |&lt;----+  | PK id             |
+|    username        |     +--| FK user_id        |
+|    email           |        |    title           |
+|    created_at      |        |    completed       |
++-------------------+        |    created_at      |
+        1                     +-------------------+
+                                      N
+
+### リレーション
+| 親テーブル | 子テーブル | 関係 | 外部キー | 削除時 |
+|-----------|-----------|------|---------|--------|
+| users     | todos     | 1:N  | user_id | CASCADE |</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4 -->
+        <section id="section4" class="section">
+            <div class="section-header">
+                <span class="section-number">5-4</span>
+                <h2 class="section-title">初期データ定義</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>5-4-1. 初期データ（シードデータ）</h3>
+                <p>開発時やテスト時に投入するサンプルデータを定義します。Spring Bootでは<code>data.sql</code>ファイルに記述します。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">data.sql（初期データ）</span>
+                    </div>
+                    <div class="code-content">
+<pre><span class="code-keyword">INSERT INTO</span> todos (title, description, completed, created_at, updated_at)
+<span class="code-keyword">VALUES</span>
+  (<span class="code-string">'買い物に行く'</span>, <span class="code-string">'牛乳とパンを買う'</span>, <span class="code-keyword">false</span>, <span class="code-keyword">NOW</span>(), <span class="code-keyword">NOW</span>()),
+  (<span class="code-string">'レポートを書く'</span>, <span class="code-string">'今週の進捗レポート'</span>, <span class="code-keyword">false</span>, <span class="code-keyword">NOW</span>(), <span class="code-keyword">NOW</span>()),
+  (<span class="code-string">'部屋の掃除'</span>, <span class="code-keyword">NULL</span>, <span class="code-keyword">true</span>, <span class="code-keyword">NOW</span>(), <span class="code-keyword">NOW</span>());</pre>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title"><span class="material-icons">lightbulb</span> 初期データのポイント</div>
+                    <div class="info-box-content">
+                        <ul>
+                            <li>正常なデータだけでなく、<strong>NULL値を含むデータ</strong>も入れる（description: NULL）</li>
+                            <li>completedが<strong>true/false両方</strong>のデータを入れる</li>
+                            <li>日本語の文字化けテスト用に<strong>日本語データ</strong>を含める</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="section5" class="section">
+            <div class="section-header">
+                <span class="section-number">5-5</span>
+                <h2 class="section-title">テンプレートからプロンプトへ</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>5-5-1. DB設計書からJPA Entityへ</h3>
+                <p>テーブル定義書は、<strong>JPA Entityクラス</strong>の生成プロンプトにそのまま使えます。</p>
+
+                <div class="prompt-card">
+                    <h4 style="color: white;"><span class="material-icons">smart_toy</span> DB設計書からEntityを生成するプロンプト</h4>
+                    <div class="prompt-box">
+<pre>以下のDB設計書に基づいて、Spring Data JPAのEntityクラスを作成してください。
+
+## テーブル定義: todos
+| カラム名 | 型 | NULL | デフォルト | 備考 |
+|---------|-----|------|-----------|------|
+| id | BIGINT | NO | AUTO_INCREMENT | PK |
+| title | VARCHAR(100) | NO | - | タスク名 |
+| description | TEXT | YES | NULL | 詳細説明 |
+| completed | BOOLEAN | NO | false | 完了フラグ |
+| created_at | DATETIME | NO | CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | DATETIME | NO | CURRENT_TIMESTAMP | 更新日時 |
+
+要件:
+- @Entity, @Id, @GeneratedValue アノテーション使用
+- created_at/updated_at は @CreationTimestamp, @UpdateTimestamp
+- Lombokは使わず、getter/setterを明示的に記述
+- パッケージ: com.example.todo.entity</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>5-5-2. 生成されるEntityのイメージ</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">Todo.java（生成イメージ）</span>
+                    </div>
+                    <div class="code-content">
+<pre><span class="code-keyword">package</span> com.example.todo.entity;
+
+<span class="code-keyword">import</span> jakarta.persistence.*;
+<span class="code-keyword">import</span> org.hibernate.annotations.*;
+<span class="code-keyword">import</span> java.time.LocalDateTime;
+
+<span class="code-annotation">@Entity</span>
+<span class="code-annotation">@Table</span>(name = <span class="code-string">"todos"</span>)
+<span class="code-keyword">public class</span> <span class="code-class">Todo</span> {
+
+    <span class="code-annotation">@Id</span>
+    <span class="code-annotation">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="code-keyword">private</span> Long id;
+
+    <span class="code-annotation">@Column</span>(nullable = <span class="code-keyword">false</span>, length = 100)
+    <span class="code-keyword">private</span> String title;
+
+    <span class="code-annotation">@Column</span>(columnDefinition = <span class="code-string">"TEXT"</span>)
+    <span class="code-keyword">private</span> String description;
+
+    <span class="code-annotation">@Column</span>(nullable = <span class="code-keyword">false</span>)
+    <span class="code-keyword">private</span> Boolean completed = <span class="code-keyword">false</span>;
+
+    <span class="code-annotation">@CreationTimestamp</span>
+    <span class="code-keyword">private</span> LocalDateTime createdAt;
+
+    <span class="code-annotation">@UpdateTimestamp</span>
+    <span class="code-keyword">private</span> LocalDateTime updatedAt;
+
+    <span class="code-comment">// getter/setter...</span>
+}</pre>
+                    </div>
+                </div>
+
+                <div class="info-box success">
+                    <div class="info-box-title"><span class="material-icons">check_circle</span> テーブル定義とEntityの対応</div>
+                    <div class="info-box-content">
+                        <p>テーブル定義の各行がEntityのフィールドに、型がJavaの型に、制約がJPAアノテーションにそれぞれ変換されています。設計書があれば、この変換をAIが正確に行えます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercises -->
+        <section id="exercises" class="section">
+            <div class="section-header">
+                <span class="section-number"><span class="material-icons">edit_note</span></span>
+                <h2 class="section-title">練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">1</div>
+                    <div class="exercise-content">
+                        <p>以下のDB型とJavaの型の対応を答えてください。(a) BIGINT (b) VARCHAR(100) (c) TEXT (d) BOOLEAN (e) DATETIME</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">2</div>
+                    <div class="exercise-content">
+                        <p>「メモ帳アプリ」のmemosテーブル定義を作成してください。カラム名・型・NULL可否・デフォルト値を含めてください。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">3</div>
+                    <div class="exercise-content">
+                        <p>memosテーブルの初期データ（INSERT文）を3件分書いてください。NULLを含むデータも入れてください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <details style="margin-top: 24px;">
+                <summary style="cursor: pointer; font-weight: 700; color: var(--primary); padding: 12px; background: var(--primary-light); border-radius: 8px;">解答を表示</summary>
+                <div class="answer-list" style="margin-top: 16px;">
+                    <div class="answer-item">
+                        <div class="answer-header">問1の解答</div>
+                        <div class="answer-content">
+                            <p>(a) BIGINT → <code>Long</code> (b) VARCHAR → <code>String</code> (c) TEXT → <code>String</code> (d) BOOLEAN → <code>Boolean</code> (e) DATETIME → <code>LocalDateTime</code></p>
+                        </div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-header">問2の解答例</div>
+                        <div class="answer-content">
+                            <p>| id | BIGINT | NO | AUTO_INCREMENT | PK |</p>
+                            <p>| title | VARCHAR(100) | NO | - | メモタイトル |</p>
+                            <p>| body | TEXT | NO | - | メモ本文 |</p>
+                            <p>| created_at | DATETIME | NO | CURRENT_TIMESTAMP | 作成日時 |</p>
+                            <p>| updated_at | DATETIME | NO | CURRENT_TIMESTAMP | 更新日時 |</p>
+                        </div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-header">問3の解答例</div>
+                        <div class="answer-content">
+                            <p><code>INSERT INTO memos (title, body, created_at, updated_at) VALUES ('会議メモ', '来週の予定を確認', NOW(), NOW()), ('買い物リスト', '牛乳、卵、パン', NOW(), NOW()), ('アイデアメモ', NULL, NOW(), NOW());</code></p>
+                            <p>※3件目のbodyがNULLになっています（NULLを含むデータの例）。ただし、bodyをNOT NULLにした場合はNULLではなく空文字を使います。</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="4doc-api-design.html" class="page-nav-btn prev">
+            <span class="material-icons">arrow_back</span>
+            <div>
+                <div class="page-nav-label">Previous</div>
+                <div class="page-nav-title">API設計書の書き方</div>
+            </div>
+        </a>
+        <a href="6doc-screen-test.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">Next</div>
+                <div class="page-nav-title">画面設計書・テスト仕様書</div>
+            </div>
+            <span class="material-icons">arrow_forward</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3章 レイヤードアーキテクチャ - アーキテクチャ基礎</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-architecture.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">3</div>
+            <h1 class="chapter-title">レイヤードアーキテクチャ</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">3-1</span><span>なぜ層を分けるか</span></li>
+                <li class="toc-item"><span class="toc-number">3-2</span><span>3層から4層構造へ</span></li>
+                <li class="toc-item"><span class="toc-number">3-3</span><span>Spring Bootのパッケージ構成</span></li>
+                <li class="toc-item"><span class="toc-number">3-4</span><span>層間の依存ルール</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 3-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-1</span>
+                <h2 class="section-title">なぜ層を分けるか</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>アプリケーションを役割ごとの「層（Layer）」に分割すると、各層が独立して変更・テスト・再利用できるようになります。レイヤードアーキテクチャは、Web開発で最も広く使われている設計パターンです。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3-1-1 層分けのメリット</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">layers</span>
+                            レイヤー分割の3大メリット
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div style="background: #dbeafe; border-radius: 12px; padding: 16px; text-align: center;">
+                                <span class="material-icons" style="color: #3b82f6; font-size: 2rem;">build</span>
+                                <div style="font-weight: 700; color: #3b82f6; margin: 8px 0 4px;">変更の局所化</div>
+                                <div style="font-size: 0.85rem; color: #334155;">DB変更がUI層に波及しない</div>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px; text-align: center;">
+                                <span class="material-icons" style="color: #22c55e; font-size: 2rem;">science</span>
+                                <div style="font-weight: 700; color: #22c55e; margin: 8px 0 4px;">テスト容易性</div>
+                                <div style="font-size: 0.85rem; color: #334155;">各層を独立してテスト可能</div>
+                            </div>
+                            <div style="background: #f3e8ff; border-radius: 12px; padding: 16px; text-align: center;">
+                                <span class="material-icons" style="color: #a855f7; font-size: 2rem;">group</span>
+                                <div style="font-weight: 700; color: #a855f7; margin: 8px 0 4px;">チーム分業</div>
+                                <div style="font-size: 0.85rem; color: #334155;">フロント・バック・DBで分担</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p>もし層を分けなければ、1つのServletクラスにHTMLの生成、ビジネスロジック、SQL文が混在する「スパゲッティコード」になります。これは第1章で学んだ「技術的負債」の典型例です。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 3-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-2</span>
+                <h2 class="section-title">3層から4層構造へ</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>Webアプリケーションの伝統的な3層構造（プレゼンテーション・ビジネスロジック・データアクセス）に、「ドメイン層」を加えた4層構造が現在のスタンダードです。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3-2-1 伝統的な3層構造</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">view_agenda</span>
+                            3層アーキテクチャ
+                        </h4>
+                        <svg viewBox="0 0 500 200" style="width: 100%; max-width: 500px; display: block; margin: 0 auto;">
+                            <rect x="50" y="10" width="400" height="50" rx="10" fill="#3b82f6"/>
+                            <text x="250" y="42" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="'Noto Sans JP', sans-serif">Presentation（プレゼンテーション層）</text>
+                            <rect x="50" y="75" width="400" height="50" rx="10" fill="#22c55e"/>
+                            <text x="250" y="107" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="'Noto Sans JP', sans-serif">Business Logic（ビジネスロジック層）</text>
+                            <rect x="50" y="140" width="400" height="50" rx="10" fill="#a855f7"/>
+                            <text x="250" y="172" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="'Noto Sans JP', sans-serif">Data Access（データアクセス層）</text>
+                            <line x1="250" y1="60" x2="250" y2="75" stroke="#64748b" stroke-width="2" marker-end="url(#arrowL)"/>
+                            <line x1="250" y1="125" x2="250" y2="140" stroke="#64748b" stroke-width="2" marker-end="url(#arrowL)"/>
+                            <defs><marker id="arrowL" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker></defs>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3-2-2 モダンな4層構造</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">view_week</span>
+                            4層アーキテクチャ（推奨）
+                        </h4>
+                        <svg viewBox="0 0 600 340" style="width: 100%; max-width: 600px; display: block; margin: 0 auto;">
+                            <!-- プレゼンテーション層 -->
+                            <rect x="100" y="10" width="400" height="55" rx="10" fill="#3b82f6"/>
+                            <text x="300" y="32" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="'Noto Sans JP', sans-serif">Presentation Layer</text>
+                            <text x="300" y="50" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11" font-family="'Noto Sans JP', sans-serif">Controller, Form, View</text>
+
+                            <!-- アプリケーション層 -->
+                            <rect x="100" y="80" width="400" height="55" rx="10" fill="#f59e0b"/>
+                            <text x="300" y="102" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="'Noto Sans JP', sans-serif">Application Layer</text>
+                            <text x="300" y="120" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11" font-family="'Noto Sans JP', sans-serif">Service（ユースケース調整）</text>
+
+                            <!-- ドメイン層 -->
+                            <rect x="100" y="150" width="400" height="55" rx="10" fill="#22c55e"/>
+                            <text x="300" y="172" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="'Noto Sans JP', sans-serif">Domain Layer</text>
+                            <text x="300" y="190" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11" font-family="'Noto Sans JP', sans-serif">Entity, Value Object, Domain Service</text>
+
+                            <!-- インフラストラクチャ層 -->
+                            <rect x="100" y="220" width="400" height="55" rx="10" fill="#a855f7"/>
+                            <text x="300" y="242" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="'Noto Sans JP', sans-serif">Infrastructure Layer</text>
+                            <text x="300" y="260" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11" font-family="'Noto Sans JP', sans-serif">Repository実装, 外部API, メール送信</text>
+
+                            <!-- 矢印（許可） -->
+                            <line x1="300" y1="65" x2="300" y2="80" stroke="#64748b" stroke-width="2" marker-end="url(#arrowL4)"/>
+                            <line x1="300" y1="135" x2="300" y2="150" stroke="#64748b" stroke-width="2" marker-end="url(#arrowL4)"/>
+
+                            <!-- インフラ→ドメイン（実装依存） -->
+                            <path d="M 520 250 Q 550 210, 520 180" fill="none" stroke="#a855f7" stroke-width="2" stroke-dasharray="6" marker-end="url(#arrowPurple)"/>
+                            <text x="560" y="215" fill="#a855f7" font-size="10" font-family="'Noto Sans JP', sans-serif">implements</text>
+
+                            <!-- 依存ルール -->
+                            <text x="50" y="108" text-anchor="middle" fill="#64748b" font-size="11" transform="rotate(-90, 50, 160)" font-family="'Noto Sans JP', sans-serif">依存の方向 ↓</text>
+
+                            <!-- 凡例 -->
+                            <rect x="100" y="295" width="12" height="12" rx="2" fill="#64748b"/>
+                            <text x="118" y="306" fill="#64748b" font-size="11" font-family="'Noto Sans JP', sans-serif">= 依存（上から下）</text>
+                            <line x1="230" y1="301" x2="260" y2="301" stroke="#a855f7" stroke-width="2" stroke-dasharray="6"/>
+                            <text x="266" y="306" fill="#a855f7" font-size="11" font-family="'Noto Sans JP', sans-serif">= インタフェースの実装</text>
+
+                            <defs>
+                                <marker id="arrowL4" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker>
+                                <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a855f7"/></marker>
+                            </defs>
+                        </svg>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>層</th>
+                                <th>役割</th>
+                                <th>Spring Bootでの対応</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Presentation</strong></td>
+                                <td>HTTPリクエスト/レスポンスの処理、画面描画</td>
+                                <td><code>@Controller</code>, <code>@RestController</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Application</strong></td>
+                                <td>ユースケースの調整、トランザクション管理</td>
+                                <td><code>@Service</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Domain</strong></td>
+                                <td>ビジネスルール、エンティティ、値オブジェクト</td>
+                                <td>POJO（アノテーション不要）</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Infrastructure</strong></td>
+                                <td>DB操作、外部APIアクセス、メール送信</td>
+                                <td><code>@Repository</code>, <code>@Component</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 3-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-3</span>
+                <h2 class="section-title">Spring Bootのパッケージ構成</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>4層構造をSpring Bootプロジェクトのパッケージ構成に落とし込みます。パッケージ名がそのまま層を表すので、コードの見通しが格段に良くなります。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3-3-1 推奨パッケージ構成</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">パッケージ構成例: ECサイト</span>
+                            <span class="code-lang">Text</span>
+                        </div>
+                        <pre class="code-content"><code>com.example.shop/
+├── ShopApplication.java              ← Spring Boot起動クラス
+│
+├── presentation/                      ← プレゼンテーション層
+│   ├── controller/
+│   │   ├── OrderController.java       ← @RestController
+│   │   └── ProductController.java
+│   ├── form/
+│   │   └── OrderForm.java             ← リクエストDTO
+│   └── response/
+│       └── OrderResponse.java         ← レスポンスDTO
+│
+├── application/                       ← アプリケーション層
+│   └── service/
+│       ├── OrderService.java          ← @Service（ユースケース）
+│       └── ProductService.java
+│
+├── domain/                            ← ドメイン層
+│   ├── model/
+│   │   ├── Order.java                 ← エンティティ
+│   │   ├── Product.java
+│   │   └── Money.java                 ← 値オブジェクト
+│   ├── repository/
+│   │   └── OrderRepository.java       ← インタフェース定義
+│   └── service/
+│       └── PricingService.java        ← ドメインサービス
+│
+└── infrastructure/                    ← インフラストラクチャ層
+    ├── repository/
+    │   └── JpaOrderRepository.java    ← @Repository（実装）
+    ├── external/
+    │   └── PaymentGateway.java        ← 外部API連携
+    └── mail/
+        └── SmtpMailSender.java        ← メール送信実装</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3-3-2 各層の実装例</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Presentation層: OrderController.java</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>@RestController
+@RequestMapping("/api/orders")
+public class OrderController {
+
+    private final OrderService orderService;
+
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
+    }
+
+    @PostMapping
+    public ResponseEntity&lt;OrderResponse&gt; createOrder(@Valid @RequestBody OrderForm form) {
+        Order order = orderService.placeOrder(form.getUserId(), form.getItems());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(OrderResponse.from(order));
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Application層: OrderService.java</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>@Service
+@Transactional
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final PricingService pricingService;
+
+    public OrderService(OrderRepository orderRepository, PricingService pricingService) {
+        this.orderRepository = orderRepository;
+        this.pricingService = pricingService;
+    }
+
+    public Order placeOrder(Long userId, List&lt;OrderItemRequest&gt; items) {
+        // ドメインオブジェクトを生成し、ドメインサービスを呼び出す
+        Order order = Order.create(userId, items);
+        Money totalPrice = pricingService.calculateTotal(order);
+        order.setTotalPrice(totalPrice);
+
+        return orderRepository.save(order);
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Domain層: Order.java（エンティティ）</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// ドメイン層はSpringに依存しない純粋なJavaクラス
+public class Order {
+    private Long id;
+    private Long userId;
+    private List&lt;OrderItem&gt; items;
+    private Money totalPrice;
+    private OrderStatus status;
+    private LocalDateTime createdAt;
+
+    public static Order create(Long userId, List&lt;OrderItemRequest&gt; itemRequests) {
+        Order order = new Order();
+        order.userId = userId;
+        order.items = itemRequests.stream()
+                .map(OrderItem::fromRequest)
+                .collect(Collectors.toList());
+        order.status = OrderStatus.PENDING;
+        order.createdAt = LocalDateTime.now();
+        return order;
+    }
+
+    public void cancel() {
+        if (this.status != OrderStatus.PENDING) {
+            throw new IllegalStateException("発送済みの注文はキャンセルできません");
+        }
+        this.status = OrderStatus.CANCELLED;
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 3-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-4</span>
+                <h2 class="section-title">層間の依存ルール</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>レイヤードアーキテクチャで最も重要なのは「依存の方向」です。上の層は下の層に依存できますが、逆方向の依存は禁止です。これを守ることで各層の独立性が保たれます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3-4-1 依存ルール一覧</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">rule</span>
+                            依存ルール: 何がOKで何がNGか
+                        </h4>
+                        <svg viewBox="0 0 550 280" style="width: 100%; max-width: 550px; display: block; margin: 0 auto;">
+                            <!-- 層 -->
+                            <rect x="150" y="10" width="200" height="40" rx="8" fill="#3b82f6"/>
+                            <text x="250" y="36" text-anchor="middle" fill="white" font-size="13" font-weight="bold" font-family="sans-serif">Presentation</text>
+                            <rect x="150" y="70" width="200" height="40" rx="8" fill="#f59e0b"/>
+                            <text x="250" y="96" text-anchor="middle" fill="white" font-size="13" font-weight="bold" font-family="sans-serif">Application</text>
+                            <rect x="150" y="130" width="200" height="40" rx="8" fill="#22c55e"/>
+                            <text x="250" y="156" text-anchor="middle" fill="white" font-size="13" font-weight="bold" font-family="sans-serif">Domain</text>
+                            <rect x="150" y="190" width="200" height="40" rx="8" fill="#a855f7"/>
+                            <text x="250" y="216" text-anchor="middle" fill="white" font-size="13" font-weight="bold" font-family="sans-serif">Infrastructure</text>
+
+                            <!-- OK矢印（右側） -->
+                            <line x1="370" y1="30" x2="400" y2="30" stroke="#22c55e" stroke-width="2"/>
+                            <line x1="400" y1="30" x2="400" y2="90" stroke="#22c55e" stroke-width="2" marker-end="url(#arrowGreen)"/>
+                            <text x="420" y="65" fill="#22c55e" font-size="11" font-weight="600">OK</text>
+
+                            <line x1="370" y1="90" x2="420" y2="90" stroke="#22c55e" stroke-width="2"/>
+                            <line x1="420" y1="90" x2="420" y2="150" stroke="#22c55e" stroke-width="2" marker-end="url(#arrowGreen)"/>
+                            <text x="440" y="125" fill="#22c55e" font-size="11" font-weight="600">OK</text>
+
+                            <!-- NG矢印（左側） -->
+                            <line x1="150" y1="150" x2="120" y2="150" stroke="#ef4444" stroke-width="2"/>
+                            <line x1="120" y1="150" x2="120" y2="90" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowRed)"/>
+                            <text x="85" y="125" fill="#ef4444" font-size="11" font-weight="600">NG</text>
+                            <line x1="83" y1="127" x2="98" y2="118" stroke="#ef4444" stroke-width="2"/>
+
+                            <line x1="150" y1="210" x2="90" y2="210" stroke="#ef4444" stroke-width="2"/>
+                            <line x1="90" y1="210" x2="90" y2="30" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowRed)"/>
+                            <text x="55" y="125" fill="#ef4444" font-size="11" font-weight="600">NG</text>
+                            <line x1="53" y1="127" x2="68" y2="118" stroke="#ef4444" stroke-width="2"/>
+
+                            <!-- 凡例 -->
+                            <rect x="150" y="250" width="100" height="20" rx="4" fill="#dcfce7"/>
+                            <text x="200" y="264" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="600">上→下: 許可</text>
+                            <rect x="270" y="250" width="100" height="20" rx="4" fill="#fef2f2"/>
+                            <text x="320" y="264" text-anchor="middle" fill="#ef4444" font-size="10" font-weight="600">下→上: 禁止</text>
+
+                            <defs>
+                                <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#22c55e"/></marker>
+                                <marker id="arrowRed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#ef4444"/></marker>
+                            </defs>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">3-4-2 ドメイン層とインフラ層の関係</h3>
+                <div class="content-block">
+                    <p>注意すべきは<strong>ドメイン層とインフラストラクチャ層の関係</strong>です。ドメイン層にはRepositoryの<strong>インタフェース</strong>を置き、インフラ層にその<strong>実装</strong>を置きます。これにより、ドメイン層はインフラ層に依存しません（DIPの適用）。</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">domain/repository/OrderRepository.java（インタフェース）</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// ドメイン層: インタフェースのみ（実装の詳細は知らない）
+package com.example.shop.domain.repository;
+
+public interface OrderRepository {
+    Order save(Order order);
+    Optional&lt;Order&gt; findById(Long id);
+    List&lt;Order&gt; findByUserId(Long userId);
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">infrastructure/repository/JpaOrderRepository.java（実装）</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// インフラ層: 具体的な永続化処理を実装
+package com.example.shop.infrastructure.repository;
+
+@Repository
+public class JpaOrderRepository implements OrderRepository {
+    private final JpaOrderEntityRepository jpa;
+
+    @Override
+    public Order save(Order order) {
+        OrderEntity entity = OrderEntity.fromDomain(order);
+        jpa.save(entity);
+        return order;
+    }
+
+    @Override
+    public Optional&lt;Order&gt; findById(Long id) {
+        return jpa.findById(id).map(OrderEntity::toDomain);
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">実務でのポイント</span>
+                        </div>
+                        <p>小規模なプロジェクトでは、厳密に4層にこだわる必要はありません。まずは「Controller→Service→Repository」の3層構造をしっかり守ることが大切です。プロジェクトが成長してビジネスロジックが複雑になってきたら、ドメイン層を分離していきましょう。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">3章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>以下のコードはどの層に配置すべきですか？理由も答えてください。</p>
+                        <div class="code-block">
+                            <pre class="code-content"><code>public class TaxCalculator {
+    public Money calculate(Money price, TaxRate rate) {
+        return price.multiply(rate.getValue());
+    }
+}</code></pre>
+                        </div>
+                        <ol type="A">
+                            <li>Presentation層</li>
+                            <li>Application層</li>
+                            <li>Domain層</li>
+                            <li>Infrastructure層</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>以下のimport文のうち、レイヤー依存ルール違反になるのはどれですか？</p>
+                        <ol type="A">
+                            <li>Controller が Service をimport</li>
+                            <li>Service が Repository（インタフェース）をimport</li>
+                            <li>Repository実装 が Controller をimport</li>
+                            <li>Domain層のEntity が JPA の <code>@Entity</code> をimport</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>「Repositoryのインタフェースをドメイン層に、実装をインフラ層に置く」設計は、SOLID原則のどれを適用していますか？ その理由を説明してください。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">3章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: C（Domain層）</div>
+                    <div class="answer-content">
+                        <p>税金計算はビジネスルールそのものであり、HTTPリクエスト（Presentation層）やDB操作（Infrastructure層）には依存していません。<code>Money</code>や<code>TaxRate</code>といった値オブジェクトを使った純粋な計算ロジックなので、Domain層のドメインサービスとして配置するのが適切です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答: C, D</div>
+                    <div class="answer-content">
+                        <p>C: Infrastructure層からPresentation層への依存は下から上への逆方向であり、ルール違反です。D: ドメイン層がJPA（フレームワーク）に依存すると、ドメイン層の独立性が損なわれます。厳密な4層ではドメインオブジェクトはPOJOとし、JPAアノテーションはインフラ層のEntityクラスに付けます。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: DIP（依存性逆転の原則）</div>
+                    <div class="answer-content">
+                        <p>上位モジュール（Domain層）がインタフェースを定義し、下位モジュール（Infrastructure層）がそれを実装します。これにより、Domain層はInfrastructure層の具体的な実装（MySQL, PostgreSQL等）に依存しません。依存の方向がInfra→Domainに逆転しており、DIPそのものです。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="2arch-solid.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第2章 SOLID原則</div>
+            </div>
+        </a>
+        <a href="4arch-ddd.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第4章 DDD基礎</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第2章 要件定義書の書き方 - 設計書駆動プロンプト開発</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+      .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; }
+      .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+      .code-dots { display: flex; gap: 6px; }
+      .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+      .code-dot.red { background: #ff5f56; }
+      .code-dot.yellow { background: #ffbd2e; }
+      .code-dot.green { background: #27ca40; }
+      .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+      .code-content { padding: 16px; overflow-x: auto; }
+      .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+      .prompt-card { background: linear-gradient(135deg, #5856D6 0%, #7B79E8 50%, #9B99F0 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+      .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+      .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; }
+      .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-doc-driven.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">2</div>
+            <h1 class="chapter-title">要件定義書の書き方</h1>
+        </header>
+
+        <nav class="toc">
+            <h3>目次</h3>
+            <ul>
+                <li><a href="#section1">2-1. 要件定義書の目的</a></li>
+                <li><a href="#section2">2-2. 機能要件の書き方</a></li>
+                <li><a href="#section3">2-3. 非機能要件</a></li>
+                <li><a href="#section4">2-4. テンプレートの使い方</a></li>
+                <li><a href="#section5">2-5. プロンプトへの変換例</a></li>
+                <li><a href="#exercises">練習問題</a></li>
+            </ul>
+        </nav>
+
+        <!-- Section 1 -->
+        <section id="section1" class="section">
+            <div class="section-header">
+                <span class="section-number">2-1</span>
+                <h2 class="section-title">要件定義書の目的</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>2-1-1. 要件定義書とは</h3>
+                <p>要件定義書は、<strong>「何を作るか」を明確にするためのドキュメント</strong>です。システム開発の最上流工程で作成され、後続のすべての設計書の土台となります。</p>
+
+                <div class="info-box">
+                    <div class="info-box-title"><span class="material-icons">lightbulb</span> ポイント</div>
+                    <div class="info-box-content">
+                        <p>要件定義書は「設計書の親」です。ここが曖昧だと、すべての設計書が曖昧になり、最終的に生成されるコードも曖昧になります。<strong>最初の要件定義が最も重要</strong>です。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>2-1-2. 要件定義書に含まれる内容</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="background: #5856D6; color: white;">
+                                <th style="padding: 12px 16px; text-align: left; border-radius: 8px 0 0 0;">セクション</th>
+                                <th style="padding: 12px 16px; text-align: left;">内容</th>
+                                <th style="padding: 12px 16px; text-align: left; border-radius: 0 8px 0 0;">記述例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">プロジェクト概要</td>
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">背景・目的・対象ユーザー</td>
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">「個人のタスク管理を効率化するWebアプリ」</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">機能要件</td>
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">システムが「何をするか」</td>
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">「タスクの追加・編集・削除・完了機能」</td>
+                            </tr>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">非機能要件</td>
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">性能・セキュリティ・可用性</td>
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">「応答時間3秒以内」「パスワード暗号化」</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">技術スタック</td>
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">使用する技術</td>
+                                <td style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0;">「Spring Boot 3.x + Thymeleaf + H2」</td>
+                            </tr>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 10px 16px; font-weight: 600;">受け入れ基準</td>
+                                <td style="padding: 10px 16px;">完成の判定基準</td>
+                                <td style="padding: 10px 16px;">「全CRUDが動作すること」</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section id="section2" class="section">
+            <div class="section-header">
+                <span class="section-number">2-2</span>
+                <h2 class="section-title">機能要件の書き方</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>2-2-1. 機能要件一覧テーブル</h3>
+                <p>機能要件は<strong>ID・機能名・説明・優先度</strong>の4列テーブルで書きます。IDは<code>FR-001</code>のように「Functional Requirement」の略を使います。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">table_chart</span> 記入例: Todoアプリの機能要件
+                    </h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="background: #3b82f6; color: white;">
+                                    <th style="padding: 10px 14px; text-align: left;">ID</th>
+                                    <th style="padding: 10px 14px; text-align: left;">機能名</th>
+                                    <th style="padding: 10px 14px; text-align: left;">説明</th>
+                                    <th style="padding: 10px 14px; text-align: left;">優先度</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">FR-001</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスク追加</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タイトルと説明を入力してタスクを新規作成する</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">高</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">FR-002</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスク一覧表示</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">登録済みの全タスクを一覧表示する</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">高</span></td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">FR-003</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスク編集</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">既存タスクのタイトル・説明を編集する</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">中</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">FR-004</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスク削除</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスクを削除する（確認ダイアログ表示後）</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">高</span></td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; font-family: 'JetBrains Mono', monospace; font-weight: 600;">FR-005</td>
+                                    <td style="padding: 8px 14px;">タスク完了切替</td>
+                                    <td style="padding: 8px 14px;">タスクの完了/未完了を切り替える</td>
+                                    <td style="padding: 8px 14px;"><span style="background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">高</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>2-2-2. ユーザーストーリーの書き方</h3>
+                <p>ユーザーストーリーは<strong>「誰が・何を・なぜ」</strong>の3要素で書きます。機能要件を利用者の視点から表現したものです。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">ユーザーストーリーの書き方</span>
+                    </div>
+                    <div class="code-content">
+<pre>## ユーザーストーリー
+
+### US-001: タスクを追加する
+- **誰が**: 一般ユーザーとして
+- **何を**: 新しいタスクを追加したい
+- **なぜ**: やるべきことを忘れないように記録するため
+
+### US-002: タスクを完了にする
+- **誰が**: 一般ユーザーとして
+- **何を**: 完了したタスクにチェックを付けたい
+- **なぜ**: 進捗状況を一目で把握するため</pre>
+                    </div>
+                </div>
+
+                <div class="info-box warning">
+                    <div class="info-box-title"><span class="material-icons">warning</span> よくある間違い</div>
+                    <div class="info-box-content">
+                        <p>「データベースにINSERTする」「POSTリクエストを送る」のような<strong>技術的な表現は要件定義では使わない</strong>でください。要件定義はあくまで「ユーザーから見た振る舞い」を記述します。技術的な詳細は後の設計書で記述します。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section id="section3" class="section">
+            <div class="section-header">
+                <span class="section-number">2-3</span>
+                <h2 class="section-title">非機能要件</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>2-3-1. 非機能要件とは</h3>
+                <p>非機能要件は、システムの<strong>「品質」に関する要件</strong>です。機能要件が「何をするか」であるのに対し、非機能要件は「どれくらいの品質で動くか」を定義します。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">speed</span> 非機能要件の4カテゴリ
+                    </h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div style="background: #dbeafe; border-radius: 12px; padding: 14px;">
+                            <p style="font-weight: 700; color: #1e40af; margin: 0 0 6px;"><span class="material-icons" style="font-size: 18px; vertical-align: middle;">speed</span> パフォーマンス</p>
+                            <ul style="margin: 0; padding-left: 18px; font-size: 0.85rem; color: #334155;">
+                                <li>画面表示: 3秒以内</li>
+                                <li>API応答: 1秒以内</li>
+                                <li>同時接続: 10ユーザー</li>
+                            </ul>
+                        </div>
+                        <div style="background: #dcfce7; border-radius: 12px; padding: 14px;">
+                            <p style="font-weight: 700; color: #166534; margin: 0 0 6px;"><span class="material-icons" style="font-size: 18px; vertical-align: middle;">security</span> セキュリティ</p>
+                            <ul style="margin: 0; padding-left: 18px; font-size: 0.85rem; color: #334155;">
+                                <li>認証: セッション認証</li>
+                                <li>パスワード: BCrypt暗号化</li>
+                                <li>CSRF対策: 有効</li>
+                            </ul>
+                        </div>
+                        <div style="background: #f3e8ff; border-radius: 12px; padding: 14px;">
+                            <p style="font-weight: 700; color: #6b21a8; margin: 0 0 6px;"><span class="material-icons" style="font-size: 18px; vertical-align: middle;">backup</span> 可用性</p>
+                            <ul style="margin: 0; padding-left: 18px; font-size: 0.85rem; color: #334155;">
+                                <li>稼働率: 99%</li>
+                                <li>バックアップ: 日次</li>
+                                <li>RTO: 4時間</li>
+                            </ul>
+                        </div>
+                        <div style="background: #fef3c7; border-radius: 12px; padding: 14px;">
+                            <p style="font-weight: 700; color: #92400e; margin: 0 0 6px;"><span class="material-icons" style="font-size: 18px; vertical-align: middle;">devices</span> 互換性</p>
+                            <ul style="margin: 0; padding-left: 18px; font-size: 0.85rem; color: #334155;">
+                                <li>Chrome / Firefox / Safari</li>
+                                <li>PC / タブレット</li>
+                                <li>レスポンシブ対応</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>2-3-2. 訓練校レベルでの非機能要件</h3>
+                <p>実務では非機能要件は非常に詳細に記述しますが、訓練校の演習レベルでは以下の最低限の項目を押さえておけば十分です。</p>
+
+                <div class="info-box">
+                    <div class="info-box-title"><span class="material-icons">school</span> 訓練校レベルの非機能要件チェックリスト</div>
+                    <div class="info-box-content">
+                        <ul>
+                            <li>対応ブラウザ: Chrome最新版</li>
+                            <li>DB: H2（開発用インメモリDB）</li>
+                            <li>認証: なし（または基本的なセッション認証）</li>
+                            <li>文字コード: UTF-8</li>
+                            <li>日本語対応: 必須</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4 -->
+        <section id="section4" class="section">
+            <div class="section-header">
+                <span class="section-number">2-4</span>
+                <h2 class="section-title">テンプレートの使い方</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>2-4-1. requirements-template.md の構造</h3>
+                <p>本講座では、<code>templates/requirements-template.md</code> を用意しています。このテンプレートの <code>{中括弧}</code> 部分を自分のプロジェクトに合わせて埋めていきます。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">templates/requirements-template.md（抜粋）</span>
+                    </div>
+                    <div class="code-content">
+<pre># 要件定義書: {プロジェクト名}
+
+## 1. プロジェクト概要
+### 1.1 背景・目的
+{このシステムを作る背景と目的を記述}
+
+### 1.2 対象ユーザー
+{主要なユーザー層を記述}
+
+## 2. 機能要件
+| ID | 機能名 | 説明 | 優先度 |
+|----|--------|------|--------|
+| FR-001 | {機能名} | {説明} | 高/中/低 |
+
+## 3. 非機能要件
+### 3.1 パフォーマンス
+{応答時間、同時接続数など}
+
+## 4. 受け入れ基準
+- [ ] {基準1}
+- [ ] {基準2}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>2-4-2. 記入例: Todoアプリ</h3>
+                <p>テンプレートをTodoアプリ用に記入した例を示します。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">requirements-todo.md（記入済み）</span>
+                    </div>
+                    <div class="code-content">
+<pre># 要件定義書: Todoアプリ
+
+## 1. プロジェクト概要
+### 1.1 背景・目的
+個人のタスク管理を効率化するためのWebアプリケーション。
+日々のタスクを登録・管理し、完了状況を一覧で把握できる。
+
+### 1.2 対象ユーザー
+- 一般ユーザー: タスクを管理したい個人
+
+## 2. 機能要件
+| ID | 機能名 | 説明 | 優先度 |
+|----|--------|------|--------|
+| FR-001 | タスク追加 | タイトルと説明を入力して新規タスクを作成 | 高 |
+| FR-002 | タスク一覧 | 登録済みの全タスクを一覧表示 | 高 |
+| FR-003 | タスク編集 | 既存タスクのタイトル・説明を編集 | 中 |
+| FR-004 | タスク削除 | タスクを削除（確認後） | 高 |
+| FR-005 | 完了切替 | タスクの完了/未完了を切り替え | 高 |
+
+## 3. 非機能要件
+### 3.1 パフォーマンス
+- 画面表示: 3秒以内
+- DB: H2（インメモリ）
+
+### 3.2 互換性
+- 対応ブラウザ: Chrome最新版
+- レスポンシブ対応: 不要（PC前提）
+
+## 4. 技術スタック
+| レイヤー | 技術 |
+|----------|------|
+| バックエンド | Spring Boot 3.4 |
+| テンプレート | Thymeleaf |
+| DB | H2 Database |
+| ビルド | Gradle |
+
+## 5. 受け入れ基準
+- [ ] タスクの追加ができること
+- [ ] タスク一覧が表示されること
+- [ ] タスクの編集ができること
+- [ ] タスクの削除ができること（確認ダイアログあり）
+- [ ] タスクの完了/未完了の切り替えができること</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="section5" class="section">
+            <div class="section-header">
+                <span class="section-number">2-5</span>
+                <h2 class="section-title">プロンプトへの変換例</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>2-5-1. 要件定義書からプロンプトへ</h3>
+                <p>記入済みの要件定義書は、<strong>そのままプロンプトの冒頭部分</strong>として使えます。以下のように「このドキュメントに基づいて実装してください」と付けるだけです。</p>
+
+                <div class="prompt-card">
+                    <h4 style="color: white;"><span class="material-icons">smart_toy</span> 要件定義書を使ったプロンプト例</h4>
+                    <div class="prompt-box">
+<pre>以下の要件定義書に基づいて、Spring Boot + Thymeleaf + H2のTodoアプリのプロジェクト構成を提案してください。
+
+# 要件定義書: Todoアプリ
+
+## プロジェクト概要
+個人のタスク管理を効率化するためのWebアプリケーション。
+
+## 機能要件
+| ID | 機能名 | 説明 | 優先度 |
+|----|--------|------|--------|
+| FR-001 | タスク追加 | タイトルと説明を入力して新規作成 | 高 |
+| FR-002 | タスク一覧 | 全タスクを一覧表示 | 高 |
+| FR-003 | タスク編集 | タイトル・説明を編集 | 中 |
+| FR-004 | タスク削除 | 確認後に削除 | 高 |
+| FR-005 | 完了切替 | 完了/未完了を切り替え | 高 |
+
+## 技術スタック
+- Spring Boot 3.4 / Thymeleaf / H2 / Gradle
+
+まずはパッケージ構成とファイル一覧を提示してください。</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>2-5-2. プロンプト変換のコツ</h3>
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">tips_and_updates</span> 変換のコツ3箇条
+                    </h4>
+                    <div style="display: grid; gap: 12px;">
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            <div style="background: #dbeafe; color: #3b82f6; min-width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">1</div>
+                            <div>
+                                <p style="font-weight: 700; margin: 0 0 4px;">冒頭に指示文を付ける</p>
+                                <p style="margin: 0; font-size: 0.85rem; color: #475569;">「以下の要件定義書に基づいて〇〇してください」と明確に指示する</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            <div style="background: #dcfce7; color: #22c55e; min-width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">2</div>
+                            <div>
+                                <p style="font-weight: 700; margin: 0 0 4px;">テンプレートのプレースホルダーを全て埋める</p>
+                                <p style="margin: 0; font-size: 0.85rem; color: #475569;"><code>{中括弧}</code>が残っているとAIが適切に解釈できない</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            <div style="background: #fef3c7; color: #f59e0b; min-width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">3</div>
+                            <div>
+                                <p style="font-weight: 700; margin: 0 0 4px;">末尾に期待する出力形式を指定する</p>
+                                <p style="margin: 0; font-size: 0.85rem; color: #475569;">「パッケージ構成を示してください」「Entityクラスを生成してください」など</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercises -->
+        <section id="exercises" class="section">
+            <div class="section-header">
+                <span class="section-number"><span class="material-icons">edit_note</span></span>
+                <h2 class="section-title">練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">1</div>
+                    <div class="exercise-content">
+                        <p>要件定義書における「機能要件」と「非機能要件」の違いを説明してください。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">2</div>
+                    <div class="exercise-content">
+                        <p>以下のうち、機能要件に該当するものをすべて選んでください。</p>
+                        <ol type="A">
+                            <li>ユーザーがログインできる</li>
+                            <li>画面表示が3秒以内</li>
+                            <li>商品を検索できる</li>
+                            <li>パスワードが暗号化される</li>
+                            <li>商品をカートに追加できる</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">3</div>
+                    <div class="exercise-content">
+                        <p>「メモ帳アプリ」の機能要件を3つ以上、<code>FR-001</code>の形式で書いてください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <details style="margin-top: 24px;">
+                <summary style="cursor: pointer; font-weight: 700; color: var(--primary); padding: 12px; background: var(--primary-light); border-radius: 8px;">解答を表示</summary>
+                <div class="answer-list" style="margin-top: 16px;">
+                    <div class="answer-item">
+                        <div class="answer-header">問1の解答</div>
+                        <div class="answer-content">
+                            <p><strong>機能要件</strong>は、システムが「何をするか」（振る舞い）を定義します。例: タスクの追加、一覧表示、削除。</p>
+                            <p><strong>非機能要件</strong>は、システムの「品質」を定義します。例: 応答速度、セキュリティ、対応ブラウザ。</p>
+                        </div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-header">問2の解答</div>
+                        <div class="answer-content">
+                            <p><strong>A, C, E</strong> が機能要件です。</p>
+                            <p>B（応答速度）とD（暗号化）は非機能要件（パフォーマンスとセキュリティ）です。</p>
+                        </div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-header">問3の解答例</div>
+                        <div class="answer-content">
+                            <p>| ID | 機能名 | 説明 | 優先度 |</p>
+                            <p>| FR-001 | メモ作成 | タイトルと本文を入力してメモを新規作成 | 高 |</p>
+                            <p>| FR-002 | メモ一覧 | 作成済みメモをタイトル一覧で表示 | 高 |</p>
+                            <p>| FR-003 | メモ編集 | 既存メモのタイトル・本文を編集 | 中 |</p>
+                            <p>| FR-004 | メモ削除 | メモを削除（確認ダイアログ付き） | 高 |</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="1doc-overview.html" class="page-nav-btn prev">
+            <span class="material-icons">arrow_back</span>
+            <div>
+                <div class="page-nav-label">Previous</div>
+                <div class="page-nav-title">設計書駆動開発とは</div>
+            </div>
+        </a>
+        <a href="3doc-functional-spec.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">Next</div>
+                <div class="page-nav-title">機能仕様書の書き方</div>
+            </div>
+            <span class="material-icons">arrow_forward</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3章 Factoryパターン - デザインパターン入門</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-design-pattern.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">3</div>
+            <h1 class="chapter-title">Factoryパターン</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">3-1</span><span>オブジェクト生成の課題</span></li>
+                <li class="toc-item"><span class="toc-number">3-2</span><span>Factory Methodパターン</span></li>
+                <li class="toc-item"><span class="toc-number">3-3</span><span>Spring Bootでの活用例</span></li>
+            </ul>
+        </nav>
+
+        <!-- Section 3-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-1</span>
+                <h2 class="section-title">オブジェクト生成の課題</h2>
+            </div>
+            <div class="intro-text">
+                <p>オブジェクトの生成を<code>new</code>で直接行うと、クラス間の結合度が上がり、条件分岐が複雑化します。Factoryパターンは、オブジェクトの生成を専用クラスに委譲することで、この問題を解決します。</p>
+            </div>
+
+            <h3 class="subsection-title">3-1-1 newの直接利用が引き起こす問題</h3>
+            <p>通知機能を例に考えてみましょう。メール、SMS、プッシュ通知の3種類があり、種類に応じて異なるクラスを生成する必要があります。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>問題のあるコード（newの直接利用）</span>
+                </div>
+                <pre><code>// 通知を送る箇所ごとにif文が必要になる
+public void sendNotification(String type, String message) {
+    if (type.equals("email")) {
+        EmailNotification notification = new EmailNotification();
+        notification.send(message);
+    } else if (type.equals("sms")) {
+        SmsNotification notification = new SmsNotification();
+        notification.send(message);
+    } else if (type.equals("push")) {
+        PushNotification notification = new PushNotification();
+        notification.send(message);
+    }
+    // 新しい通知手段を追加するたびに、ここに分岐を追加...
+}</code></pre>
+            </div>
+
+            <div class="highlight-box" style="background: #fef2f2; border-left: 4px solid #fca5a5;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #991b1b;">error</span> この設計の問題点</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li>通知を送る箇所が複数あると、同じif-else分岐がコピペされる</li>
+                    <li>新しい通知手段を追加するたびに、全ての箇所を修正する必要がある</li>
+                    <li>変更漏れによるバグが発生しやすい</li>
+                </ul>
+            </div>
+
+            <h3 class="subsection-title">3-1-2 Factoryで解決するイメージ</h3>
+            <p>Factoryパターンでは、「どのオブジェクトを作るか」の判断を専用のFactoryクラスに集約します。利用側は<code>Factory.create(type)</code>と呼ぶだけで、具体的なクラスを知らなくてよくなります。</p>
+        </section>
+
+        <!-- Section 3-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-2</span>
+                <h2 class="section-title">Factory Methodパターン</h2>
+            </div>
+            <div class="intro-text">
+                <p>Factory Methodパターンは、オブジェクトの生成をサブクラスやメソッドに委譲するパターンです。共通のインターフェースを通じてオブジェクトを受け取るため、利用側のコードは具象クラスに依存しません。</p>
+            </div>
+
+            <h3 class="subsection-title">3-2-1 クラス構造</h3>
+
+            <!-- SVG class diagram of Factory Method -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                    <span class="material-icons" style="color: #5856D6;">schema</span>
+                    Factory Methodパターンのクラス図
+                </h4>
+                <svg viewBox="0 0 680 340" style="max-width: 680px; width: 100%; height: auto; display: block; margin: 0 auto;">
+                    <!-- Notification interface -->
+                    <rect x="230" y="10" width="220" height="70" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                    <text x="340" y="32" text-anchor="middle" font-size="10" fill="#3b82f6" font-style="italic">&lt;&lt;interface&gt;&gt;</text>
+                    <text x="340" y="50" text-anchor="middle" font-size="13" fill="#1e40af" font-weight="700">Notification</text>
+                    <text x="340" y="68" text-anchor="middle" font-size="10" fill="#1e40af">+ send(message: String): void</text>
+
+                    <!-- Arrows from implementations -->
+                    <line x1="110" y1="130" x2="300" y2="80" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6,3"/>
+                    <polygon points="300,80 290,85 293,76" fill="#94a3b8"/>
+                    <line x1="340" y1="130" x2="340" y2="80" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6,3"/>
+                    <polygon points="340,80 335,90 345,90" fill="#94a3b8"/>
+                    <line x1="570" y1="130" x2="380" y2="80" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6,3"/>
+                    <polygon points="380,80 387,76 390,85" fill="#94a3b8"/>
+
+                    <!-- EmailNotification -->
+                    <rect x="20" y="130" width="180" height="55" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+                    <text x="110" y="155" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">EmailNotification</text>
+                    <text x="110" y="173" text-anchor="middle" font-size="10" fill="#166534">+ send(message)</text>
+
+                    <!-- SmsNotification -->
+                    <rect x="250" y="130" width="180" height="55" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="340" y="155" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">SmsNotification</text>
+                    <text x="340" y="173" text-anchor="middle" font-size="10" fill="#92400e">+ send(message)</text>
+
+                    <!-- PushNotification -->
+                    <rect x="480" y="130" width="180" height="55" rx="10" fill="#f3e8ff" stroke="#a855f7" stroke-width="2"/>
+                    <text x="570" y="155" text-anchor="middle" font-size="12" fill="#7e22ce" font-weight="700">PushNotification</text>
+                    <text x="570" y="173" text-anchor="middle" font-size="10" fill="#7e22ce">+ send(message)</text>
+
+                    <!-- NotificationFactory -->
+                    <rect x="200" y="240" width="280" height="80" rx="10" fill="#fef2f2" stroke="#fca5a5" stroke-width="2"/>
+                    <text x="340" y="265" text-anchor="middle" font-size="13" fill="#991b1b" font-weight="700">NotificationFactory</text>
+                    <line x1="210" y1="275" x2="470" y2="275" stroke="#fca5a5" stroke-width="1"/>
+                    <text x="340" y="293" text-anchor="middle" font-size="10" fill="#991b1b">+ create(type: String): Notification</text>
+                    <text x="340" y="310" text-anchor="middle" font-size="9" fill="#991b1b" font-style="italic">typeに応じた具象クラスを生成して返す</text>
+
+                    <!-- Arrow from Factory to Interface -->
+                    <line x1="340" y1="240" x2="340" y2="200" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowFactory)"/>
+                    <text x="355" y="225" font-size="9" fill="#64748b">creates</text>
+
+                    <defs>
+                        <marker id="arrowFactory" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <h3 class="subsection-title">3-2-2 インターフェースの定義</h3>
+            <p>まず、通知の共通インターフェースを定義します。全ての通知クラスはこのインターフェースを実装します。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>Notification.java（インターフェース）</span>
+                </div>
+                <pre><code>public interface Notification {
+    void send(String to, String message);
+    String getType();
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">3-2-3 具象クラスの実装</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>EmailNotification.java / SmsNotification.java</span>
+                </div>
+                <pre><code>public class EmailNotification implements Notification {
+    @Override
+    public void send(String to, String message) {
+        // メール送信ロジック
+        System.out.println("メール送信: " + to + " - " + message);
+    }
+
+    @Override
+    public String getType() {
+        return "email";
+    }
+}
+
+public class SmsNotification implements Notification {
+    @Override
+    public void send(String to, String message) {
+        // SMS送信ロジック
+        System.out.println("SMS送信: " + to + " - " + message);
+    }
+
+    @Override
+    public String getType() {
+        return "sms";
+    }
+}</code></pre>
+            </div>
+
+            <h3 class="subsection-title">3-2-4 Factoryクラスの実装</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>NotificationFactory.java</span>
+                </div>
+                <pre><code>public class NotificationFactory {
+
+    public static Notification create(String type) {
+        switch (type) {
+            case "email":
+                return new EmailNotification();
+            case "sms":
+                return new SmsNotification();
+            case "push":
+                return new PushNotification();
+            default:
+                throw new IllegalArgumentException("未対応の通知タイプ: " + type);
+        }
+    }
+}</code></pre>
+            </div>
+
+            <p>これで利用側のコードは非常にシンプルになります。</p>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>利用側のコード</span>
+                </div>
+                <pre><code>// Factoryを使えば、利用側は具象クラスを知らなくてよい
+Notification notification = NotificationFactory.create("email");
+notification.send("user@example.com", "注文完了のお知らせ");</code></pre>
+            </div>
+        </section>
+
+        <!-- Section 3-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 3-3</span>
+                <h2 class="section-title">Spring Bootでの活用例</h2>
+            </div>
+            <div class="intro-text">
+                <p>Spring BootではDIコンテナを活用することで、さらに柔軟なFactoryパターンを実現できます。インターフェースの実装クラスを全てBean登録しておき、Mapでまとめてインジェクションするテクニックがよく使われます。</p>
+            </div>
+
+            <h3 class="subsection-title">3-3-1 SpringのDIを活用したFactory</h3>
+            <p>各通知クラスに<code>@Component</code>を付けてBeanとして登録し、Factoryで<code>Map</code>を使って自動インジェクションします。</p>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>Spring Boot版 NotificationFactory</span>
+                </div>
+                <pre><code>// 各通知クラスに@Componentを付ける
+@Component("email")
+public class EmailNotification implements Notification { ... }
+
+@Component("sms")
+public class SmsNotification implements Notification { ... }
+
+@Component("push")
+public class PushNotification implements Notification { ... }
+
+// FactoryでMapインジェクション
+@Component
+public class NotificationFactory {
+
+    private final Map&lt;String, Notification&gt; notificationMap;
+
+    // Springが自動的にBean名をキーにMapを生成する
+    public NotificationFactory(Map&lt;String, Notification&gt; notificationMap) {
+        this.notificationMap = notificationMap;
+    }
+
+    public Notification create(String type) {
+        Notification notification = notificationMap.get(type);
+        if (notification == null) {
+            throw new IllegalArgumentException("未対応の通知タイプ: " + type);
+        }
+        return notification;
+    }
+}</code></pre>
+            </div>
+
+            <div class="highlight-box" style="background: #dcfce7; border-left: 4px solid #22c55e;">
+                <p class="no-margin"><strong><span class="material-icons" style="vertical-align: middle; font-size: 1.1rem; color: #166534;">check_circle</span> Spring版Factoryのメリット</strong></p>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 0.95em;">
+                    <li>新しい通知クラスを追加しても、<strong>Factoryの修正が不要</strong>（@Componentを付けるだけで自動登録）</li>
+                    <li>switch文が不要になり、<strong>Open-Closed原則</strong>（拡張に開き、修正に閉じる）に従える</li>
+                    <li>各通知クラスに他のBeanを注入できる（DBアクセスや外部API連携が可能）</li>
+                </ul>
+            </div>
+
+            <h3 class="subsection-title">3-3-2 ServiceからFactoryを利用する</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="code-dot red"></span>
+                        <span class="code-dot yellow"></span>
+                        <span class="code-dot green"></span>
+                    </div>
+                    <span>NotificationService.java</span>
+                </div>
+                <pre><code>@Service
+public class NotificationService {
+
+    private final NotificationFactory factory;
+
+    public NotificationService(NotificationFactory factory) {
+        this.factory = factory;
+    }
+
+    public void notify(String type, String to, String message) {
+        // Factoryから適切な通知オブジェクトを取得
+        Notification notification = factory.create(type);
+        notification.send(to, message);
+    }
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- Exercise Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">3章 練習問題</h2>
+            </div>
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>Factoryパターンの目的として最も適切なものを選んでください。</p>
+                        <p>A. オブジェクトの継承関係を定義する<br>
+                           B. オブジェクトの生成を専用クラスに委譲し、利用側と具象クラスの結合を下げる<br>
+                           C. データベースへのアクセスを抽象化する<br>
+                           D. アルゴリズムを実行時に切り替える</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>Spring BootでFactoryパターンを実装する際、<code>Map&lt;String, Notification&gt;</code>をコンストラクタインジェクションすると、MapのキーとBeanの対応はどのように決まりますか。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>以下の要件に対して、Factoryパターンを適用する設計を簡潔に説明してください。</p>
+                        <p>「ECサイトで、支払い方法（クレジットカード、銀行振込、コンビニ払い）に応じた決済処理クラスを切り替えたい。」</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Answer Section -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">3章 解説・解答</h2>
+            </div>
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1 解答</div>
+                    <div class="answer-content">
+                        <p><strong>正解: B. オブジェクトの生成を専用クラスに委譲し、利用側と具象クラスの結合を下げる</strong></p>
+                        <p>Factoryパターンは「生成」に関するパターンです。利用側は共通インターフェースを通じてオブジェクトを受け取るため、具象クラスの変更や追加に強い設計になります。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q2 解答</div>
+                    <div class="answer-content">
+                        <p>Mapのキーは<strong>Bean名</strong>（@Componentの引数、またはクラス名の先頭小文字）になります。例えば <code>@Component("email")</code> と指定した場合はキーが <code>"email"</code> になり、引数を省略すると <code>"emailNotification"</code>（クラス名のキャメルケース）がキーになります。</p>
+                    </div>
+                </div>
+                <div class="answer-item">
+                    <div class="answer-header">Q3 解答</div>
+                    <div class="answer-content">
+                        <p>以下のように設計します。</p>
+                        <ol style="font-size: 0.95em;">
+                            <li><code>PaymentProcessor</code> インターフェースを定義し、<code>process(Order order)</code> メソッドを持たせる</li>
+                            <li><code>CreditCardProcessor</code>、<code>BankTransferProcessor</code>、<code>ConveniProcessor</code> の3つの具象クラスがインターフェースを実装</li>
+                            <li><code>PaymentFactory</code> がString型の支払い方法キーを受け取り、対応する <code>PaymentProcessor</code> を返す</li>
+                            <li>Spring Bootなら各ProcessorにBean名付きの<code>@Component</code>を付け、Factory側で<code>Map&lt;String, PaymentProcessor&gt;</code>をインジェクション</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="2dp-repository-dto.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div><div class="page-nav-label">前の章</div><div class="page-nav-title">第2章 Repository/DTOパターン</div></div>
+        </a>
+        <a href="4dp-strategy-state.html" class="page-nav-btn next">
+            <div><div class="page-nav-label">次の章</div><div class="page-nav-title">第4章 Strategy/Stateパターン</div></div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

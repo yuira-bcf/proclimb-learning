@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第6章 画面設計書・テスト仕様書 - 設計書駆動プロンプト開発</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+      .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; }
+      .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+      .code-dots { display: flex; gap: 6px; }
+      .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+      .code-dot.red { background: #ff5f56; }
+      .code-dot.yellow { background: #ffbd2e; }
+      .code-dot.green { background: #27ca40; }
+      .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+      .code-content { padding: 16px; overflow-x: auto; }
+      .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+      .prompt-card { background: linear-gradient(135deg, #5856D6 0%, #7B79E8 50%, #9B99F0 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+      .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+      .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; }
+      .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-doc-driven.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">6</div>
+            <h1 class="chapter-title">画面設計書・テスト仕様書</h1>
+        </header>
+
+        <nav class="toc">
+            <h3>目次</h3>
+            <ul>
+                <li><a href="#section1">6-1. 画面設計書の構成</a></li>
+                <li><a href="#section2">6-2. 画面遷移図</a></li>
+                <li><a href="#section3">6-3. テスト仕様書の構成</a></li>
+                <li><a href="#section4">6-4. テストケースの書き方</a></li>
+                <li><a href="#section5">6-5. テンプレートからプロンプトへ</a></li>
+                <li><a href="#exercises">練習問題</a></li>
+            </ul>
+        </nav>
+
+        <!-- Section 1 -->
+        <section id="section1" class="section">
+            <div class="section-header">
+                <span class="section-number">6-1</span>
+                <h2 class="section-title">画面設計書の構成</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>6-1-1. 画面設計書とは</h3>
+                <p>画面設計書は、<strong>各画面のレイアウト・入力項目・ボタン・バリデーション</strong>を定義するドキュメントです。Thymeleafテンプレートの設計に直結します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>6-1-2. 入力項目定義テーブル</h3>
+                <p>フォーム画面では、各入力項目の<strong>HTML要素・type属性・name属性・必須/任意・バリデーション</strong>を定義します。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #3b82f6;">input</span> SCR-002: タスク登録画面 入力項目定義
+                    </h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                            <thead>
+                                <tr style="background: #3b82f6; color: white;">
+                                    <th style="padding: 10px 12px; text-align: left;">#</th>
+                                    <th style="padding: 10px 12px; text-align: left;">項目名</th>
+                                    <th style="padding: 10px 12px; text-align: left;">HTML要素</th>
+                                    <th style="padding: 10px 12px; text-align: left;">type</th>
+                                    <th style="padding: 10px 12px; text-align: left;">name属性</th>
+                                    <th style="padding: 10px 12px; text-align: left;">必須</th>
+                                    <th style="padding: 10px 12px; text-align: left;">バリデーション</th>
+                                    <th style="padding: 10px 12px; text-align: left;">初期値</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">1</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">タイトル</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">input</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">text</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">title</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;"><span style="color: #ef4444; font-weight: 700;">はい</span></td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">1-100文字</td>
+                                    <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">空</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 12px;">2</td>
+                                    <td style="padding: 8px 12px; font-weight: 600;">説明</td>
+                                    <td style="padding: 8px 12px; font-family: 'JetBrains Mono', monospace;">textarea</td>
+                                    <td style="padding: 8px 12px;">-</td>
+                                    <td style="padding: 8px 12px; font-family: 'JetBrains Mono', monospace;">description</td>
+                                    <td style="padding: 8px 12px;">いいえ</td>
+                                    <td style="padding: 8px 12px;">最大500文字</td>
+                                    <td style="padding: 8px 12px;">空</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>6-1-3. レイアウト概要図</h3>
+                <p>画面のレイアウトをテキストベースで記述します。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">SCR-001: タスク一覧画面レイアウト</span>
+                    </div>
+                    <div class="code-content">
+<pre>+--------------------------------------------------+
+| ヘッダー: Todoアプリ                               |
++--------------------------------------------------+
+| タスク一覧            [新規作成ボタン]              |
++--------------------------------------------------+
+| | # | タイトル    | 状態   | 作成日     | 操作  | |
+| | 1 | 買い物に行く | 未完了 | 2026/03/01 | 詳細  | |
+| | 2 | レポート     | 完了   | 2026/03/01 | 詳細  | |
++--------------------------------------------------+
+| フッター                                          |
++--------------------------------------------------+</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section id="section2" class="section">
+            <div class="section-header">
+                <span class="section-number">6-2</span>
+                <h2 class="section-title">画面遷移図</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>6-2-1. 画面遷移の設計</h3>
+                <p>画面遷移図は、ユーザーがどの画面からどの操作でどの画面に遷移するかを示します。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">account_tree</span> Todoアプリ 画面遷移図
+                    </h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="background: #5856D6; color: white;">
+                                    <th style="padding: 10px 14px; text-align: left;">遷移元</th>
+                                    <th style="padding: 10px 14px; text-align: left;">アクション</th>
+                                    <th style="padding: 10px 14px; text-align: left;">遷移先</th>
+                                    <th style="padding: 10px 14px; text-align: left;">HTTPメソッド</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-001 一覧</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">新規作成ボタン</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-002 登録フォーム</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">GET</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-002 登録</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">登録ボタン（成功）</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-001 一覧</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">POST → redirect</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-002 登録</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">登録ボタン（エラー）</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-002 登録フォーム（再表示）</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">POST → return</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-001 一覧</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">詳細リンク</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-003 詳細</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">GET</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-003 詳細</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">編集ボタン</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">SCR-004 編集フォーム</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">GET</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px;">SCR-003 詳細</td>
+                                    <td style="padding: 8px 14px;">削除ボタン（確認後）</td>
+                                    <td style="padding: 8px 14px;">SCR-001 一覧</td>
+                                    <td style="padding: 8px 14px; font-family: 'JetBrains Mono', monospace;">POST → redirect</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title"><span class="material-icons">lightbulb</span> PRGパターン</div>
+                    <div class="info-box-content">
+                        <p>POST送信が成功した後は<strong>redirect（リダイレクト）</strong>で一覧画面に戻ります。これはPRG（Post-Redirect-Get）パターンと呼ばれ、ブラウザの更新ボタンで二重送信されるのを防ぎます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section id="section3" class="section">
+            <div class="section-header">
+                <span class="section-number">6-3</span>
+                <h2 class="section-title">テスト仕様書の構成</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>6-3-1. テスト仕様書とは</h3>
+                <p>テスト仕様書は、<strong>システムが仕様通りに動作するかを確認するためのドキュメント</strong>です。何をどのようにテストし、何が期待結果かを記載します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3>6-3-2. テスト種別</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="background: #ef4444; color: white;">
+                                <th style="padding: 10px 14px; text-align: left; border-radius: 8px 0 0 0;">テスト種別</th>
+                                <th style="padding: 10px 14px; text-align: left;">テスト対象</th>
+                                <th style="padding: 10px 14px; text-align: left;">例</th>
+                                <th style="padding: 10px 14px; text-align: left; border-radius: 0 8px 0 0;">訓練校での優先度</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">画面テスト</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">画面の表示・操作</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">一覧画面が表示されるか</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-weight: 600;">高</span></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">バリデーションテスト</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">入力値の検証</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">空欄送信でエラーが出るか</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-weight: 600;">高</span></td>
+                            </tr>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">CRUDテスト</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">データの登録・更新・削除</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">登録後に一覧に表示されるか</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-weight: 600;">高</span></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 14px; font-weight: 600;">境界値テスト</td>
+                                <td style="padding: 8px 14px;">文字数の上限・下限</td>
+                                <td style="padding: 8px 14px;">100文字ちょうど/101文字</td>
+                                <td style="padding: 8px 14px;"><span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 4px; font-weight: 600;">中</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4 -->
+        <section id="section4" class="section">
+            <div class="section-header">
+                <span class="section-number">6-4</span>
+                <h2 class="section-title">テストケースの書き方</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>6-4-1. テストケーステーブル</h3>
+                <p>テストケースは<strong>ID・カテゴリ・テスト項目・前提条件・手順・期待結果・優先度</strong>で構成します。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #ef4444;">fact_check</span> Todoアプリ テストケース例
+                    </h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                            <thead>
+                                <tr style="background: #ef4444; color: white;">
+                                    <th style="padding: 8px 10px; text-align: left;">TC-ID</th>
+                                    <th style="padding: 8px 10px; text-align: left;">カテゴリ</th>
+                                    <th style="padding: 8px 10px; text-align: left;">テスト項目</th>
+                                    <th style="padding: 8px 10px; text-align: left;">手順</th>
+                                    <th style="padding: 8px 10px; text-align: left;">期待結果</th>
+                                    <th style="padding: 8px 10px; text-align: left;">優先度</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">TC-001</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;"><span style="background: #dcfce7; color: #166534; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">正常系</span></td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">タスク一覧が表示される</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">/todosにアクセス</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">一覧画面が表示される</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">高</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">TC-002</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;"><span style="background: #dcfce7; color: #166534; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">正常系</span></td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">タスクを追加できる</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">タイトル「テスト」で登録</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">一覧に追加される</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">高</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">TC-003</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef2f2; color: #991b1b; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">異常系</span></td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">タイトル空欄で登録</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">タイトル未入力で送信</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">エラーメッセージ表示</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">高</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">TC-004</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">境界値</span></td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">タイトル100文字で登録</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">100文字入力して送信</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">正常に登録される</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">中</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">TC-005</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">境界値</span></td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">タイトル101文字で登録</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">101文字入力して送信</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">エラーメッセージ表示</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #e2e8f0;">中</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 6px 10px; font-family: 'JetBrains Mono', monospace;">TC-006</td>
+                                    <td style="padding: 6px 10px;"><span style="background: #dcfce7; color: #166534; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem;">正常系</span></td>
+                                    <td style="padding: 6px 10px;">タスクを削除できる</td>
+                                    <td style="padding: 6px 10px;">詳細画面で削除ボタン</td>
+                                    <td style="padding: 6px 10px;">一覧から消える</td>
+                                    <td style="padding: 6px 10px;">高</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="section5" class="section">
+            <div class="section-header">
+                <span class="section-number">6-5</span>
+                <h2 class="section-title">テンプレートからプロンプトへ</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>6-5-1. 画面設計書からThymeleafテンプレートへ</h3>
+
+                <div class="prompt-card">
+                    <h4 style="color: white;"><span class="material-icons">smart_toy</span> 画面設計書からThymeleafを生成するプロンプト</h4>
+                    <div class="prompt-box">
+<pre>以下の画面設計書に基づいて、Thymeleafテンプレートを作成してください。
+
+## SCR-002: タスク登録画面
+- URL: /todos/new (GET) → フォーム表示
+- 送信先: /todos (POST)
+- テンプレート: todos/form.html
+
+## 入力項目
+| 項目名 | 要素 | name属性 | 必須 | バリデーション |
+|--------|------|---------|------|-------------|
+| タイトル | input[text] | title | はい | 1-100文字 |
+| 説明 | textarea | description | いいえ | 最大500文字 |
+
+## エラー表示
+- 各フィールドの下にth:errorsでエラーメッセージ表示
+- Bootstrap 5のフォームスタイルを使用
+
+## ボタン
+- 登録ボタン（type=submit）
+- キャンセルリンク（/todosへ遷移）
+
+Thymeleafのth:object, th:field, th:errorsを使用してください。</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>6-5-2. テスト仕様書からテストコード生成</h3>
+                <p>テスト仕様書のテストケースは、将来的にJUnitテストコードの生成プロンプトとしても使えます。まずは手動テストの手順書として活用しましょう。</p>
+
+                <div class="info-box success">
+                    <div class="info-box-title"><span class="material-icons">check_circle</span> 画面設計 + テスト仕様 = 品質保証</div>
+                    <div class="info-box-content">
+                        <p>画面設計書で「何を表示するか」を定義し、テスト仕様書で「正しく表示されるか」を検証します。この2つの設計書をセットで作ることで、<strong>開発と品質保証を同時に設計</strong>できます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercises -->
+        <section id="exercises" class="section">
+            <div class="section-header">
+                <span class="section-number"><span class="material-icons">edit_note</span></span>
+                <h2 class="section-title">練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">1</div>
+                    <div class="exercise-content">
+                        <p>「メモ帳アプリ」のメモ作成画面の入力項目定義テーブルを作成してください（項目名・HTML要素・必須・バリデーション）。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">2</div>
+                    <div class="exercise-content">
+                        <p>テストケースの「正常系」「異常系」「境界値」の違いを説明してください。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">3</div>
+                    <div class="exercise-content">
+                        <p>「メモ帳アプリ」のメモ作成機能に対するテストケースを、正常系2件・異常系2件・境界値1件の計5件書いてください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <details style="margin-top: 24px;">
+                <summary style="cursor: pointer; font-weight: 700; color: var(--primary); padding: 12px; background: var(--primary-light); border-radius: 8px;">解答を表示</summary>
+                <div class="answer-list" style="margin-top: 16px;">
+                    <div class="answer-item">
+                        <div class="answer-header">問1の解答例</div>
+                        <div class="answer-content">
+                            <p>| タイトル | input[text] | title | はい | 1-100文字 |</p>
+                            <p>| 本文 | textarea | body | はい | 1-10000文字 |</p>
+                        </div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-header">問2の解答</div>
+                        <div class="answer-content">
+                            <p><strong>正常系</strong>: 正しい入力で正しく動作することを確認するテスト。</p>
+                            <p><strong>異常系</strong>: 不正な入力や操作に対して、適切にエラー処理されることを確認するテスト。</p>
+                            <p><strong>境界値</strong>: 入力値の上限・下限ちょうど/超過で正しく判定されることを確認するテスト。</p>
+                        </div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-header">問3の解答例</div>
+                        <div class="answer-content">
+                            <p>正常系: TC-001 タイトル・本文入力して正常に登録される / TC-002 登録後に一覧画面にリダイレクトされる</p>
+                            <p>異常系: TC-003 タイトル空欄で「タイトルは必須です」が表示 / TC-004 本文空欄で「本文は必須です」が表示</p>
+                            <p>境界値: TC-005 タイトル100文字で正常に登録される（101文字ならエラー）</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="5doc-db-design.html" class="page-nav-btn prev">
+            <span class="material-icons">arrow_back</span>
+            <div>
+                <div class="page-nav-label">Previous</div>
+                <div class="page-nav-title">DB設計書の書き方</div>
+            </div>
+        </a>
+        <a href="7doc-exercise-todo.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">Next</div>
+                <div class="page-nav-title">演習: Todoアプリ</div>
+            </div>
+            <span class="material-icons">arrow_forward</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

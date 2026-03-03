@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第4章 API設計書の書き方 - 設計書駆動プロンプト開発</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+      .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; }
+      .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+      .code-dots { display: flex; gap: 6px; }
+      .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+      .code-dot.red { background: #ff5f56; }
+      .code-dot.yellow { background: #ffbd2e; }
+      .code-dot.green { background: #27ca40; }
+      .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+      .code-content { padding: 16px; overflow-x: auto; }
+      .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+      .code-keyword { color: #c084fc; }
+      .code-string { color: #86efac; }
+      .code-comment { color: #94a3b8; }
+      .code-annotation { color: #fbbf24; }
+      .code-class { color: #67e8f9; }
+      .prompt-card { background: linear-gradient(135deg, #5856D6 0%, #7B79E8 50%, #9B99F0 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+      .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+      .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; }
+      .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; color: #e2e8f0; }
+      .http-method { padding: 3px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; color: white; }
+      .http-get { background: #22c55e; }
+      .http-post { background: #3b82f6; }
+      .http-put { background: #f59e0b; }
+      .http-delete { background: #ef4444; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-doc-driven.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">4</div>
+            <h1 class="chapter-title">API設計書の書き方</h1>
+        </header>
+
+        <nav class="toc">
+            <h3>目次</h3>
+            <ul>
+                <li><a href="#section1">4-1. API設計書の構成</a></li>
+                <li><a href="#section2">4-2. エンドポイント一覧</a></li>
+                <li><a href="#section3">4-3. リクエスト/レスポンス定義</a></li>
+                <li><a href="#section4">4-4. エラーコード定義</a></li>
+                <li><a href="#section5">4-5. テンプレートからプロンプトへ</a></li>
+                <li><a href="#exercises">練習問題</a></li>
+            </ul>
+        </nav>
+
+        <!-- Section 1 -->
+        <section id="section1" class="section">
+            <div class="section-header">
+                <span class="section-number">4-1</span>
+                <h2 class="section-title">API設計書の構成</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>4-1-1. API設計書とは</h3>
+                <p>API設計書は、<strong>サーバーとクライアント間の通信仕様</strong>を定義するドキュメントです。どのURLにどのHTTPメソッドでアクセスすると何が返ってくるかを正確に記述します。</p>
+
+                <div class="info-box">
+                    <div class="info-box-title"><span class="material-icons">lightbulb</span> Thymeleafアプリでも使うの?</div>
+                    <div class="info-box-content">
+                        <p>本講座ではThymeleaf（サーバーサイドレンダリング）を使いますが、API設計書の考え方はControllerのエンドポイント設計にそのまま使えます。URLとHTTPメソッドの対応表は、<strong>Controllerクラスのメソッドと1対1で対応</strong>します。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>4-1-2. API設計書の主要セクション</h3>
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">api</span> API設計書の構成要素
+                    </h4>
+                    <div style="display: grid; gap: 10px;">
+                        <div style="display: flex; gap: 12px; align-items: center; background: #dbeafe; border-radius: 8px; padding: 10px 14px;">
+                            <span style="font-weight: 700; color: #3b82f6; min-width: 24px;">1</span>
+                            <span style="font-weight: 600;">基本情報</span>
+                            <span style="font-size: 0.85rem; color: #475569; margin-left: auto;">ベースURL、認証方式、レスポンス形式</span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #dcfce7; border-radius: 8px; padding: 10px 14px;">
+                            <span style="font-weight: 700; color: #22c55e; min-width: 24px;">2</span>
+                            <span style="font-weight: 600;">エンドポイント一覧</span>
+                            <span style="font-size: 0.85rem; color: #475569; margin-left: auto;">HTTPメソッド、パス、概要</span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #f3e8ff; border-radius: 8px; padding: 10px 14px;">
+                            <span style="font-weight: 700; color: #a855f7; min-width: 24px;">3</span>
+                            <span style="font-weight: 600;">リクエスト/レスポンス</span>
+                            <span style="font-size: 0.85rem; color: #475569; margin-left: auto;">パラメータ、JSONボディ、レスポンスJSON</span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #fef3c7; border-radius: 8px; padding: 10px 14px;">
+                            <span style="font-weight: 700; color: #f59e0b; min-width: 24px;">4</span>
+                            <span style="font-weight: 600;">エラーコード</span>
+                            <span style="font-size: 0.85rem; color: #475569; margin-left: auto;">HTTPステータス、エラーコード、メッセージ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section id="section2" class="section">
+            <div class="section-header">
+                <span class="section-number">4-2</span>
+                <h2 class="section-title">エンドポイント一覧</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>4-2-1. CRUD対応のエンドポイント設計</h3>
+                <p>REST APIの基本であるCRUD操作は、以下のように<strong>HTTPメソッドとURLパス</strong>を対応させます。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">table_chart</span> Todoアプリ エンドポイント一覧
+                    </h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="background: #334155; color: white;">
+                                    <th style="padding: 10px 14px; text-align: left; border-radius: 8px 0 0 0;">#</th>
+                                    <th style="padding: 10px 14px; text-align: left;">メソッド</th>
+                                    <th style="padding: 10px 14px; text-align: left;">パス</th>
+                                    <th style="padding: 10px 14px; text-align: left;">概要</th>
+                                    <th style="padding: 10px 14px; text-align: left; border-radius: 0 8px 0 0;">対応CRUD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">1</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span class="http-method http-get">GET</span></td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">/todos</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスク一覧画面を表示</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">Read（一覧）</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">2</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span class="http-method http-get">GET</span></td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">/todos/new</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">新規登録フォームを表示</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">-</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">3</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span class="http-method http-post">POST</span></td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">/todos</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスクを新規作成</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">Create</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">4</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span class="http-method http-get">GET</span></td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">/todos/{id}</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスク詳細を表示</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">Read（詳細）</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">5</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span class="http-method http-get">GET</span></td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">/todos/{id}/edit</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">編集フォームを表示</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">-</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">6</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span class="http-method http-put">PUT</span></td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">/todos/{id}</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">タスクを更新</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">Update</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px;">7</td>
+                                    <td style="padding: 8px 14px;"><span class="http-method http-delete">DELETE</span></td>
+                                    <td style="padding: 8px 14px; font-family: 'JetBrains Mono', monospace;">/todos/{id}</td>
+                                    <td style="padding: 8px 14px;">タスクを削除</td>
+                                    <td style="padding: 8px 14px;">Delete</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>4-2-2. URL設計のルール</h3>
+                <div class="info-box">
+                    <div class="info-box-title"><span class="material-icons">rule</span> URL設計の基本ルール</div>
+                    <div class="info-box-content">
+                        <ul>
+                            <li><strong>リソース名は複数形</strong>: <code>/todos</code>（<code>/todo</code>ではない）</li>
+                            <li><strong>IDはパスパラメータ</strong>: <code>/todos/{id}</code> でリソースを特定</li>
+                            <li><strong>動詞はHTTPメソッドで表現</strong>: <code>GET</code>=取得、<code>POST</code>=作成、<code>PUT</code>=更新、<code>DELETE</code>=削除</li>
+                            <li><strong>ネストは浅く</strong>: <code>/users/{userId}/todos</code> は最大2階層まで</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section id="section3" class="section">
+            <div class="section-header">
+                <span class="section-number">4-3</span>
+                <h2 class="section-title">リクエスト/レスポンス定義</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>4-3-1. リクエストボディの定義</h3>
+                <p>POSTやPUTで送信するデータの形式を定義します。各フィールドの<strong>型・必須/任意・バリデーション</strong>を明記します。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">POST /todos リクエスト定義</span>
+                    </div>
+                    <div class="code-content">
+<pre><span class="code-comment">// リクエストボディ（JSON形式で記述）</span>
+{
+  "<span class="code-string">title</span>": "買い物に行く",
+  "<span class="code-string">description</span>": "牛乳とパンを買う"
+}
+
+<span class="code-comment">// フィールド定義テーブル</span>
+| フィールド   | 型     | 必須 | バリデーション | 説明         |
+|-------------|--------|------|--------------|-------------|
+| title       | String | はい  | 1-100文字     | タスクタイトル |
+| description | String | いいえ | 最大500文字    | タスク説明    |</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>4-3-2. レスポンスの定義</h3>
+                <p>APIが返すデータの形式を、<strong>HTTPステータスコードごと</strong>に定義します。</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">GET /todos レスポンス（200 OK）</span>
+                    </div>
+                    <div class="code-content">
+<pre>[
+  {
+    "<span class="code-string">id</span>": 1,
+    "<span class="code-string">title</span>": "買い物に行く",
+    "<span class="code-string">description</span>": "牛乳とパンを買う",
+    "<span class="code-string">completed</span>": false,
+    "<span class="code-string">createdAt</span>": "2026-03-01T10:00:00",
+    "<span class="code-string">updatedAt</span>": "2026-03-01T10:00:00"
+  },
+  {
+    "<span class="code-string">id</span>": 2,
+    "<span class="code-string">title</span>": "レポートを書く",
+    "<span class="code-string">description</span>": null,
+    "<span class="code-string">completed</span>": true,
+    "<span class="code-string">createdAt</span>": "2026-03-01T09:00:00",
+    "<span class="code-string">updatedAt</span>": "2026-03-01T14:30:00"
+  }
+]</pre>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title"><span class="material-icons">lightbulb</span> Thymeleafの場合</div>
+                    <div class="info-box-content">
+                        <p>Thymeleafを使う場合、APIはJSONではなくHTMLを返します。しかし、<strong>Controllerが受け取るパラメータと返すModelの属性</strong>は同じ構造です。API設計書のフィールド定義は、Formクラスのフィールドとして直接使えます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4 -->
+        <section id="section4" class="section">
+            <div class="section-header">
+                <span class="section-number">4-4</span>
+                <h2 class="section-title">エラーコード定義</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>4-4-1. エラーコード一覧</h3>
+                <p>システムで発生しうるエラーと、その際のHTTPステータスコード・エラーメッセージを定義します。</p>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="background: #ef4444; color: white;">
+                                <th style="padding: 10px 14px; text-align: left; border-radius: 8px 0 0 0;">エラーコード</th>
+                                <th style="padding: 10px 14px; text-align: left;">HTTPステータス</th>
+                                <th style="padding: 10px 14px; text-align: left;">説明</th>
+                                <th style="padding: 10px 14px; text-align: left; border-radius: 0 8px 0 0;">対処法</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">VALIDATION_ERROR</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 4px; font-weight: 600;">400</span></td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">入力値バリデーションエラー</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">エラーフィールドを確認</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-weight: 600;">NOT_FOUND</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 4px; font-weight: 600;">404</span></td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">指定されたリソースが存在しない</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">IDを確認</td>
+                            </tr>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 8px 14px; font-family: 'JetBrains Mono', monospace; font-weight: 600;">INTERNAL_ERROR</td>
+                                <td style="padding: 8px 14px;"><span style="background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-weight: 600;">500</span></td>
+                                <td style="padding: 8px 14px;">サーバー内部エラー</td>
+                                <td style="padding: 8px 14px;">サーバーログを確認</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="section5" class="section">
+            <div class="section-header">
+                <span class="section-number">4-5</span>
+                <h2 class="section-title">テンプレートからプロンプトへ</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>4-5-1. API設計書からSpring Boot Controllerへ</h3>
+                <p>API設計書のエンドポイント一覧は、Spring BootのControllerクラスに<strong>ほぼそのまま変換</strong>できます。</p>
+
+                <div class="prompt-card">
+                    <h4 style="color: white;"><span class="material-icons">smart_toy</span> API設計書からControllerを生成するプロンプト</h4>
+                    <div class="prompt-box">
+<pre>以下のAPI設計書に基づいて、Spring Boot + ThymeleafのTodoControllerクラスを作成してください。
+
+## エンドポイント一覧
+| メソッド | パス | 概要 | Controllerメソッド名 |
+|---------|------|------|-------------------|
+| GET | /todos | 一覧表示 | list() |
+| GET | /todos/new | 登録フォーム | showCreateForm() |
+| POST | /todos | 新規作成 | create() |
+| GET | /todos/{id} | 詳細表示 | show() |
+| GET | /todos/{id}/edit | 編集フォーム | showEditForm() |
+| POST | /todos/{id} | 更新 | update() |
+| POST | /todos/{id}/delete | 削除 | delete() |
+
+## リクエストパラメータ（POST /todos, POST /todos/{id}）
+| フィールド | 型 | 必須 | バリデーション |
+|-----------|-----|------|-------------|
+| title | String | はい | @NotBlank, @Size(max=100) |
+| description | String | いいえ | @Size(max=500) |
+
+## バリデーションエラー時
+- BindingResultでエラーを検出
+- エラーがあればフォームを再表示（入力値保持）
+
+@Controllerアノテーション、TodoServiceへの依存注入、
+各メソッドの@GetMapping/@PostMappingを含めてください。</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>4-5-2. 生成されるControllerのイメージ</h3>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                        <span class="code-title">TodoController.java（生成イメージ）</span>
+                    </div>
+                    <div class="code-content">
+<pre><span class="code-annotation">@Controller</span>
+<span class="code-annotation">@RequestMapping</span>(<span class="code-string">"/todos"</span>)
+<span class="code-keyword">public class</span> <span class="code-class">TodoController</span> {
+
+    <span class="code-keyword">private final</span> <span class="code-class">TodoService</span> todoService;
+
+    <span class="code-keyword">public</span> TodoController(<span class="code-class">TodoService</span> todoService) {
+        <span class="code-keyword">this</span>.todoService = todoService;
+    }
+
+    <span class="code-comment">// GET /todos - 一覧表示</span>
+    <span class="code-annotation">@GetMapping</span>
+    <span class="code-keyword">public</span> String list(<span class="code-class">Model</span> model) {
+        model.addAttribute(<span class="code-string">"todos"</span>, todoService.findAll());
+        <span class="code-keyword">return</span> <span class="code-string">"todos/list"</span>;
+    }
+
+    <span class="code-comment">// GET /todos/new - 登録フォーム</span>
+    <span class="code-annotation">@GetMapping</span>(<span class="code-string">"/new"</span>)
+    <span class="code-keyword">public</span> String showCreateForm(<span class="code-class">Model</span> model) {
+        model.addAttribute(<span class="code-string">"todoForm"</span>, <span class="code-keyword">new</span> <span class="code-class">TodoForm</span>());
+        <span class="code-keyword">return</span> <span class="code-string">"todos/form"</span>;
+    }
+
+    <span class="code-comment">// POST /todos - 新規作成</span>
+    <span class="code-annotation">@PostMapping</span>
+    <span class="code-keyword">public</span> String create(
+            <span class="code-annotation">@Valid</span> <span class="code-class">TodoForm</span> form,
+            <span class="code-class">BindingResult</span> result) {
+        <span class="code-keyword">if</span> (result.hasErrors()) {
+            <span class="code-keyword">return</span> <span class="code-string">"todos/form"</span>;
+        }
+        todoService.create(form);
+        <span class="code-keyword">return</span> <span class="code-string">"redirect:/todos"</span>;
+    }
+}</pre>
+                    </div>
+                </div>
+
+                <div class="info-box success">
+                    <div class="info-box-title"><span class="material-icons">check_circle</span> 設計書とコードの対応</div>
+                    <div class="info-box-content">
+                        <p>エンドポイント一覧の各行が、Controllerの各メソッドに1対1で対応していることが分かります。設計書が正確であればあるほど、AIが生成するコードも正確になります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercises -->
+        <section id="exercises" class="section">
+            <div class="section-header">
+                <span class="section-number"><span class="material-icons">edit_note</span></span>
+                <h2 class="section-title">練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">1</div>
+                    <div class="exercise-content">
+                        <p>HTTPメソッド（GET, POST, PUT, DELETE）とCRUD操作の対応を答えてください。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">2</div>
+                    <div class="exercise-content">
+                        <p>「メモ帳アプリ」のエンドポイント一覧を、メソッド・パス・概要の3列テーブルで作成してください（最低5エンドポイント）。</p>
+                    </div>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-number">3</div>
+                    <div class="exercise-content">
+                        <p><code>POST /memos</code>（メモ新規作成）のリクエストボディとバリデーションルールをJSON形式で定義してください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <details style="margin-top: 24px;">
+                <summary style="cursor: pointer; font-weight: 700; color: var(--primary); padding: 12px; background: var(--primary-light); border-radius: 8px;">解答を表示</summary>
+                <div class="answer-list" style="margin-top: 16px;">
+                    <div class="answer-item">
+                        <div class="answer-header">問1の解答</div>
+                        <div class="answer-content">
+                            <p><strong>GET</strong> = Read（取得）、<strong>POST</strong> = Create（作成）、<strong>PUT</strong> = Update（更新）、<strong>DELETE</strong> = Delete（削除）</p>
+                        </div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-header">問2の解答例</div>
+                        <div class="answer-content">
+                            <p>| GET | /memos | メモ一覧表示 |</p>
+                            <p>| GET | /memos/new | 新規作成フォーム |</p>
+                            <p>| POST | /memos | メモ新規作成 |</p>
+                            <p>| GET | /memos/{id} | メモ詳細表示 |</p>
+                            <p>| GET | /memos/{id}/edit | 編集フォーム |</p>
+                            <p>| POST | /memos/{id} | メモ更新 |</p>
+                            <p>| POST | /memos/{id}/delete | メモ削除 |</p>
+                        </div>
+                    </div>
+                    <div class="answer-item">
+                        <div class="answer-header">問3の解答例</div>
+                        <div class="answer-content">
+                            <p><strong>リクエストボディ:</strong> <code>{ "title": "会議メモ", "body": "来週のスケジュール..." }</code></p>
+                            <p><strong>バリデーション:</strong> title: String, 必須, 1-100文字 / body: String, 必須, 1-10000文字</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="3doc-functional-spec.html" class="page-nav-btn prev">
+            <span class="material-icons">arrow_back</span>
+            <div>
+                <div class="page-nav-label">Previous</div>
+                <div class="page-nav-title">機能仕様書の書き方</div>
+            </div>
+        </a>
+        <a href="5doc-db-design.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">Next</div>
+                <div class="page-nav-title">DB設計書の書き方</div>
+            </div>
+            <span class="material-icons">arrow_forward</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

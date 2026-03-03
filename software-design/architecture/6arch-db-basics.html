@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第6章 DB設計の基礎 - アーキテクチャ基礎</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-architecture.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">6</div>
+            <h1 class="chapter-title">DB設計の基礎</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">6-1</span><span>データモデリング</span></li>
+                <li class="toc-item"><span class="toc-number">6-2</span><span>ER図</span></li>
+                <li class="toc-item"><span class="toc-number">6-3</span><span>正規化（1NF〜3NF）</span></li>
+                <li class="toc-item"><span class="toc-number">6-4</span><span>主キー・外部キー・インデックス</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 6-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-1</span>
+                <h2 class="section-title">データモデリング</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>データモデリングとは、アプリケーションが扱うデータの構造を設計することです。良いDB設計は「データの整合性」と「検索の効率性」の両立を目指します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">6-1-1 データモデリングの3段階</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">account_tree</span>
+                            データモデリングの3段階
+                        </h4>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap;">
+                            <div style="background: #dbeafe; border-radius: 12px; padding: 16px; text-align: center; min-width: 150px;">
+                                <span class="material-icons" style="color: #3b82f6; font-size: 2rem;">lightbulb</span>
+                                <div style="font-weight: 700; color: #3b82f6; margin: 4px 0;">概念モデル</div>
+                                <div style="font-size: 0.8rem; color: #334155;">何のデータがあるか</div>
+                                <div style="font-size: 0.75rem; color: #64748b;">エンティティと関連</div>
+                            </div>
+                            <span class="material-icons" style="color: #94a3b8;">arrow_forward</span>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px; text-align: center; min-width: 150px;">
+                                <span class="material-icons" style="color: #22c55e; font-size: 2rem;">schema</span>
+                                <div style="font-weight: 700; color: #22c55e; margin: 4px 0;">論理モデル</div>
+                                <div style="font-size: 0.8rem; color: #334155;">どんな属性があるか</div>
+                                <div style="font-size: 0.75rem; color: #64748b;">テーブル・カラム・正規化</div>
+                            </div>
+                            <span class="material-icons" style="color: #94a3b8;">arrow_forward</span>
+                            <div style="background: #f3e8ff; border-radius: 12px; padding: 16px; text-align: center; min-width: 150px;">
+                                <span class="material-icons" style="color: #a855f7; font-size: 2rem;">storage</span>
+                                <div style="font-weight: 700; color: #a855f7; margin: 4px 0;">物理モデル</div>
+                                <div style="font-size: 0.8rem; color: #334155;">どうDB上に配置するか</div>
+                                <div style="font-size: 0.75rem; color: #64748b;">型・インデックス・DDL</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 6-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-2</span>
+                <h2 class="section-title">ER図</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>ER図（Entity-Relationship Diagram）は、データベースのテーブル構造と関連を視覚的に表現する図です。エンティティ（テーブル）、属性（カラム）、リレーション（関連）の3要素で構成されます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">6-2-1 ER図の記法</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>カーディナリティ</th>
+                                <th>記号</th>
+                                <th>意味</th>
+                                <th>例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1対1</td>
+                                <td><code>1 --- 1</code></td>
+                                <td>1つに対して1つ</td>
+                                <td>User --- UserProfile</td>
+                            </tr>
+                            <tr>
+                                <td>1対多</td>
+                                <td><code>1 --- *</code></td>
+                                <td>1つに対して複数</td>
+                                <td>User --- Order</td>
+                            </tr>
+                            <tr>
+                                <td>多対多</td>
+                                <td><code>* --- *</code></td>
+                                <td>複数対複数（中間テーブル必要）</td>
+                                <td>Order --- Product</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">6-2-2 ER図の例: ECサイト</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">schema</span>
+                            User - Order - Product ER図
+                        </h4>
+                        <svg viewBox="0 0 600 320" style="width: 100%; max-width: 600px; display: block; margin: 0 auto;">
+                            <!-- User テーブル -->
+                            <rect x="20" y="30" width="160" height="140" rx="8" fill="white" stroke="#3b82f6" stroke-width="2"/>
+                            <rect x="20" y="30" width="160" height="32" rx="8" fill="#3b82f6"/>
+                            <text x="100" y="51" text-anchor="middle" fill="white" font-size="13" font-weight="bold" font-family="sans-serif">users</text>
+                            <text x="30" y="82" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">PK id: BIGINT</text>
+                            <text x="30" y="100" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">   name: VARCHAR</text>
+                            <text x="30" y="118" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">   email: VARCHAR</text>
+                            <text x="30" y="136" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">   created_at: TIMESTAMP</text>
+                            <line x1="20" y1="62" x2="180" y2="62" stroke="#e2e8f0" stroke-width="1"/>
+
+                            <!-- Order テーブル -->
+                            <rect x="220" y="30" width="160" height="160" rx="8" fill="white" stroke="#22c55e" stroke-width="2"/>
+                            <rect x="220" y="30" width="160" height="32" rx="8" fill="#22c55e"/>
+                            <text x="300" y="51" text-anchor="middle" fill="white" font-size="13" font-weight="bold" font-family="sans-serif">orders</text>
+                            <text x="230" y="82" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">PK id: BIGINT</text>
+                            <text x="230" y="100" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">FK user_id: BIGINT</text>
+                            <text x="230" y="118" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">   status: VARCHAR</text>
+                            <text x="230" y="136" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">   total_price: INT</text>
+                            <text x="230" y="154" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">   ordered_at: TIMESTAMP</text>
+                            <line x1="220" y1="62" x2="380" y2="62" stroke="#e2e8f0" stroke-width="1"/>
+
+                            <!-- order_items 中間テーブル -->
+                            <rect x="220" y="220" width="160" height="90" rx="8" fill="white" stroke="#f59e0b" stroke-width="2"/>
+                            <rect x="220" y="220" width="160" height="32" rx="8" fill="#f59e0b"/>
+                            <text x="300" y="241" text-anchor="middle" fill="white" font-size="13" font-weight="bold" font-family="sans-serif">order_items</text>
+                            <text x="230" y="272" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">FK order_id: BIGINT</text>
+                            <text x="230" y="290" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">FK product_id: BIGINT</text>
+                            <line x1="220" y1="252" x2="380" y2="252" stroke="#e2e8f0" stroke-width="1"/>
+
+                            <!-- Product テーブル -->
+                            <rect x="420" y="200" width="160" height="120" rx="8" fill="white" stroke="#a855f7" stroke-width="2"/>
+                            <rect x="420" y="200" width="160" height="32" rx="8" fill="#a855f7"/>
+                            <text x="500" y="221" text-anchor="middle" fill="white" font-size="13" font-weight="bold" font-family="sans-serif">products</text>
+                            <text x="430" y="252" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">PK id: BIGINT</text>
+                            <text x="430" y="270" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">   name: VARCHAR</text>
+                            <text x="430" y="288" fill="#334155" font-size="11" font-family="'JetBrains Mono', monospace">   price: INT</text>
+                            <line x1="420" y1="232" x2="580" y2="232" stroke="#e2e8f0" stroke-width="1"/>
+
+                            <!-- リレーション -->
+                            <line x1="180" y1="80" x2="220" y2="80" stroke="#64748b" stroke-width="2"/>
+                            <text x="192" y="72" fill="#64748b" font-size="10">1</text>
+                            <text x="208" y="72" fill="#64748b" font-size="10">*</text>
+
+                            <line x1="300" y1="190" x2="300" y2="220" stroke="#64748b" stroke-width="2"/>
+                            <text x="290" y="205" fill="#64748b" font-size="10">1</text>
+                            <text x="290" y="218" fill="#64748b" font-size="10">*</text>
+
+                            <line x1="380" y1="265" x2="420" y2="265" stroke="#64748b" stroke-width="2"/>
+                            <text x="388" y="258" fill="#64748b" font-size="10">*</text>
+                            <text x="410" y="258" fill="#64748b" font-size="10">1</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 6-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-3</span>
+                <h2 class="section-title">正規化（1NF〜3NF）</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>正規化とは、データの冗長性を排除し、更新異常（挿入異常・更新異常・削除異常）を防ぐためにテーブル構造を整理することです。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">6-3-1 非正規形から第1正規形へ</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #ef4444;">warning</span>
+                            非正規形: 繰り返し項目がある
+                        </h4>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="background: #fef2f2;">
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0;">注文ID</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0;">顧客名</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0;">商品名1</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0;">数量1</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0;">商品名2</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0;">数量2</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">1</td>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">田中太郎</td>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">ノートPC</td>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">1</td>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">マウス</td>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">2</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>第1正規形（1NF）</strong>: 繰り返し項目を排除し、全てのカラムが原子的（これ以上分割できない）な値を持つようにします。</p>
+
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #22c55e;">check_circle</span>
+                            第1正規形: 繰り返しを行に分離
+                        </h4>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="background: #dcfce7;">
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0;">注文ID</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0;">顧客名</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0;">商品名</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0;">数量</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">1</td>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">田中太郎</td>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">ノートPC</td>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">1</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">1</td>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">田中太郎</td>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">マウス</td>
+                                    <td style="padding: 8px; border: 1px solid #e2e8f0;">2</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">6-3-2 第2正規形・第3正規形</h3>
+                <div class="content-block">
+                    <p><strong>第2正規形（2NF）</strong>: 部分関数従属を排除します。主キーの一部だけに依存するカラムを別テーブルに分離します。</p>
+                    <p><strong>第3正規形（3NF）</strong>: 推移的関数従属を排除します。非キーカラムが他の非キーカラムに依存する場合、別テーブルに分離します。</p>
+
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">auto_fix_high</span>
+                            正規化の段階まとめ
+                        </h4>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #dbeafe; color: #3b82f6; font-weight: 700; padding: 6px 14px; border-radius: 8px; white-space: nowrap;">1NF</div>
+                                <div style="flex: 1; font-size: 0.9rem;">繰り返し項目を排除。全カラムが原子値。</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #dcfce7; color: #22c55e; font-weight: 700; padding: 6px 14px; border-radius: 8px; white-space: nowrap;">2NF</div>
+                                <div style="flex: 1; font-size: 0.9rem;">部分関数従属を排除。主キー全体に依存させる。</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: #f3e8ff; color: #a855f7; font-weight: 700; padding: 6px 14px; border-radius: 8px; white-space: nowrap;">3NF</div>
+                                <div style="flex: 1; font-size: 0.9rem;">推移的関数従属を排除。非キー同士の依存をなくす。</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">第3正規形のテーブル（最終結果）</span>
+                            <span class="code-lang">SQL</span>
+                        </div>
+                        <pre class="code-content"><code>-- 顧客テーブル
+CREATE TABLE customers (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE
+);
+
+-- 注文テーブル
+CREATE TABLE orders (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    customer_id BIGINT NOT NULL,
+    ordered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+-- 商品テーブル
+CREATE TABLE products (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(200) NOT NULL,
+    price INT NOT NULL
+);
+
+-- 注文明細テーブル（中間テーブル）
+CREATE TABLE order_items (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    order_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    unit_price INT NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 6-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 6-4</span>
+                <h2 class="section-title">主キー・外部キー・インデックス</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>テーブル設計の3大制約を正しく使うことで、データの整合性を保証し、検索パフォーマンスを向上させます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">6-4-1 キーと制約</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>制約</th>
+                                <th>役割</th>
+                                <th>特徴</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>PRIMARY KEY</strong></td>
+                                <td>行を一意に識別する</td>
+                                <td>NOT NULL + UNIQUE。テーブルに1つだけ</td>
+                            </tr>
+                            <tr>
+                                <td><strong>FOREIGN KEY</strong></td>
+                                <td>テーブル間の参照整合性を保証</td>
+                                <td>親テーブルに存在しない値を入れられない</td>
+                            </tr>
+                            <tr>
+                                <td><strong>UNIQUE</strong></td>
+                                <td>重複を禁止する</td>
+                                <td>NULLは許可される（DB製品による）</td>
+                            </tr>
+                            <tr>
+                                <td><strong>NOT NULL</strong></td>
+                                <td>NULL値を禁止する</td>
+                                <td>必須項目に付与</td>
+                            </tr>
+                            <tr>
+                                <td><strong>INDEX</strong></td>
+                                <td>検索を高速化する</td>
+                                <td>WHERE句やJOINで使うカラムに設定</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">6-4-2 インデックスの仕組み</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">speed</span>
+                            インデックスの効果
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #fef2f2; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #ef4444; margin-bottom: 8px;">INDEXなし: 全件スキャン</div>
+                                <p style="font-size: 0.85rem; color: #334155;">100万行を1行ずつ確認<br/>→ 最悪100万回の比較</p>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 8px;">INDEXあり: B-Tree検索</div>
+                                <p style="font-size: 0.85rem; color: #334155;">二分探索のようなツリー検索<br/>→ 約20回の比較で到達</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">インデックスの作成例</span>
+                            <span class="code-lang">SQL</span>
+                        </div>
+                        <pre class="code-content"><code>-- 単一カラムインデックス
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+
+-- 複合インデックス（検索条件が複数のとき）
+CREATE INDEX idx_orders_status_date ON orders(status, ordered_at);
+
+-- ユニークインデックス
+CREATE UNIQUE INDEX idx_users_email ON users(email);</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">インデックスの注意点</span>
+                        </div>
+                        <p>インデックスは検索を速くしますが、INSERT/UPDATEは遅くなります（インデックスの更新が必要なため）。<strong>WHERE句やJOINで頻繁に使うカラム</strong>に絞って作成しましょう。全カラムにインデックスを張るのは逆効果です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">6章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>以下のテーブルは第何正規形まで満たしていますか？ また、次の正規形にするにはどうすればよいですか。</p>
+                        <table class="data-table">
+                            <thead><tr><th>社員ID</th><th>社員名</th><th>部署名</th><th>部署長名</th></tr></thead>
+                            <tbody>
+                                <tr><td>1</td><td>田中</td><td>開発部</td><td>山田</td></tr>
+                                <tr><td>2</td><td>鈴木</td><td>開発部</td><td>山田</td></tr>
+                                <tr><td>3</td><td>佐藤</td><td>営業部</td><td>高橋</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>「ブログシステム」で以下のテーブルが必要です。CREATE TABLE文を書いてください。主キー、外部キー、NOT NULL制約を含めること。</p>
+                        <ul>
+                            <li>authors テーブル（id, name, email）</li>
+                            <li>posts テーブル（id, author_id, title, content, created_at）</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>postsテーブルで「特定のauthor_idの記事をcreated_atの降順で取得する」クエリが頻繁に実行されます。最適なインデックスを設計してください。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">6章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: 第2正規形（2NF）</div>
+                    <div class="answer-content">
+                        <p>繰り返し項目はなく（1NF達成）、全カラムが主キー（社員ID）に完全従属しています（2NF達成）。しかし「部署長名」は「部署名」に依存しており、社員IDに直接は依存していません（推移的関数従属）。第3正規形にするには、部署テーブル（部署名, 部署長名）を分離し、社員テーブルには部署IDの外部キーだけを持たせます。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答</div>
+                    <div class="answer-content">
+                        <div class="code-block">
+                            <pre class="code-content"><code>CREATE TABLE authors (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE posts (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    author_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (author_id) REFERENCES authors(id)
+);</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答</div>
+                    <div class="answer-content">
+                        <p>複合インデックスを <code>(author_id, created_at DESC)</code> の順で作成します。<code>CREATE INDEX idx_posts_author_date ON posts(author_id, created_at DESC);</code> これにより、特定のauthor_idでフィルタした後、created_atの降順ソートもインデックスで処理できます（カバリングインデックス）。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="5arch-rest-api.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第5章 REST API設計</div>
+            </div>
+        </a>
+        <a href="7arch-db-practice.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第7章 DB設計の実践</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

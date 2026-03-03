@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第2章 SOLID原則 - アーキテクチャ基礎</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-architecture.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">2</div>
+            <h1 class="chapter-title">SOLID原則</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">2-1</span><span>単一責任の原則 (SRP)</span></li>
+                <li class="toc-item"><span class="toc-number">2-2</span><span>開放閉鎖の原則 (OCP)</span></li>
+                <li class="toc-item"><span class="toc-number">2-3</span><span>リスコフの置換原則 (LSP)</span></li>
+                <li class="toc-item"><span class="toc-number">2-4</span><span>インタフェース分離の原則 (ISP)</span></li>
+                <li class="toc-item"><span class="toc-number">2-5</span><span>依存性逆転の原則 (DIP)</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 2-1: SRP -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 2-1</span>
+                <h2 class="section-title">単一責任の原則 (SRP)</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>Single Responsibility Principle</strong> ―「クラスを変更する理由は、ただ1つであるべき」。1つのクラスが複数の役割を持つと、一方の変更がもう一方に影響を与えてしまいます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2-1-1 SRPの概念</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">filter_1</span>
+                            SRP: 1クラス = 1責務
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #fef2f2; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #ef4444; margin-bottom: 8px;">違反: 複数の責務</div>
+                                <div style="background: white; border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
+                                    <div style="font-weight: 600; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 8px;">UserService</div>
+                                    <div style="color: #ef4444;">- authenticate()</div>
+                                    <div style="color: #ef4444;">- sendEmail()</div>
+                                    <div style="color: #ef4444;">- generateReport()</div>
+                                    <div style="color: #ef4444;">- formatCSV()</div>
+                                </div>
+                                <p style="font-size: 0.8rem; color: #64748b; margin-top: 8px;">変更理由が4つもある</p>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 8px;">準拠: 1つの責務</div>
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    <div style="background: white; border-radius: 8px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">
+                                        <span style="font-weight: 600;">AuthService</span>
+                                        <span style="color: #22c55e; display: block;">- authenticate()</span>
+                                    </div>
+                                    <div style="background: white; border-radius: 8px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">
+                                        <span style="font-weight: 600;">EmailService</span>
+                                        <span style="color: #22c55e; display: block;">- sendEmail()</span>
+                                    </div>
+                                    <div style="background: white; border-radius: 8px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">
+                                        <span style="font-weight: 600;">ReportService</span>
+                                        <span style="color: #22c55e; display: block;">- generateReport()</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2-1-2 Before / After コード</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Before: SRP違反 ― 1クラスに複数責務</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>public class Employee {
+    private String name;
+    private double salary;
+
+    // 責務1: 給与計算（経理部門の要件）
+    public double calculatePay() {
+        return salary * 1.1;  // 手当込み
+    }
+
+    // 責務2: 勤怠レポート生成（人事部門の要件）
+    public String generateAttendanceReport() {
+        return name + "の出勤日数: 20日";
+    }
+
+    // 責務3: DB保存（技術部門の要件）
+    public void saveToDatabase() {
+        // JDBC直接操作...
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">After: SRP準拠 ― 責務を分離</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// データ保持のみ
+public class Employee {
+    private String name;
+    private double salary;
+
+    public String getName() { return name; }
+    public double getSalary() { return salary; }
+}
+
+// 給与計算の責務
+public class PayCalculator {
+    public double calculatePay(Employee employee) {
+        return employee.getSalary() * 1.1;
+    }
+}
+
+// レポート生成の責務
+public class AttendanceReporter {
+    public String generateReport(Employee employee) {
+        return employee.getName() + "の出勤日数: 20日";
+    }
+}
+
+// 永続化の責務
+public class EmployeeRepository {
+    public void save(Employee employee) {
+        // JPA/MyBatis経由で保存
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 2-2: OCP -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 2-2</span>
+                <h2 class="section-title">開放閉鎖の原則 (OCP)</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>Open-Closed Principle</strong> ―「拡張に対して開いていて、修正に対して閉じているべき」。新しい機能を追加するとき、既存のコードを変更せずに済む設計を目指します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2-2-1 OCPの概念</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">lock_open</span>
+                            OCP: 拡張に開き、修正に閉じる
+                        </h4>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap;">
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px 24px; text-align: center;">
+                                <span class="material-icons" style="color: #22c55e; font-size: 2rem;">add_circle</span>
+                                <div style="font-weight: 700; color: #22c55e; margin-top: 4px;">拡張: Open</div>
+                                <div style="font-size: 0.8rem; color: #334155;">新クラスの追加はOK</div>
+                            </div>
+                            <div style="background: #fef2f2; border-radius: 12px; padding: 16px 24px; text-align: center;">
+                                <span class="material-icons" style="color: #ef4444; font-size: 2rem;">block</span>
+                                <div style="font-weight: 700; color: #ef4444; margin-top: 4px;">修正: Closed</div>
+                                <div style="font-size: 0.8rem; color: #334155;">既存コードの変更はNG</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2-2-2 Before / After コード</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Before: OCP違反 ― 新しい割引を追加するたびにif文を修正</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>public class DiscountCalculator {
+    public double calculate(String type, double price) {
+        if ("normal".equals(type)) {
+            return price;
+        } else if ("member".equals(type)) {
+            return price * 0.9;
+        } else if ("premium".equals(type)) {
+            return price * 0.8;
+        }
+        // 新しい割引タイプを追加するたびにここを修正...
+        // else if ("student".equals(type)) { ... }
+        return price;
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">After: OCP準拠 ― 新しい割引はクラス追加だけでOK</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// 割引戦略のインタフェース
+public interface DiscountStrategy {
+    double apply(double price);
+}
+
+// 各割引をクラスとして実装
+public class NormalDiscount implements DiscountStrategy {
+    @Override
+    public double apply(double price) { return price; }
+}
+
+public class MemberDiscount implements DiscountStrategy {
+    @Override
+    public double apply(double price) { return price * 0.9; }
+}
+
+public class PremiumDiscount implements DiscountStrategy {
+    @Override
+    public double apply(double price) { return price * 0.8; }
+}
+
+// 新しい割引を追加しても、このクラスは変更不要！
+public class DiscountCalculator {
+    public double calculate(DiscountStrategy strategy, double price) {
+        return strategy.apply(price);
+    }
+}
+
+// 学生割引を追加: 新クラスを作るだけ
+public class StudentDiscount implements DiscountStrategy {
+    @Override
+    public double apply(double price) { return price * 0.85; }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 2-3: LSP -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 2-3</span>
+                <h2 class="section-title">リスコフの置換原則 (LSP)</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>Liskov Substitution Principle</strong> ―「子クラスは親クラスと置換可能であるべき」。親クラスを使っている場所で子クラスに差し替えても、プログラムが正しく動作しなければなりません。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2-3-1 LSPの概念</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">swap_horiz</span>
+                            LSP: サブタイプは親と置換可能
+                        </h4>
+                        <p style="font-size: 0.9rem; color: #334155; margin-bottom: 16px;">有名な反例:「正方形は長方形の一種」と考えてしまうケース</p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #fef2f2; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #ef4444; margin-bottom: 8px;">違反例</div>
+                                <p style="font-size: 0.85rem; color: #334155;">Square(正方形) が Rectangle(長方形) を継承。setWidth()を呼ぶとheightも変わってしまい、Rectangleとして使えない。</p>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 8px;">準拠例</div>
+                                <p style="font-size: 0.85rem; color: #334155;">Shape インタフェースを定義し、Rectangle と Square を独立した実装にする。共通の振る舞いだけをインタフェースで規定。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2-3-2 Before / After コード</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Before: LSP違反 ― Squareが親のRectangleの契約を破る</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>public class Rectangle {
+    protected int width;
+    protected int height;
+
+    public void setWidth(int w) { this.width = w; }
+    public void setHeight(int h) { this.height = h; }
+    public int getArea() { return width * height; }
+}
+
+public class Square extends Rectangle {
+    @Override
+    public void setWidth(int w) {
+        this.width = w;
+        this.height = w;  // 正方形なので同じにする → 親の契約違反！
+    }
+
+    @Override
+    public void setHeight(int h) {
+        this.width = h;
+        this.height = h;
+    }
+}
+
+// 利用側: Rectangleとして使うと予期しない結果に
+Rectangle r = new Square();
+r.setWidth(5);
+r.setHeight(3);
+System.out.println(r.getArea());  // 期待: 15、実際: 9</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">After: LSP準拠 ― 共通インタフェースで独立実装</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>public interface Shape {
+    int getArea();
+}
+
+public class Rectangle implements Shape {
+    private final int width;
+    private final int height;
+
+    public Rectangle(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
+
+    @Override
+    public int getArea() { return width * height; }
+}
+
+public class Square implements Shape {
+    private final int side;
+
+    public Square(int side) {
+        this.side = side;
+    }
+
+    @Override
+    public int getArea() { return side * side; }
+}
+
+// 利用側: Shapeとして安全に使える
+Shape rect = new Rectangle(5, 3);
+Shape sq = new Square(4);
+System.out.println(rect.getArea());  // 15
+System.out.println(sq.getArea());    // 16</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 2-4: ISP -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 2-4</span>
+                <h2 class="section-title">インタフェース分離の原則 (ISP)</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>Interface Segregation Principle</strong> ―「クライアントに不要なメソッドへの依存を強制してはならない」。大きすぎるインタフェースは、小さな専用インタフェースに分割すべきです。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2-4-1 ISPの概念</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">call_split</span>
+                            ISP: 太ったインタフェースを分割する
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center;">
+                            <div style="background: #fef2f2; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; color: #ef4444;">太ったIF</div>
+                                <div style="background: white; border-radius: 8px; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">
+                                    <div style="font-weight: 700; margin-bottom: 4px;">Machine</div>
+                                    <div>+ print()</div>
+                                    <div>+ scan()</div>
+                                    <div>+ fax()</div>
+                                    <div>+ staple()</div>
+                                </div>
+                            </div>
+                            <span class="material-icons" style="color: #5856D6; font-size: 2rem;">arrow_forward</span>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; color: #22c55e;">分割後</div>
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    <div style="background: white; border-radius: 6px; padding: 6px 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;">Printer: print()</div>
+                                    <div style="background: white; border-radius: 6px; padding: 6px 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;">Scanner: scan()</div>
+                                    <div style="background: white; border-radius: 6px; padding: 6px 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;">Fax: fax()</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2-4-2 Before / After コード</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Before: ISP違反 ― 使わないメソッドの実装を強制</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>public interface MultiFunctionDevice {
+    void print(Document doc);
+    void scan(Document doc);
+    void fax(Document doc);
+}
+
+// シンプルなプリンターなのに、scan/faxも実装が必要...
+public class SimplePrinter implements MultiFunctionDevice {
+    @Override
+    public void print(Document doc) { /* 印刷処理 */ }
+
+    @Override
+    public void scan(Document doc) {
+        throw new UnsupportedOperationException("スキャン非対応");
+    }
+
+    @Override
+    public void fax(Document doc) {
+        throw new UnsupportedOperationException("FAX非対応");
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">After: ISP準拠 ― 必要なインタフェースだけ実装</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// 小さなインタフェースに分割
+public interface Printer {
+    void print(Document doc);
+}
+
+public interface Scanner {
+    void scan(Document doc);
+}
+
+public interface Fax {
+    void fax(Document doc);
+}
+
+// シンプルプリンター: Printerだけ実装
+public class SimplePrinter implements Printer {
+    @Override
+    public void print(Document doc) { /* 印刷処理 */ }
+}
+
+// 複合機: 必要なものを全て実装
+public class MultiFunctionPrinter implements Printer, Scanner, Fax {
+    @Override
+    public void print(Document doc) { /* 印刷処理 */ }
+
+    @Override
+    public void scan(Document doc) { /* スキャン処理 */ }
+
+    @Override
+    public void fax(Document doc) { /* FAX処理 */ }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 2-5: DIP -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 2-5</span>
+                <h2 class="section-title">依存性逆転の原則 (DIP)</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>Dependency Inversion Principle</strong> ―「上位モジュールは下位モジュールに依存すべきでない。どちらも抽象に依存すべき」。Spring BootのDI（依存性注入）の根幹にある原則です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2-5-1 DIPの概念</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">swap_vert</span>
+                            DIP: 依存の方向を逆転させる
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                            <div>
+                                <div style="font-weight: 700; color: #ef4444; margin-bottom: 12px; text-align: center;">従来: 上位→下位に依存</div>
+                                <svg viewBox="0 0 200 120" style="width: 100%; max-width: 200px; display: block; margin: 0 auto;">
+                                    <rect x="30" y="10" width="140" height="35" rx="8" fill="#3b82f6"/>
+                                    <text x="100" y="33" text-anchor="middle" fill="white" font-size="12" font-family="sans-serif">OrderService</text>
+                                    <rect x="30" y="75" width="140" height="35" rx="8" fill="#94a3b8"/>
+                                    <text x="100" y="98" text-anchor="middle" fill="white" font-size="12" font-family="sans-serif">MySQLRepository</text>
+                                    <line x1="100" y1="45" x2="100" y2="75" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowDip)"/>
+                                    <defs><marker id="arrowDip" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#ef4444"/></marker></defs>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 12px; text-align: center;">DIP: 抽象に依存</div>
+                                <svg viewBox="0 0 200 160" style="width: 100%; max-width: 200px; display: block; margin: 0 auto;">
+                                    <rect x="30" y="10" width="140" height="30" rx="8" fill="#3b82f6"/>
+                                    <text x="100" y="30" text-anchor="middle" fill="white" font-size="11" font-family="sans-serif">OrderService</text>
+                                    <rect x="20" y="65" width="160" height="30" rx="8" fill="#f59e0b" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4"/>
+                                    <text x="100" y="84" text-anchor="middle" fill="white" font-size="11" font-family="sans-serif" font-style="italic">&lt;&lt;Repository&gt;&gt;</text>
+                                    <rect x="30" y="120" width="140" height="30" rx="8" fill="#94a3b8"/>
+                                    <text x="100" y="140" text-anchor="middle" fill="white" font-size="11" font-family="sans-serif">MySQLRepository</text>
+                                    <line x1="100" y1="40" x2="100" y2="65" stroke="#22c55e" stroke-width="2" marker-end="url(#arrowDip2)"/>
+                                    <line x1="100" y1="150" x2="100" y2="95" stroke="#22c55e" stroke-width="2" marker-end="url(#arrowDip2)" stroke-dasharray="6"/>
+                                    <defs><marker id="arrowDip2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#22c55e"/></marker></defs>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">2-5-2 Before / After コード（Spring Boot）</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Before: DIP違反 ― 具象クラスに直接依存</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// 上位モジュールが下位モジュールの具象クラスに依存
+public class OrderService {
+    private MySqlOrderRepository repository = new MySqlOrderRepository();
+
+    public void placeOrder(Order order) {
+        repository.save(order);
+        // DBをPostgreSQLに変えたい → このクラスも修正が必要
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">After: DIP準拠 ― インタフェース + Spring DI</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// 抽象（インタフェース）
+public interface OrderRepository {
+    void save(Order order);
+    Optional&lt;Order&gt; findById(Long id);
+}
+
+// 下位モジュール: インタフェースを実装
+@Repository
+public class JpaOrderRepository implements OrderRepository {
+    @Override
+    public void save(Order order) { /* JPA経由で保存 */ }
+
+    @Override
+    public Optional&lt;Order&gt; findById(Long id) { /* JPA経由で検索 */ }
+}
+
+// 上位モジュール: 抽象に依存（Spring DIで注入）
+@Service
+public class OrderService {
+    private final OrderRepository repository;
+
+    @Autowired
+    public OrderService(OrderRepository repository) {
+        this.repository = repository;  // 実装の詳細を知らない
+    }
+
+    public void placeOrder(Order order) {
+        repository.save(order);
+        // DBを変えてもこのクラスは修正不要！
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">Spring BootとDIP</span>
+                        </div>
+                        <p>Spring Bootの<code>@Autowired</code>によるDI（Dependency Injection）は、まさにDIPを実現する仕組みです。インタフェースを定義し、実装クラスに<code>@Repository</code>や<code>@Service</code>を付けるだけで、Springが自動的に依存関係を解決してくれます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">2章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>以下のコードはSOLID原則のどれに違反していますか？理由も答えてください。</p>
+                        <div class="code-block">
+                            <pre class="code-content"><code>public class ReportGenerator {
+    public void generatePdf(Data data) { /* PDF生成 */ }
+    public void generateExcel(Data data) { /* Excel生成 */ }
+    public void sendEmail(String to, byte[] file) { /* メール送信 */ }
+    public void uploadToS3(byte[] file) { /* S3アップロード */ }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>OCP（開放閉鎖の原則）に従い、以下のif-else連鎖をStrategy パターンでリファクタリングしてください。</p>
+                        <div class="code-block">
+                            <pre class="code-content"><code>public double calculateShipping(String method, double weight) {
+    if ("express".equals(method)) return weight * 500;
+    else if ("standard".equals(method)) return weight * 200;
+    else if ("economy".equals(method)) return weight * 100;
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>SOLID原則の5つをそれぞれ一言で説明してください。また、Spring Bootの開発で最も関わりが深い原則はどれですか？</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">2章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: SRP（単一責任の原則）違反</div>
+                    <div class="answer-content">
+                        <p><code>ReportGenerator</code>はレポート生成（PDF/Excel）、メール送信、ファイルアップロードという3つの異なる責務を持っています。「レポートの形式が変わった」「メール送信の仕様が変わった」「保存先がS3からGCSに変わった」など、変更理由が複数あるためSRP違反です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答</div>
+                    <div class="answer-content">
+                        <div class="code-block">
+                            <pre class="code-content"><code>public interface ShippingStrategy {
+    double calculate(double weight);
+}
+
+public class ExpressShipping implements ShippingStrategy {
+    @Override public double calculate(double weight) { return weight * 500; }
+}
+public class StandardShipping implements ShippingStrategy {
+    @Override public double calculate(double weight) { return weight * 200; }
+}
+public class EconomyShipping implements ShippingStrategy {
+    @Override public double calculate(double weight) { return weight * 100; }
+}
+
+// 利用側
+public double calculateShipping(ShippingStrategy strategy, double weight) {
+    return strategy.calculate(weight);
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答</div>
+                    <div class="answer-content">
+                        <p><strong>SRP:</strong> 1クラス1責務。<strong>OCP:</strong> 拡張に開き修正に閉じる。<strong>LSP:</strong> サブタイプは親と置換可能。<strong>ISP:</strong> インタフェースは小さく分割。<strong>DIP:</strong> 抽象に依存する。Spring Bootで最も関わりが深いのは<strong>DIP</strong>です。<code>@Autowired</code>によるDIがDIPそのものであり、Controller→Service→Repositoryの層構造もインタフェースを介した依存関係で構築されています。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="1arch-why-design.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第1章 なぜ設計が重要か</div>
+            </div>
+        </a>
+        <a href="3arch-layered.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第3章 レイヤードアーキテクチャ</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

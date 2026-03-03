@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第7章 DB設計の実践 - アーキテクチャ基礎</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-architecture.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">7</div>
+            <h1 class="chapter-title">DB設計の実践</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">7-1</span><span>論理設計から物理設計へ</span></li>
+                <li class="toc-item"><span class="toc-number">7-2</span><span>テーブル設計パターン</span></li>
+                <li class="toc-item"><span class="toc-number">7-3</span><span>共通カラム設計</span></li>
+                <li class="toc-item"><span class="toc-number">7-4</span><span>マスタ・トランザクション分離</span></li>
+                <li class="toc-item"><span class="toc-number">7-5</span><span>ECサイトDB設計</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 7-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-1</span>
+                <h2 class="section-title">論理設計から物理設計へ</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>前章で学んだ正規化やER図は「論理設計」の段階です。本章では論理設計を実際のRDBMSに実装する「物理設計」のノウハウを学びます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">7-1-1 論理設計と物理設計の違い</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>観点</th>
+                                <th>論理設計</th>
+                                <th>物理設計</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>目的</td>
+                                <td>データの構造を整理する</td>
+                                <td>パフォーマンスと運用を考慮して実装する</td>
+                            </tr>
+                            <tr>
+                                <td>テーブル名</td>
+                                <td>日本語OK（例: 注文テーブル）</td>
+                                <td>英語スネークケース（例: orders）</td>
+                            </tr>
+                            <tr>
+                                <td>データ型</td>
+                                <td>概念的（数値, 文字列）</td>
+                                <td>具体的（BIGINT, VARCHAR(255)）</td>
+                            </tr>
+                            <tr>
+                                <td>正規化</td>
+                                <td>厳密に正規化する</td>
+                                <td>パフォーマンスのため意図的に非正規化する場合も</td>
+                            </tr>
+                            <tr>
+                                <td>インデックス</td>
+                                <td>考慮しない</td>
+                                <td>クエリパターンに合わせて設計</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">7-1-2 命名規約</h3>
+                <div class="content-block">
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">text_format</span></span>
+                            <span class="info-box-title">テーブル/カラム命名規約</span>
+                        </div>
+                        <ul>
+                            <li><strong>テーブル名</strong>: 複数形のスネークケース（<code>users</code>, <code>order_items</code>）</li>
+                            <li><strong>カラム名</strong>: スネークケース（<code>created_at</code>, <code>user_id</code>）</li>
+                            <li><strong>主キー</strong>: <code>id</code>（シンプルに）</li>
+                            <li><strong>外部キー</strong>: <code>{参照先テーブル名の単数形}_id</code>（例: <code>user_id</code>）</li>
+                            <li><strong>日時カラム</strong>: <code>xxx_at</code>（<code>created_at</code>, <code>updated_at</code>）</li>
+                            <li><strong>真偽値</strong>: <code>is_xxx</code>（<code>is_active</code>, <code>is_deleted</code>）</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 7-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-2</span>
+                <h2 class="section-title">テーブル設計パターン</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>実務で頻出するテーブル設計のパターンを紹介します。これらを知っておくと、設計の引き出しが増え、適切な判断ができるようになります。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">7-2-1 よく使うパターン</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">pattern</span>
+                            テーブル設計パターン一覧
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+                            <div style="background: #dbeafe; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #3b82f6; margin-bottom: 6px;">履歴テーブル</div>
+                                <p style="font-size: 0.8rem; color: #334155; margin: 0;">変更を追跡するために、更新ではなくINSERTで記録。<code>status_histories</code></p>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 6px;">論理削除</div>
+                                <p style="font-size: 0.8rem; color: #334155; margin: 0;"><code>is_deleted</code>フラグでDELETEの代わり。データ復旧可能。</p>
+                            </div>
+                            <div style="background: #fef3c7; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #f59e0b; margin-bottom: 6px;">区分値テーブル</div>
+                                <p style="font-size: 0.8rem; color: #334155; margin: 0;">ENUMの代わりにコードマスタテーブルで管理。拡張が容易。</p>
+                            </div>
+                            <div style="background: #f3e8ff; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #a855f7; margin-bottom: 6px;">楽観ロック</div>
+                                <p style="font-size: 0.8rem; color: #334155; margin: 0;"><code>version</code>カラムで同時更新を検出。Spring JPAの<code>@Version</code>。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">7-2-2 論理削除の実装</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">論理削除のDDLとクエリ</span>
+                            <span class="code-lang">SQL</span>
+                        </div>
+                        <pre class="code-content"><code>CREATE TABLE users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 通常の取得: 削除されていないレコードのみ
+SELECT * FROM users WHERE is_deleted = FALSE;
+
+-- 論理削除の実行
+UPDATE users SET is_deleted = TRUE, deleted_at = NOW() WHERE id = 1;
+
+-- UNIQUEインデックスとの両立（削除済みは重複OK）
+CREATE UNIQUE INDEX idx_users_email_active
+    ON users(email) WHERE is_deleted = FALSE;  -- PostgreSQL
+-- MySQLの場合: UNIQUE INDEX (email, is_deleted) で工夫</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 7-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-3</span>
+                <h2 class="section-title">共通カラム設計</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>全テーブルに共通で持たせるカラムを統一的に設計することで、監査ログやデバッグの効率が上がります。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">7-3-1 共通カラム一覧</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>カラム名</th>
+                                <th>型</th>
+                                <th>用途</th>
+                                <th>自動設定</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>id</code></td>
+                                <td>BIGINT</td>
+                                <td>主キー（AUTO_INCREMENT）</td>
+                                <td>DB自動採番</td>
+                            </tr>
+                            <tr>
+                                <td><code>created_at</code></td>
+                                <td>TIMESTAMP</td>
+                                <td>作成日時</td>
+                                <td>DEFAULT CURRENT_TIMESTAMP</td>
+                            </tr>
+                            <tr>
+                                <td><code>updated_at</code></td>
+                                <td>TIMESTAMP</td>
+                                <td>更新日時</td>
+                                <td>ON UPDATE CURRENT_TIMESTAMP</td>
+                            </tr>
+                            <tr>
+                                <td><code>created_by</code></td>
+                                <td>VARCHAR(100)</td>
+                                <td>作成者（ユーザーID or システム名）</td>
+                                <td>アプリ側で設定</td>
+                            </tr>
+                            <tr>
+                                <td><code>updated_by</code></td>
+                                <td>VARCHAR(100)</td>
+                                <td>更新者</td>
+                                <td>アプリ側で設定</td>
+                            </tr>
+                            <tr>
+                                <td><code>version</code></td>
+                                <td>INT</td>
+                                <td>楽観ロック用バージョン</td>
+                                <td>DEFAULT 0、更新時に+1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">JPAの共通Entityクラス（BaseEntity）</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+public abstract class BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @CreatedBy
+    @Column(updatable = false)
+    private String createdBy;
+
+    @LastModifiedBy
+    private String updatedBy;
+
+    @Version
+    private Integer version;
+
+    // getter/setter
+}
+
+// 各エンティティはBaseEntityを継承するだけ
+@Entity
+@Table(name = "products")
+public class ProductEntity extends BaseEntity {
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private Integer price;
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 7-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-4</span>
+                <h2 class="section-title">マスタ・トランザクション分離</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>テーブルは大きく「マスタテーブル」と「トランザクションテーブル」に分類されます。この分類を意識して設計することが、スケーラブルなDB設計の鍵です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">7-4-1 マスタとトランザクション</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">compare</span>
+                            マスタ vs トランザクション
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #dbeafe; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #3b82f6; margin-bottom: 8px;">マスタテーブル</div>
+                                <ul style="font-size: 0.85rem; color: #334155; padding-left: 20px; margin: 0;">
+                                    <li>基本情報を管理</li>
+                                    <li>更新頻度が低い</li>
+                                    <li>レコード数が比較的少ない</li>
+                                    <li>例: users, products, categories</li>
+                                </ul>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 8px;">トランザクションテーブル</div>
+                                <ul style="font-size: 0.85rem; color: #334155; padding-left: 20px; margin: 0;">
+                                    <li>業務上の出来事を記録</li>
+                                    <li>INSERT中心（更新は少ない）</li>
+                                    <li>レコード数が急速に増加</li>
+                                    <li>例: orders, payments, logs</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box" style="border-left-color: #f59e0b;">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons" style="color: #f59e0b;">warning</span></span>
+                            <span class="info-box-title">注文時の商品価格をどう保存するか</span>
+                        </div>
+                        <p>注文明細に商品マスタの価格をそのまま外部キーで参照すると、商品価格が変わったとき過去の注文金額も変わってしまいます。<strong>注文時点の価格をトランザクションテーブルにコピー（スナップショット）しておく</strong>のが正しい設計です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 7-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 7-5</span>
+                <h2 class="section-title">ECサイトDB設計</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>ここまでの知識を総合して、ECサイトのDB設計を実践します。ER図からDDL、そしてSpring BootのJPA Entityまでを一気に設計しましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">7-5-1 ECサイトER図（全体）</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">shopping_cart</span>
+                            ECサイト データベース全体像
+                        </h4>
+                        <svg viewBox="0 0 700 400" style="width: 100%; max-width: 700px; display: block; margin: 0 auto;">
+                            <!-- ユーザー -->
+                            <rect x="10" y="10" width="150" height="110" rx="8" fill="white" stroke="#3b82f6" stroke-width="2"/>
+                            <rect x="10" y="10" width="150" height="28" rx="8" fill="#3b82f6"/>
+                            <text x="85" y="29" text-anchor="middle" fill="white" font-size="12" font-weight="bold">users</text>
+                            <text x="18" y="54" fill="#334155" font-size="9" font-family="monospace">PK id</text>
+                            <text x="18" y="68" fill="#334155" font-size="9" font-family="monospace">   name, email</text>
+                            <text x="18" y="82" fill="#334155" font-size="9" font-family="monospace">   password_hash</text>
+                            <text x="18" y="96" fill="#64748b" font-size="9" font-family="monospace">   created_at, updated_at</text>
+
+                            <!-- カテゴリ -->
+                            <rect x="540" y="10" width="150" height="90" rx="8" fill="white" stroke="#a855f7" stroke-width="2"/>
+                            <rect x="540" y="10" width="150" height="28" rx="8" fill="#a855f7"/>
+                            <text x="615" y="29" text-anchor="middle" fill="white" font-size="12" font-weight="bold">categories</text>
+                            <text x="548" y="54" fill="#334155" font-size="9" font-family="monospace">PK id</text>
+                            <text x="548" y="68" fill="#334155" font-size="9" font-family="monospace">   name, slug</text>
+                            <text x="548" y="82" fill="#334155" font-size="9" font-family="monospace">FK parent_id</text>
+
+                            <!-- 商品 -->
+                            <rect x="370" y="10" width="150" height="110" rx="8" fill="white" stroke="#a855f7" stroke-width="2"/>
+                            <rect x="370" y="10" width="150" height="28" rx="8" fill="#a855f7"/>
+                            <text x="445" y="29" text-anchor="middle" fill="white" font-size="12" font-weight="bold">products</text>
+                            <text x="378" y="54" fill="#334155" font-size="9" font-family="monospace">PK id</text>
+                            <text x="378" y="68" fill="#334155" font-size="9" font-family="monospace">FK category_id</text>
+                            <text x="378" y="82" fill="#334155" font-size="9" font-family="monospace">   name, price, stock</text>
+                            <text x="378" y="96" fill="#64748b" font-size="9" font-family="monospace">   created_at, updated_at</text>
+
+                            <!-- 注文 -->
+                            <rect x="10" y="160" width="150" height="120" rx="8" fill="white" stroke="#22c55e" stroke-width="2"/>
+                            <rect x="10" y="160" width="150" height="28" rx="8" fill="#22c55e"/>
+                            <text x="85" y="179" text-anchor="middle" fill="white" font-size="12" font-weight="bold">orders</text>
+                            <text x="18" y="204" fill="#334155" font-size="9" font-family="monospace">PK id</text>
+                            <text x="18" y="218" fill="#334155" font-size="9" font-family="monospace">FK user_id</text>
+                            <text x="18" y="232" fill="#334155" font-size="9" font-family="monospace">   status, total_price</text>
+                            <text x="18" y="246" fill="#334155" font-size="9" font-family="monospace">   shipping_address</text>
+                            <text x="18" y="260" fill="#64748b" font-size="9" font-family="monospace">   ordered_at</text>
+
+                            <!-- 注文明細 -->
+                            <rect x="200" y="180" width="150" height="100" rx="8" fill="white" stroke="#f59e0b" stroke-width="2"/>
+                            <rect x="200" y="180" width="150" height="28" rx="8" fill="#f59e0b"/>
+                            <text x="275" y="199" text-anchor="middle" fill="white" font-size="12" font-weight="bold">order_items</text>
+                            <text x="208" y="224" fill="#334155" font-size="9" font-family="monospace">PK id</text>
+                            <text x="208" y="238" fill="#334155" font-size="9" font-family="monospace">FK order_id, product_id</text>
+                            <text x="208" y="252" fill="#334155" font-size="9" font-family="monospace">   quantity, unit_price</text>
+
+                            <!-- 決済 -->
+                            <rect x="10" y="320" width="150" height="70" rx="8" fill="white" stroke="#ef4444" stroke-width="2"/>
+                            <rect x="10" y="320" width="150" height="28" rx="8" fill="#ef4444"/>
+                            <text x="85" y="339" text-anchor="middle" fill="white" font-size="12" font-weight="bold">payments</text>
+                            <text x="18" y="364" fill="#334155" font-size="9" font-family="monospace">PK id / FK order_id</text>
+                            <text x="18" y="378" fill="#334155" font-size="9" font-family="monospace">   method, amount, paid_at</text>
+
+                            <!-- リレーション -->
+                            <line x1="85" y1="120" x2="85" y2="160" stroke="#64748b" stroke-width="1.5"/>
+                            <text x="75" y="135" fill="#64748b" font-size="9">1</text>
+                            <text x="75" y="158" fill="#64748b" font-size="9">*</text>
+
+                            <line x1="160" y1="220" x2="200" y2="230" stroke="#64748b" stroke-width="1.5"/>
+                            <text x="166" y="218" fill="#64748b" font-size="9">1</text>
+                            <text x="190" y="228" fill="#64748b" font-size="9">*</text>
+
+                            <line x1="350" y1="230" x2="445" y2="120" stroke="#64748b" stroke-width="1.5"/>
+                            <text x="354" y="222" fill="#64748b" font-size="9">*</text>
+                            <text x="430" y="130" fill="#64748b" font-size="9">1</text>
+
+                            <line x1="85" y1="280" x2="85" y2="320" stroke="#64748b" stroke-width="1.5"/>
+                            <text x="75" y="295" fill="#64748b" font-size="9">1</text>
+                            <text x="75" y="318" fill="#64748b" font-size="9">1</text>
+
+                            <line x1="520" y1="50" x2="540" y2="50" stroke="#64748b" stroke-width="1.5"/>
+                            <text x="524" y="44" fill="#64748b" font-size="9">*</text>
+                            <text x="536" y="44" fill="#64748b" font-size="9">1</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">7-5-2 ECサイトDDL</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">ECサイト DDL（MySQL）</span>
+                            <span class="code-lang">SQL</span>
+                        </div>
+                        <pre class="code-content"><code>-- マスタテーブル
+CREATE TABLE categories (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    parent_id BIGINT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_id) REFERENCES categories(id)
+);
+
+CREATE TABLE products (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    category_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    price INT NOT NULL CHECK (price >= 0),
+    stock INT NOT NULL DEFAULT 0 CHECK (stock >= 0),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    version INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+CREATE TABLE users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- トランザクションテーブル
+CREATE TABLE orders (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    total_price INT NOT NULL,
+    shipping_address TEXT NOT NULL,
+    ordered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE order_items (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    order_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    unit_price INT NOT NULL,  -- 注文時点の価格をスナップショット
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+CREATE TABLE payments (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    order_id BIGINT NOT NULL UNIQUE,
+    method VARCHAR(30) NOT NULL,
+    amount INT NOT NULL,
+    paid_at TIMESTAMP NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+
+-- インデックス
+CREATE INDEX idx_products_category ON products(category_id);
+CREATE INDEX idx_orders_user ON orders(user_id);
+CREATE INDEX idx_orders_status ON orders(status, ordered_at);
+CREATE INDEX idx_order_items_order ON order_items(order_id);</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">7-5-3 JPA Entityマッピング</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">OrderEntity.java（JPA Entity）</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>@Entity
+@Table(name = "orders")
+public class OrderEntity extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
+
+    @Column(nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    @Column(name = "total_price", nullable = false)
+    private Integer totalPrice;
+
+    @Column(name = "shipping_address", nullable = false)
+    private String shippingAddress;
+
+    @Column(name = "ordered_at", nullable = false)
+    private LocalDateTime orderedAt;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List&lt;OrderItemEntity&gt; items = new ArrayList&lt;&gt;();
+
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+    private PaymentEntity payment;
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">7章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>注文明細テーブルの<code>unit_price</code>カラムは、商品テーブルの<code>price</code>と重複しているように見えます。なぜ別途保存する必要があるのか、理由を説明してください。</p>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>「ブログサービス」のDB設計を行ってください。以下のテーブルのCREATE TABLE文を書いてください。共通カラム（created_at, updated_at）を含めること。</p>
+                        <ul>
+                            <li>users（id, name, email）</li>
+                            <li>posts（id, user_id, title, content, status）</li>
+                            <li>tags（id, name）</li>
+                            <li>post_tags（post_id, tag_id） - 多対多の中間テーブル</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>以下のテーブルのうち「マスタテーブル」と「トランザクションテーブル」に分類してください。</p>
+                        <p>departments, employees, attendance_records, meeting_rooms, room_reservations, job_titles</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">7章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答</div>
+                    <div class="answer-content">
+                        <p>商品の価格は時間とともに変更される可能性があります（値上げ・セール等）。注文明細に<code>unit_price</code>を保存しておかないと、商品マスタの価格が変わったとき、過去の注文金額も連動して変わってしまいます。「注文時点の価格」を保持するスナップショットとして、<code>unit_price</code>は不可欠です。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答</div>
+                    <div class="answer-content">
+                        <div class="code-block">
+                            <pre class="code-content"><code>CREATE TABLE users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE posts (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE tags (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE post_tags (
+    post_id BIGINT NOT NULL,
+    tag_id BIGINT NOT NULL,
+    PRIMARY KEY (post_id, tag_id),
+    FOREIGN KEY (post_id) REFERENCES posts(id),
+    FOREIGN KEY (tag_id) REFERENCES tags(id)
+);</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答</div>
+                    <div class="answer-content">
+                        <p><strong>マスタ:</strong> departments（部署）, employees（社員）, meeting_rooms（会議室）, job_titles（役職）。これらは基本情報であり、頻繁には変更されません。</p>
+                        <p><strong>トランザクション:</strong> attendance_records（勤怠記録）, room_reservations（会議室予約）。これらは日々の業務で発生する出来事の記録であり、INSERT中心でレコード数が増え続けます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="6arch-db-basics.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第6章 DB設計の基礎</div>
+            </div>
+        </a>
+        <a href="8arch-screen-design.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第8章 画面設計</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

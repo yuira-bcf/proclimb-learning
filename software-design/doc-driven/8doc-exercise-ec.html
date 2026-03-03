@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第8章 演習: ECサイト - 設計書駆動プロンプト開発</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+      .code-block { background: #1e293b; border-radius: 12px; margin: 16px 0; overflow: hidden; }
+      .code-header { background: rgba(255,255,255,0.1); padding: 10px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+      .code-dots { display: flex; gap: 6px; }
+      .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+      .code-dot.red { background: #ff5f56; }
+      .code-dot.yellow { background: #ffbd2e; }
+      .code-dot.green { background: #27ca40; }
+      .code-title { color: rgba(255,255,255,0.7); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+      .code-content { padding: 16px; overflow-x: auto; }
+      .code-content pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0; white-space: pre; }
+      .prompt-card { background: linear-gradient(135deg, #5856D6 0%, #7B79E8 50%, #9B99F0 100%); border-radius: 16px; padding: 24px; color: white; margin: 24px 0; }
+      .prompt-card h4 { margin: 0 0 16px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+      .prompt-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; }
+      .prompt-box pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; color: #e2e8f0; }
+      .hint-box { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 16px; margin: 16px 0; }
+      .hint-box h5 { margin: 0 0 8px; color: #92400e; display: flex; align-items: center; gap: 6px; }
+      .hint-box p { margin: 0; font-size: 0.85rem; color: #78350f; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-doc-driven.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">8</div>
+            <h1 class="chapter-title">演習: ECサイト</h1>
+        </header>
+
+        <nav class="toc">
+            <h3>目次</h3>
+            <ul>
+                <li><a href="#section1">8-1. 演習概要</a></li>
+                <li><a href="#section2">8-2. 要件定義（自分で作成）</a></li>
+                <li><a href="#section3">8-3. 設計書作成ガイド</a></li>
+                <li><a href="#section4">8-4. プロンプト作成ヒント</a></li>
+                <li><a href="#section5">8-5. チェックリスト</a></li>
+                <li><a href="#section6">8-6. 発展課題</a></li>
+            </ul>
+        </nav>
+
+        <!-- Section 1 -->
+        <section id="section1" class="section">
+            <div class="section-header">
+                <span class="section-number">8-1</span>
+                <h2 class="section-title">演習概要</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>8-1-1. この演習の目的</h3>
+                <p>第7章のTodoアプリでは完成版の設計書を提供しましたが、本章では<strong>自分で設計書を書くところから</strong>始めます。ECサイトの「商品管理機能」を題材に、6種類の設計書テンプレートを埋めてプロンプトを作成し、コードを生成する応用演習です。</p>
+
+                <div class="info-box warning">
+                    <div class="info-box-title"><span class="material-icons">warning</span> 注意: この演習は自力で取り組む演習です</div>
+                    <div class="info-box-content">
+                        <p>第7章と異なり、完成版の設計書は提供しません。ヒントとチェックリストを参考にしながら、<strong>自分で設計書を作成</strong>してください。分からない場合は各章のテンプレートと記入例を参照してください。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>8-1-2. 演習の題材: ECサイト商品管理</h3>
+                <p>簡易的なECサイトの<strong>商品管理機能（管理者向け）</strong>を開発します。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">shopping_cart</span> ECサイト商品管理の概要
+                    </h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div style="background: #dbeafe; border-radius: 12px; padding: 16px;">
+                            <p style="font-weight: 700; color: #1e40af; margin: 0 0 8px;">作るもの</p>
+                            <ul style="margin: 0; padding-left: 18px; font-size: 0.85rem; color: #334155;">
+                                <li>商品の一覧表示</li>
+                                <li>商品の登録（名前・価格・説明・カテゴリ）</li>
+                                <li>商品の編集</li>
+                                <li>商品の削除</li>
+                                <li>カテゴリ別フィルタ</li>
+                            </ul>
+                        </div>
+                        <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                            <p style="font-weight: 700; color: #166534; margin: 0 0 8px;">作らないもの</p>
+                            <ul style="margin: 0; padding-left: 18px; font-size: 0.85rem; color: #334155;">
+                                <li>ユーザー認証</li>
+                                <li>カート機能</li>
+                                <li>注文・決済</li>
+                                <li>画像アップロード</li>
+                                <li>在庫管理</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section id="section2" class="section">
+            <div class="section-header">
+                <span class="section-number">8-2</span>
+                <h2 class="section-title">要件定義（自分で作成）</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>8-2-1. 要件定義書を書こう</h3>
+                <p><code>templates/requirements-template.md</code> をコピーして、ECサイト商品管理の要件定義書を作成してください。</p>
+
+                <div class="hint-box">
+                    <h5><span class="material-icons">tips_and_updates</span> ヒント: 機能要件</h5>
+                    <p>以下の機能をFR-001〜FR-006として定義してみましょう。商品追加 / 商品一覧 / 商品詳細 / 商品編集 / 商品削除 / カテゴリフィルタ</p>
+                </div>
+
+                <div class="hint-box">
+                    <h5><span class="material-icons">tips_and_updates</span> ヒント: 技術スタック</h5>
+                    <p>Todoアプリと同じ構成（Spring Boot 3.4 / Thymeleaf / H2 / Bootstrap 5 / Gradle）で構いません。</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>8-2-2. 商品の属性を考えよう</h3>
+                <p>商品にはどのような属性（プロパティ）が必要でしょうか。以下を参考に検討してください。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">inventory_2</span> 商品の属性（参考）
+                    </h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="background: #5856D6; color: white;">
+                                    <th style="padding: 10px 14px; text-align: left;">属性名</th>
+                                    <th style="padding: 10px 14px; text-align: left;">データ型（目安）</th>
+                                    <th style="padding: 10px 14px; text-align: left;">必須?</th>
+                                    <th style="padding: 10px 14px; text-align: left;">備考</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">商品名</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">VARCHAR(200)</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">はい</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">1〜200文字</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">価格</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">INTEGER</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">はい</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">0以上の整数（円）</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">説明</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">TEXT</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">いいえ</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">商品の詳細説明</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">カテゴリ</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace;">VARCHAR(50)</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">はい</td>
+                                    <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">食品/日用品/家電/書籍/その他</td>
+                                </tr>
+                                <tr style="background: #f8fafc;">
+                                    <td style="padding: 8px 14px;">販売状態</td>
+                                    <td style="padding: 8px 14px; font-family: 'JetBrains Mono', monospace;">BOOLEAN</td>
+                                    <td style="padding: 8px 14px;">はい</td>
+                                    <td style="padding: 8px 14px;">販売中/販売停止</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section id="section3" class="section">
+            <div class="section-header">
+                <span class="section-number">8-3</span>
+                <h2 class="section-title">設計書作成ガイド</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>8-3-1. 作成する設計書一覧</h3>
+                <p>以下の6つの設計書を、対応するテンプレートを使って作成してください。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">assignment</span> 作成する設計書
+                    </h4>
+                    <div style="display: grid; gap: 10px;">
+                        <div style="display: flex; gap: 12px; align-items: center; background: #dbeafe; border-radius: 8px; padding: 10px 14px;">
+                            <input type="checkbox" style="width: 18px; height: 18px;">
+                            <span style="font-weight: 600;">1. 要件定義書</span>
+                            <span style="font-size: 0.8rem; color: #475569; margin-left: auto; font-family: 'JetBrains Mono', monospace;">requirements-template.md</span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #dcfce7; border-radius: 8px; padding: 10px 14px;">
+                            <input type="checkbox" style="width: 18px; height: 18px;">
+                            <span style="font-weight: 600;">2. 機能仕様書</span>
+                            <span style="font-size: 0.8rem; color: #475569; margin-left: auto; font-family: 'JetBrains Mono', monospace;">functional-spec-template.md</span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #f3e8ff; border-radius: 8px; padding: 10px 14px;">
+                            <input type="checkbox" style="width: 18px; height: 18px;">
+                            <span style="font-weight: 600;">3. API設計書</span>
+                            <span style="font-size: 0.8rem; color: #475569; margin-left: auto; font-family: 'JetBrains Mono', monospace;">api-design-template.md</span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #fef3c7; border-radius: 8px; padding: 10px 14px;">
+                            <input type="checkbox" style="width: 18px; height: 18px;">
+                            <span style="font-weight: 600;">4. DB設計書</span>
+                            <span style="font-size: 0.8rem; color: #475569; margin-left: auto; font-family: 'JetBrains Mono', monospace;">db-design-template.md</span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #dbeafe; border-radius: 8px; padding: 10px 14px;">
+                            <input type="checkbox" style="width: 18px; height: 18px;">
+                            <span style="font-weight: 600;">5. 画面設計書</span>
+                            <span style="font-size: 0.8rem; color: #475569; margin-left: auto; font-family: 'JetBrains Mono', monospace;">screen-design-template.md</span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; background: #fef2f2; border-radius: 8px; padding: 10px 14px;">
+                            <input type="checkbox" style="width: 18px; height: 18px;">
+                            <span style="font-weight: 600;">6. テスト仕様書</span>
+                            <span style="font-size: 0.8rem; color: #475569; margin-left: auto; font-family: 'JetBrains Mono', monospace;">test-spec-template.md</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>8-3-2. 設計のヒント</h3>
+
+                <div class="hint-box">
+                    <h5><span class="material-icons">tips_and_updates</span> ヒント: エンドポイント設計</h5>
+                    <p>Todoアプリの<code>/todos</code>を<code>/products</code>に置き換えて考えましょう。カテゴリフィルタは<code>GET /products?category=食品</code>のようにクエリパラメータで実現できます。</p>
+                </div>
+
+                <div class="hint-box">
+                    <h5><span class="material-icons">tips_and_updates</span> ヒント: DB設計</h5>
+                    <p>productsテーブルには、id / name / price / description / category / on_sale / created_at / updated_at のカラムが必要です。priceはINTEGER（0以上）、categoryはVARCHAR、on_saleはBOOLEANで定義します。</p>
+                </div>
+
+                <div class="hint-box">
+                    <h5><span class="material-icons">tips_and_updates</span> ヒント: バリデーション</h5>
+                    <p>商品名: @NotBlank + @Size(max=200) / 価格: @NotNull + @Min(0) + @Max(9999999) / カテゴリ: @NotBlank</p>
+                </div>
+
+                <div class="hint-box">
+                    <h5><span class="material-icons">tips_and_updates</span> ヒント: カテゴリ選択</h5>
+                    <p>カテゴリはselectタグ（プルダウン）で選択させます。選択肢は固定値（食品/日用品/家電/書籍/その他）で、Enum定義するか、文字列リストとしてControllerから渡します。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4 -->
+        <section id="section4" class="section">
+            <div class="section-header">
+                <span class="section-number">8-4</span>
+                <h2 class="section-title">プロンプト作成ヒント</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>8-4-1. プロンプトの構成</h3>
+                <p>第7章と同じ3段階のプロンプトで作成します。</p>
+
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">smart_toy</span> 3段階プロンプト構成
+                    </h4>
+                    <div style="display: grid; gap: 12px;">
+                        <div style="background: #dbeafe; border-radius: 8px; padding: 14px;">
+                            <p style="font-weight: 700; color: #1e40af; margin: 0 0 6px;">プロンプト1: Entity + Repository</p>
+                            <p style="font-size: 0.85rem; color: #334155; margin: 0;">DB設計書のテーブル定義を貼り付けて、ProductエンティティとProductRepositoryを生成</p>
+                        </div>
+                        <div style="background: #dcfce7; border-radius: 8px; padding: 14px;">
+                            <p style="font-weight: 700; color: #166534; margin: 0 0 6px;">プロンプト2: Service + Controller + Form</p>
+                            <p style="font-size: 0.85rem; color: #334155; margin: 0;">API設計書のエンドポイント一覧 + バリデーションルールを貼り付けて、ProductService / ProductController / ProductFormを生成</p>
+                        </div>
+                        <div style="background: #f3e8ff; border-radius: 8px; padding: 14px;">
+                            <p style="font-weight: 700; color: #6b21a8; margin: 0 0 6px;">プロンプト3: Thymeleafテンプレート</p>
+                            <p style="font-size: 0.85rem; color: #334155; margin: 0;">画面設計書の入力項目定義 + レイアウト概要を貼り付けて、各HTMLテンプレートを生成</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>8-4-2. Todoアプリとの違い</h3>
+                <p>ECサイトの商品管理はTodoアプリより以下の点が複雑です。プロンプトにこれらの要件を含めることを忘れないでください。</p>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="background: #5856D6; color: white;">
+                                <th style="padding: 10px 14px; text-align: left;">追加要素</th>
+                                <th style="padding: 10px 14px; text-align: left;">Todoアプリ</th>
+                                <th style="padding: 10px 14px; text-align: left;">ECサイト商品管理</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">数値入力</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">なし</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">価格（Integer, @Min(0)）</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">プルダウン選択</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">なし</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">カテゴリ（select要素）</td>
+                            </tr>
+                            <tr style="background: #f8fafc;">
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">フィルタ機能</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">なし</td>
+                                <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">カテゴリ別フィルタ</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 14px; font-weight: 600;">金額表示</td>
+                                <td style="padding: 8px 14px;">なし</td>
+                                <td style="padding: 8px 14px;">価格のフォーマット（カンマ区切り + 円）</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="section5" class="section">
+            <div class="section-header">
+                <span class="section-number">8-5</span>
+                <h2 class="section-title">チェックリスト</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>8-5-1. 設計書チェックリスト</h3>
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #22c55e;">checklist</span> 設計書の完成度チェック
+                    </h4>
+                    <div style="display: grid; gap: 8px; font-size: 0.9rem;">
+                        <p style="font-weight: 700; color: #1e40af; margin: 0;">要件定義書</p>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer; padding-left: 16px;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>機能要件が6つ以上定義されている</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer; padding-left: 16px;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>技術スタックが明記されている</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer; padding-left: 16px;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>受け入れ基準が3つ以上ある</span>
+                        </label>
+
+                        <p style="font-weight: 700; color: #166534; margin: 12px 0 0;">機能仕様書</p>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer; padding-left: 16px;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>ユースケースに正常系と代替フローがある</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer; padding-left: 16px;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>画面一覧にURL・テンプレートが記載されている</span>
+                        </label>
+
+                        <p style="font-weight: 700; color: #6b21a8; margin: 12px 0 0;">API設計書</p>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer; padding-left: 16px;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>全エンドポイントにHTTPメソッド・パスがある</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer; padding-left: 16px;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>リクエストパラメータのバリデーションが定義されている</span>
+                        </label>
+
+                        <p style="font-weight: 700; color: #92400e; margin: 12px 0 0;">DB設計書</p>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer; padding-left: 16px;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>全カラムに型・NULL可否・デフォルト値がある</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer; padding-left: 16px;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>初期データ（5件以上）が定義されている</span>
+                        </label>
+
+                        <p style="font-weight: 700; color: #1e40af; margin: 12px 0 0;">画面設計書・テスト仕様書</p>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer; padding-left: 16px;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>入力項目定義にselectタグ（カテゴリ）が含まれている</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer; padding-left: 16px;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>テストケースが正常系・異常系・境界値で8件以上ある</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>8-5-2. 実装チェックリスト</h3>
+                <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                        <span class="material-icons" style="color: #5856D6;">build</span> 実装の完成度チェック
+                    </h4>
+                    <div style="display: grid; gap: 8px; font-size: 0.9rem;">
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>アプリケーションがエラーなく起動する</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>商品一覧が表示される（初期データ含む）</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>商品の新規登録ができる（バリデーション付き）</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>商品の編集ができる</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>商品の削除ができる（確認ダイアログ付き）</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>カテゴリ別フィルタが動作する</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>価格がカンマ区切りで表示される</span>
+                        </label>
+                        <label style="display: flex; gap: 8px; align-items: center; cursor: pointer;">
+                            <input type="checkbox" style="width: 16px; height: 16px;">
+                            <span>日本語が文字化けしない</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6 -->
+        <section id="section6" class="section">
+            <div class="section-header">
+                <span class="section-number">8-6</span>
+                <h2 class="section-title">発展課題</h2>
+            </div>
+
+            <div class="subsection">
+                <h3>8-6-1. チャレンジ課題</h3>
+                <p>基本の商品管理機能が完成したら、以下の発展課題に挑戦してみましょう。各課題について、まず<strong>設計書を書いてからプロンプトを作成</strong>してください。</p>
+
+                <div style="display: grid; gap: 16px; margin: 24px 0;">
+                    <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="background: #a855f7; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Level 1</span>
+                            <span style="font-weight: 700; color: #6b21a8;">商品検索機能</span>
+                        </div>
+                        <p style="font-size: 0.85rem; color: #334155; margin: 0;">商品名でキーワード検索できるようにする。一覧画面に検索フォームを追加し、LIKEクエリで部分一致検索を実装する。</p>
+                    </div>
+
+                    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="background: #f59e0b; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Level 2</span>
+                            <span style="font-weight: 700; color: #92400e;">価格帯フィルタ</span>
+                        </div>
+                        <p style="font-size: 0.85rem; color: #334155; margin: 0;">価格の範囲（〜1,000円 / 1,000〜5,000円 / 5,000円〜）でフィルタできるようにする。クエリパラメータで最小価格・最大価格を指定する。</p>
+                    </div>
+
+                    <div style="background: #fef2f2; border: 2px solid #f87171; border-radius: 12px; padding: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="background: #f87171; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Level 3</span>
+                            <span style="font-weight: 700; color: #991b1b;">カテゴリマスタ分離</span>
+                        </div>
+                        <p style="font-size: 0.85rem; color: #334155; margin: 0;">カテゴリを固定文字列ではなく、別テーブル（categories）で管理する。productsテーブルにcategory_id外部キーを追加し、1:Nのリレーションを設計する。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>8-6-2. 講座のまとめ</h3>
+
+                <div class="info-box success">
+                    <div class="info-box-title"><span class="material-icons">celebration</span> 講座完了おめでとうございます!</div>
+                    <div class="info-box-content">
+                        <p>全8章を通じて、以下のスキルを身につけました。</p>
+                        <ul>
+                            <li><strong>6種類の設計書</strong>（要件定義・機能仕様・API設計・DB設計・画面設計・テスト仕様）の書き方</li>
+                            <li>Markdownテンプレートを使った<strong>効率的な設計書作成</strong></li>
+                            <li>設計書を<strong>AIプロンプトに変換する</strong>手法</li>
+                            <li>設計書駆動で<strong>Spring Bootアプリケーションを開発</strong>する一連の流れ</li>
+                        </ul>
+                        <p>これからの開発では、コードを書く前にまず設計書を書く習慣をつけてください。設計書があれば、AIの力を最大限に引き出すことができます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+        <a href="7doc-exercise-todo.html" class="page-nav-btn prev">
+            <span class="material-icons">arrow_back</span>
+            <div>
+                <div class="page-nav-label">Previous</div>
+                <div class="page-nav-title">演習: Todoアプリ</div>
+            </div>
+        </a>
+        <div></div>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

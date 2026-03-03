@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第5章 REST API設計 - アーキテクチャ基礎</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-architecture.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">5</div>
+            <h1 class="chapter-title">REST API設計</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">5-1</span><span>RESTful原則</span></li>
+                <li class="toc-item"><span class="toc-number">5-2</span><span>URL設計</span></li>
+                <li class="toc-item"><span class="toc-number">5-3</span><span>HTTPステータスコード</span></li>
+                <li class="toc-item"><span class="toc-number">5-4</span><span>リクエスト/レスポンス設計</span></li>
+                <li class="toc-item"><span class="toc-number">5-5</span><span>エラーレスポンス設計</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 5-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-1</span>
+                <h2 class="section-title">RESTful原則</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>REST（Representational State Transfer）は、Web APIの設計スタイルです。HTTPプロトコルの仕組みを最大限に活用し、リソースの操作をシンプルで統一的なインタフェースで表現します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5-1-1 RESTの6つの制約</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">api</span>
+                            REST 6原則
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                            <div style="background: #dbeafe; border-radius: 10px; padding: 12px;">
+                                <div style="font-weight: 700; color: #3b82f6; font-size: 0.9rem;">1. クライアント・サーバ</div>
+                                <div style="font-size: 0.8rem; color: #334155;">UI(フロント)とデータ(バック)を分離</div>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 10px; padding: 12px;">
+                                <div style="font-weight: 700; color: #22c55e; font-size: 0.9rem;">2. ステートレス</div>
+                                <div style="font-size: 0.8rem; color: #334155;">各リクエストは独立、サーバに状態を保持しない</div>
+                            </div>
+                            <div style="background: #fef3c7; border-radius: 10px; padding: 12px;">
+                                <div style="font-weight: 700; color: #f59e0b; font-size: 0.9rem;">3. キャッシュ可能</div>
+                                <div style="font-size: 0.8rem; color: #334155;">レスポンスにキャッシュ可否を明示</div>
+                            </div>
+                            <div style="background: #f3e8ff; border-radius: 10px; padding: 12px;">
+                                <div style="font-weight: 700; color: #a855f7; font-size: 0.9rem;">4. 統一インタフェース</div>
+                                <div style="font-size: 0.8rem; color: #334155;">HTTPメソッドとURLで操作を表現</div>
+                            </div>
+                            <div style="background: #fef2f2; border-radius: 10px; padding: 12px;">
+                                <div style="font-weight: 700; color: #ef4444; font-size: 0.9rem;">5. 階層化システム</div>
+                                <div style="font-size: 0.8rem; color: #334155;">LB, キャッシュ等の中間層を挿入可能</div>
+                            </div>
+                            <div style="background: #dbeafe; border-radius: 10px; padding: 12px;">
+                                <div style="font-weight: 700; color: #3b82f6; font-size: 0.9rem;">6. コードオンデマンド</div>
+                                <div style="font-size: 0.8rem; color: #334155;">必要に応じてコードを送信（任意）</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5-1-2 HTTPメソッドとCRUD</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>HTTPメソッド</th>
+                                <th>CRUD操作</th>
+                                <th>例</th>
+                                <th>冪等性</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>GET</strong></td>
+                                <td>Read（取得）</td>
+                                <td><code>GET /api/users/1</code></td>
+                                <td>あり</td>
+                            </tr>
+                            <tr>
+                                <td><strong>POST</strong></td>
+                                <td>Create（作成）</td>
+                                <td><code>POST /api/users</code></td>
+                                <td>なし</td>
+                            </tr>
+                            <tr>
+                                <td><strong>PUT</strong></td>
+                                <td>Update（全体更新）</td>
+                                <td><code>PUT /api/users/1</code></td>
+                                <td>あり</td>
+                            </tr>
+                            <tr>
+                                <td><strong>PATCH</strong></td>
+                                <td>Update（部分更新）</td>
+                                <td><code>PATCH /api/users/1</code></td>
+                                <td>場合による</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DELETE</strong></td>
+                                <td>Delete（削除）</td>
+                                <td><code>DELETE /api/users/1</code></td>
+                                <td>あり</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">冪等性（べきとうせい）とは</span>
+                        </div>
+                        <p>同じリクエストを何度送っても結果が変わらない性質です。GETは何度取得しても同じ結果。DELETEも既に削除済みなら再度送っても変わりません。一方POSTは送るたびに新しいリソースが作られるため、冪等ではありません。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-2</span>
+                <h2 class="section-title">URL設計</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>REST APIのURLは「リソース」を表します。動詞ではなく名詞を使い、階層構造でリソース間の関係を表現するのがポイントです。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5-2-1 URL設計のルール</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ルール</th>
+                                <th>悪い例</th>
+                                <th>良い例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>名詞（複数形）を使う</td>
+                                <td><code>/getUsers</code></td>
+                                <td><code>/users</code></td>
+                            </tr>
+                            <tr>
+                                <td>動詞を含めない</td>
+                                <td><code>/deleteUser/1</code></td>
+                                <td><code>DELETE /users/1</code></td>
+                            </tr>
+                            <tr>
+                                <td>小文字ケバブケース</td>
+                                <td><code>/orderItems</code></td>
+                                <td><code>/order-items</code></td>
+                            </tr>
+                            <tr>
+                                <td>階層でリソース関係を表す</td>
+                                <td><code>/getUserOrders?userId=1</code></td>
+                                <td><code>/users/1/orders</code></td>
+                            </tr>
+                            <tr>
+                                <td>フィルタはクエリパラメータ</td>
+                                <td><code>/orders/pending</code></td>
+                                <td><code>/orders?status=pending</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5-2-2 ECサイトのURL設計例</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">link</span>
+                            ECサイト API エンドポイント一覧
+                        </h4>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="background: #f1f5f9;">
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">メソッド</th>
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">URL</th>
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">説明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;"><span style="background:#dbeafe;color:#3b82f6;padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.75rem;">GET</span></td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">/api/products</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">商品一覧を取得</td></tr>
+                                <tr><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;"><span style="background:#dbeafe;color:#3b82f6;padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.75rem;">GET</span></td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">/api/products/{id}</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">商品詳細を取得</td></tr>
+                                <tr><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;"><span style="background:#dcfce7;color:#22c55e;padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.75rem;">POST</span></td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">/api/orders</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">注文を作成</td></tr>
+                                <tr><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;"><span style="background:#dbeafe;color:#3b82f6;padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.75rem;">GET</span></td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">/api/users/{id}/orders</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">ユーザーの注文一覧</td></tr>
+                                <tr><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;"><span style="background:#fef3c7;color:#f59e0b;padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.75rem;">PATCH</span></td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">/api/orders/{id}</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">注文を部分更新</td></tr>
+                                <tr><td style="padding: 6px 12px;"><span style="background:#fef2f2;color:#ef4444;padding:2px 8px;border-radius:4px;font-weight:600;font-size:0.75rem;">DELETE</span></td><td style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">/api/orders/{id}</td><td style="padding: 6px 12px;">注文を削除</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-3</span>
+                <h2 class="section-title">HTTPステータスコード</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>ステータスコードはAPIの「返事」です。適切なコードを返すことで、クライアントはレスポンスの意味を正しく理解できます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5-3-1 よく使うステータスコード</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>コード</th>
+                                <th>意味</th>
+                                <th>使用場面</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong style="color: #22c55e;">200 OK</strong></td>
+                                <td>成功</td>
+                                <td>GET, PUT, PATCHの成功時</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #22c55e;">201 Created</strong></td>
+                                <td>作成成功</td>
+                                <td>POSTでリソース作成成功時</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #22c55e;">204 No Content</strong></td>
+                                <td>成功（本文なし）</td>
+                                <td>DELETEの成功時</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #f59e0b;">400 Bad Request</strong></td>
+                                <td>リクエスト不正</td>
+                                <td>バリデーションエラー</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #f59e0b;">401 Unauthorized</strong></td>
+                                <td>認証エラー</td>
+                                <td>ログインしていない</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #f59e0b;">403 Forbidden</strong></td>
+                                <td>認可エラー</td>
+                                <td>権限がない</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #f59e0b;">404 Not Found</strong></td>
+                                <td>未検出</td>
+                                <td>指定IDのリソースが存在しない</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #f59e0b;">409 Conflict</strong></td>
+                                <td>競合</td>
+                                <td>重複登録、楽観ロック失敗</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #ef4444;">500 Internal Server Error</strong></td>
+                                <td>サーバエラー</td>
+                                <td>予期しない例外発生時</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-4</span>
+                <h2 class="section-title">リクエスト/レスポンス設計</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>JSON形式のリクエスト/レスポンスの設計は、API利用者の使いやすさに直結します。Spring Bootの<code>@RestController</code>で実装する方法を見ていきましょう。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5-4-1 Spring Boot での REST API 実装</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">ProductController.java</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>@RestController
+@RequestMapping("/api/products")
+public class ProductController {
+
+    private final ProductService productService;
+
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
+
+    // GET /api/products - 一覧取得
+    @GetMapping
+    public ResponseEntity&lt;List&lt;ProductResponse&gt;&gt; getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        List&lt;ProductResponse&gt; products = productService.findAll(page, size);
+        return ResponseEntity.ok(products);
+    }
+
+    // GET /api/products/{id} - 1件取得
+    @GetMapping("/{id}")
+    public ResponseEntity&lt;ProductResponse&gt; getById(@PathVariable Long id) {
+        ProductResponse product = productService.findById(id);
+        return ResponseEntity.ok(product);
+    }
+
+    // POST /api/products - 新規作成
+    @PostMapping
+    public ResponseEntity&lt;ProductResponse&gt; create(
+            @Valid @RequestBody ProductCreateRequest request) {
+        ProductResponse created = productService.create(request);
+        URI location = URI.create("/api/products/" + created.getId());
+        return ResponseEntity.created(location).body(created);
+    }
+
+    // PUT /api/products/{id} - 全体更新
+    @PutMapping("/{id}")
+    public ResponseEntity&lt;ProductResponse&gt; update(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductUpdateRequest request) {
+        ProductResponse updated = productService.update(id, request);
+        return ResponseEntity.ok(updated);
+    }
+
+    // DELETE /api/products/{id} - 削除
+    @DeleteMapping("/{id}")
+    public ResponseEntity&lt;Void&gt; delete(@PathVariable Long id) {
+        productService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">リクエスト/レスポンスDTO</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// リクエストDTO（入力）
+public class ProductCreateRequest {
+    @NotBlank(message = "商品名は必須です")
+    private String name;
+
+    @NotNull @Min(value = 0, message = "価格は0以上")
+    private Integer price;
+
+    private String description;
+
+    // getter/setter
+}
+
+// レスポンスDTO（出力）
+public class ProductResponse {
+    private Long id;
+    private String name;
+    private int price;
+    private String description;
+    private LocalDateTime createdAt;
+
+    public static ProductResponse from(Product product) {
+        ProductResponse res = new ProductResponse();
+        res.id = product.getId();
+        res.name = product.getName();
+        res.price = product.getPrice();
+        res.description = product.getDescription();
+        res.createdAt = product.getCreatedAt();
+        return res;
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 5-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 5-5</span>
+                <h2 class="section-title">エラーレスポンス設計</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>統一されたエラーレスポンス形式を定めることで、クライアントはエラーハンドリングを共通化できます。Spring Bootの<code>@RestControllerAdvice</code>で実装します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">5-5-1 エラーレスポンスの形式</h3>
+                <div class="content-block">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">統一エラーレスポンス JSON</span>
+                            <span class="code-lang">JSON</span>
+                        </div>
+                        <pre class="code-content"><code>{
+    "status": 400,
+    "error": "Bad Request",
+    "code": "VALIDATION_ERROR",
+    "message": "入力値に問題があります",
+    "details": [
+        {
+            "field": "name",
+            "message": "商品名は必須です"
+        },
+        {
+            "field": "price",
+            "message": "価格は0以上を指定してください"
+        }
+    ],
+    "timestamp": "2026-03-04T10:30:00"
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">GlobalExceptionHandler.java</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    // バリデーションエラー
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleValidation(
+            MethodArgumentNotValidException ex) {
+        List&lt;FieldError&gt; details = ex.getBindingResult()
+            .getFieldErrors().stream()
+            .map(e -> new FieldError(e.getField(), e.getDefaultMessage()))
+            .toList();
+
+        ErrorResponse error = new ErrorResponse(
+            400, "Bad Request", "VALIDATION_ERROR",
+            "入力値に問題があります", details
+        );
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    // リソース未検出
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleNotFound(
+            ResourceNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+            404, "Not Found", "RESOURCE_NOT_FOUND",
+            ex.getMessage(), null
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    // 予期しないエラー
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleUnexpected(Exception ex) {
+        ErrorResponse error = new ErrorResponse(
+            500, "Internal Server Error", "INTERNAL_ERROR",
+            "予期しないエラーが発生しました", null
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(error);
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">5章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>以下のURLのうち、RESTfulな設計として適切なものをすべて選んでください。</p>
+                        <ol type="A">
+                            <li><code>GET /api/users/1/orders</code></li>
+                            <li><code>POST /api/createUser</code></li>
+                            <li><code>DELETE /api/users/1</code></li>
+                            <li><code>GET /api/getUserById?id=1</code></li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>次の操作に対して、適切なHTTPメソッドとステータスコードの組み合わせを答えてください。</p>
+                        <ol>
+                            <li>新しいユーザーを作成し、作成されたユーザー情報を返す</li>
+                            <li>存在しないIDの商品を取得しようとした</li>
+                            <li>注文を削除し、何も返さない</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>「ユーザーが自分の注文をキャンセルする」機能のエンドポイントを設計してください。URL、HTTPメソッド、リクエスト/レスポンスのJSON例を示してください。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">5章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: A, C</div>
+                    <div class="answer-content">
+                        <p>A: リソースの階層関係（ユーザーの注文一覧）を正しく表現しています。C: DELETEメソッドで削除を表現し、URLは名詞のみです。B: URLに動詞「create」が含まれています（<code>POST /api/users</code>が正しい）。D: URLに動詞「getUserById」が含まれています（<code>GET /api/users/1</code>が正しい）。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答</div>
+                    <div class="answer-content">
+                        <p>1: <code>POST /api/users</code> → <strong>201 Created</strong>（Locationヘッダーで作成されたリソースのURLも返す）。2: <code>GET /api/products/{id}</code> → <strong>404 Not Found</strong>。3: <code>DELETE /api/orders/{id}</code> → <strong>204 No Content</strong>。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答</div>
+                    <div class="answer-content">
+                        <p><code>PATCH /api/orders/{orderId}</code> でステータスを更新する方法が一般的です。</p>
+                        <div class="code-block">
+                            <pre class="code-content"><code>// リクエスト
+PATCH /api/orders/123
+Content-Type: application/json
+
+{
+    "status": "CANCELLED",
+    "reason": "注文を間違えたため"
+}
+
+// レスポンス (200 OK)
+{
+    "id": 123,
+    "status": "CANCELLED",
+    "cancelledAt": "2026-03-04T15:30:00",
+    "reason": "注文を間違えたため"
+}</code></pre>
+                        </div>
+                        <p>別の設計として <code>POST /api/orders/123/cancel</code>（サブリソースとしてのアクション）もありです。RESTの純粋さよりも分かりやすさを優先する場面もあります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="4arch-ddd.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第4章 DDD基礎</div>
+            </div>
+        </a>
+        <a href="6arch-db-basics.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第6章 DB設計の基礎</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>

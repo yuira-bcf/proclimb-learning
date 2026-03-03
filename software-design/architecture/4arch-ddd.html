@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第4章 DDD基礎 - アーキテクチャ基礎</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+      :root {
+        --primary: #5856D6;
+        --primary-dark: #4A48C4;
+        --primary-light: #EDEDFC;
+        --primary-lighter: #C7C6F2;
+      }
+      .nav-category-links { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-architecture.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+            <div class="chapter-number">4</div>
+            <h1 class="chapter-title">DDD基礎</h1>
+        </header>
+
+        <nav class="toc">
+            <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+            <ul class="toc-list">
+                <li class="toc-item"><span class="toc-number">4-1</span><span>DDDとは</span></li>
+                <li class="toc-item"><span class="toc-number">4-2</span><span>ユビキタス言語</span></li>
+                <li class="toc-item"><span class="toc-number">4-3</span><span>Entity・Value Object・Aggregate</span></li>
+                <li class="toc-item"><span class="toc-number">4-4</span><span>ドメインサービス</span></li>
+                <li class="toc-item"><span class="toc-number">4-5</span><span>境界づけられたコンテキスト</span></li>
+            </ul>
+        </nav>
+
+        <!-- セクション 4-1 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-1</span>
+                <h2 class="section-title">DDDとは</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>DDD（Domain-Driven Design / ドメイン駆動設計）</strong>とは、ソフトウェアの複雑さに立ち向かうための設計手法です。ビジネスの問題領域（ドメイン）を深く理解し、それをソフトウェアモデルに反映させることを重視します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4-1-1 DDDの基本思想</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">psychology</span>
+                            DDDの核心: ビジネスの複雑さをコードで表現する
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #fef2f2; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #ef4444; margin-bottom: 8px;">DDD以前: データ中心設計</div>
+                                <ul style="font-size: 0.85rem; color: #334155; padding-left: 20px;">
+                                    <li>まずテーブルを設計する</li>
+                                    <li>ビジネスロジックがServiceに散在</li>
+                                    <li>Entityはただのデータ入れ物</li>
+                                    <li>ドメイン知識がコードに表れない</li>
+                                </ul>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 8px;">DDD: ドメイン中心設計</div>
+                                <ul style="font-size: 0.85rem; color: #334155; padding-left: 20px;">
+                                    <li>まずビジネスルールを理解する</li>
+                                    <li>ロジックをドメインモデルに持たせる</li>
+                                    <li>Entityが自身のルールを知っている</li>
+                                    <li>コードがビジネスの仕様書になる</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-2 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-2</span>
+                <h2 class="section-title">ユビキタス言語</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>ユビキタス言語（Ubiquitous Language）</strong>とは、開発チームとビジネスの関係者（ドメインエキスパート）が共通して使う言葉のことです。コード内の変数名・クラス名・メソッド名に、ビジネスで使われる用語をそのまま使います。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4-2-1 ユビキタス言語の実践</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ビジネス用語</th>
+                                <th>悪い命名</th>
+                                <th>ユビキタス言語に基づく命名</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>注文を確定する</td>
+                                <td><code>updateStatus()</code></td>
+                                <td><code>confirmOrder()</code></td>
+                            </tr>
+                            <tr>
+                                <td>在庫を引き当てる</td>
+                                <td><code>decreaseCount()</code></td>
+                                <td><code>allocateStock()</code></td>
+                            </tr>
+                            <tr>
+                                <td>商品を出荷する</td>
+                                <td><code>processItem()</code></td>
+                                <td><code>shipProduct()</code></td>
+                            </tr>
+                            <tr>
+                                <td>返品する</td>
+                                <td><code>reverseTransaction()</code></td>
+                                <td><code>returnProduct()</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">なぜユビキタス言語が重要か</span>
+                        </div>
+                        <p>ビジネスの人が「注文をキャンセルしたい」と言ったとき、コード上にも<code>order.cancel()</code>というメソッドがあれば、開発者は即座に修正箇所を特定できます。命名が<code>data.setFlag(0)</code>だったら、何をしているのか分からないままです。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-3 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-3</span>
+                <h2 class="section-title">Entity・Value Object・Aggregate</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>DDDの戦術的パターンの中核をなす3つの概念を学びます。これらを正しく使い分けることで、ドメインモデルの表現力が飛躍的に向上します。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4-3-1 EntityとValue Object</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">category</span>
+                            Entity vs Value Object
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #dbeafe; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #3b82f6; margin-bottom: 8px;">Entity（エンティティ）</div>
+                                <ul style="font-size: 0.85rem; color: #334155; padding-left: 20px; margin: 0;">
+                                    <li><strong>同一性（ID）</strong>で識別される</li>
+                                    <li>ライフサイクルがある（生成→更新→削除）</li>
+                                    <li>可変（mutable）なことが多い</li>
+                                    <li>例: User, Order, Product</li>
+                                </ul>
+                            </div>
+                            <div style="background: #dcfce7; border-radius: 12px; padding: 16px;">
+                                <div style="font-weight: 700; color: #22c55e; margin-bottom: 8px;">Value Object（値オブジェクト）</div>
+                                <ul style="font-size: 0.85rem; color: #334155; padding-left: 20px; margin: 0;">
+                                    <li><strong>属性の値</strong>で識別される</li>
+                                    <li>IDを持たない</li>
+                                    <li>不変（immutable）である</li>
+                                    <li>例: Money, Email, Address</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Value Object の例: Money</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// 値オブジェクト: 不変（final）, 値で等価判定
+public class Money {
+    private final int amount;
+    private final String currency;
+
+    public Money(int amount, String currency) {
+        if (amount < 0) throw new IllegalArgumentException("金額は0以上");
+        this.amount = amount;
+        this.currency = currency;
+    }
+
+    public Money add(Money other) {
+        if (!this.currency.equals(other.currency)) {
+            throw new IllegalArgumentException("通貨が異なります");
+        }
+        return new Money(this.amount + other.amount, this.currency);  // 新しいインスタンスを返す
+    }
+
+    public Money multiply(int quantity) {
+        return new Money(this.amount * quantity, this.currency);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Money)) return false;
+        Money money = (Money) o;
+        return amount == money.amount &amp;&amp; currency.equals(money.currency);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(amount, currency);
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">Entity の例: Order</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// エンティティ: IDで識別, ビジネスロジックを持つ
+public class Order {
+    private final OrderId id;            // 識別子
+    private final UserId userId;
+    private List&lt;OrderLine&gt; lines;
+    private Money totalPrice;
+    private OrderStatus status;
+
+    public Order(OrderId id, UserId userId) {
+        this.id = id;
+        this.userId = userId;
+        this.lines = new ArrayList&lt;&gt;();
+        this.status = OrderStatus.DRAFT;
+    }
+
+    public void addItem(Product product, int quantity) {
+        if (status != OrderStatus.DRAFT) {
+            throw new IllegalStateException("確定済みの注文には追加できません");
+        }
+        Money lineTotal = product.getPrice().multiply(quantity);
+        lines.add(new OrderLine(product.getId(), quantity, lineTotal));
+        recalculateTotal();
+    }
+
+    public void confirm() {
+        if (lines.isEmpty()) {
+            throw new IllegalStateException("商品が空の注文は確定できません");
+        }
+        this.status = OrderStatus.CONFIRMED;
+    }
+
+    private void recalculateTotal() {
+        this.totalPrice = lines.stream()
+            .map(OrderLine::getSubtotal)
+            .reduce(new Money(0, "JPY"), Money::add);
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4-3-2 Aggregate（集約）</h3>
+                <div class="content-block">
+                    <p><strong>集約（Aggregate）</strong>は、関連するEntityとValue Objectのまとまりです。外部からのアクセスは必ず<strong>集約ルート（Aggregate Root）</strong>を通じて行います。これによりデータの整合性を保証します。</p>
+
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">account_tree</span>
+                            注文の集約境界
+                        </h4>
+                        <svg viewBox="0 0 500 280" style="width: 100%; max-width: 500px; display: block; margin: 0 auto;">
+                            <!-- 集約境界 -->
+                            <rect x="30" y="20" width="440" height="230" rx="16" fill="none" stroke="#5856D6" stroke-width="3" stroke-dasharray="8"/>
+                            <text x="250" y="48" text-anchor="middle" fill="#5856D6" font-size="13" font-weight="700" font-family="'Noto Sans JP', sans-serif">Order Aggregate</text>
+
+                            <!-- 集約ルート -->
+                            <rect x="150" y="60" width="200" height="45" rx="10" fill="#3b82f6"/>
+                            <text x="250" y="80" text-anchor="middle" fill="white" font-size="13" font-weight="bold" font-family="sans-serif">Order</text>
+                            <text x="250" y="96" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="10" font-family="sans-serif">Aggregate Root</text>
+
+                            <!-- OrderLine -->
+                            <rect x="60" y="140" width="160" height="40" rx="8" fill="#22c55e"/>
+                            <text x="140" y="165" text-anchor="middle" fill="white" font-size="12" font-family="sans-serif">OrderLine (Entity)</text>
+
+                            <!-- Money -->
+                            <rect x="280" y="140" width="160" height="40" rx="8" fill="#f59e0b"/>
+                            <text x="360" y="165" text-anchor="middle" fill="white" font-size="12" font-family="sans-serif">Money (VO)</text>
+
+                            <!-- ShippingAddress -->
+                            <rect x="140" y="200" width="200" height="35" rx="8" fill="#f59e0b"/>
+                            <text x="240" y="222" text-anchor="middle" fill="white" font-size="12" font-family="sans-serif">ShippingAddress (VO)</text>
+
+                            <!-- 矢印 -->
+                            <line x1="200" y1="105" x2="140" y2="140" stroke="#64748b" stroke-width="2" marker-end="url(#arrowAgg)"/>
+                            <line x1="300" y1="105" x2="360" y2="140" stroke="#64748b" stroke-width="2" marker-end="url(#arrowAgg)"/>
+                            <line x1="250" y1="105" x2="240" y2="200" stroke="#64748b" stroke-width="2" marker-end="url(#arrowAgg)"/>
+
+                            <!-- 外部からのアクセス -->
+                            <line x1="250" y1="0" x2="250" y2="60" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowRedAgg)"/>
+                            <text x="315" y="15" fill="#ef4444" font-size="11" font-weight="600" font-family="'Noto Sans JP', sans-serif">外部アクセスはここだけ</text>
+
+                            <defs>
+                                <marker id="arrowAgg" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker>
+                                <marker id="arrowRedAgg" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#ef4444"/></marker>
+                            </defs>
+                        </svg>
+                        <p style="text-align: center; font-size: 0.85rem; color: #64748b; margin-top: 8px;">外部からOrderLineやShippingAddressに直接アクセスしてはならない</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-4 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-4</span>
+                <h2 class="section-title">ドメインサービス</h2>
+            </div>
+
+            <div class="intro-text">
+                <p>どのEntityにも属さないビジネスロジックは<strong>ドメインサービス</strong>に配置します。「2つのEntityにまたがる処理」や「外部の情報が必要な計算」がその典型例です。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4-4-1 ドメインサービスの使い分け</h3>
+                <div class="content-block">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ロジックの種類</th>
+                                <th>配置先</th>
+                                <th>例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1つのEntityの状態変更</td>
+                                <td>Entity自身のメソッド</td>
+                                <td><code>order.cancel()</code></td>
+                            </tr>
+                            <tr>
+                                <td>複数Entityにまたがる処理</td>
+                                <td>ドメインサービス</td>
+                                <td>在庫の引当（Order + Stock）</td>
+                            </tr>
+                            <tr>
+                                <td>外部情報が必要な計算</td>
+                                <td>ドメインサービス</td>
+                                <td>税率を使った価格計算</td>
+                            </tr>
+                            <tr>
+                                <td>ユースケースの調整</td>
+                                <td>アプリケーションサービス</td>
+                                <td>注文→在庫引当→通知の一連の流れ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title">ドメインサービスの例: 在庫引当</span>
+                            <span class="code-lang">Java</span>
+                        </div>
+                        <pre class="code-content"><code>// ドメインサービス: 複数の集約にまたがるロジック
+public class StockAllocationService {
+
+    public void allocate(Order order, Stock stock) {
+        for (OrderLine line : order.getLines()) {
+            if (!stock.hasEnough(line.getProductId(), line.getQuantity())) {
+                throw new InsufficientStockException(
+                    line.getProductId() + "の在庫が不足しています"
+                );
+            }
+            stock.reduce(line.getProductId(), line.getQuantity());
+        }
+    }
+}
+
+// アプリケーションサービスから呼び出す
+@Service
+@Transactional
+public class OrderApplicationService {
+    private final OrderRepository orderRepo;
+    private final StockRepository stockRepo;
+    private final StockAllocationService allocationService;
+
+    public void confirmOrder(OrderId orderId) {
+        Order order = orderRepo.findById(orderId)
+            .orElseThrow(() -> new OrderNotFoundException(orderId));
+        Stock stock = stockRepo.findAll();
+
+        allocationService.allocate(order, stock);  // ドメインサービス呼び出し
+        order.confirm();
+
+        orderRepo.save(order);
+        stockRepo.save(stock);
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- セクション 4-5 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Section 4-5</span>
+                <h2 class="section-title">境界づけられたコンテキスト</h2>
+            </div>
+
+            <div class="intro-text">
+                <p><strong>境界づけられたコンテキスト（Bounded Context）</strong>は、DDDの戦略的パターンの中核です。同じ言葉でもコンテキストによって意味が異なることを認め、明示的に境界を引きます。</p>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">4-5-1 コンテキストの境界</h3>
+                <div class="content-block">
+                    <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+                        <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+                            <span class="material-icons" style="color: #5856D6;">grid_view</span>
+                            ECサイトのBounded Context例
+                        </h4>
+                        <svg viewBox="0 0 560 260" style="width: 100%; max-width: 560px; display: block; margin: 0 auto;">
+                            <!-- 注文コンテキスト -->
+                            <rect x="10" y="10" width="170" height="120" rx="12" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+                            <text x="95" y="32" text-anchor="middle" fill="#3b82f6" font-size="12" font-weight="700" font-family="'Noto Sans JP', sans-serif">注文コンテキスト</text>
+                            <rect x="25" y="45" width="140" height="24" rx="6" fill="#dbeafe"/>
+                            <text x="95" y="62" text-anchor="middle" fill="#3b82f6" font-size="10" font-family="sans-serif">Order, OrderLine</text>
+                            <rect x="25" y="78" width="140" height="24" rx="6" fill="#dbeafe"/>
+                            <text x="95" y="95" text-anchor="middle" fill="#3b82f6" font-size="10" font-family="sans-serif">Customer(注文者)</text>
+
+                            <!-- 配送コンテキスト -->
+                            <rect x="200" y="10" width="170" height="120" rx="12" fill="none" stroke="#22c55e" stroke-width="2.5"/>
+                            <text x="285" y="32" text-anchor="middle" fill="#22c55e" font-size="12" font-weight="700" font-family="'Noto Sans JP', sans-serif">配送コンテキスト</text>
+                            <rect x="215" y="45" width="140" height="24" rx="6" fill="#dcfce7"/>
+                            <text x="285" y="62" text-anchor="middle" fill="#22c55e" font-size="10" font-family="sans-serif">Shipment, Parcel</text>
+                            <rect x="215" y="78" width="140" height="24" rx="6" fill="#dcfce7"/>
+                            <text x="285" y="95" text-anchor="middle" fill="#22c55e" font-size="10" font-family="sans-serif">Customer(届け先)</text>
+
+                            <!-- 決済コンテキスト -->
+                            <rect x="390" y="10" width="160" height="120" rx="12" fill="none" stroke="#a855f7" stroke-width="2.5"/>
+                            <text x="470" y="32" text-anchor="middle" fill="#a855f7" font-size="12" font-weight="700" font-family="'Noto Sans JP', sans-serif">決済コンテキスト</text>
+                            <rect x="405" y="45" width="130" height="24" rx="6" fill="#f3e8ff"/>
+                            <text x="470" y="62" text-anchor="middle" fill="#a855f7" font-size="10" font-family="sans-serif">Payment, Refund</text>
+                            <rect x="405" y="78" width="130" height="24" rx="6" fill="#f3e8ff"/>
+                            <text x="470" y="95" text-anchor="middle" fill="#a855f7" font-size="10" font-family="sans-serif">Customer(支払者)</text>
+
+                            <!-- 注意テキスト -->
+                            <rect x="50" y="155" width="460" height="80" rx="10" fill="#fef3c7"/>
+                            <text x="280" y="180" text-anchor="middle" fill="#92400e" font-size="12" font-weight="600" font-family="'Noto Sans JP', sans-serif">同じ「Customer」でもコンテキストごとに意味が異なる</text>
+                            <text x="280" y="200" text-anchor="middle" fill="#92400e" font-size="11" font-family="'Noto Sans JP', sans-serif">注文: 購入者情報（名前、会員ランク）</text>
+                            <text x="280" y="218" text-anchor="middle" fill="#92400e" font-size="11" font-family="'Noto Sans JP', sans-serif">配送: 届け先情報（住所、電話番号）/ 決済: 支払者情報（カード番号）</text>
+                        </svg>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-box-header">
+                            <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
+                            <span class="info-box-title">DDDの適用基準</span>
+                        </div>
+                        <p>DDDの全てのパターンを最初から適用する必要はありません。まずは<strong>ユビキタス言語</strong>と<strong>Entity/Value Objectの使い分け</strong>から始めましょう。ビジネスロジックが複雑になってきたら、Aggregate や Bounded Context を検討します。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 練習問題 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Exercise</span>
+                <h2 class="section-title">4章 練習問題</h2>
+            </div>
+
+            <div class="exercise-list">
+                <div class="exercise-item">
+                    <div class="exercise-number">Q1</div>
+                    <div class="exercise-content">
+                        <p>以下のうち、Value Object（値オブジェクト）として設計すべきものをすべて選んでください。</p>
+                        <ol type="A">
+                            <li>メールアドレス（Email）</li>
+                            <li>ユーザー（User）</li>
+                            <li>住所（Address）</li>
+                            <li>注文（Order）</li>
+                            <li>金額（Money）</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q2</div>
+                    <div class="exercise-content">
+                        <p>以下のコードをDDDのEntityパターンに改善してください。現在はServiceにビジネスロジックが流出しています。</p>
+                        <div class="code-block">
+                            <pre class="code-content"><code>// 貧血ドメインモデル（アンチパターン）
+public class Account {
+    private int balance;
+    public int getBalance() { return balance; }
+    public void setBalance(int b) { this.balance = b; }
+}
+
+public class AccountService {
+    public void withdraw(Account account, int amount) {
+        if (account.getBalance() < amount) {
+            throw new RuntimeException("残高不足");
+        }
+        account.setBalance(account.getBalance() - amount);
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="exercise-item">
+                    <div class="exercise-number">Q3</div>
+                    <div class="exercise-content">
+                        <p>「在庫を引き当てる」ロジックは、Order Entity・Stock Entity・ドメインサービスのどこに置くべきですか？ 理由を説明してください。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 解答 -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Answer</span>
+                <h2 class="section-title">4章 解説・解答</h2>
+            </div>
+
+            <div class="answer-list">
+                <div class="answer-item">
+                    <div class="answer-header">Q1の解答: A, C, E</div>
+                    <div class="answer-content">
+                        <p>Email, Address, MoneyはIDで識別する必要がなく、属性の値で等価判定されます（同じメールアドレス文字列なら同じもの）。一方、UserとOrderはIDで識別されるエンティティです（同じ名前のUserでも別人）。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q2の解答</div>
+                    <div class="answer-content">
+                        <div class="code-block">
+                            <pre class="code-content"><code>// リッチドメインモデル: ビジネスロジックをEntity内に
+public class Account {
+    private int balance;
+
+    public int getBalance() { return balance; }
+
+    public void withdraw(int amount) {
+        if (balance < amount) {
+            throw new InsufficientBalanceException("残高不足");
+        }
+        this.balance -= amount;
+    }
+
+    public void deposit(int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("入金額は正の値");
+        }
+        this.balance += amount;
+    }
+}</code></pre>
+                        </div>
+                        <p>setBalance()を削除し、withdraw/depositといったビジネス操作のメソッドにしました。不正な状態遷移をEntity自身が防ぐことができます。</p>
+                    </div>
+                </div>
+
+                <div class="answer-item">
+                    <div class="answer-header">Q3の解答: ドメインサービス</div>
+                    <div class="answer-content">
+                        <p>在庫引当は「注文」と「在庫」の2つの集約にまたがる処理です。OrderがStockを直接操作するのは集約の境界を越えてしまいます。StockがOrderの詳細を知るのも不適切です。このような複数集約にまたがるロジックはドメインサービス（StockAllocationService等）に配置するのが適切です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="page-nav">
+        <a href="3arch-layered.html" class="page-nav-btn prev">
+            <span>&#8592;</span>
+            <div>
+                <div class="page-nav-label">前の章</div>
+                <div class="page-nav-title">第3章 レイヤードアーキテクチャ</div>
+            </div>
+        </a>
+        <a href="5arch-rest-api.html" class="page-nav-btn next">
+            <div>
+                <div class="page-nav-label">次の章</div>
+                <div class="page-nav-title">第5章 REST API設計</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>
+
+    <script src="../../shared/demo.js"></script>
+</body>
+</html>
