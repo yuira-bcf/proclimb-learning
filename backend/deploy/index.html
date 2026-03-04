@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaアプリケーションをWebで公開する - Renderデプロイガイド</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/common.css">
+    <style>
+        :root {
+            --primary: #0097A7;
+            --primary-dark: #00838F;
+            --primary-light: #E0F7FA;
+            --primary-lighter: #B2EBF2;
+        }
+        .nav-category-links { display: none; }
+
+        /* スクリーンショット画像 */
+        .screenshot {
+            display: block;
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            margin: 20px auto;
+        }
+        .screenshot-caption {
+            text-align: center;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: -8px;
+            margin-bottom: 24px;
+        }
+
+        /* ステップインジケーター */
+        .step-flow {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 32px 0;
+        }
+        .step-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+        .step-chip.active {
+            background: var(--primary);
+            color: white;
+        }
+        .step-arrow {
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        /* 前提条件ボックス */
+        .prereq-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 24px 0;
+        }
+        .prereq-box h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .prereq-box ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .prereq-box li {
+            font-size: 0.88rem;
+            color: #78350f;
+            line-height: 1.8;
+        }
+
+        /* 注意事項カード */
+        .notice-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .notice-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .notice-card h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .notice-card p {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        /* プロンプトボックス */
+        .prompt-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            color: #e2e8f0;
+        }
+        .prompt-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .prompt-card-header .material-icons {
+            color: #a78bfa;
+            font-size: 20px;
+        }
+        .prompt-card-header span {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #a78bfa;
+        }
+        .prompt-card pre {
+            margin: 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #e2e8f0;
+        }
+
+        /* 設定テーブル */
+        .settings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.88rem;
+        }
+        .settings-table th {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 10px 16px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .settings-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .settings-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* 手順番号 */
+        .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        .step-instruction {
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+            margin: 16px 0;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body>
+    <nav class="global-nav"></nav>
+    <script src="../../shared/js/nav-spring.js"></script>
+
+    <div class="container">
+        <header class="chapter-header">
+            <div class="chapter-badge"><span class="material-icons">menu_book</span> Deploy Guide</div>
+            <div class="chapter-number"><span class="material-icons" style="font-size: 2.5rem;">cloud_upload</span></div>
+            <h1 class="chapter-title">JavaアプリケーションをWebで公開する</h1>
+            <p class="chapter-subtitle">Render + Docker で Spring Boot アプリをデプロイする手順ガイド</p>
+        </header>
+
+        <!-- ステップフロー -->
+        <div class="step-flow">
+            <div class="step-chip"><span class="material-icons" style="font-size:16px;">description</span> Step 1: Dockerfile作成</div>
+            <div class="step-arrow"><span class="material-icons">chevron_right</span></div>
+            <div class="step-chip"><span class="material-icons" style="font-size:16px;">person_add</span> Step 2: Render登録</div>
+            <div class="step-arrow"><span class="material-icons">chevron_right</span></div>
+            <div class="step-chip"><span class="material-icons" style="font-size:16px;">rocket_launch</span> Step 3: デプロイ</div>
+            <div class="step-arrow"><span class="material-icons">chevron_right</span></div>
+            <div class="step-chip"><span class="material-icons" style="font-size:16px;">verified</span> Step 4: 動作確認</div>
+        </div>
+
+        <!-- 前提条件 -->
+        <div class="prereq-box">
+            <h4><span class="material-icons">checklist</span> 前提条件</h4>
+            <ul>
+                <li>Javaプロジェクト（Spring Boot + Maven）がローカルに存在している</li>
+                <li>GitHubリポジトリに最新の状態がプッシュされている</li>
+            </ul>
+        </div>
+
+        <!-- ============ Step 1 ============ -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Step 1</span>
+                <h2 class="section-title">DockerfileとDockerignoreを作成</h2>
+            </div>
+            <div class="intro-text">
+                <p>Renderでビルド・公開するために必要なファイルを作成します。Renderは言語としてJavaを直接サポートしていないため、<strong>Docker</strong>という仮想コンテナ技術を利用します。ビルドはRender側でDockerfileを読み取って行われるため、ローカルにDockerをインストールしていなくても問題ありません。</p>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title"><span class="material-icons">lightbulb</span> Docker とは？</div>
+                <p>アプリケーションの実行環境をまるごとパッケージングする技術です。「どのOSでも同じように動く」状態を実現できます。詳しくは <a href="../../devtools/docker/index.html" style="color:var(--primary);">Docker構築入門</a> を参照してください。</p>
+            </div>
+
+            <h3 class="subsection-title">1-1 VSCodeでプロジェクトを開く</h3>
+            <div class="step-instruction">
+                <span class="step-num">1</span>
+                <span>VSCodeを立ち上げ、対象のJavaプロジェクトを開きます。</span>
+            </div>
+
+            <h3 class="subsection-title">1-2 AIにプロンプトを投入</h3>
+            <div class="step-instruction">
+                <span class="step-num">2</span>
+                <span>Claude Code / Copilot 等のAIツールに以下のプロンプトを投入し、Dockerfile と .dockerignore を自動生成します。</span>
+            </div>
+
+            <div class="prompt-card">
+                <div class="prompt-card-header">
+                    <span class="material-icons">smart_toy</span>
+                    <span>AIプロンプト — Dockerfile 自動生成</span>
+                </div>
+                <pre>Spring Boot（Maven）プロジェクトを Render（Docker デプロイ）で確実に動作させる前提で、必要なファイル作成・修正・検証まで実施してください。
+
+【目的】
+- Render でビルド/起動エラーなくデプロイできる状態にする
+- 過去に発生した以下を再発させない
+  - mvnw 実行権限エラー（Permission denied）
+  - Java ファイル先頭の BOM によるコンパイルエラー（illegal character: '\ufeff'）
+  - ルート URL `/` で 404 になる問題（必要なら `/todo` へ誘導）
+
+【必須対応】
+1. ルート直下に Dockerfile を作成/更新
+   - Maven Wrapper を使ってビルド
+   - Linux 上で `mvnw` が必ず実行できるように `chmod +x ./mvnw` を入れる
+   - Render の待受ポート 10000 で起動する（`-Dserver.port=10000`）
+   - マルチステージビルドにする（build + runtime）
+
+2. ルート直下に .dockerignore を作成/更新
+   - 必須: .git / .idea / .vscode / target / build / out
+
+3. 文字コードチェック
+   - `src/main/java/**/*.java` を走査し、UTF-8 BOM があれば除去
+
+4. ルーティング確認
+   - `/` アクセス時に 404 になるなら、`/todo` へリダイレクトする最小修正を追加
+
+5. 検証
+   - `./mvnw test` を実行して成功を確認
+   - 可能なら `docker build` も実行し、Docker ビルド成功を確認
+
+【出力してほしい内容】
+- 変更したファイル一覧
+- Dockerfile と .dockerignore の最終内容
+- BOM 除去を行ったファイル一覧（なければ「なし」）
+- テスト結果（成功/失敗）
+- Render 側で確認すべきポイント</pre>
+            </div>
+
+            <h3 class="subsection-title">1-3 コミット・プッシュ</h3>
+            <div class="step-instruction">
+                <span class="step-num">3</span>
+                <span>問題なく作成されたら、Sourcetree等でコミット・プッシュします。事前準備はこれだけで完了です。</span>
+            </div>
+        </section>
+
+        <!-- ============ Step 2 ============ -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Step 2</span>
+                <h2 class="section-title">Renderアカウント作成とGitHub連携</h2>
+            </div>
+
+            <h3 class="subsection-title">2-1 Renderにアクセス</h3>
+            <div class="step-instruction">
+                <span class="step-num">1</span>
+                <span><a href="https://render.com/" target="_blank" rel="noopener noreferrer" style="color:var(--primary);font-weight:600;">https://render.com/</a> にアクセスし、「Start for free」をクリックします。</span>
+            </div>
+            <img src="render_img/01_render-home.png" alt="Render トップページ" class="screenshot">
+
+            <h3 class="subsection-title">2-2 アカウント作成</h3>
+            <div class="step-instruction">
+                <span class="step-num">2</span>
+                <span>任意の方法でアカウントを作成します（Google OAuth 等）。</span>
+            </div>
+            <img src="render_img/02_make-account.png" alt="アカウント作成" class="screenshot">
+
+            <h3 class="subsection-title">2-3 Web Service を新規作成</h3>
+            <div class="step-instruction">
+                <span class="step-num">3</span>
+                <span>ワークスペース画面が開いたら、右上の「+New」→「Web Service」をクリックします。</span>
+            </div>
+            <img src="render_img/03_new-webservice.png" alt="Web Service 新規作成" class="screenshot">
+
+            <h3 class="subsection-title">2-4 GitHub連携</h3>
+            <div class="step-instruction">
+                <span class="step-num">4</span>
+                <span>「Git Provider」→「GitHub」をクリックし、「Authorize Render」で連携を許可します。</span>
+            </div>
+            <img src="render_img/04_git-settings.png" alt="Git Provider 設定" class="screenshot">
+            <img src="render_img/05_git-permission.png" alt="GitHub 認可" class="screenshot">
+
+            <h3 class="subsection-title">2-5 リポジトリを選択</h3>
+            <div class="step-instruction">
+                <span class="step-num">5</span>
+                <span>Renderにインストールするリポジトリを選択します。</span>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title"><span class="material-icons">info</span> リポジトリの選択方式</div>
+                <ul style="margin:0;padding-left:20px;">
+                    <li><strong>All Repositories</strong> — GitHubの全リポジトリをRenderに接続</li>
+                    <li><strong>Only Select Repositories</strong> — 任意の1つだけを接続（推奨）</li>
+                </ul>
+            </div>
+            <img src="render_img/06_select-repository.png" alt="リポジトリ選択" class="screenshot">
+
+            <h3 class="subsection-title">2-6 接続確認</h3>
+            <div class="step-instruction">
+                <span class="step-num">6</span>
+                <span>Installボタンをクリックし、New Web Service画面にリポジトリが表示されたらOKです。</span>
+            </div>
+            <img src="render_img/07_connect-repository.png" alt="リポジトリ接続完了" class="screenshot">
+
+            <div class="info-box">
+                <div class="info-box-title"><span class="material-icons">info</span> この段階では…</div>
+                <p>まだデプロイ（公開）はされていません。Render側に、デプロイ対象となるリポジトリを登録しただけの状態です。</p>
+            </div>
+        </section>
+
+        <!-- ============ Step 3 ============ -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Step 3</span>
+                <h2 class="section-title">RenderでJavaアプリケーションをデプロイ</h2>
+            </div>
+
+            <h3 class="subsection-title">3-1 リポジトリを選択</h3>
+            <div class="step-instruction">
+                <span class="step-num">1</span>
+                <span>インストール済みリポジトリの中から、デプロイするリポジトリをクリックします。</span>
+            </div>
+
+            <h3 class="subsection-title">3-2 サービス設定</h3>
+            <div class="step-instruction">
+                <span class="step-num">2</span>
+                <span>設定画面で以下の項目を登録します。</span>
+            </div>
+
+            <table class="settings-table">
+                <thead>
+                    <tr><th>項目</th><th>設定値</th><th>備考</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Name</strong></td><td>任意</td><td>デフォルトはリポジトリ名</td></tr>
+                    <tr><td><strong>Language</strong></td><td>Docker</td><td>JavaではなくDockerを選択</td></tr>
+                    <tr><td><strong>Branch</strong></td><td>main</td><td>デフォルトブランチ</td></tr>
+                    <tr><td><strong>Region</strong></td><td>Oregon (US West)</td><td></td></tr>
+                    <tr><td><strong>Root Directory</strong></td><td>（空欄）</td><td>入力しない</td></tr>
+                    <tr><td><strong>Instance Type</strong></td><td><strong>Free</strong></td><td>デフォルトはStarterなので注意</td></tr>
+                    <tr><td><strong>Environment Variables</strong></td><td>（空欄）</td><td>必要に応じてAIに確認</td></tr>
+                </tbody>
+            </table>
+
+            <img src="render_img/08_service-settings.png" alt="サービス設定" class="screenshot">
+            <img src="render_img/09_service-instanceType.png" alt="Instance Type 設定" class="screenshot">
+
+            <div class="info-box" style="border-left-color: #f59e0b;">
+                <div class="info-box-title"><span class="material-icons">warning</span> Instance Type に注意</div>
+                <p>デフォルトでは <strong>Starter（有料）</strong> が選択されています。学習用途では必ず <strong>Free</strong> に変更してください。</p>
+            </div>
+
+            <h3 class="subsection-title">3-3 デプロイ実行</h3>
+            <div class="step-instruction">
+                <span class="step-num">3</span>
+                <span>下部の「Deploy Web Service」をクリックします。</span>
+            </div>
+
+            <h3 class="subsection-title">3-4 デプロイ結果の確認</h3>
+            <div class="step-instruction">
+                <span class="step-num">4</span>
+                <span>サービス画面が表示され、赤い×が出ていなければデプロイ成功です。</span>
+            </div>
+            <img src="render_img/10_deploy_render.png" alt="デプロイ成功画面" class="screenshot">
+
+            <div class="info-box" style="border-left-color: #ef4444;">
+                <div class="info-box-title"><span class="material-icons">error</span> デプロイが失敗した場合</div>
+                <p>画面中央付近に赤い×アイコンが表示されます。下部のログをメモ帳等に保存し、AIにファイル添付して修正依頼 → 修正後コミット・プッシュで自動再デプロイされます。</p>
+            </div>
+        </section>
+
+        <!-- ============ Step 4 ============ -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Step 4</span>
+                <h2 class="section-title">URLにアクセスし、表示・機能のテスト</h2>
+            </div>
+
+            <h3 class="subsection-title">4-1 公開URLにアクセス</h3>
+            <div class="step-instruction">
+                <span class="step-num">1</span>
+                <span>サービス画面上部に表示されているURLをコピーし、ブラウザでアクセスします。</span>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title"><span class="material-icons">link</span> URLについて</div>
+                <ul style="margin:0;padding-left:20px;">
+                    <li>リダイレクト設定済みの場合 → 自動的に正しいページへ遷移します</li>
+                    <li>リダイレクト未実装の場合 → URLの末尾に適切なパスを追加してください</li>
+                </ul>
+                <p style="margin-top:8px;">例）<code style="background:#e2e8f0;padding:2px 8px;border-radius:4px;">https://todos-o31a.onrender.com</code> → <code style="background:#e2e8f0;padding:2px 8px;border-radius:4px;">https://todos-o31a.onrender.com/todo</code></p>
+            </div>
+
+            <img src="render_img/11_prodution-page.png" alt="本番ページ表示" class="screenshot">
+
+            <h3 class="subsection-title">4-2 機能テスト</h3>
+            <div class="step-instruction">
+                <span class="step-num">2</span>
+                <span>各下層ページ、CRUD操作、バリデーション等が正しく動作するかチェックします。</span>
+            </div>
+
+            <h3 class="subsection-title">4-3 デプロイ完了</h3>
+            <div class="step-instruction">
+                <span class="step-num">3</span>
+                <span>問題がなければデプロイは完了です。以降、機能を追加してプッシュするたびに自動で再デプロイされます。</span>
+            </div>
+        </section>
+
+        <!-- ============ 注意事項 ============ -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">Notice</span>
+                <h2 class="section-title">Render Freeプランの注意事項</h2>
+            </div>
+
+            <div class="notice-grid">
+                <div class="notice-card">
+                    <h4><span class="material-icons" style="color:#f59e0b;">timer</span> スリープ機能</h4>
+                    <p>15分間アクセスがないとServiceが停止します。次回アクセス時にService起動で<strong>1分程度</strong>かかります。</p>
+                </div>
+                <div class="notice-card">
+                    <h4><span class="material-icons" style="color:#ef4444;">storage</span> DBリセット</h4>
+                    <p>FreeプランではDBが停止するたびに<strong>リセット</strong>されます。永続的にデータを保存するには有料プランが必要です。</p>
+                </div>
+                <div class="notice-card">
+                    <h4><span class="material-icons" style="color:#3b82f6;">schedule</span> 月間稼働時間</h4>
+                    <p>月間Service起動時間が<strong>750時間</strong>です。1Serviceなら問題ありませんが、複数Serviceでは不足する場合があります。</p>
+                </div>
+                <div class="notice-card">
+                    <h4><span class="material-icons" style="color:#8b5cf6;">memory</span> メモリ制限</h4>
+                    <p>Freeプランではメモリが小さいため、重いサービスでは動作が鈍くなる可能性があります。</p>
+                </div>
+            </div>
+
+            <div class="info-box" style="border-left-color: #ef4444;">
+                <div class="info-box-title"><span class="material-icons">warning</span> Node.js 併用時の注意</div>
+                <p>Node.js等を導入している場合は動作の保証ができません。AIに確認しながら適切なデプロイ環境に整えましょう。</p>
+            </div>
+        </section>
+
+        <!-- ページナビ -->
+        <div class="page-nav">
+            <a href="../../backend/spring/index.html" class="page-nav-link prev">
+                <span class="material-icons">arrow_back</span>
+                <div>
+                    <span class="page-nav-label">関連教材</span>
+                    <span class="page-nav-title">Spring基礎</span>
+                </div>
+            </a>
+            <a href="../../devtools/docker/index.html" class="page-nav-link next">
+                <div>
+                    <span class="page-nav-label">関連教材</span>
+                    <span class="page-nav-title">Docker構築入門</span>
+                </div>
+                <span class="material-icons">arrow_forward</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Apple Footer -->
+    <div class="apple-footer-top">
+        <div class="apple-footer-top-inner">
+            本チュートリアルは訓練校の教材として作成されています。各コースは実践的なスキル習得を目的とし、現場で活用できる知識を体系的に学べるよう設計されています。
+        </div>
+    </div>
+    <footer class="apple-footer-main">
+        <div class="apple-footer-main-inner">
+            <div class="apple-footer-col">
+                <h4>フロントエンド</h4>
+                <a href="../../frontend/html/index.html">HTML/CSS入門</a>
+                <a href="../../frontend/javascript/index.html">JavaScript入門</a>
+            </div>
+            <div class="apple-footer-col">
+                <h4>バックエンド</h4>
+                <a href="../../backend/java/index.html">Java基礎</a>
+                <a href="../../backend/spring/index.html">Spring基礎</a>
+            </div>
+            <div class="apple-footer-col">
+                <h4>ソフトウェア設計</h4>
+                <a href="../../software-design/design-pattern/index.html">デザインパターン入門</a>
+                <a href="../../software-design/architecture/index.html">アーキテクチャ基礎</a>
+                <a href="../../software-design/doc-driven/index.html">設計書駆動プロンプト開発</a>
+            </div>
+            <div class="apple-footer-col">
+                <h4>AI・自動化</h4>
+                <a href="../../ai/promptpg-step/index.html">プロンプトPG</a>
+                <a href="../../ai/chatgpt/index.html">ChatGPT活用</a>
+            </div>
+        </div>
+    </footer>
+    <div class="apple-footer-bottom">
+        <div class="apple-footer-bottom-inner">
+            <span class="apple-footer-copy">Copyright &copy; 2026 Tutorial Dashboard. All rights reserved.</span>
+            <div class="apple-footer-legal">
+                <a href="#">プライバシーポリシー</a>
+                <a href="#">利用規約</a>
+                <a href="#">サイトマップ</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
