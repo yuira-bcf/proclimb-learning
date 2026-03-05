@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第12章 テストを書く - Spring Boot ハンズオン</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #F1FFFE;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-spring-handson.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+      <div class="chapter-number">12</div>
+      <h1 class="chapter-title">テストを書く</h1>
+      <p class="chapter-subtitle">JUnit5でRepository・Service・Controllerのテストを書き、品質を担保する</p>
+    </header>
+
+    <nav class="toc">
+      <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">12-1</span><span>なぜテストを書くのか</span></li>
+        <li class="toc-item"><span class="toc-number">12-2</span><span>Repositoryテストを書く</span></li>
+        <li class="toc-item"><span class="toc-number">12-3</span><span>Serviceテストを書く</span></li>
+        <li class="toc-item"><span class="toc-number">12-4</span><span>Controllerテストを書く</span></li>
+        <li class="toc-item"><span class="toc-number">12-5</span><span>テストを実行する</span></li>
+        <li class="toc-item"><span class="toc-number">12-6</span><span>まとめ・コース総括</span></li>
+      </ul>
+    </nav>
+
+    <!-- セクション 12-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-1</span>
+        <h2 class="section-title">なぜテストを書くのか</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>ここまでTodoアプリの機能をすべてブラウザで手動確認してきました。しかし、機能が増えるにつれて「変更した箇所が別の機能を壊していないか」を毎回手動で確認するのは現実的ではありません。自動テストを書くことで、コードを変更するたびにワンコマンドで全機能を検証できるようになります。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-1-1 手動テストの限界</h3>
+        <div class="content-block">
+          <!-- テスト比較図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">compare</span>
+              手動テスト vs 自動テスト
+            </h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div style="background: #fef2f2; border-radius: 10px; padding: 16px; border-top: 3px solid #ef4444;">
+                <div style="font-weight: 700; color: #dc2626; font-size: 0.85rem; margin-bottom: 12px;">手動テスト</div>
+                <div style="font-size: 0.78rem; color: #334155; line-height: 2;">
+                  <div>&#9744; ブラウザを開いてURLを入力</div>
+                  <div>&#9744; フォームに値を入力して送信</div>
+                  <div>&#9744; 画面を目視で確認</div>
+                  <div>&#9744; 全ページ分を繰り返す...</div>
+                  <div style="color: #dc2626; margin-top: 8px; font-weight: 600;">所要時間: 10〜30分</div>
+                </div>
+              </div>
+              <div style="background: #dcfce7; border-radius: 10px; padding: 16px; border-top: 3px solid #22c55e;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.85rem; margin-bottom: 12px;">自動テスト</div>
+                <div style="font-size: 0.78rem; color: #334155; line-height: 2;">
+                  <div>&#9745; コマンド1つで全テスト実行</div>
+                  <div>&#9745; 結果は合格/不合格で自動判定</div>
+                  <div>&#9745; 変更のたびに何度でも実行可能</div>
+                  <div>&#9745; CI/CDパイプラインに組み込める</div>
+                  <div style="color: #16a34a; margin-top: 8px; font-weight: 600;">所要時間: 数秒〜数十秒</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-1-2 テストの種類とこの章で書くテスト</h3>
+        <div class="content-block">
+          <!-- テストピラミッド図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">signal_cellular_alt</span>
+              テストピラミッド -- この章で書くテスト
+            </h4>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+              <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 10px 20px; width: 180px; text-align: center;">
+                <div style="font-weight: 700; color: #92400e; font-size: 0.8rem;">E2Eテスト</div>
+                <div style="font-size: 0.7rem; color: #b45309;">ブラウザ全体の動作確認</div>
+              </div>
+              <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; padding: 12px 30px; width: 260px; text-align: center;">
+                <div style="font-weight: 700; color: #1e40af; font-size: 0.85rem;">Controllerテスト &#9745;</div>
+                <div style="font-size: 0.72rem; color: #2563eb;">MockMvcでHTTPリクエストを模擬</div>
+              </div>
+              <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 8px; padding: 12px 40px; width: 340px; text-align: center;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">Service / Repositoryテスト &#9745;</div>
+                <div style="font-size: 0.72rem; color: #15803d;">個々のクラスの動作を検証</div>
+              </div>
+            </div>
+            <p style="text-align: center; color: #64748b; font-size: 0.78rem; margin-top: 16px;">下に行くほど数が多く、実行が速い。この章では下の2層を書きます。</p>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> テスト環境について</div>
+            <div class="info-box-content">
+              <p>Spring Bootプロジェクトには、JUnit5とMockitoがデフォルトで含まれています（<code>spring-boot-starter-test</code>）。追加の依存関係は不要で、すぐにテストを書き始められます。テストコードは<code>src/test/java/</code>配下に配置します。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 12-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-2</span>
+        <h2 class="section-title">Repositoryテストを書く</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>最初に、データベースとのやり取りが正しく動作するかを検証するRepositoryテストを書きます。<code>@DataJpaTest</code>を使うと、JPAに関連するコンポーネントだけが起動するため、高速にテストできます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-2-1 テストクラスを作成する</h3>
+        <div class="content-block">
+          <p><code>src/test/java/com/example/todo/</code>ディレクトリに<code>TodoRepositoryTest.java</code>を新規作成してください。以下のコードを手で入力しましょう。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/test/java/com/example/todo/TodoRepositoryTest.java</span>
+            </div>
+            <pre class="code-content"><code>package com.example.todo;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DataJpaTest
+class TodoRepositoryTest {
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Autowired
+    private TodoRepository todoRepository;
+
+    @Test
+    @DisplayName("ステータスで絞り込めること")
+    void findByStatus_returnsMatchingTodos() {
+        // 準備: テストデータを登録
+        Todo todo1 = new Todo();
+        todo1.setTitle("テスト1");
+        todo1.setStatus(TodoStatus.NOT_STARTED);
+        todo1.setDueDate(LocalDate.of(2026, 4, 1));
+        entityManager.persist(todo1);
+
+        Todo todo2 = new Todo();
+        todo2.setTitle("テスト2");
+        todo2.setStatus(TodoStatus.COMPLETED);
+        todo2.setDueDate(LocalDate.of(2026, 4, 1));
+        entityManager.persist(todo2);
+
+        Todo todo3 = new Todo();
+        todo3.setTitle("テスト3");
+        todo3.setStatus(TodoStatus.NOT_STARTED);
+        todo3.setDueDate(LocalDate.of(2026, 4, 1));
+        entityManager.persist(todo3);
+
+        entityManager.flush();
+
+        // 実行: NOT_STARTEDで検索
+        List&lt;Todo&gt; result = todoRepository.findByStatus(TodoStatus.NOT_STARTED);
+
+        // 検証: 2件返ること
+        assertThat(result).hasSize(2);
+        assertThat(result).allMatch(t -> t.getStatus() == TodoStatus.NOT_STARTED);
+    }
+
+    @Test
+    @DisplayName("タイトルの部分一致検索ができること")
+    void findByTitleContaining_returnsMatchingTodos() {
+        Todo todo1 = new Todo();
+        todo1.setTitle("Spring Boot勉強");
+        todo1.setStatus(TodoStatus.NOT_STARTED);
+        todo1.setDueDate(LocalDate.of(2026, 4, 1));
+        entityManager.persist(todo1);
+
+        Todo todo2 = new Todo();
+        todo2.setTitle("買い物リスト");
+        todo2.setStatus(TodoStatus.NOT_STARTED);
+        todo2.setDueDate(LocalDate.of(2026, 4, 1));
+        entityManager.persist(todo2);
+
+        entityManager.flush();
+
+        List&lt;Todo&gt; result = todoRepository.findByTitleContaining("Spring");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getTitle()).contains("Spring");
+    }
+}</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> コードの解説</div>
+            <div class="info-box-content">
+              <ul>
+                <li><strong>@DataJpaTest</strong> -- JPA関連のBeanだけを起動する軽量テスト。インメモリH2データベースを使うため高速です。</li>
+                <li><strong>TestEntityManager</strong> -- テスト用のEntityManager。<code>persist()</code>でテストデータを直接DBに登録します。</li>
+                <li><strong>@DisplayName</strong> -- テスト結果レポートに表示される日本語名を付けます。</li>
+                <li><strong>assertThat()</strong> -- AssertJライブラリの検証メソッド。<code>hasSize(2)</code>で件数、<code>allMatch()</code>で全件の条件を検証します。</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- テストの流れ図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">timeline</span>
+              テストの3ステップ: 準備 → 実行 → 検証
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <div style="background: #dbeafe; border-radius: 10px; padding: 14px; text-align: center;">
+                <div style="font-weight: 700; color: #1e40af; font-size: 0.85rem; margin-bottom: 6px;">1. 準備（Arrange）</div>
+                <div style="font-size: 0.75rem; color: #334155;">テストデータをDBに登録する</div>
+              </div>
+              <div style="background: #fef3c7; border-radius: 10px; padding: 14px; text-align: center;">
+                <div style="font-weight: 700; color: #92400e; font-size: 0.85rem; margin-bottom: 6px;">2. 実行（Act）</div>
+                <div style="font-size: 0.75rem; color: #334155;">テスト対象のメソッドを呼ぶ</div>
+              </div>
+              <div style="background: #dcfce7; border-radius: 10px; padding: 14px; text-align: center;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.85rem; margin-bottom: 6px;">3. 検証（Assert）</div>
+                <div style="font-size: 0.75rem; color: #334155;">結果が期待通りか確認する</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 12-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-3</span>
+        <h2 class="section-title">Serviceテストを書く</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>Service層のテストでは、データベースへの実際のアクセスを避けるために<strong>Mockito</strong>を使います。Repositoryの動作をモック（偽物）に置き換えることで、Serviceのビジネスロジックだけを純粋にテストできます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-3-1 モックとは何か</h3>
+        <div class="content-block">
+          <!-- モック解説図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">science</span>
+              モックを使ったServiceテストの仕組み
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 12px; max-width: 480px; margin: 0 auto;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 14px 20px; flex: 1; text-align: center;">
+                  <div style="font-weight: 700; color: #92400e; font-size: 0.85rem;">TodoService</div>
+                  <div style="font-size: 0.72rem; color: #b45309;">テスト対象（本物）</div>
+                </div>
+                <div style="color: #64748b; font-size: 0.9rem;">&#8594;</div>
+                <div style="background: #f3e8ff; border: 2px dashed #a855f7; border-radius: 10px; padding: 14px 20px; flex: 1; text-align: center;">
+                  <div style="font-weight: 700; color: #7c3aed; font-size: 0.85rem;">TodoRepository</div>
+                  <div style="font-size: 0.72rem; color: #7c3aed;">モック（偽物）</div>
+                </div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; text-align: center; font-size: 0.78rem; color: #00838F;">
+                モックは「findById(1L)を呼ばれたらこのTodoを返す」と<br>事前にプログラムされた偽オブジェクト
+              </div>
+            </div>
+          </div>
+
+          <p>モック（Mock）は「呼ばれたら決まった値を返す偽物のオブジェクト」です。本物のRepositoryはDBアクセスが必要ですが、モックを使えばDB不要でServiceだけをテストできます。</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-3-2 TodoServiceTestを作成する</h3>
+        <div class="content-block">
+          <p><code>src/test/java/com/example/todo/</code>に<code>TodoServiceTest.java</code>を作成してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/test/java/com/example/todo/TodoServiceTest.java</span>
+            </div>
+            <pre class="code-content"><code>package com.example.todo;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class TodoServiceTest {
+
+    @Mock
+    private TodoRepository todoRepository;
+
+    @InjectMocks
+    private TodoService todoService;
+
+    @Test
+    @DisplayName("IDで1件取得できること")
+    void findById_returnsTodo() {
+        // 準備: モックの振る舞いを定義
+        Todo todo = new Todo();
+        todo.setId(1L);
+        todo.setTitle("テストTodo");
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+
+        // 実行
+        Todo result = todoService.findById(1L);
+
+        // 検証
+        assertThat(result.getTitle()).isEqualTo("テストTodo");
+        verify(todoRepository).findById(1L);
+    }
+
+    @Test
+    @DisplayName("存在しないIDで例外がスローされること")
+    void findById_throwsException_whenNotFound() {
+        // 準備: 空のOptionalを返すモック
+        when(todoRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // 実行 & 検証: 例外がスローされることを確認
+        assertThatThrownBy(() -> todoService.findById(99L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("不正なID");
+    }
+
+    @Test
+    @DisplayName("ステータスが次の状態に切り替わること")
+    void toggleStatus_changesStatus() {
+        // 準備
+        Todo todo = new Todo();
+        todo.setId(1L);
+        todo.setTitle("テスト");
+        todo.setStatus(TodoStatus.NOT_STARTED);
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+
+        // 実行
+        todoService.toggleStatus(1L);
+
+        // 検証: NOT_STARTED → IN_PROGRESS に変わったこと
+        assertThat(todo.getStatus()).isEqualTo(TodoStatus.IN_PROGRESS);
+        verify(todoRepository).save(todo);
+    }
+}</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> アノテーションの解説</div>
+            <div class="info-box-content">
+              <ul>
+                <li><strong>@ExtendWith(MockitoExtension.class)</strong> -- JUnit5でMockitoを使うための設定。@Mockや@InjectMocksが動作するようになります。</li>
+                <li><strong>@Mock</strong> -- モックオブジェクトを自動生成します。TodoRepositoryのメソッドは全てnullや空コレクションを返す状態になります。</li>
+                <li><strong>@InjectMocks</strong> -- テスト対象のクラスを作成し、@Mockオブジェクトを自動注入します。</li>
+                <li><strong>when(...).thenReturn(...)</strong> -- 「このメソッドが呼ばれたら、この値を返せ」というモックの振る舞いを定義します。</li>
+                <li><strong>verify(...)</strong> -- メソッドが実際に呼ばれたことを検証します。save()が呼ばれずにテストが通ってしまう事故を防ぎます。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 12-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-4</span>
+        <h2 class="section-title">Controllerテストを書く</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>Controllerテストでは、実際にHTTPリクエストを送信せずに<strong>MockMvc</strong>を使ってリクエストを模擬します。ControllerがServiceを呼んで正しいレスポンスを返すかを検証します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-4-1 TodoControllerTestを作成する</h3>
+        <div class="content-block">
+          <p><code>src/test/java/com/example/todo/</code>に<code>TodoControllerTest.java</code>を作成し、以下のコードを入力してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/test/java/com/example/todo/TodoControllerTest.java</span>
+            </div>
+            <pre class="code-content"><code>package com.example.todo;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(TodoController.class)
+class TodoControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private TodoService todoService;
+
+    @Test
+    @DisplayName("一覧ページが正常に表示されること")
+    void list_returnsListView() throws Exception {
+        // 準備
+        Todo todo = new Todo();
+        todo.setTitle("テストTodo");
+        todo.setStatus(TodoStatus.NOT_STARTED);
+        when(todoService.findAll(null)).thenReturn(List.of(todo));
+
+        // 実行 & 検証
+        mockMvc.perform(get("/todos"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("layout"))
+                .andExpect(model().attributeExists("todos"));
+    }
+
+    @Test
+    @DisplayName("新規登録ページが表示されること")
+    void create_returnsCreateView() throws Exception {
+        mockMvc.perform(get("/todos/create"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("layout"))
+                .andExpect(model().attributeExists("todo"));
+    }
+
+    @Test
+    @DisplayName("削除後に一覧にリダイレクトされること")
+    void delete_redirectsToList() throws Exception {
+        mockMvc.perform(post("/todos/1/delete"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/todos"));
+    }
+}</code></pre>
+          </div>
+
+          <!-- MockMvc解説図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">api</span>
+              MockMvcの処理フロー
+            </h4>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 0.82rem;">
+              <div style="background: #f3e8ff; border-radius: 8px; padding: 10px 16px; font-weight: 600; color: #7c3aed;">MockMvc</div>
+              <div style="color: #64748b;">&#8594;</div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #334155; background: #f1f5f9; padding: 6px 10px; border-radius: 6px;">GET /todos</div>
+              <div style="color: #64748b;">&#8594;</div>
+              <div style="background: #dbeafe; border-radius: 8px; padding: 10px 16px; font-weight: 600; color: #1e40af;">Controller</div>
+              <div style="color: #64748b;">&#8594;</div>
+              <div style="background: #f3e8ff; border: 2px dashed #a855f7; border-radius: 8px; padding: 10px 16px; font-weight: 600; color: #7c3aed;">Service(Mock)</div>
+            </div>
+            <p style="text-align: center; color: #64748b; font-size: 0.78rem; margin-top: 12px;">実際のHTTP通信もDB接続もなし。Controllerのルーティングと戻り値だけをテスト。</p>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> アノテーションの解説</div>
+            <div class="info-box-content">
+              <ul>
+                <li><strong>@WebMvcTest(TodoController.class)</strong> -- 指定したControllerだけを起動する軽量テスト。ServiceやRepositoryは起動しません。</li>
+                <li><strong>@MockBean</strong> -- Spring のApplicationContextにモックBeanを登録します。Controllerが依存するServiceをモックで置き換えます。</li>
+                <li><strong>mockMvc.perform(get("/todos"))</strong> -- GET /todos リクエストを模擬的に送信します。</li>
+                <li><strong>andExpect(status().isOk())</strong> -- HTTPステータスが200であることを検証します。</li>
+                <li><strong>andExpect(view().name("layout"))</strong> -- 返されたビュー名が"layout"であることを検証します。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 12-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-5</span>
+        <h2 class="section-title">テストを実行する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>テストを書き終わったら、実際に実行して結果を確認しましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-5-1 Gradleでテストを実行する</h3>
+        <div class="content-block">
+          <p>ターミナルでプロジェクトのルートディレクトリに移動し、以下のコマンドを実行してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">ターミナル</span>
+            </div>
+            <pre class="code-content"><code>./gradlew test</code></pre>
+          </div>
+
+          <p>全テストが合格すると、以下のような出力が表示されます。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">テスト実行結果（成功時）</span>
+            </div>
+            <pre class="code-content"><code>BUILD SUCCESSFUL in 8s
+4 actionable tasks: 4 executed
+
+> Task :test
+TodoRepositoryTest > ステータスで絞り込めること PASSED
+TodoRepositoryTest > タイトルの部分一致検索ができること PASSED
+TodoServiceTest > IDで1件取得できること PASSED
+TodoServiceTest > 存在しないIDで例外がスローされること PASSED
+TodoServiceTest > ステータスが次の状態に切り替わること PASSED
+TodoControllerTest > 一覧ページが正常に表示されること PASSED
+TodoControllerTest > 新規登録ページが表示されること PASSED
+TodoControllerTest > 削除後に一覧にリダイレクトされること PASSED</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-5-2 テストレポートを確認する</h3>
+        <div class="content-block">
+          <p>Gradleはテスト結果をHTMLレポートとして出力します。以下のパスにあるファイルをブラウザで開いてみましょう。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">テストレポートのパス</span>
+            </div>
+            <pre class="code-content"><code>build/reports/tests/test/index.html</code></pre>
+          </div>
+
+          <!-- レポートイメージ -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">assessment</span>
+              テストレポートのイメージ
+            </h4>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; font-size: 0.85rem;">
+              <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: #334155;">Test Summary</div>
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
+                <div style="text-align: center;">
+                  <div style="font-size: 1.5rem; font-weight: 700; color: #334155;">8</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">tests</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 1.5rem; font-weight: 700; color: #22c55e;">8</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">successful</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 1.5rem; font-weight: 700; color: #64748b;">0</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">failures</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 1.5rem; font-weight: 700; color: #334155;">100%</div>
+                  <div style="font-size: 0.75rem; color: #64748b;">successful rate</div>
+                </div>
+              </div>
+              <div style="background: #dcfce7; height: 8px; border-radius: 4px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-5-3 Red → Green → Refactor</h3>
+        <div class="content-block">
+          <p>テスト駆動開発（TDD）では「Red → Green → Refactor」のサイクルを回します。</p>
+
+          <!-- TDDサイクル図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">autorenew</span>
+              TDDサイクル
+            </h4>
+            <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+              <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 50%; width: 120px; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                <div style="font-weight: 700; color: #dc2626; font-size: 0.9rem;">Red</div>
+                <div style="font-size: 0.7rem; color: #dc2626; margin-top: 4px;">失敗するテスト<br>を書く</div>
+              </div>
+              <div style="align-self: center; color: #0097A7; font-size: 1.5rem;">&#8594;</div>
+              <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 50%; width: 120px; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                <div style="font-weight: 700; color: #16a34a; font-size: 0.9rem;">Green</div>
+                <div style="font-size: 0.7rem; color: #16a34a; margin-top: 4px;">テストが通る<br>最小のコードを書く</div>
+              </div>
+              <div style="align-self: center; color: #0097A7; font-size: 1.5rem;">&#8594;</div>
+              <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 50%; width: 120px; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                <div style="font-weight: 700; color: #1e40af; font-size: 0.9rem;">Refactor</div>
+                <div style="font-size: 0.7rem; color: #1e40af; margin-top: 4px;">テストを維持<br>しつつ改善する</div>
+              </div>
+            </div>
+            <p style="text-align: center; color: #64748b; font-size: 0.78rem; margin-top: 16px;">このサイクルを繰り返すことで、テストに守られた安全なコードベースが育っていきます</p>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> テストが失敗したとき</div>
+            <div class="info-box-content">
+              <p>テストが失敗した場合は、エラーメッセージを読んで原因を特定します。よくある失敗原因は、import文の不足、メソッド名のタイプミス、モックの設定漏れなどです。テストコード自体にバグがある場合もあるので、テストコードもプロダクションコードと同様に注意深く書きましょう。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 12-6 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 12-6</span>
+        <h2 class="section-title">まとめ・コース総括</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>おめでとうございます。全12章を通して、Spring Bootで本格的なWebアプリケーションをゼロから構築しました。最後に、このコースで作り上げたTodoアプリの全体像を振り返りましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-6-1 Todoアプリの全体像</h3>
+        <div class="content-block">
+          <!-- 全体像の図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">architecture</span>
+              12章で完成したTodoアプリのアーキテクチャ
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 8px; max-width: 560px; margin: 0 auto;">
+              <!-- ブラウザ -->
+              <div style="background: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 10px; padding: 12px; text-align: center;">
+                <div style="font-weight: 700; color: #475569; font-size: 0.85rem;">ブラウザ（ユーザー）</div>
+                <div style="font-size: 0.72rem; color: #64748b;">Bootstrap 5 でデザイン済み</div>
+              </div>
+              <div style="text-align: center; color: #64748b;">&#8595; HTTP &#8595;</div>
+              <!-- Controller -->
+              <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 10px; padding: 12px; display: flex; justify-content: space-around;">
+                <div style="text-align: center;">
+                  <div style="font-weight: 700; color: #1e40af; font-size: 0.85rem;">TodoController</div>
+                  <div style="font-size: 0.7rem; color: #3b82f6;">@Controller</div>
+                </div>
+                <div style="text-align: center; border-left: 1px solid #93c5fd; padding-left: 16px;">
+                  <div style="font-size: 0.72rem; color: #1e40af;">一覧 / 登録 / 編集</div>
+                  <div style="font-size: 0.72rem; color: #1e40af;">削除 / ステータス切替</div>
+                </div>
+              </div>
+              <div style="text-align: center; color: #64748b;">&#8595; メソッド呼び出し &#8595;</div>
+              <!-- Service -->
+              <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 12px; display: flex; justify-content: space-around;">
+                <div style="text-align: center;">
+                  <div style="font-weight: 700; color: #92400e; font-size: 0.85rem;">TodoService</div>
+                  <div style="font-size: 0.7rem; color: #b45309;">@Service</div>
+                </div>
+                <div style="text-align: center; border-left: 1px solid #fcd34d; padding-left: 16px;">
+                  <div style="font-size: 0.72rem; color: #92400e;">CRUD / フィルタ</div>
+                  <div style="font-size: 0.72rem; color: #92400e;">ステータス切替ロジック</div>
+                </div>
+              </div>
+              <div style="text-align: center; color: #64748b;">&#8595; JPA &#8595;</div>
+              <!-- Repository + Entity -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 10px; padding: 12px; text-align: center;">
+                  <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">TodoRepository</div>
+                  <div style="font-size: 0.7rem; color: #15803d;">JpaRepository</div>
+                </div>
+                <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 10px; padding: 12px; text-align: center;">
+                  <div style="font-weight: 700; color: #7c3aed; font-size: 0.85rem;">Todo + TodoStatus</div>
+                  <div style="font-size: 0.7rem; color: #9333ea;">@Entity + Enum</div>
+                </div>
+              </div>
+              <div style="text-align: center; color: #64748b;">&#8595; SQL &#8595;</div>
+              <!-- DB -->
+              <div style="background: #1e293b; border-radius: 10px; padding: 12px; text-align: center; color: white;">
+                <div style="font-weight: 700; font-size: 0.85rem;">H2 Database</div>
+                <div style="font-size: 0.7rem; color: #94a3b8;">インメモリDB（開発用）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-6-2 各章で学んだこと</h3>
+        <div class="content-block">
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; font-size: 0.78rem;">
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">1</div>
+                <div><strong>プロジェクト作成</strong><br><span style="color: #64748b;">Spring Initializr, Gradle, 初回起動</span></div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">2</div>
+                <div><strong>Thymeleaf</strong><br><span style="color: #64748b;">テンプレートエンジン, th:text, th:each</span></div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">3</div>
+                <div><strong>Entity</strong><br><span style="color: #64748b;">@Entity, @Id, H2 Database</span></div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">4</div>
+                <div><strong>Repository</strong><br><span style="color: #64748b;">JpaRepository, findAll, findById</span></div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">5</div>
+                <div><strong>フォーム登録</strong><br><span style="color: #64748b;">@PostMapping, th:object, th:field</span></div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">6</div>
+                <div><strong>更新・削除</strong><br><span style="color: #64748b;">@PathVariable, redirect, CRUD完成</span></div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">7</div>
+                <div><strong>バリデーション</strong><br><span style="color: #64748b;">@Valid, @NotBlank, th:errors</span></div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">8</div>
+                <div><strong>検索・ソート</strong><br><span style="color: #64748b;">@Query, @RequestParam, ORDER BY</span></div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">9</div>
+                <div><strong>ステータス管理</strong><br><span style="color: #64748b;">Enum, @Enumerated, フィルタ</span></div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">10</div>
+                <div><strong>デザイン</strong><br><span style="color: #64748b;">Bootstrap 5, th:fragment, layout</span></div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">11</div>
+                <div><strong>Service層</strong><br><span style="color: #64748b;">@Service, DI, 3層アーキテクチャ</span></div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
+                <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">12</div>
+                <div><strong>テスト</strong><br><span style="color: #64748b;">JUnit5, Mockito, MockMvc</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">12-6-3 次のステップへ</h3>
+        <div class="content-block">
+          <p>このコースで学んだ基礎は、より高度なSpring Boot開発への足がかりになります。次に挑戦できるテーマをいくつか紹介します。</p>
+
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                <span class="material-icons" style="color: #0097A7; font-size: 1.5rem;">security</span>
+                <div style="font-weight: 700; color: #334155; font-size: 0.9rem; margin-top: 8px;">Spring Security</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">ログイン機能、認証・認可の仕組みを導入する</div>
+              </div>
+              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                <span class="material-icons" style="color: #0097A7; font-size: 1.5rem;">api</span>
+                <div style="font-weight: 700; color: #334155; font-size: 0.9rem; margin-top: 8px;">REST API化</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">@RestControllerでJSON APIを提供し、フロントエンドと分離する</div>
+              </div>
+              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                <span class="material-icons" style="color: #0097A7; font-size: 1.5rem;">cloud_upload</span>
+                <div style="font-weight: 700; color: #334155; font-size: 0.9rem; margin-top: 8px;">デプロイ</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">PostgreSQLに切り替えてHerokuやRenderにデプロイする</div>
+              </div>
+              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                <span class="material-icons" style="color: #0097A7; font-size: 1.5rem;">hub</span>
+                <div style="font-weight: 700; color: #334155; font-size: 0.9rem; margin-top: 8px;">Docker</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">アプリをDockerコンテナ化し、環境に依存しない実行を実現する</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">emoji_events</span> お疲れ様でした！</div>
+            <div class="info-box-content">
+              <p>12章にわたるハンズオンを完走したあなたは、Spring Bootの基本的な開発フローを一通り経験しました。プロジェクトの作成からテストの実装まで、実際の開発現場で使われる技術をひととおり手を動かして学んでいます。このTodoアプリをベースに、自分だけの機能を追加したり、新しいプロジェクトに挑戦してみてください。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習問題 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Exercise</span>
+        <h2 class="section-title">12章 練習問題</h2>
+      </div>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <div class="exercise-number">Q1</div>
+          <div class="exercise-content">
+            <p>JUnit5でMockitoを使ったServiceテストにおいて、<code>@Mock</code>と<code>@InjectMocks</code>の組み合わせについて正しい記述はどれですか。</p>
+            <ol type="A">
+              <li>@Mockはテスト対象のクラスに付け、@InjectMocksは依存先に付ける</li>
+              <li>@Mockは依存先（モック化する対象）に付け、@InjectMocksはテスト対象のクラスに付ける</li>
+              <li>@Mockと@InjectMocksは同じクラスに同時に付けることができる</li>
+              <li>@InjectMocksを使う場合、@Autowiredも併記する必要がある</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q2</div>
+          <div class="exercise-content">
+            <p>MockMvcを使ったControllerテストで、<code>mockMvc.perform(get("/todos")).andExpect(status().isOk())</code> が検証していることはどれですか。</p>
+            <ol type="A">
+              <li>ブラウザが正常にページを表示できること</li>
+              <li>GET /todos に対するHTTPレスポンスのステータスコードが200であること</li>
+              <li>データベースにTodoが正常に保存されること</li>
+              <li>Thymeleafテンプレートが正しくレンダリングされること</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q3</div>
+          <div class="exercise-content">
+            <p><code>@DataJpaTest</code>アノテーションについて正しい記述はどれですか。</p>
+            <ol type="A">
+              <li>アプリケーション全体を起動してテストを実行する</li>
+              <li>JPA関連のコンポーネントのみを起動し、インメモリDBを使ってRepositoryをテストする</li>
+              <li>Controllerのエンドポイントをテストするためのアノテーションである</li>
+              <li>テスト実行時に本番データベースに接続してデータを検証する</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解答 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Answer</span>
+        <h2 class="section-title">12章 解説・解答</h2>
+      </div>
+      <div class="answer-list">
+        <div class="answer-item">
+          <div class="answer-header">Q1の解答: B</div>
+          <div class="answer-content">
+            <p><code>@Mock</code>はモック化（偽物化）する依存先のクラスに付けます。<code>@InjectMocks</code>はテスト対象のクラスに付け、そのクラスのコンストラクタに@Mockオブジェクトが自動注入されます。例えば、TodoServiceをテストする場合、<code>@Mock TodoRepository</code>と<code>@InjectMocks TodoService</code>の組み合わせで、モックのRepositoryが注入されたServiceが作成されます。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q2の解答: B</div>
+          <div class="answer-content">
+            <p><code>status().isOk()</code>は、HTTPレスポンスのステータスコードが200（OK）であることを検証します。MockMvcは実際のHTTPサーバーを起動せず、Spring MVCのDispatcherServletを通じてリクエストを処理します。ブラウザの表示やDBへの保存は検証対象外です。テンプレートのレンダリングは別途<code>view().name()</code>で検証します。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q3の解答: B</div>
+          <div class="answer-content">
+            <p><code>@DataJpaTest</code>はJPA関連のコンポーネント（Entity、Repository、TestEntityManager等）だけを起動する軽量なテスト環境を提供します。デフォルトでインメモリのH2データベースを使用するため、本番DBに影響を与えません。ControllerやServiceは起動されないため、Repositoryの動作検証に特化しています。アプリケーション全体を起動するテストには<code>@SpringBootTest</code>を使います。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="page-nav">
+    <a href="11sh-service-layer.html" class="page-nav-btn prev">
+      <span>&#8592;</span>
+      <div>
+        <div class="page-nav-label">前の章</div>
+        <div class="page-nav-title">第11章</div>
+      </div>
+    </a>
+    <a href="index.html" class="page-nav-btn next">
+      <div>
+        <div class="page-nav-label">コース一覧に戻る</div>
+        <div class="page-nav-title">Spring Boot ハンズオン</div>
+      </div>
+      <span>&#8594;</span>
+    </a>
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第9章 ステータス管理と完了フィルタ - Spring Boot ハンズオン</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #F1FFFE;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-spring-handson.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+      <div class="chapter-number">9</div>
+      <h1 class="chapter-title">ステータス管理と完了フィルタ</h1>
+      <p class="chapter-subtitle">未完了/完了の切り替えとフィルタ機能を追加する</p>
+    </header>
+
+    <nav class="toc">
+      <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">9-1</span><span>ステータス管理の設計</span></li>
+        <li class="toc-item"><span class="toc-number">9-2</span><span>Enumを作成しEntityに追加する</span></li>
+        <li class="toc-item"><span class="toc-number">9-3</span><span>ステータス切り替え機能を実装する</span></li>
+        <li class="toc-item"><span class="toc-number">9-4</span><span>フィルタ機能を実装する</span></li>
+        <li class="toc-item"><span class="toc-number">9-5</span><span>data.sqlを更新して動作確認する</span></li>
+        <li class="toc-item"><span class="toc-number">9-6</span><span>まとめ</span></li>
+      </ul>
+    </nav>
+
+    <!-- セクション 9-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-1</span>
+        <h2 class="section-title">ステータス管理の設計</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>これまでのTodoアプリには「完了したかどうか」を管理する仕組みがありませんでした。この章では、Todoにステータス（未着手・進行中・完了）を持たせ、一覧画面からワンクリックで切り替えたり、ステータスでフィルタリングしたりできるようにします。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-1-1 なぜステータスが必要か</h3>
+        <div class="content-block">
+          <p>現実のタスク管理では、タスクには複数の状態があります。単純な「完了/未完了」ではなく、「まだ手をつけていない」「作業中」「終わった」という3つの状態を管理することで、進捗を正確に把握できるようになります。</p>
+
+          <!-- ステータス遷移図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">swap_horiz</span>
+              ステータス遷移図
+            </h4>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap;">
+              <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 16px 24px; text-align: center; min-width: 120px;">
+                <div style="font-size: 1.5rem;">&#128221;</div>
+                <div style="font-weight: 700; color: #92400e; font-size: 0.9rem;">NOT_STARTED</div>
+                <div style="font-size: 0.75rem; color: #b45309;">未着手</div>
+              </div>
+              <div style="color: #0097A7; font-size: 1.5rem; font-weight: 700;">&#8594;</div>
+              <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 16px 24px; text-align: center; min-width: 120px;">
+                <div style="font-size: 1.5rem;">&#9881;</div>
+                <div style="font-weight: 700; color: #1e40af; font-size: 0.9rem;">IN_PROGRESS</div>
+                <div style="font-size: 0.75rem; color: #2563eb;">進行中</div>
+              </div>
+              <div style="color: #0097A7; font-size: 1.5rem; font-weight: 700;">&#8594;</div>
+              <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 16px 24px; text-align: center; min-width: 120px;">
+                <div style="font-size: 1.5rem;">&#9989;</div>
+                <div style="font-weight: 700; color: #166534; font-size: 0.9rem;">COMPLETED</div>
+                <div style="font-size: 0.75rem; color: #15803d;">完了</div>
+              </div>
+            </div>
+            <p style="text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 16px;">ステータスは順番通りに進むだけでなく、戻すこともできる設計にします</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-1-2 Enumで状態を表現するメリット</h3>
+        <div class="content-block">
+          <p>ステータスをStringで管理すると、タイプミスによるバグが起きやすくなります。JavaのEnumを使えば、取りうる値をコンパイル時に限定できるため安全です。</p>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> Enumとは</div>
+            <div class="info-box-content">
+              <p>Enum（列挙型）は、決められた定数の集合を表すJavaの型です。例えば「曜日」「季節」「ステータス」のように、取りうる値が限定されている場合に使います。switch文やif文で安全に分岐できるのが大きなメリットです。</p>
+            </div>
+          </div>
+
+          <!-- String vs Enum 比較 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; font-size: 1rem; color: #334155;">String vs Enum の比較</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div style="background: #fef2f2; border-radius: 10px; padding: 16px; border-top: 3px solid #ef4444;">
+                <div style="font-weight: 700; color: #dc2626; font-size: 0.85rem; margin-bottom: 8px;">String（危険）</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #1e293b; line-height: 1.8;">
+                  todo.setStatus("<span style="color: #dc2626;">complated</span>");<br>
+                  <span style="color: #94a3b8;">// タイプミスに気づけない！</span>
+                </div>
+              </div>
+              <div style="background: #dcfce7; border-radius: 10px; padding: 16px; border-top: 3px solid #22c55e;">
+                <div style="font-weight: 700; color: #16a34a; font-size: 0.85rem; margin-bottom: 8px;">Enum（安全）</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #1e293b; line-height: 1.8;">
+                  todo.setStatus(TodoStatus.<span style="color: #16a34a;">COMPLETED</span>);<br>
+                  <span style="color: #94a3b8;">// コンパイルエラーで検出！</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 9-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-2</span>
+        <h2 class="section-title">Enumを作成しEntityに追加する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>まずは<code>TodoStatus</code> Enumを新しいファイルとして作成し、次にTodo Entityにstatusフィールドを追加します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-2-1 TodoStatus Enumを作成する</h3>
+        <div class="content-block">
+          <p><code>com.example.todo</code>パッケージに新しいファイル<code>TodoStatus.java</code>を作成してください。以下のコードを手で入力しましょう。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/java/com/example/todo/TodoStatus.java</span>
+            </div>
+            <pre class="code-content"><code>package com.example.todo;
+
+public enum TodoStatus {
+    NOT_STARTED("未着手"),
+    IN_PROGRESS("進行中"),
+    COMPLETED("完了");
+
+    private final String displayName;
+
+    TodoStatus(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+}</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> コードの解説</div>
+            <div class="info-box-content">
+              <ul>
+                <li><strong>NOT_STARTED, IN_PROGRESS, COMPLETED</strong> -- 3つの定数を定義しています。データベースにはこの英語名で保存されます。</li>
+                <li><strong>displayName</strong> -- 画面に表示する日本語名を保持するフィールドです。</li>
+                <li><strong>getDisplayName()</strong> -- Thymeleafテンプレートから <code>th:text="${todo.status.displayName}"</code> のように呼び出して日本語表示できます。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-2-2 Todo Entityにstatusフィールドを追加する</h3>
+        <div class="content-block">
+          <p>既存の<code>Todo.java</code>を開いて、以下のフィールドを追加してください。<code>dueDate</code>フィールドの下あたりに書くのがよいでしょう。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">Todo.java に追加するフィールド</span>
+            </div>
+            <pre class="code-content"><code>    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TodoStatus status = TodoStatus.NOT_STARTED;</code></pre>
+          </div>
+
+          <p>続けて、getterとsetterも追加しましょう。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">Todo.java に追加するgetter/setter</span>
+            </div>
+            <pre class="code-content"><code>    public TodoStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TodoStatus status) {
+        this.status = status;
+    }</code></pre>
+          </div>
+
+          <!-- @Enumerated解説図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">storage</span>
+              @Enumerated の保存方式の違い
+            </h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div style="background: #dcfce7; border-radius: 10px; padding: 16px; border-top: 3px solid #22c55e;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.85rem; margin-bottom: 8px;">EnumType.STRING（推奨）</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #334155; background: #f1f5f9; border-radius: 6px; padding: 8px; line-height: 1.8;">
+                  status = '<span style="color: #16a34a; font-weight: 600;">NOT_STARTED</span>'<br>
+                  status = '<span style="color: #16a34a; font-weight: 600;">COMPLETED</span>'
+                </div>
+                <p style="font-size: 0.78rem; color: #64748b; margin-top: 8px;">人間が読める。Enumの順番を変えても安全。</p>
+              </div>
+              <div style="background: #fef2f2; border-radius: 10px; padding: 16px; border-top: 3px solid #ef4444;">
+                <div style="font-weight: 700; color: #dc2626; font-size: 0.85rem; margin-bottom: 8px;">EnumType.ORDINAL（非推奨）</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #334155; background: #f1f5f9; border-radius: 6px; padding: 8px; line-height: 1.8;">
+                  status = <span style="color: #dc2626; font-weight: 600;">0</span><br>
+                  status = <span style="color: #dc2626; font-weight: 600;">2</span>
+                </div>
+                <p style="font-size: 0.78rem; color: #64748b; margin-top: 8px;">数字だけでは意味不明。順番を変えるとデータが壊れる。</p>
+              </div>
+            </div>
+          </div>
+
+          <p>必要なimport文も忘れずに追加してください。</p>
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">Todo.java に追加するimport</span>
+            </div>
+            <pre class="code-content"><code>import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-2-3 この時点でのファイル構成</h3>
+        <div class="content-block">
+          <!-- プロジェクト構成図 -->
+          <div style="background: #1e293b; border-radius: 12px; padding: 20px 24px; margin: 16px 0; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.9; color: #e2e8f0;">
+            <div>src/main/java/com/example/todo/</div>
+            <div style="padding-left: 20px;">
+              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> Todo.java <span style="color: #fbbf24;">&#8592; statusフィールド追加</span><br>
+              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoRepository.java<br>
+              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoController.java<br>
+              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> <span style="color: #86efac;">TodoStatus.java</span> <span style="color: #86efac;">&#8592; NEW!</span><br>
+              <span style="color: #64748b;">&#9492;&#9472;&#9472;</span> TodoApplication.java
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 9-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-3</span>
+        <h2 class="section-title">ステータス切り替え機能を実装する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>一覧画面でボタンを押すだけでステータスを次の状態に進められる「トグル機能」を実装します。NOT_STARTED → IN_PROGRESS → COMPLETED → NOT_STARTED ... と巡回する仕組みです。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-3-1 TodoStatusにnext()メソッドを追加する</h3>
+        <div class="content-block">
+          <p><code>TodoStatus.java</code>を開いて、次の状態を返すメソッドを追加しましょう。<code>getDisplayName()</code>の下に以下のメソッドを入力してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoStatus.java に追加するメソッド</span>
+            </div>
+            <pre class="code-content"><code>    public TodoStatus next() {
+        TodoStatus[] values = TodoStatus.values();
+        return values[(this.ordinal() + 1) % values.length];
+    }</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> ordinal() と values() とは</div>
+            <div class="info-box-content">
+              <ul>
+                <li><code>ordinal()</code> -- Enumの定義順を0から返します。NOT_STARTED=0, IN_PROGRESS=1, COMPLETED=2</li>
+                <li><code>values()</code> -- 全てのEnum定数を配列で返します</li>
+                <li><code>% values.length</code> -- 剰余演算で配列の末尾から先頭に巡回します（2+1=3, 3%3=0 → NOT_STARTEDに戻る）</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-3-2 Controllerにtoggleエンドポイントを追加する</h3>
+        <div class="content-block">
+          <p><code>TodoController.java</code>に以下のメソッドを追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java に追加</span>
+            </div>
+            <pre class="code-content"><code>    @PostMapping("/{id}/toggle-status")
+    public String toggleStatus(@PathVariable Long id) {
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("不正なID: " + id));
+        todo.setStatus(todo.getStatus().next());
+        todoRepository.save(todo);
+        return "redirect:/todos";
+    }</code></pre>
+          </div>
+
+          <p>このメソッドは、URLパスに含まれるIDでTodoを検索し、現在のステータスの<code>next()</code>を呼んで次の状態に進め、保存してから一覧にリダイレクトします。</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-3-3 一覧テンプレートにステータス切り替えボタンを追加する</h3>
+        <div class="content-block">
+          <p><code>list.html</code>のTodo一覧テーブルの各行に、ステータス表示と切り替えボタンを追加しましょう。既存のテーブルのtd要素の中に以下を追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">list.html - ステータス列の追加</span>
+            </div>
+            <pre class="code-content"><code>&lt;!-- テーブルヘッダーに追加 --&gt;
+&lt;th&gt;ステータス&lt;/th&gt;
+
+&lt;!-- テーブルボディのth:eachの中に追加 --&gt;
+&lt;td&gt;
+    &lt;form th:action="@{'/todos/' + ${todo.id} + '/toggle-status'}" method="post" style="display:inline;"&gt;
+        &lt;button type="submit" th:text="${todo.status.displayName}"
+                th:classappend="${todo.status.name() == 'COMPLETED'} ? 'btn-success' :
+                               (${todo.status.name() == 'IN_PROGRESS'} ? 'btn-primary' : 'btn-secondary')"&gt;
+        &lt;/button&gt;
+    &lt;/form&gt;
+&lt;/td&gt;</code></pre>
+          </div>
+
+          <!-- 画面イメージ -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">monitor</span>
+              実行して確認しましょう - ステータスボタンの動作
+            </h4>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; font-size: 0.85rem;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                <thead>
+                  <tr style="background: #f1f5f9;">
+                    <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e2e8f0;">タイトル</th>
+                    <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e2e8f0;">ステータス</th>
+                    <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e2e8f0;">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #f1f5f9;">Spring Bootの勉強</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #f1f5f9;"><span style="background: #dbeafe; color: #1e40af; padding: 2px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">進行中</span></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #f1f5f9;">編集 | 削除</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #f1f5f9;">買い物リスト作成</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #f1f5f9;"><span style="background: #fef3c7; color: #92400e; padding: 2px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">未着手</span></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #f1f5f9;">編集 | 削除</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px;">レポート提出</td>
+                    <td style="padding: 8px;"><span style="background: #dcfce7; color: #166534; padding: 2px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">完了</span></td>
+                    <td style="padding: 8px;">編集 | 削除</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p style="color: #64748b; font-size: 0.75rem; margin: 8px 0 0;">ステータスボタンをクリックするたびに 未着手 → 進行中 → 完了 → 未着手 と切り替わります</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 9-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-4</span>
+        <h2 class="section-title">フィルタ機能を実装する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>Todoが増えてくると、全件表示では見づらくなります。ステータスごとに絞り込めるフィルタ機能を追加しましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-4-1 Repositoryにフィルタ用メソッドを追加する</h3>
+        <div class="content-block">
+          <p><code>TodoRepository.java</code>に以下のメソッドを追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoRepository.java に追加</span>
+            </div>
+            <pre class="code-content"><code>    List&lt;Todo&gt; findByStatus(TodoStatus status);</code></pre>
+          </div>
+
+          <p>Spring Data JPAの命名規則に従って<code>findByStatus</code>と書くだけで、自動的に<code>WHERE status = ?</code>のSQLが生成されます。import文に<code>TodoStatus</code>を追加するのを忘れないでください。</p>
+
+          <!-- クエリ自動生成の仕組み図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">auto_fix_high</span>
+              メソッド名からSQLが自動生成される仕組み
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; border-left: 4px solid #0097A7;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-bottom: 8px;">
+                  <span style="color: #0097A7; font-weight: 600;">findBy</span><span style="color: #7c3aed; font-weight: 600;">Status</span>(<span style="color: #dc2626;">TodoStatus status</span>)
+                </div>
+                <div style="font-size: 0.75rem; color: #334155;">
+                  <span style="color: #0097A7;">&#8595; 接頭辞</span>
+                  &nbsp;&nbsp;&nbsp;
+                  <span style="color: #7c3aed;">&#8595; プロパティ名</span>
+                  &nbsp;&nbsp;&nbsp;
+                  <span style="color: #dc2626;">&#8595; 引数</span>
+                </div>
+              </div>
+              <div style="text-align: center; color: #0097A7; font-size: 1.2rem;">&#8595;</div>
+              <div style="background: #1e293b; border-radius: 10px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;">
+                <span style="color: #7dd3fc;">SELECT</span> * <span style="color: #7dd3fc;">FROM</span> todo <span style="color: #7dd3fc;">WHERE</span> status = <span style="color: #fbbf24;">?</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-4-2 Controllerのlist()メソッドを修正する</h3>
+        <div class="content-block">
+          <p>既存の<code>list()</code>メソッドを以下のように変更してください。<code>@RequestParam</code>でステータスのフィルタ値を受け取り、値がある場合はフィルタリング、ない場合は全件表示する仕組みです。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java - list()を修正</span>
+            </div>
+            <pre class="code-content"><code>    @GetMapping
+    public String list(@RequestParam(required = false) TodoStatus status,
+                       Model model) {
+        List&lt;Todo&gt; todos;
+        if (status != null) {
+            todos = todoRepository.findByStatus(status);
+        } else {
+            todos = todoRepository.findAll();
+        }
+        model.addAttribute("todos", todos);
+        model.addAttribute("currentStatus", status);
+        model.addAttribute("statuses", TodoStatus.values());
+        return "list";
+    }</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> ポイント解説</div>
+            <div class="info-box-content">
+              <ul>
+                <li><code>@RequestParam(required = false)</code> -- パラメータが省略可能であることを示します。省略時はnullになります。</li>
+                <li><code>TodoStatus.values()</code> -- テンプレートでフィルタボタンを動的に生成するために全ステータスを渡しています。</li>
+                <li><code>currentStatus</code> -- 現在選択中のフィルタを画面でハイライトするために渡します。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-4-3 テンプレートにフィルタボタンを追加する</h3>
+        <div class="content-block">
+          <p><code>list.html</code>のテーブルの上に、以下のフィルタボタン群を追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">list.html - フィルタボタン</span>
+            </div>
+            <pre class="code-content"><code>&lt;div style="margin-bottom: 16px;"&gt;
+    &lt;a th:href="@{/todos}" th:classappend="${currentStatus == null} ? 'active'"&gt;すべて&lt;/a&gt;
+    &lt;span th:each="s : ${statuses}"&gt;
+        &lt;a th:href="@{/todos(status=${s})}"
+           th:text="${s.displayName}"
+           th:classappend="${currentStatus != null and currentStatus.name() == s.name()} ? 'active'"&gt;
+        &lt;/a&gt;
+    &lt;/span&gt;
+&lt;/div&gt;</code></pre>
+          </div>
+
+          <p><code>th:each="s : ${statuses}"</code> で全ステータスをループし、それぞれのフィルタリンクを動的に生成しています。<code>currentStatus</code>と一致するボタンにはactiveクラスが付きます。</p>
+
+          <p>実行して確認しましょう。ブラウザで <code>http://localhost:8080/todos</code> を開き、フィルタボタンをクリックすると、URLが <code>/todos?status=COMPLETED</code> のように変わり、該当するTodoだけが表示されるはずです。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 9-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-5</span>
+        <h2 class="section-title">data.sqlを更新して動作確認する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>初期データにステータスを含めて、フィルタ機能が正しく動作するか確認しましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-5-1 data.sqlにステータスを追加する</h3>
+        <div class="content-block">
+          <p><code>src/main/resources/data.sql</code>を開いて、INSERT文にstatusカラムを追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/resources/data.sql</span>
+            </div>
+            <pre class="code-content"><code>INSERT INTO todo (title, description, due_date, status, created_at) VALUES
+('Spring Bootの勉強', 'ハンズオン教材を最後まで進める', '2026-04-01', 'IN_PROGRESS', '2026-03-01 10:00:00'),
+('買い物リスト作成', '週末の買い物リストをまとめる', '2026-03-10', 'NOT_STARTED', '2026-03-02 09:00:00'),
+('レポート提出', '月次レポートを作成して提出', '2026-03-05', 'COMPLETED', '2026-03-01 14:00:00'),
+('部屋の掃除', '本棚の整理と掃除機がけ', '2026-03-08', 'NOT_STARTED', '2026-03-03 08:00:00'),
+('GitHubリポジトリ作成', 'Todoアプリのリポジトリを作る', '2026-03-07', 'COMPLETED', '2026-03-01 11:00:00');</code></pre>
+          </div>
+
+          <p>アプリケーションを再起動して <code>http://localhost:8080/todos</code> を開きましょう。5件のTodoがそれぞれ異なるステータスで表示され、フィルタボタンで絞り込めることを確認してください。</p>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">check_circle</span> 確認ポイント</div>
+            <div class="info-box-content">
+              <ul>
+                <li>「すべて」をクリック → 5件すべて表示される</li>
+                <li>「未着手」をクリック → 2件（買い物リスト、部屋の掃除）が表示される</li>
+                <li>「完了」をクリック → 2件（レポート提出、GitHubリポジトリ作成）が表示される</li>
+                <li>ステータスボタンをクリック → ステータスが切り替わる</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 9-6 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 9-6</span>
+        <h2 class="section-title">まとめ</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この章では、Enumを使ったステータス管理とフィルタ機能を実装しました。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">9-6-1 この章で学んだこと</h3>
+        <div class="content-block">
+          <!-- まとめ図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+              <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">list_alt</span>
+                <div style="font-weight: 700; color: #00838F; font-size: 0.9rem; margin-top: 8px;">Java Enum</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">型安全な定数の集合を定義</div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">storage</span>
+                <div style="font-weight: 700; color: #00838F; font-size: 0.9rem; margin-top: 8px;">@Enumerated</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">EnumType.STRINGで安全に保存</div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">filter_alt</span>
+                <div style="font-weight: 700; color: #00838F; font-size: 0.9rem; margin-top: 8px;">フィルタ機能</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">@RequestParamとfindByStatusで実装</div>
+              </div>
+            </div>
+          </div>
+
+          <p>次の章では、Bootstrap CSSを導入して見た目をプロフェッショナルに仕上げます。Thymeleafフラグメントを使った共通レイアウトの作り方も学びます。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習問題 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Exercise</span>
+        <h2 class="section-title">9章 練習問題</h2>
+      </div>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <div class="exercise-number">Q1</div>
+          <div class="exercise-content">
+            <p>JPAでEnumをデータベースに保存する際、<code>@Enumerated</code>アノテーションの設定として推奨されるのはどれですか。</p>
+            <ol type="A">
+              <li>@Enumerated(EnumType.ORDINAL) -- Enumの定義順（0, 1, 2...）で保存する</li>
+              <li>@Enumerated(EnumType.STRING) -- Enumの名前（文字列）で保存する</li>
+              <li>@Enumerated を付けなくても自動的にSTRINGで保存される</li>
+              <li>@Enumerated(EnumType.INTEGER) -- Enumの値をint型で保存する</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q2</div>
+          <div class="exercise-content">
+            <p>Spring Data JPAで<code>TodoRepository</code>に<code>List&lt;Todo&gt; findByStatus(TodoStatus status)</code>メソッドを定義したとき、自動生成されるSQLとして正しいものはどれですか。</p>
+            <ol type="A">
+              <li>SELECT * FROM todo WHERE status LIKE ?</li>
+              <li>SELECT * FROM todo WHERE status = ?</li>
+              <li>SELECT * FROM todo ORDER BY status</li>
+              <li>SELECT status FROM todo</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q3</div>
+          <div class="exercise-content">
+            <p><code>@RequestParam(required = false) TodoStatus status</code> とコントローラのメソッド引数に書いた場合、URLに<code>?status</code>パラメータが含まれないとき、<code>status</code>変数の値はどうなりますか。</p>
+            <ol type="A">
+              <li>空文字列（""）が代入される</li>
+              <li>TodoStatus.NOT_STARTED がデフォルトで代入される</li>
+              <li>nullが代入される</li>
+              <li>例外（MissingServletRequestParameterException）がスローされる</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解答 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Answer</span>
+        <h2 class="section-title">9章 解説・解答</h2>
+      </div>
+      <div class="answer-list">
+        <div class="answer-item">
+          <div class="answer-header">Q1の解答: B</div>
+          <div class="answer-content">
+            <p><code>EnumType.STRING</code>を使うと、データベースには<code>"NOT_STARTED"</code>、<code>"COMPLETED"</code>のように文字列で保存されます。<code>EnumType.ORDINAL</code>は定義順の数値（0, 1, 2）で保存するため、Enumの定義順を変更するとデータの意味が変わってしまう危険があります。STRINGを使えばEnum定数の追加・並べ替えにも安全に対応できます。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q2の解答: B</div>
+          <div class="answer-content">
+            <p>Spring Data JPAの命名規則では、<code>findBy</code>の後にプロパティ名を続けると、そのプロパティで<code>WHERE</code>句の等値比較を行うSQLが自動生成されます。<code>findByStatus(TodoStatus status)</code>は<code>SELECT * FROM todo WHERE status = ?</code>に変換されます。LIKEによる部分一致検索には<code>findByStatusContaining</code>のような命名を使います。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q3の解答: C</div>
+          <div class="answer-content">
+            <p><code>required = false</code>を指定すると、パラメータが省略された場合にnullが代入されます。デフォルトでは<code>required = true</code>であり、パラメータが省略されると例外がスローされます。nullの可能性がある場合は、Controller側で<code>if (status != null)</code>のようにnullチェックを行う必要があります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="page-nav">
+    <a href="8sh-search-sort.html" class="page-nav-btn prev">
+      <span>&#8592;</span>
+      <div>
+        <div class="page-nav-label">前の章</div>
+        <div class="page-nav-title">第8章</div>
+      </div>
+    </a>
+    <a href="10sh-layout-design.html" class="page-nav-btn next">
+      <div>
+        <div class="page-nav-label">次の章</div>
+        <div class="page-nav-title">第10章</div>
+      </div>
+      <span>&#8594;</span>
+    </a>
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

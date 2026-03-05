@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第2章 HTMLテンプレートを表示する - Spring Boot ハンズオン</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #F1FFFE;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <!-- グローバルナビゲーション -->
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-spring-handson.js"></script>
+
+  <div class="container">
+    <!-- ヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">build</span> Hands-on</div>
+      <div class="chapter-number">2</div>
+      <h1 class="chapter-title">HTMLテンプレートを表示する</h1>
+      <p class="chapter-subtitle">Controllerからデータを渡し、Thymeleafで動的に表示する</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">2-1</span><span>Controllerの役割を理解する</span></li>
+        <li class="toc-item"><span class="toc-number">2-2</span><span>Modelにデータを渡す</span></li>
+        <li class="toc-item"><span class="toc-number">2-3</span><span>Thymeleafで動的表示する</span></li>
+        <li class="toc-item"><span class="toc-number">2-4</span><span>複数ページを作る</span></li>
+        <li class="toc-item"><span class="toc-number">2-5</span><span>まとめ</span></li>
+      </ul>
+    </nav>
+
+    <!-- セクション 2-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-1</span>
+        <h2 class="section-title">Controllerの役割を理解する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>前章ではHello Worldを表示しましたが、今回はControllerの仕組みをもう少し深く理解し、さまざまなデータをHTMLに渡す方法を学びます。</p>
+      </div>
+
+      <!-- 2-1-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2-1-1 MVCパターンとControllerの位置づけ</h3>
+        <div class="content-block">
+          <p>Spring Bootは <strong>MVC（Model-View-Controller）</strong> パターンを採用しています。Controllerはブラウザからのリクエストを受け取り、処理結果をViewに渡す「交通整理役」です。</p>
+
+          <!-- MVCパターン図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">hub</span>
+              MVCパターンの全体像
+            </h4>
+            <svg viewBox="0 0 640 280" style="width: 100%; max-width: 640px; display: block; margin: 0 auto;">
+              <!-- ブラウザ -->
+              <rect x="10" y="100" width="110" height="70" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+              <text x="65" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">ブラウザ</text>
+              <text x="65" y="150" text-anchor="middle" font-size="10" fill="#64748b">ユーザー</text>
+
+              <!-- Controller -->
+              <rect x="190" y="100" width="130" height="70" rx="12" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+              <text x="255" y="125" text-anchor="middle" font-size="10" fill="#64748b">@Controller</text>
+              <text x="255" y="145" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">Controller</text>
+              <text x="255" y="160" text-anchor="middle" font-size="9" fill="#64748b">交通整理役</text>
+
+              <!-- Model -->
+              <rect x="255" y="10" width="130" height="60" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+              <text x="320" y="35" text-anchor="middle" font-size="10" fill="#64748b">データの入れ物</text>
+              <text x="320" y="55" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Model</text>
+
+              <!-- View -->
+              <rect x="390" y="100" width="130" height="70" rx="12" fill="#f3e8ff" stroke="#a855f7" stroke-width="2"/>
+              <text x="455" y="125" text-anchor="middle" font-size="10" fill="#64748b">templates/*.html</text>
+              <text x="455" y="145" text-anchor="middle" font-size="13" font-weight="700" fill="#7e22ce">View</text>
+              <text x="455" y="160" text-anchor="middle" font-size="9" fill="#64748b">Thymeleaf</text>
+
+              <!-- HTML -->
+              <rect x="520" y="100" width="110" height="70" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+              <text x="575" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">HTML</text>
+              <text x="575" y="150" text-anchor="middle" font-size="10" fill="#64748b">レスポンス</text>
+
+              <!-- 矢印 -->
+              <line x1="120" y1="125" x2="185" y2="125" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
+              <text x="152" y="118" text-anchor="middle" font-size="9" fill="#3b82f6">Request</text>
+
+              <line x1="280" y1="100" x2="300" y2="75" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-y)"/>
+              <text x="275" y="85" text-anchor="middle" font-size="9" fill="#f59e0b">データ</text>
+
+              <line x1="340" y1="70" x2="420" y2="100" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-y)"/>
+
+              <line x1="320" y1="135" x2="385" y2="135" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow-g)"/>
+              <text x="352" y="128" text-anchor="middle" font-size="9" fill="#22c55e">return</text>
+
+              <line x1="520" y1="145" x2="535" y2="145" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow-p)"/>
+
+              <!-- 矢印マーカー -->
+              <defs>
+                <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#3b82f6"/></marker>
+                <marker id="arrow-y" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#f59e0b"/></marker>
+                <marker id="arrow-g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#22c55e"/></marker>
+                <marker id="arrow-p" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#a855f7"/></marker>
+              </defs>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-1-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2-1-2 @Controllerと@GetMappingの仕組み</h3>
+        <div class="content-block">
+          <p>Controllerには2つの重要なアノテーション（注釈）があります。</p>
+
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">label</span>
+              アノテーションの役割
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="background: #dcfce7; border-radius: 12px; padding: 16px; border-left: 5px solid #22c55e;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.95rem; margin-bottom: 4px;">@Controller</div>
+                <div style="font-size: 0.82rem; color: #334155;">「このクラスはWebリクエストを処理する役割だよ」とSpringに伝える。起動時に自動でインスタンスが作られる。</div>
+              </div>
+              <div style="background: #dbeafe; border-radius: 12px; padding: 16px; border-left: 5px solid #3b82f6;">
+                <div style="font-weight: 700; color: #1e40af; font-size: 0.95rem; margin-bottom: 4px;">@GetMapping("/パス")</div>
+                <div style="font-size: 0.82rem; color: #334155;">「GETリクエストでこのパスにアクセスされたらこのメソッドを呼んで」という指定。URLとメソッドを紐づける。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> GETリクエストとは</div>
+            <div class="info-box-content">
+              <p>ブラウザのアドレスバーにURLを入力してアクセスすると「GET」リクエストが送信されます。データの「取得」に使います。フォームの送信は「POST」リクエストで、第5章で学びます。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 2-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-2</span>
+        <h2 class="section-title">Modelにデータを渡す</h2>
+      </div>
+
+      <!-- 2-2-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2-2-1 文字列を渡す</h3>
+        <div class="content-block">
+          <p>前章の <code>HelloController</code> を改良して、Todoアプリ用の <code>TodoController</code> を作りましょう。</p>
+
+          <p><code>src/main/java/com/example/todo/controller/</code> に <code>TodoController.java</code> を新規作成し、<strong>以下のコードを手で入力してください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/java/com/example/todo/controller/TodoController.java</span>
+            </div>
+            <pre class="code-content"><code>package com.example.todo.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class TodoController {
+
+    @GetMapping("/todos")
+    public String list(Model model) {
+        model.addAttribute("title", "Todoリスト");
+        return "todo/list";
+    }
+}</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> コードの解説</div>
+            <div class="info-box-content">
+              <ul>
+                <li><code>model.addAttribute("title", "Todoリスト")</code> ── "title"という名前で文字列をHTMLに渡す</li>
+                <li><code>return "todo/list"</code> ── <code>templates/todo/list.html</code> を表示する（サブフォルダも指定可能）</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-2-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2-2-2 リストを渡す</h3>
+        <div class="content-block">
+          <p>次に、複数のTodoを文字列リストとして渡してみましょう。<code>TodoController.java</code> の <code>list</code> メソッドに<strong>以下の行を追加してください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java（list メソッドに追加）</span>
+            </div>
+            <pre class="code-content"><code>@GetMapping("/todos")
+public String list(Model model) {
+    model.addAttribute("title", "Todoリスト");
+
+    // 仮データとしてリストを渡す
+    List&lt;String&gt; todos = List.of(
+        "Spring Bootの環境構築",
+        "Thymeleafの基本を学ぶ",
+        "Entityクラスを作成する"
+    );
+    model.addAttribute("todos", todos);
+
+    return "todo/list";
+}</code></pre>
+          </div>
+
+          <p>import文も追加が必要です。ファイルの先頭に <strong>以下の1行を追加してください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">import文を追加</span>
+            </div>
+            <pre class="code-content"><code>import java.util.List;</code></pre>
+          </div>
+
+          <!-- Model の仕組み図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">inventory_2</span>
+              Modelはデータの「運び屋」
+            </h4>
+            <div style="display: flex; align-items: stretch; justify-content: center; gap: 16px; flex-wrap: wrap;">
+              <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 16px; flex: 1; min-width: 180px;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.88rem; margin-bottom: 8px;">Controller側</div>
+                <div style="background: #1e293b; border-radius: 8px; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;">
+                  <div style="color: #86efac;">model.addAttribute(</div>
+                  <div style="color: #fbbf24; padding-left: 12px;">"title", "Todoリスト"</div>
+                  <div style="color: #86efac;">);</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; color: #0097A7; font-size: 2rem; font-weight: 700;">→</div>
+              <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 16px; flex: 1; min-width: 180px;">
+                <div style="font-weight: 700; color: #7e22ce; font-size: 0.88rem; margin-bottom: 8px;">HTML（Thymeleaf）側</div>
+                <div style="background: #1e293b; border-radius: 8px; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;">
+                  <div style="color: #c084fc;">&lt;h1 th:text=</div>
+                  <div style="color: #fbbf24; padding-left: 12px;">"${title}"</div>
+                  <div style="color: #c084fc;">&gt;&lt;/h1&gt;</div>
+                </div>
+              </div>
+            </div>
+            <div style="text-align: center; margin-top: 12px; font-size: 0.82rem; color: #64748b;">
+              addAttribute の第1引数（"title"）と th:text の ${title} が一致している必要があります
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 2-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-3</span>
+        <h2 class="section-title">Thymeleafで動的表示する</h2>
+      </div>
+
+      <!-- 2-3-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2-3-1 一覧ページのHTMLを作成する</h3>
+        <div class="content-block">
+          <p><code>src/main/resources/templates/</code> に <code>todo</code> フォルダを新規作成し、その中に <code>list.html</code> を作成してください。</p>
+
+          <p><strong>以下のHTMLを手で入力してください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/resources/templates/todo/list.html</span>
+            </div>
+            <pre class="code-content"><code>&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title th:text="${title}"&gt;Todoリスト&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1 th:text="${title}"&gt;タイトル&lt;/h1&gt;
+
+    &lt;!-- リストが空の場合のメッセージ --&gt;
+    &lt;p th:if="${#lists.isEmpty(todos)}"&gt;
+        Todoはまだありません。
+    &lt;/p&gt;
+
+    &lt;!-- Todoリストをループ表示 --&gt;
+    &lt;ul&gt;
+        &lt;li th:each="todo : ${todos}" th:text="${todo}"&gt;
+            サンプルTodo
+        &lt;/li&gt;
+    &lt;/ul&gt;
+
+    &lt;p&gt;合計: &lt;span th:text="${#lists.size(todos)}"&gt;0&lt;/span&gt; 件&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+          </div>
+
+          <!-- Thymeleaf構文の図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">code</span>
+              Thymeleafの主要構文
+            </h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+              <thead>
+                <tr style="background: #e0f7fa;">
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid #0097A7; font-weight: 700;">構文</th>
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid #0097A7; font-weight: 700;">役割</th>
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid #0097A7; font-weight: 700;">例</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>th:text</code></td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">テキストを置き換える</td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>th:text="${title}"</code></td>
+                </tr>
+                <tr style="background: #fafafa;">
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>th:each</code></td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">リストをループ表示</td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>th:each="item : ${list}"</code></td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>th:if</code></td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">条件に合うときだけ表示</td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>th:if="${condition}"</code></td>
+                </tr>
+                <tr style="background: #fafafa;">
+                  <td style="padding: 8px 14px;">
+                    <code>th:href</code></td>
+                  <td style="padding: 8px 14px;">リンクURLを動的に生成</td>
+                  <td style="padding: 8px 14px;"><code>th:href="@{/path}"</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-3-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2-3-2 実行して確認しましょう</h3>
+        <div class="content-block">
+          <p>アプリケーションを再起動して、ブラウザで <strong>http://localhost:8080/todos</strong> にアクセスしてください。</p>
+
+          <!-- 期待される画面 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #22c55e;">check_circle</span>
+              期待される表示
+            </h4>
+            <div style="background: white; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden;">
+              <div style="background: #f3f4f6; padding: 8px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #d1d5db;">
+                <div style="display: flex; gap: 6px;">
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #22c55e;"></div>
+                </div>
+                <div style="flex: 1; background: white; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; color: #64748b;">localhost:8080/todos</div>
+              </div>
+              <div style="padding: 24px;">
+                <div style="font-size: 1.6rem; font-weight: 700; color: #1e293b; margin-bottom: 12px;">Todoリスト</div>
+                <ul style="margin: 0 0 12px 20px; line-height: 2;">
+                  <li>Spring Bootの環境構築</li>
+                  <li>Thymeleafの基本を学ぶ</li>
+                  <li>Entityクラスを作成する</li>
+                </ul>
+                <div style="font-size: 0.9rem; color: #64748b;">合計: 3 件</div>
+              </div>
+            </div>
+          </div>
+
+          <p>3つのTodoが箇条書きで表示されていれば成功です。</p>
+        </div>
+      </div>
+
+      <!-- 2-3-3 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2-3-3 th:eachの仕組みを理解する</h3>
+        <div class="content-block">
+          <p><code>th:each</code> はJavaの拡張for文と同じ考え方です。リストの各要素を1つずつ取り出して繰り返します。</p>
+
+          <!-- th:each の展開図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">loop</span>
+              th:each の展開イメージ
+            </h4>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start;">
+              <div style="flex: 1; min-width: 200px;">
+                <div style="font-weight: 700; color: #7e22ce; font-size: 0.85rem; margin-bottom: 8px;">テンプレート（1行だけ書く）</div>
+                <div style="background: #1e293b; border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">
+                  <div style="color: #c084fc;">&lt;li <span style="color: #fbbf24;">th:each="todo : ${todos}"</span></div>
+                  <div style="color: #c084fc;">    <span style="color: #86efac;">th:text="${todo}"</span>&gt;&lt;/li&gt;</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; color: #0097A7; font-size: 1.5rem; font-weight: 700;">→</div>
+              <div style="flex: 1; min-width: 200px;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.85rem; margin-bottom: 8px;">生成されるHTML（3行に展開）</div>
+                <div style="background: #1e293b; border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">
+                  <div style="color: #86efac;">&lt;li&gt;Spring Bootの環境構築&lt;/li&gt;</div>
+                  <div style="color: #86efac;">&lt;li&gt;Thymeleafの基本を学ぶ&lt;/li&gt;</div>
+                  <div style="color: #86efac;">&lt;li&gt;Entityクラスを作成する&lt;/li&gt;</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 2-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-4</span>
+        <h2 class="section-title">複数ページを作る</h2>
+      </div>
+
+      <!-- 2-4-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2-4-1 詳細ページ用のControllerメソッドを追加する</h3>
+        <div class="content-block">
+          <p>一覧ページに加えて、各Todoの詳細を表示するページを作りましょう。<code>TodoController.java</code> に<strong>以下のメソッドを追加してください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java に追加するメソッド</span>
+            </div>
+            <pre class="code-content"><code>@GetMapping("/todos/{id}")
+public String detail(@PathVariable("id") int id, Model model) {
+    // 仮データ（後でDBから取得するように変更します）
+    List&lt;String&gt; todos = List.of(
+        "Spring Bootの環境構築",
+        "Thymeleafの基本を学ぶ",
+        "Entityクラスを作成する"
+    );
+
+    if (id &gt;= 0 &amp;&amp; id &lt; todos.size()) {
+        model.addAttribute("todo", todos.get(id));
+        model.addAttribute("id", id);
+    }
+
+    return "todo/detail";
+}</code></pre>
+          </div>
+
+          <p>import文も追加が必要です。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">import文を追加</span>
+            </div>
+            <pre class="code-content"><code>import org.springframework.web.bind.annotation.PathVariable;</code></pre>
+          </div>
+
+          <!-- URLパスの図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">link</span>
+              URLパスとパス変数
+            </h4>
+            <div style="background: #1e293b; border-radius: 10px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 2.2; margin-bottom: 12px;">
+              <div style="color: #e2e8f0;">GET /todos/<span style="color: #fbbf24; font-weight: 700; background: rgba(251,191,36,0.15); padding: 2px 6px; border-radius: 3px;">0</span> → detail() の id = <span style="color: #fbbf24;">0</span> → "Spring Bootの環境構築"</div>
+              <div style="color: #e2e8f0;">GET /todos/<span style="color: #86efac; font-weight: 700; background: rgba(134,239,172,0.15); padding: 2px 6px; border-radius: 3px;">1</span> → detail() の id = <span style="color: #86efac;">1</span> → "Thymeleafの基本を学ぶ"</div>
+              <div style="color: #e2e8f0;">GET /todos/<span style="color: #67e8f9; font-weight: 700; background: rgba(103,232,249,0.15); padding: 2px 6px; border-radius: 3px;">2</span> → detail() の id = <span style="color: #67e8f9;">2</span> → "Entityクラスを作成する"</div>
+            </div>
+            <div style="font-size: 0.82rem; color: #64748b;">
+              <code>{id}</code> の部分がURLの値と自動でマッチします。<code>@PathVariable</code> でメソッド引数として受け取ります。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-4-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2-4-2 詳細ページのHTMLを作成する</h3>
+        <div class="content-block">
+          <p><code>src/main/resources/templates/todo/</code> に <code>detail.html</code> を新規作成し、<strong>以下のHTMLを手で入力してください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/resources/templates/todo/detail.html</span>
+            </div>
+            <pre class="code-content"><code>&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Todo詳細&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Todo詳細&lt;/h1&gt;
+    &lt;p&gt;ID: &lt;span th:text="${id}"&gt;0&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;内容: &lt;span th:text="${todo}"&gt;サンプル&lt;/span&gt;&lt;/p&gt;
+
+    &lt;a th:href="@{/todos}"&gt;← 一覧に戻る&lt;/a&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-4-3 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2-4-3 一覧ページにリンクを追加する</h3>
+        <div class="content-block">
+          <p><code>list.html</code> の <code>&lt;li&gt;</code> タグを修正して、各Todoをクリックすると詳細ページに遷移するようにしましょう。<strong><code>list.html</code> の <code>&lt;ul&gt;</code> 部分を以下に書き換えてください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">list.html の &lt;ul&gt; 部分を修正</span>
+            </div>
+            <pre class="code-content"><code>&lt;ul&gt;
+    &lt;li th:each="todo, iterStat : ${todos}"&gt;
+        &lt;a th:href="@{/todos/{id}(id=${iterStat.index})}"
+           th:text="${todo}"&gt;サンプルTodo&lt;/a&gt;
+    &lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> iterStatとは</div>
+            <div class="info-box-content">
+              <p><code>th:each="todo, iterStat : ${todos}"</code> の <code>iterStat</code> はループ状態を表すオブジェクトです。<code>iterStat.index</code> で現在のインデックス（0始まり）を取得できます。<code>@{/todos/{id}(id=${iterStat.index})}</code> はThymeleafのURL構文で、パス変数に値を埋め込みます。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2-4-4 -->
+      <div class="subsection">
+        <h3 class="subsection-title">2-4-4 実行して確認しましょう</h3>
+        <div class="content-block">
+          <p>アプリケーションを再起動して、ブラウザで確認しましょう。</p>
+          <ol>
+            <li><strong>http://localhost:8080/todos</strong> にアクセス</li>
+            <li>各Todoのリンクをクリックして、詳細ページに遷移することを確認</li>
+            <li>詳細ページの「一覧に戻る」リンクで戻れることを確認</li>
+          </ol>
+
+          <!-- この時点のファイル構成 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">folder_open</span>
+              この時点でのファイル構成
+            </h4>
+            <div style="background: #1e293b; border-radius: 10px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.9;">
+              <div style="color: #fbbf24; font-weight: 700;">todo/src/main/</div>
+              <div style="color: #e2e8f0;">├── java/com/example/todo/</div>
+              <div style="color: #e2e8f0;">│   ├── TodoApplication.java</div>
+              <div style="color: #e2e8f0;">│   └── controller/</div>
+              <div style="color: #e2e8f0;">│       ├── HelloController.java</div>
+              <div style="color: #86efac;">│       └── TodoController.java <span style="color: #64748b;">← 新規作成</span></div>
+              <div style="color: #e2e8f0;">└── resources/</div>
+              <div style="color: #e2e8f0;">    ├── application.properties</div>
+              <div style="color: #e2e8f0;">    └── templates/</div>
+              <div style="color: #e2e8f0;">        ├── hello.html</div>
+              <div style="color: #fbbf24;">        └── todo/</div>
+              <div style="color: #86efac;">            ├── list.html <span style="color: #64748b;">← 新規作成</span></div>
+              <div style="color: #86efac;">            └── detail.html <span style="color: #64748b;">← 新規作成</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 2-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 2-5</span>
+        <h2 class="section-title">まとめ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">2-5-1 この章で学んだこと</h3>
+        <div class="content-block">
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">summarize</span>
+              Chapter 2 まとめ
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">send</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">Model.addAttribute</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">ControllerからHTMLにデータを渡す</div>
+              </div>
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">loop</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">th:each / th:if</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">ループ・条件分岐で動的表示</div>
+              </div>
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">link</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">@PathVariable</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">URLの値をメソッド引数で受取</div>
+              </div>
+            </div>
+          </div>
+
+          <p>現在のTodoデータはControllerにハードコードされた仮データです。次の章では <strong>Entity</strong> クラスを作成し、データベースにTodoを保存する仕組みを作ります。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習問題 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Exercise</span>
+        <h2 class="section-title">2章 練習問題</h2>
+      </div>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <div class="exercise-number">Q1</div>
+          <div class="exercise-content">
+            <p>以下のThymeleafのコードで、<code>items</code> リストに ["りんご", "バナナ", "みかん"] が渡された場合、生成されるHTMLのli要素は何個ですか。</p>
+            <div class="code-block" style="margin: 12px 0;">
+              <div class="code-header"><div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div><span class="code-title">HTML</span></div>
+              <pre class="code-content"><code>&lt;ul&gt;
+    &lt;li th:each="item : ${items}" th:text="${item}"&gt;&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+            </div>
+            <ol type="A">
+              <li>1個</li>
+              <li>2個</li>
+              <li>3個</li>
+              <li>4個</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q2</div>
+          <div class="exercise-content">
+            <p>Controllerのメソッドで <code>return "todo/list"</code> と記述した場合、Thymeleafが参照するHTMLファイルのパスはどれですか。</p>
+            <ol type="A">
+              <li>src/main/java/todo/list.html</li>
+              <li>src/main/resources/templates/todo/list.html</li>
+              <li>src/main/resources/static/todo/list.html</li>
+              <li>templates/todo/list.html</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q3</div>
+          <div class="exercise-content">
+            <p>以下のControllerメソッドにおいて、<code>model.addAttribute("name", "太郎")</code> で渡したデータをHTMLで表示する正しいThymeleaf構文はどれですか。</p>
+            <ol type="A">
+              <li><code>&lt;p th:text="name"&gt;&lt;/p&gt;</code></li>
+              <li><code>&lt;p th:text="${name}"&gt;&lt;/p&gt;</code></li>
+              <li><code>&lt;p th:value="${name}"&gt;&lt;/p&gt;</code></li>
+              <li><code>&lt;p text="${name}"&gt;&lt;/p&gt;</code></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解答 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Answer</span>
+        <h2 class="section-title">2章 解説・解答</h2>
+      </div>
+      <div class="answer-list">
+        <div class="answer-item">
+          <div class="answer-header">Q1の解答: C</div>
+          <div class="answer-content">
+            <p><code>th:each</code> はリストの要素数だけHTMLタグを繰り返し生成します。["りんご", "バナナ", "みかん"] は3つの要素があるため、<code>&lt;li&gt;</code> が3個生成されます。テンプレート上では1行で書いても、実際のHTMLでは要素数分に展開されます。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q2の解答: B</div>
+          <div class="answer-content">
+            <p>Thymeleafは <code>src/main/resources/templates/</code> をルートとして、戻り値の文字列に <code>.html</code> を付けたパスを参照します。<code>return "todo/list"</code> は <code>src/main/resources/templates/todo/list.html</code> を表示します。<code>static/</code> はCSS・JS・画像用のフォルダです。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q3の解答: B</div>
+          <div class="answer-content">
+            <p>Thymeleafで変数を参照するには <code>${変数名}</code> の形式で書きます。<code>th:text="${name}"</code> が正解です。<code>${}</code> を付けないとリテラル文字列として扱われます。<code>th:value</code> はフォーム要素のvalue属性用で、テキスト表示には <code>th:text</code> を使います。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="1sh-project-setup.html" class="page-nav-btn prev">
+      <span>&#8592;</span>
+      <div>
+        <div class="page-nav-label">前の章</div>
+        <div class="page-nav-title">第1章 プロジェクト作成と初期設定</div>
+      </div>
+    </a>
+    <a href="3sh-entity.html" class="page-nav-btn next">
+      <div>
+        <div class="page-nav-label">次の章</div>
+        <div class="page-nav-title">第3章 エンティティとテーブル設計</div>
+      </div>
+      <span>&#8594;</span>
+    </a>
+  </div>
+
+  <!-- 共通フッター -->
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

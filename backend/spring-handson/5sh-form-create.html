@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第5章 フォームからデータを登録する - Spring Boot ハンズオン</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #F1FFFE;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <!-- グローバルナビゲーション -->
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-spring-handson.js"></script>
+
+  <div class="container">
+    <!-- ヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">build</span> Hands-on</div>
+      <div class="chapter-number">5</div>
+      <h1 class="chapter-title">フォームからデータを登録する</h1>
+      <p class="chapter-subtitle">HTMLフォームでTodoを新規作成し、PRGパターンでリダイレクトする</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">5-1</span><span>登録フォームのHTMLを作成する</span></li>
+        <li class="toc-item"><span class="toc-number">5-2</span><span>@PostMappingでフォームデータを受信する</span></li>
+        <li class="toc-item"><span class="toc-number">5-3</span><span>repository.save()でデータを保存する</span></li>
+        <li class="toc-item"><span class="toc-number">5-4</span><span>PRGパターンとリダイレクト</span></li>
+        <li class="toc-item"><span class="toc-number">5-5</span><span>一覧画面に「新規作成」リンクを追加する</span></li>
+      </ul>
+    </nav>
+
+    <!-- セクション 5-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-1</span>
+        <h2 class="section-title">登録フォームのHTMLを作成する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>前章までで、データベースからTodo一覧を取得して表示できるようになりました。この章では、ブラウザのフォームからデータを入力してデータベースに保存する機能を実装します。</p>
+      </div>
+
+      <!-- 5-1-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-1-1 この章で作る機能の全体像</h3>
+        <div class="content-block">
+          <p>まず、これから実装する「新規登録」機能の流れを確認しましょう。</p>
+
+          <!-- 全体フロー図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">sync_alt</span>
+              新規登録の処理フロー
+            </h4>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+              <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 110px;">
+                <div style="font-size: 0.72rem; color: #64748b;">GET /todos/new</div>
+                <div style="font-size: 0.78rem; font-weight: 600; color: #1e40af;">フォーム表示</div>
+              </div>
+              <div style="color: #3b82f6; font-size: 1.5rem; font-weight: 700;">&#8594;</div>
+              <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 110px;">
+                <div style="font-size: 0.72rem; color: #64748b;">POST /todos</div>
+                <div style="font-size: 0.78rem; font-weight: 600; color: #166534;">データ受信</div>
+              </div>
+              <div style="color: #22c55e; font-size: 1.5rem; font-weight: 700;">&#8594;</div>
+              <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 110px;">
+                <div style="font-size: 0.72rem; color: #64748b;">repository.save()</div>
+                <div style="font-size: 0.78rem; font-weight: 600; color: #7e22ce;">DB保存</div>
+              </div>
+              <div style="color: #a855f7; font-size: 1.5rem; font-weight: 700;">&#8594;</div>
+              <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 110px;">
+                <div style="font-size: 0.72rem; color: #64748b;">redirect:/todos</div>
+                <div style="font-size: 0.78rem; font-weight: 600; color: #92400e;">一覧へ戻る</div>
+              </div>
+            </div>
+          </div>
+
+          <p>この流れを1つずつ実装していきましょう。</p>
+        </div>
+      </div>
+
+      <!-- 5-1-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-1-2 フォーム表示用のControllerメソッドを追加する</h3>
+        <div class="content-block">
+          <p>まず、フォーム画面を表示するためのメソッドをControllerに追加します。<code>TodoController.java</code> を開いて、以下のメソッドを追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java（メソッドを追加）</span>
+            </div>
+            <pre class="code-content"><code>@GetMapping("/todos/new")
+public String showCreateForm(Model model) {
+    model.addAttribute("todo", new Todo());
+    return "todos/create";
+}</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> なぜ空のTodoを渡すのか</div>
+            <div class="info-box-content">
+              <p><code>new Todo()</code> で空のTodoオブジェクトを作りModelに入れています。これはThymeleafの <code>th:object</code> でフォームとオブジェクトを紐づけるために必要です。フォーム入力値が自動的にこのオブジェクトのフィールドにセットされます。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-1-3 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-1-3 登録フォームのHTMLを作成する</h3>
+        <div class="content-block">
+          <p><code>src/main/resources/templates/todos/</code> フォルダに <code>create.html</code> を新規作成してください。</p>
+
+          <p><strong>以下のHTMLを手で入力してください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/resources/templates/todos/create.html</span>
+            </div>
+            <pre class="code-content"><code>&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Todo新規作成&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Todoを新規作成&lt;/h1&gt;
+
+    &lt;form th:action="@{/todos}" th:object="${todo}" method="post"&gt;
+        &lt;div&gt;
+            &lt;label for="title"&gt;タイトル&lt;/label&gt;
+            &lt;input type="text" id="title" th:field="*{title}"&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+            &lt;label for="description"&gt;説明&lt;/label&gt;
+            &lt;textarea id="description" th:field="*{description}"
+                      rows="3"&gt;&lt;/textarea&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+            &lt;label for="dueDate"&gt;期限日&lt;/label&gt;
+            &lt;input type="date" id="dueDate" th:field="*{dueDate}"&gt;
+        &lt;/div&gt;
+        &lt;button type="submit"&gt;登録&lt;/button&gt;
+        &lt;a th:href="@{/todos}"&gt;キャンセル&lt;/a&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+          </div>
+
+          <!-- フォーム属性の図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">description</span>
+              Thymeleafのフォーム属性
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem;">
+              <div style="background: #dbeafe; border-radius: 8px; padding: 12px 16px;">
+                <code style="font-weight: 700; color: #1e40af;">th:action="@{/todos}"</code><br>
+                <span style="color: #64748b;">フォーム送信先のURLを指定。<code>@{...}</code> はThymeleafのURL式。</span>
+              </div>
+              <div style="background: #dcfce7; border-radius: 8px; padding: 12px 16px;">
+                <code style="font-weight: 700; color: #166534;">th:object="${todo}"</code><br>
+                <span style="color: #64748b;">フォーム全体をTodoオブジェクトに紐づける。Controllerで渡したオブジェクトを参照。</span>
+              </div>
+              <div style="background: #f3e8ff; border-radius: 8px; padding: 12px 16px;">
+                <code style="font-weight: 700; color: #7e22ce;">th:field="*{title}"</code><br>
+                <span style="color: #64748b;"><code>*{...}</code> は <code>th:object</code> のフィールドを参照。name属性・value属性が自動設定される。</span>
+              </div>
+              <div style="background: #fef3c7; border-radius: 8px; padding: 12px 16px;">
+                <code style="font-weight: 700; color: #92400e;">method="post"</code><br>
+                <span style="color: #64748b;">フォーム送信時にHTTP POSTリクエストを送る。データの作成・更新にはPOSTを使う。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 5-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-2</span>
+        <h2 class="section-title">@PostMappingでフォームデータを受信する</h2>
+      </div>
+
+      <!-- 5-2-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-2-1 GETとPOSTの違いを理解する</h3>
+        <div class="content-block">
+          <p>Webアプリケーションでは、HTTPメソッドによってリクエストの意味が異なります。</p>
+
+          <!-- GET vs POST の図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">compare_arrows</span>
+              GETリクエストとPOSTリクエスト
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+              <div style="background: #dbeafe; border-radius: 12px; padding: 20px; border-left: 5px solid #3b82f6;">
+                <div style="font-weight: 700; color: #1e40af; margin-bottom: 8px; font-size: 1rem;">GET リクエスト</div>
+                <ul style="margin: 0; padding-left: 18px; font-size: 0.82rem; color: #334155; line-height: 1.8;">
+                  <li>データの<strong>取得</strong>に使う</li>
+                  <li>URLにパラメータが見える</li>
+                  <li>ブラウザの「戻る」で再実行される</li>
+                  <li>ブックマーク可能</li>
+                </ul>
+                <div style="margin-top: 10px; font-size: 0.78rem; color: #64748b;">例: 一覧表示、詳細表示、フォーム画面表示</div>
+              </div>
+              <div style="background: #dcfce7; border-radius: 12px; padding: 20px; border-left: 5px solid #22c55e;">
+                <div style="font-weight: 700; color: #166534; margin-bottom: 8px; font-size: 1rem;">POST リクエスト</div>
+                <ul style="margin: 0; padding-left: 18px; font-size: 0.82rem; color: #334155; line-height: 1.8;">
+                  <li>データの<strong>送信・作成</strong>に使う</li>
+                  <li>データはリクエストボディに入る</li>
+                  <li>ブラウザの「戻る」で再送信されない</li>
+                  <li>ブックマーク不可</li>
+                </ul>
+                <div style="margin-top: 10px; font-size: 0.78rem; color: #64748b;">例: 新規登録、更新、削除</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-2-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-2-2 POSTリクエストを受け取るメソッドを作成する</h3>
+        <div class="content-block">
+          <p><code>TodoController.java</code> に以下のメソッドを追加してください。<code>@PostMapping</code> アノテーションを使い、フォームから送信されたデータを受け取ります。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java（メソッドを追加）</span>
+            </div>
+            <pre class="code-content"><code>@PostMapping("/todos")
+public String createTodo(@ModelAttribute Todo todo) {
+    todo.setCreatedAt(LocalDateTime.now());
+    todoRepository.save(todo);
+    return "redirect:/todos";
+}</code></pre>
+          </div>
+
+          <p>import文も追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java（import追加）</span>
+            </div>
+            <pre class="code-content"><code>import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import java.time.LocalDateTime;</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> @ModelAttribute の仕組み</div>
+            <div class="info-box-content">
+              <p><code>@ModelAttribute</code> は、フォームから送信されたデータを自動的にJavaオブジェクトに変換（バインド）してくれます。フォームの <code>name</code> 属性（th:fieldで自動設定）とオブジェクトのフィールド名が一致していれば、値が自動的にセットされます。</p>
+            </div>
+          </div>
+
+          <!-- バインドの図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">link</span>
+              フォームデータのバインド
+            </h4>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
+              <div style="background: #1e293b; border-radius: 10px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.8;">
+                <div style="color: #64748b;">// フォームの送信データ</div>
+                <div style="color: #e2e8f0;">title=<span style="color: #86efac;">買い物に行く</span></div>
+                <div style="color: #e2e8f0;">description=<span style="color: #86efac;">牛乳とパン</span></div>
+                <div style="color: #e2e8f0;">dueDate=<span style="color: #86efac;">2026-03-10</span></div>
+              </div>
+              <div style="color: #0097A7; font-size: 2rem; font-weight: 700;">&#8594;</div>
+              <div style="background: #1e293b; border-radius: 10px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.8;">
+                <div style="color: #64748b;">// Todoオブジェクト</div>
+                <div style="color: #e2e8f0;">todo.title = <span style="color: #86efac;">"買い物に行く"</span></div>
+                <div style="color: #e2e8f0;">todo.description = <span style="color: #86efac;">"牛乳とパン"</span></div>
+                <div style="color: #e2e8f0;">todo.dueDate = <span style="color: #86efac;">2026-03-10</span></div>
+              </div>
+            </div>
+            <div style="text-align: center; margin-top: 12px; font-size: 0.8rem; color: #64748b;">
+              Spring が name 属性とフィールド名を照合して自動変換する
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 5-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-3</span>
+        <h2 class="section-title">repository.save()でデータを保存する</h2>
+      </div>
+
+      <!-- 5-3-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-3-1 save()メソッドの動作を理解する</h3>
+        <div class="content-block">
+          <p><code>JpaRepository</code> の <code>save()</code> メソッドは、渡されたエンティティをデータベースに保存します。重要なのは、<strong>新規登録と更新の両方</strong>に使えるということです。</p>
+
+          <!-- save()の動作図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">save</span>
+              save() の動作
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+              <div style="background: #dcfce7; border-radius: 12px; padding: 20px; border-left: 5px solid #22c55e;">
+                <div style="font-weight: 700; color: #166534; margin-bottom: 8px;">id が null の場合</div>
+                <div style="font-size: 0.85rem; color: #334155;">INSERT（新規登録）が実行される</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; margin-top: 8px; background: #f0fdf4; padding: 8px; border-radius: 6px;">
+                  INSERT INTO todo (title, ...) VALUES (?, ...)
+                </div>
+              </div>
+              <div style="background: #dbeafe; border-radius: 12px; padding: 20px; border-left: 5px solid #3b82f6;">
+                <div style="font-weight: 700; color: #1e40af; margin-bottom: 8px;">id が存在する場合</div>
+                <div style="font-size: 0.85rem; color: #334155;">UPDATE（更新）が実行される</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; margin-top: 8px; background: #eff6ff; padding: 8px; border-radius: 6px;">
+                  UPDATE todo SET title=?, ... WHERE id=?
+                </div>
+              </div>
+            </div>
+            <div style="background: #e0f7fa; border: 1px solid #80deea; border-radius: 8px; padding: 12px 16px; margin-top: 16px;">
+              <p style="margin: 0; color: #00695c; font-size: 0.82rem; line-height: 1.7;">
+                フォームから新規作成する場合、<code>id</code> はセットされていないため <code>null</code> です。そのため <code>save()</code> はINSERTを実行します。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-3-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-3-2 Controllerの全体像を確認する</h3>
+        <div class="content-block">
+          <p>ここまでの変更を加えた <code>TodoController.java</code> の全体像を確認しましょう。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/java/com/example/todo/controller/TodoController.java</span>
+            </div>
+            <pre class="code-content"><code>package com.example.todo.controller;
+
+import com.example.todo.entity.Todo;
+import com.example.todo.repository.TodoRepository;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import java.time.LocalDateTime;
+
+@Controller
+public class TodoController {
+
+    private final TodoRepository todoRepository;
+
+    public TodoController(TodoRepository todoRepository) {
+        this.todoRepository = todoRepository;
+    }
+
+    // 一覧表示（第4章で作成済み）
+    @GetMapping("/todos")
+    public String list(Model model) {
+        model.addAttribute("todos", todoRepository.findAll());
+        return "todos/list";
+    }
+
+    // 新規作成フォーム表示
+    @GetMapping("/todos/new")
+    public String showCreateForm(Model model) {
+        model.addAttribute("todo", new Todo());
+        return "todos/create";
+    }
+
+    // 新規作成処理
+    @PostMapping("/todos")
+    public String createTodo(@ModelAttribute Todo todo) {
+        todo.setCreatedAt(LocalDateTime.now());
+        todoRepository.save(todo);
+        return "redirect:/todos";
+    }
+}</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> URLの使い分け</div>
+            <div class="info-box-content">
+              <p><code>GET /todos</code> と <code>POST /todos</code> は同じURLですが、HTTPメソッドが異なるため別のメソッドで処理されます。<code>@GetMapping</code> はGETリクエスト、<code>@PostMapping</code> はPOSTリクエストにだけ反応します。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-3-3 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-3-3 実行して確認しましょう</h3>
+        <div class="content-block">
+          <p>アプリケーションを再起動して、フォームからデータを登録してみましょう。</p>
+
+          <ol>
+            <li>アプリケーションを再起動する</li>
+            <li>ブラウザで <strong>http://localhost:8080/todos/new</strong> にアクセスする</li>
+            <li>タイトル・説明・期限日を入力して「登録」ボタンをクリック</li>
+            <li>一覧画面にリダイレクトされ、登録したTodoが表示されることを確認</li>
+          </ol>
+
+          <!-- 期待される画面 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #22c55e;">check_circle</span>
+              期待される表示（登録フォーム）
+            </h4>
+            <div style="background: white; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden;">
+              <div style="background: #f3f4f6; padding: 8px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #d1d5db;">
+                <div style="display: flex; gap: 6px;">
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #22c55e;"></div>
+                </div>
+                <div style="flex: 1; background: white; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; color: #64748b;">localhost:8080/todos/new</div>
+              </div>
+              <div style="padding: 24px;">
+                <div style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 16px;">Todoを新規作成</div>
+                <div style="margin-bottom: 12px;">
+                  <div style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 4px;">タイトル</div>
+                  <div style="border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; font-size: 0.85rem; color: #9ca3af;">買い物に行く</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                  <div style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 4px;">説明</div>
+                  <div style="border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; font-size: 0.85rem; color: #9ca3af; min-height: 60px;">牛乳とパンを買う</div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                  <div style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 4px;">期限日</div>
+                  <div style="border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; font-size: 0.85rem; color: #9ca3af; width: 160px;">2026-03-10</div>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                  <div style="background: #0097A7; color: white; padding: 8px 20px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">登録</div>
+                  <div style="color: #0097A7; padding: 8px 20px; font-size: 0.85rem;">キャンセル</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 5-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-4</span>
+        <h2 class="section-title">PRGパターンとリダイレクト</h2>
+      </div>
+
+      <!-- 5-4-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-4-1 PRGパターンとは</h3>
+        <div class="content-block">
+          <p>先ほどのコードで <code>return "redirect:/todos"</code> と書きました。これは <strong>PRG（Post-Redirect-Get）パターン</strong> と呼ばれる重要なWebアプリの設計パターンです。</p>
+
+          <!-- PRGパターンの図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">refresh</span>
+              PRG（Post-Redirect-Get）パターン
+            </h4>
+
+            <div style="margin-bottom: 20px;">
+              <div style="font-weight: 600; color: #dc2626; margin-bottom: 12px; font-size: 0.9rem;">PRGパターンを使わない場合の問題</div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 10px; padding: 10px 14px; text-align: center; font-size: 0.78rem;">
+                  <div style="font-weight: 600; color: #dc2626;">POST /todos</div>
+                  <div style="color: #64748b;">データ登録</div>
+                </div>
+                <div style="color: #dc2626; font-weight: 700;">&#8594;</div>
+                <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 10px; padding: 10px 14px; text-align: center; font-size: 0.78rem;">
+                  <div style="font-weight: 600; color: #dc2626;">HTMLを直接返す</div>
+                </div>
+                <div style="color: #dc2626; font-weight: 700;">&#8594;</div>
+                <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 10px; padding: 10px 14px; text-align: center; font-size: 0.78rem;">
+                  <div style="font-weight: 600; color: #dc2626;">F5で再読込</div>
+                  <div style="color: #64748b;">二重登録される！</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-weight: 600; color: #16a34a; margin-bottom: 12px; font-size: 0.9rem;">PRGパターンを使う場合</div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <div style="background: #dcfce7; border: 2px solid #86efac; border-radius: 10px; padding: 10px 14px; text-align: center; font-size: 0.78rem;">
+                  <div style="font-weight: 600; color: #16a34a;">POST /todos</div>
+                  <div style="color: #64748b;">データ登録</div>
+                </div>
+                <div style="color: #16a34a; font-weight: 700;">&#8594;</div>
+                <div style="background: #dcfce7; border: 2px solid #86efac; border-radius: 10px; padding: 10px 14px; text-align: center; font-size: 0.78rem;">
+                  <div style="font-weight: 600; color: #16a34a;">302 Redirect</div>
+                  <div style="color: #64748b;">リダイレクト</div>
+                </div>
+                <div style="color: #16a34a; font-weight: 700;">&#8594;</div>
+                <div style="background: #dcfce7; border: 2px solid #86efac; border-radius: 10px; padding: 10px 14px; text-align: center; font-size: 0.78rem;">
+                  <div style="font-weight: 600; color: #16a34a;">GET /todos</div>
+                  <div style="color: #64748b;">一覧表示</div>
+                </div>
+                <div style="color: #16a34a; font-weight: 700;">&#8594;</div>
+                <div style="background: #dcfce7; border: 2px solid #86efac; border-radius: 10px; padding: 10px 14px; text-align: center; font-size: 0.78rem;">
+                  <div style="font-weight: 600; color: #16a34a;">F5で再読込</div>
+                  <div style="color: #64748b;">GETなので安全！</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">tips_and_updates</span> 覚えておこう</div>
+            <div class="info-box-content">
+              <p>Spring Bootでリダイレクトする場合は、戻り値の文字列を <code>"redirect:/パス"</code> にします。テンプレート名ではなくURLとして解釈され、ブラウザに302レスポンスが返ります。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-4-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-4-2 リダイレクトの動作を確認する</h3>
+        <div class="content-block">
+          <p>ブラウザの開発者ツール（F12）の「Network」タブを開いた状態でフォームを送信してみてください。</p>
+
+          <ol>
+            <li>ブラウザで開発者ツール（F12）を開く</li>
+            <li>「Network」タブを選択</li>
+            <li><code>http://localhost:8080/todos/new</code> で新しいTodoを登録</li>
+            <li>Networkタブで <strong>302</strong> レスポンスを確認</li>
+          </ol>
+
+          <!-- ネットワーク図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">network_check</span>
+              Networkタブで確認できるリクエスト
+            </h4>
+            <div style="background: #1e293b; border-radius: 10px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 2;">
+              <div style="display: flex; gap: 16px; color: #64748b; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 8px;">
+                <div style="width: 40px;">Status</div>
+                <div style="width: 60px;">Method</div>
+                <div>URL</div>
+              </div>
+              <div style="display: flex; gap: 16px; color: #e2e8f0;">
+                <div style="width: 40px; color: #f59e0b; font-weight: 700;">302</div>
+                <div style="width: 60px; color: #86efac;">POST</div>
+                <div>/todos</div>
+              </div>
+              <div style="display: flex; gap: 16px; color: #e2e8f0;">
+                <div style="width: 40px; color: #86efac; font-weight: 700;">200</div>
+                <div style="width: 60px; color: #67e8f9;">GET</div>
+                <div>/todos</div>
+              </div>
+            </div>
+            <div style="font-size: 0.78rem; color: #64748b; margin-top: 8px;">
+              POSTの後にGETが自動実行されている = PRGパターンが機能している
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 5-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 5-5</span>
+        <h2 class="section-title">一覧画面に「新規作成」リンクを追加する</h2>
+      </div>
+
+      <!-- 5-5-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-5-1 一覧HTMLにリンクを追加する</h3>
+        <div class="content-block">
+          <p>一覧画面から新規作成画面へ遷移できるように、リンクを追加しましょう。<code>list.html</code> の <code>&lt;h1&gt;</code> タグの下に追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/resources/templates/todos/list.html（追加箇所）</span>
+            </div>
+            <pre class="code-content"><code>&lt;h1&gt;Todo一覧&lt;/h1&gt;
+&lt;a th:href="@{/todos/new}"&gt;+ 新しいTodoを作成&lt;/a&gt;
+
+&lt;table&gt;
+    &lt;!-- 既存のテーブル --&gt;
+&lt;/table&gt;</code></pre>
+          </div>
+
+          <!-- 画面遷移図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">swap_horiz</span>
+              画面遷移の流れ
+            </h4>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; font-size: 0.82rem;">
+              <div style="background: white; border: 2px solid #0097A7; border-radius: 12px; padding: 16px; text-align: center; min-width: 140px;">
+                <div style="font-weight: 700; color: #0097A7; margin-bottom: 4px;">一覧画面</div>
+                <div style="color: #64748b; font-size: 0.75rem;">/todos</div>
+                <div style="margin-top: 8px; background: #E0F7FA; padding: 4px 10px; border-radius: 4px; font-size: 0.72rem;">「+ 新しいTodoを作成」</div>
+              </div>
+              <div style="color: #0097A7; font-size: 1.2rem; font-weight: 700;">&#8594; GET</div>
+              <div style="background: white; border: 2px solid #0097A7; border-radius: 12px; padding: 16px; text-align: center; min-width: 140px;">
+                <div style="font-weight: 700; color: #0097A7; margin-bottom: 4px;">作成画面</div>
+                <div style="color: #64748b; font-size: 0.75rem;">/todos/new</div>
+                <div style="margin-top: 8px; background: #E0F7FA; padding: 4px 10px; border-radius: 4px; font-size: 0.72rem;">「登録」ボタン</div>
+              </div>
+              <div style="color: #0097A7; font-size: 1.2rem; font-weight: 700;">&#8594; POST</div>
+              <div style="background: white; border: 2px solid #0097A7; border-radius: 12px; padding: 16px; text-align: center; min-width: 140px;">
+                <div style="font-weight: 700; color: #0097A7; margin-bottom: 4px;">一覧画面</div>
+                <div style="color: #64748b; font-size: 0.75rem;">/todos</div>
+                <div style="margin-top: 8px; background: #E0F7FA; padding: 4px 10px; border-radius: 4px; font-size: 0.72rem;">redirect:/todos</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-5-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">5-5-2 この章で作成・変更したファイル</h3>
+        <div class="content-block">
+          <!-- ファイル構成の図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">folder_open</span>
+              この時点でのファイル構成
+            </h4>
+            <div style="background: #1e293b; border-radius: 10px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.9;">
+              <div style="color: #fbbf24; font-weight: 700;">todo/src/main/</div>
+              <div style="color: #e2e8f0;">&#9500;&#9472;&#9472; java/com/example/todo/</div>
+              <div style="color: #e2e8f0;">&#9474;   &#9500;&#9472;&#9472; entity/</div>
+              <div style="color: #e2e8f0;">&#9474;   &#9474;   &#9492;&#9472;&#9472; Todo.java</div>
+              <div style="color: #e2e8f0;">&#9474;   &#9500;&#9472;&#9472; repository/</div>
+              <div style="color: #e2e8f0;">&#9474;   &#9474;   &#9492;&#9472;&#9472; TodoRepository.java</div>
+              <div style="color: #e2e8f0;">&#9474;   &#9492;&#9472;&#9472; controller/</div>
+              <div style="color: #67e8f9;">&#9474;       &#9492;&#9472;&#9472; TodoController.java <span style="color: #64748b;">&#8592; メソッド追加</span></div>
+              <div style="color: #e2e8f0;">&#9492;&#9472;&#9472; resources/templates/todos/</div>
+              <div style="color: #67e8f9;">    &#9500;&#9472;&#9472; list.html <span style="color: #64748b;">&#8592; リンク追加</span></div>
+              <div style="color: #86efac;">    &#9492;&#9472;&#9472; create.html <span style="color: #64748b;">&#8592; 新規作成</span></div>
+            </div>
+          </div>
+
+          <!-- まとめ -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">summarize</span>
+              Chapter 5 まとめ
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">edit_note</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">th:object + th:field</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">フォームとオブジェクトを紐づけ</div>
+              </div>
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">send</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">@PostMapping</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">POSTリクエストを受信</div>
+              </div>
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">save</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">save() + PRG</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">保存してリダイレクト</div>
+              </div>
+            </div>
+          </div>
+
+          <p>次の章では、登録したデータを<strong>編集・削除</strong>する機能を追加します。CRUDのうちUpdateとDeleteを実装し、Todoアプリの基本機能を完成させましょう。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習問題 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Exercise</span>
+        <h2 class="section-title">5章 練習問題</h2>
+      </div>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <div class="exercise-number">Q1</div>
+          <div class="exercise-content">
+            <p>Thymeleafのフォームで <code>th:object="${todo}"</code> と書いた場合、各入力フィールドでオブジェクトのプロパティを参照する正しい構文はどれですか。</p>
+            <ol type="A">
+              <li><code>th:field="${todo.title}"</code></li>
+              <li><code>th:field="*{title}"</code></li>
+              <li><code>th:value="${title}"</code></li>
+              <li><code>th:field="#{title}"</code></li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q2</div>
+          <div class="exercise-content">
+            <p>PRGパターンを使わずにPOST処理後にHTMLを直接返すと、どのような問題が起きる可能性がありますか。</p>
+            <ol type="A">
+              <li>ページの表示速度が遅くなる</li>
+              <li>ブラウザのF5（再読込）でデータが二重登録される</li>
+              <li>データベースに接続できなくなる</li>
+              <li>CSSが適用されなくなる</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q3</div>
+          <div class="exercise-content">
+            <p><code>JpaRepository</code> の <code>save()</code> メソッドについて正しい説明はどれですか。</p>
+            <ol type="A">
+              <li>常にINSERT（新規登録）を実行する</li>
+              <li>常にUPDATE（更新）を実行する</li>
+              <li>idがnullならINSERT、idが存在すればUPDATEを実行する</li>
+              <li>DELETE（削除）も実行できる</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解答 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Answer</span>
+        <h2 class="section-title">5章 解説・解答</h2>
+      </div>
+      <div class="answer-list">
+        <div class="answer-item">
+          <div class="answer-header">Q1の解答: B</div>
+          <div class="answer-content">
+            <p><code>th:object</code> で指定したオブジェクトのプロパティは <code>*{...}</code>（アスタリスク式）で参照します。<code>*{title}</code> は <code>${todo.title}</code> と同じ意味ですが、<code>th:object</code> と組み合わせることでコードが簡潔になります。<code>#{...}</code> はメッセージ式（国際化）、<code>@{...}</code> はURL式です。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q2の解答: B</div>
+          <div class="answer-content">
+            <p>POST処理後にHTMLを直接返すと、ブラウザのURLがPOST先のままになります。この状態でF5（再読込）を押すと、同じPOSTリクエストが再送信され、同じデータが重複して登録されます。PRGパターンではPOST後にリダイレクト（302）するため、ブラウザのURLがGET先に変わり、F5を押してもGETリクエストが実行されるだけで安全です。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q3の解答: C</div>
+          <div class="answer-content">
+            <p><code>save()</code> メソッドは、渡されたエンティティのIDを見て自動的に動作を切り替えます。IDが <code>null</code> または未設定の場合はINSERT（新規登録）、既に存在するIDが設定されている場合はUPDATE（更新）を実行します。削除は <code>deleteById()</code> など別のメソッドを使います。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="4sh-repository.html" class="page-nav-btn prev">
+      <span>&#8592;</span>
+      <div>
+        <div class="page-nav-label">前の章</div>
+        <div class="page-nav-title">第4章 リポジトリでデータを取得する</div>
+      </div>
+    </a>
+    <a href="6sh-update-delete.html" class="page-nav-btn next">
+      <div>
+        <div class="page-nav-label">次の章</div>
+        <div class="page-nav-title">第6章 データを更新・削除する</div>
+      </div>
+      <span>&#8594;</span>
+    </a>
+  </div>
+
+  <!-- 共通フッター -->
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

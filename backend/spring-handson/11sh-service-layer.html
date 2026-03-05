@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第11章 サービス層でロジックを分離する - Spring Boot ハンズオン</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #F1FFFE;
+    }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-spring-handson.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+      <div class="chapter-number">11</div>
+      <h1 class="chapter-title">サービス層でロジックを分離する</h1>
+      <p class="chapter-subtitle">ControllerからServiceへロジックを移動し、責務分割とDIを実感する</p>
+    </header>
+
+    <nav class="toc">
+      <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">11-1</span><span>なぜServiceが必要か</span></li>
+        <li class="toc-item"><span class="toc-number">11-2</span><span>TodoServiceクラスを作成する</span></li>
+        <li class="toc-item"><span class="toc-number">11-3</span><span>ControllerをService呼び出しに変更する</span></li>
+        <li class="toc-item"><span class="toc-number">11-4</span><span>ビジネスロジックをServiceに集約する</span></li>
+        <li class="toc-item"><span class="toc-number">11-5</span><span>リファクタリング前後を比較する</span></li>
+        <li class="toc-item"><span class="toc-number">11-6</span><span>まとめ</span></li>
+      </ul>
+    </nav>
+
+    <!-- セクション 11-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-1</span>
+        <h2 class="section-title">なぜServiceが必要か</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>ここまでのTodoアプリでは、Controllerがデータの取得・保存・ステータスの切り替えなど、あらゆる処理を直接行っています。機能が増えるにつれてControllerが肥大化し、コードの見通しが悪くなります。この章では、ビジネスロジックをServiceクラスに分離する「3層アーキテクチャ」のリファクタリングを行います。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">11-1-1 Controller肥大化の問題</h3>
+        <div class="content-block">
+          <p>現在のTodoControllerを振り返ってみましょう。1つのクラスに以下の全てが詰め込まれています。</p>
+
+          <!-- 問題点の図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #ef4444;">warning</span>
+              現在のTodoController -- 責務が多すぎる
+            </h4>
+            <div style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 12px; padding: 20px; max-width: 360px; margin: 0 auto;">
+              <div style="text-align: center; font-weight: 700; color: #dc2626; font-size: 1rem; margin-bottom: 16px;">TodoController</div>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div style="background: white; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem; color: #334155; border-left: 3px solid #3b82f6;">HTTPリクエストの受付・レスポンス</div>
+                <div style="background: white; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem; color: #334155; border-left: 3px solid #f59e0b;">Todoの検索・ソート処理</div>
+                <div style="background: white; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem; color: #334155; border-left: 3px solid #f59e0b;">ステータスの切り替えロジック</div>
+                <div style="background: white; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem; color: #334155; border-left: 3px solid #f59e0b;">期限切れチェック</div>
+                <div style="background: white; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem; color: #334155; border-left: 3px solid #22c55e;">データベースアクセス（Repository呼び出し）</div>
+              </div>
+              <div style="text-align: center; margin-top: 12px; font-size: 0.75rem; color: #dc2626;">1クラスに全部入りで見通しが悪い</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">11-1-2 3層アーキテクチャとは</h3>
+        <div class="content-block">
+          <p>Spring Bootの標準的な設計パターンでは、アプリケーションを3つの層に分けて、それぞれに明確な役割を持たせます。</p>
+
+          <!-- 3層アーキテクチャ図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">layers</span>
+              3層アーキテクチャ
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 12px; max-width: 500px; margin: 0 auto;">
+              <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 16px; text-align: center;">
+                <div style="font-weight: 700; color: #1e40af; font-size: 0.95rem;">Controller層（プレゼンテーション）</div>
+                <div style="font-size: 0.78rem; color: #3b82f6; margin-top: 4px;">HTTPリクエスト/レスポンスの処理、画面遷移</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; margin-top: 6px;">@Controller / @RestController</div>
+              </div>
+              <div style="text-align: center; color: #0097A7; font-size: 1.2rem;">&#8595; 呼び出す &#8595;</div>
+              <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 16px; text-align: center;">
+                <div style="font-weight: 700; color: #92400e; font-size: 0.95rem;">Service層（ビジネスロジック）</div>
+                <div style="font-size: 0.78rem; color: #b45309; margin-top: 4px;">業務ルール、データ加工、複雑な処理の実行</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; margin-top: 6px;">@Service</div>
+              </div>
+              <div style="text-align: center; color: #0097A7; font-size: 1.2rem;">&#8595; 呼び出す &#8595;</div>
+              <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 16px; text-align: center;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.95rem;">Repository層（データアクセス）</div>
+                <div style="font-size: 0.78rem; color: #15803d; margin-top: 4px;">データベースへの読み書き（CRUD操作）</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; margin-top: 6px;">@Repository / JpaRepository</div>
+              </div>
+            </div>
+            <p style="text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 16px;">ControllerはServiceだけを知り、ServiceはRepositoryだけを知る</p>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> なぜ層を分けるのか</div>
+            <div class="info-box-content">
+              <ul>
+                <li><strong>テストしやすい</strong> -- Serviceだけを単体テストできる（次章で実践）</li>
+                <li><strong>再利用できる</strong> -- 同じServiceをWebコントローラとAPIコントローラの両方から呼べる</li>
+                <li><strong>変更の影響を限定できる</strong> -- 画面変更はController、ロジック変更はServiceだけを修正すればよい</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 11-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-2</span>
+        <h2 class="section-title">TodoServiceクラスを作成する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>新しいファイル<code>TodoService.java</code>を作成し、データの取得・保存・削除のメソッドを定義します。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">11-2-1 基本的なCRUDメソッドを作る</h3>
+        <div class="content-block">
+          <p><code>com.example.todo</code>パッケージに<code>TodoService.java</code>を新規作成し、以下のコードを手で入力してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/java/com/example/todo/TodoService.java</span>
+            </div>
+            <pre class="code-content"><code>package com.example.todo;
+
+import org.springframework.stereotype.Service;
+import java.util.List;
+
+@Service
+public class TodoService {
+
+    private final TodoRepository todoRepository;
+
+    // コンストラクタインジェクション
+    public TodoService(TodoRepository todoRepository) {
+        this.todoRepository = todoRepository;
+    }
+
+    // 全件取得
+    public List&lt;Todo&gt; findAll() {
+        return todoRepository.findAll();
+    }
+
+    // ID指定で1件取得
+    public Todo findById(Long id) {
+        return todoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("不正なID: " + id));
+    }
+
+    // 保存（新規・更新共通）
+    public Todo save(Todo todo) {
+        return todoRepository.save(todo);
+    }
+
+    // 削除
+    public void deleteById(Long id) {
+        todoRepository.deleteById(id);
+    }
+}</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> コードの解説</div>
+            <div class="info-box-content">
+              <ul>
+                <li><strong>@Service</strong> -- このクラスがService層のコンポーネントであることをSpringに伝えます。@Componentと同等ですが、役割を明示するため@Serviceを使います。</li>
+                <li><strong>コンストラクタインジェクション</strong> -- <code>final</code>フィールドとコンストラクタでDI（依存性注入）を行います。Spring Bootはコンストラクタが1つの場合、<code>@Autowired</code>を省略できます。</li>
+                <li><strong>orElseThrow()</strong> -- <code>findById()</code>はOptionalを返すため、値がない場合に例外をスローします。この判定ロジックをServiceに閉じ込めることで、Controllerがシンプルになります。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">11-2-2 DI（依存性注入）の仕組み</h3>
+        <div class="content-block">
+          <!-- DI解説図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">sync_alt</span>
+              Springの依存性注入（DI）の流れ
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 16px; max-width: 500px; margin: 0 auto;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #0097A7; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">1</div>
+                <div style="background: #E0F7FA; border-radius: 8px; padding: 12px 16px; flex: 1; font-size: 0.82rem;">
+                  <strong>起動時:</strong> Spring が <code>@Repository</code> 付きの TodoRepository を検出し、インスタンスを作成
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #0097A7; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">2</div>
+                <div style="background: #E0F7FA; border-radius: 8px; padding: 12px 16px; flex: 1; font-size: 0.82rem;">
+                  <strong>起動時:</strong> Spring が <code>@Service</code> 付きの TodoService を検出し、コンストラクタに TodoRepository を注入して作成
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #0097A7; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">3</div>
+                <div style="background: #E0F7FA; border-radius: 8px; padding: 12px 16px; flex: 1; font-size: 0.82rem;">
+                  <strong>起動時:</strong> Spring が <code>@Controller</code> 付きの TodoController を検出し、コンストラクタに TodoService を注入して作成
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #0097A7; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">4</div>
+                <div style="background: #E0F7FA; border-radius: 8px; padding: 12px 16px; flex: 1; font-size: 0.82rem;">
+                  <strong>実行時:</strong> HTTPリクエスト → Controller → Service → Repository → DB
+                </div>
+              </div>
+            </div>
+            <p style="text-align: center; color: #64748b; font-size: 0.78rem; margin-top: 16px;">自分で <code>new TodoService()</code> する必要がない。Springが自動で生成・接続してくれる。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 11-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-3</span>
+        <h2 class="section-title">ControllerをService呼び出しに変更する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>TodoControllerが直接TodoRepositoryを呼んでいた部分を、TodoServiceの呼び出しに段階的に置き換えていきます。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">11-3-1 Controller の依存関係を変更する</h3>
+        <div class="content-block">
+          <p>まず、TodoControllerのフィールドとコンストラクタを変更します。<code>TodoRepository</code>を<code>TodoService</code>に差し替えてください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java - 変更前</span>
+            </div>
+            <pre class="code-content"><code>@Controller
+@RequestMapping("/todos")
+public class TodoController {
+
+    private final TodoRepository todoRepository;
+
+    public TodoController(TodoRepository todoRepository) {
+        this.todoRepository = todoRepository;
+    }
+    // ...
+}</code></pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java - 変更後</span>
+            </div>
+            <pre class="code-content"><code>@Controller
+@RequestMapping("/todos")
+public class TodoController {
+
+    private final TodoService todoService;
+
+    public TodoController(TodoService todoService) {
+        this.todoService = todoService;
+    }
+    // ...
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">11-3-2 各メソッドをService呼び出しに書き換える</h3>
+        <div class="content-block">
+          <p>Controllerの各メソッドを順番に書き換えましょう。まずは<code>list()</code>メソッドです。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java - list()の変更</span>
+            </div>
+            <pre class="code-content"><code>    @GetMapping
+    public String list(@RequestParam(required = false) TodoStatus status,
+                       Model model) {
+        List&lt;Todo&gt; todos = todoService.findAll(status);
+        model.addAttribute("todos", todos);
+        model.addAttribute("currentStatus", status);
+        model.addAttribute("statuses", TodoStatus.values());
+        model.addAttribute("viewName", "list");
+        model.addAttribute("pageTitle", "Todo一覧");
+        return "layout";
+    }</code></pre>
+          </div>
+
+          <p>次に、詳細・編集・削除メソッドも書き換えます。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java - edit/delete の変更</span>
+            </div>
+            <pre class="code-content"><code>    // 編集画面表示
+    @GetMapping("/{id}/edit")
+    public String edit(@PathVariable Long id, Model model) {
+        model.addAttribute("todo", todoService.findById(id));
+        model.addAttribute("viewName", "edit");
+        model.addAttribute("pageTitle", "Todo編集");
+        return "layout";
+    }
+
+    // 更新処理
+    @PostMapping("/{id}/update")
+    public String update(@PathVariable Long id,
+                         @Valid @ModelAttribute Todo todo,
+                         BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            model.addAttribute("viewName", "edit");
+            model.addAttribute("pageTitle", "Todo編集");
+            return "layout";
+        }
+        todo.setId(id);
+        todoService.save(todo);
+        return "redirect:/todos";
+    }
+
+    // 削除処理
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id) {
+        todoService.deleteById(id);
+        return "redirect:/todos";
+    }
+
+    // ステータス切り替え
+    @PostMapping("/{id}/toggle-status")
+    public String toggleStatus(@PathVariable Long id) {
+        todoService.toggleStatus(id);
+        return "redirect:/todos";
+    }</code></pre>
+          </div>
+
+          <p>Controllerのコードがとてもシンプルになりました。各メソッドは「リクエストを受け取る → Serviceに処理を委譲する → 画面を返す」という役割だけに集中しています。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 11-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-4</span>
+        <h2 class="section-title">ビジネスロジックをServiceに集約する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>Controllerから切り出したロジックをTodoServiceに追加していきましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">11-4-1 フィルタ付き検索メソッドを追加する</h3>
+        <div class="content-block">
+          <p><code>TodoService.java</code>に、ステータスによるフィルタ検索メソッドを追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoService.java に追加</span>
+            </div>
+            <pre class="code-content"><code>    // ステータスでフィルタして取得（nullの場合は全件）
+    public List&lt;Todo&gt; findAll(TodoStatus status) {
+        if (status != null) {
+            return todoRepository.findByStatus(status);
+        }
+        return todoRepository.findAll();
+    }</code></pre>
+          </div>
+
+          <p>条件分岐がServiceの中に移動したことで、Controllerのlist()メソッドは<code>todoService.findAll(status)</code>の1行で済むようになりました。</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">11-4-2 ステータス切り替えロジックを追加する</h3>
+        <div class="content-block">
+          <p>ステータスのトグル処理もServiceに移動しましょう。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoService.java に追加</span>
+            </div>
+            <pre class="code-content"><code>    // ステータスを次の状態に切り替える
+    public void toggleStatus(Long id) {
+        Todo todo = findById(id);
+        todo.setStatus(todo.getStatus().next());
+        todoRepository.save(todo);
+    }</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> Serviceメソッドの設計ポイント</div>
+            <div class="info-box-content">
+              <p><code>toggleStatus()</code>は内部で<code>findById()</code>を再利用しています。Serviceクラス内のメソッド同士を組み合わせることで、コードの重複を避けられます。将来「ステータス変更時にメール通知を送る」といった機能追加も、このメソッドだけを修正すれば済みます。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">11-4-3 この時点でのファイル構成を確認する</h3>
+        <div class="content-block">
+          <!-- ファイル構成図 -->
+          <div style="background: #1e293b; border-radius: 12px; padding: 20px 24px; margin: 16px 0; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.9; color: #e2e8f0;">
+            <div>src/main/java/com/example/todo/</div>
+            <div style="padding-left: 20px;">
+              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> Todo.java <span style="color: #64748b;">(Entity)</span><br>
+              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoStatus.java <span style="color: #64748b;">(Enum)</span><br>
+              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoRepository.java <span style="color: #64748b;">(Repository層)</span><br>
+              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> <span style="color: #86efac;">TodoService.java</span> <span style="color: #86efac;">&#8592; NEW! (Service層)</span><br>
+              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoController.java <span style="color: #fbbf24;">&#8592; リファクタリング済 (Controller層)</span><br>
+              <span style="color: #64748b;">&#9492;&#9472;&#9472;</span> TodoApplication.java
+            </div>
+          </div>
+
+          <p>実行して確認しましょう。アプリケーションを再起動して、全ての機能（一覧表示、フィルタ、登録、編集、削除、ステータス切り替え）が以前と同じように動作することを確認してください。リファクタリングなので、動作は変わらないのが正解です。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 11-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-5</span>
+        <h2 class="section-title">リファクタリング前後を比較する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>リファクタリングの効果を数字とコードで振り返りましょう。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">11-5-1 Before / After 比較</h3>
+        <div class="content-block">
+          <!-- 比較図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">compare</span>
+              TodoController の変化
+            </h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div style="background: #fef2f2; border-radius: 10px; padding: 16px; border-top: 3px solid #ef4444;">
+                <div style="font-weight: 700; color: #dc2626; font-size: 0.85rem; margin-bottom: 12px;">Before（Service導入前）</div>
+                <div style="font-size: 0.78rem; color: #334155; line-height: 1.8;">
+                  <div style="margin-bottom: 4px;"><strong>行数:</strong> 約80行</div>
+                  <div style="margin-bottom: 4px;"><strong>依存:</strong> TodoRepository（直接）</div>
+                  <div style="margin-bottom: 4px;"><strong>責務:</strong> HTTP処理 + ロジック + DB呼び出し</div>
+                  <div><strong>テスト:</strong> DB接続が必要で困難</div>
+                </div>
+              </div>
+              <div style="background: #dcfce7; border-radius: 10px; padding: 16px; border-top: 3px solid #22c55e;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.85rem; margin-bottom: 12px;">After（Service導入後）</div>
+                <div style="font-size: 0.78rem; color: #334155; line-height: 1.8;">
+                  <div style="margin-bottom: 4px;"><strong>行数:</strong> 約50行</div>
+                  <div style="margin-bottom: 4px;"><strong>依存:</strong> TodoService（間接的にDB）</div>
+                  <div style="margin-bottom: 4px;"><strong>責務:</strong> HTTP処理のみ</div>
+                  <div><strong>テスト:</strong> Serviceをモック化可能</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 呼び出しフロー図 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">account_tree</span>
+              toggleStatusの呼び出しフロー
+            </h4>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 0.82rem;">
+              <div style="background: #dbeafe; border-radius: 8px; padding: 10px 16px; font-weight: 600; color: #1e40af;">Controller</div>
+              <div style="color: #64748b;">&#8594;</div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #334155; background: #f1f5f9; padding: 6px 10px; border-radius: 6px;">toggleStatus(id)</div>
+              <div style="color: #64748b;">&#8594;</div>
+              <div style="background: #fef3c7; border-radius: 8px; padding: 10px 16px; font-weight: 600; color: #92400e;">Service</div>
+              <div style="color: #64748b;">&#8594;</div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #334155; background: #f1f5f9; padding: 6px 10px; border-radius: 6px;">findById() + save()</div>
+              <div style="color: #64748b;">&#8594;</div>
+              <div style="background: #dcfce7; border-radius: 8px; padding: 10px 16px; font-weight: 600; color: #166534;">Repository</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 11-6 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 11-6</span>
+        <h2 class="section-title">まとめ</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>この章では、ControllerからService層にビジネスロジックを分離するリファクタリングを行いました。</p>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">11-6-1 この章で学んだこと</h3>
+        <div class="content-block">
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+              <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">layers</span>
+                <div style="font-weight: 700; color: #00838F; font-size: 0.9rem; margin-top: 8px;">3層アーキテクチャ</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">Controller → Service → Repository</div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">settings_suggest</span>
+                <div style="font-weight: 700; color: #00838F; font-size: 0.9rem; margin-top: 8px;">@Serviceアノテーション</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">SpringのDIコンテナに登録</div>
+              </div>
+              <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">sync_alt</span>
+                <div style="font-weight: 700; color: #00838F; font-size: 0.9rem; margin-top: 8px;">コンストラクタDI</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">finalフィールド + コンストラクタ</div>
+              </div>
+            </div>
+          </div>
+
+          <p>次の章では、JUnit5を使ったテストの書き方を学びます。Service層を分離したことで、Repositoryをモック化してServiceだけを単体テストできるようになりました。この恩恵を実感しましょう。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習問題 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Exercise</span>
+        <h2 class="section-title">11章 練習問題</h2>
+      </div>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <div class="exercise-number">Q1</div>
+          <div class="exercise-content">
+            <p>Spring Bootの3層アーキテクチャにおける<code>@Service</code>アノテーションの役割について正しいものはどれですか。</p>
+            <ol type="A">
+              <li>HTTPリクエストを受け付けるエンドポイントを定義する</li>
+              <li>データベースアクセス用のクラスであることをSpringに伝える</li>
+              <li>ビジネスロジックを担当するクラスであることをSpringに伝え、DIコンテナに登録する</li>
+              <li>テンプレートエンジンにデータを渡すためのクラスを定義する</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q2</div>
+          <div class="exercise-content">
+            <p>以下のコンストラクタインジェクションについて正しい記述はどれですか。</p>
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+                <span class="code-title">TodoService.java</span>
+              </div>
+              <pre class="code-content"><code>private final TodoRepository todoRepository;
+
+public TodoService(TodoRepository todoRepository) {
+    this.todoRepository = todoRepository;
+}</code></pre>
+            </div>
+            <ol type="A">
+              <li>@Autowiredアノテーションが省略されているためコンパイルエラーになる</li>
+              <li>コンストラクタが1つしかない場合、Spring Bootは自動的に@Autowiredを適用する</li>
+              <li>finalフィールドはDIできないため、finalを外す必要がある</li>
+              <li>このコードではフィールドインジェクションが行われる</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q3</div>
+          <div class="exercise-content">
+            <p>Service層を導入するメリットとして<strong>誤っている</strong>ものはどれですか。</p>
+            <ol type="A">
+              <li>ビジネスロジックを単体テストしやすくなる</li>
+              <li>同じロジックをWebコントローラとAPIコントローラから再利用できる</li>
+              <li>Service層を導入すると処理速度が向上し、レスポンスが速くなる</li>
+              <li>Controller が HTTP処理に集中でき、コードの見通しが良くなる</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解答 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Answer</span>
+        <h2 class="section-title">11章 解説・解答</h2>
+      </div>
+      <div class="answer-list">
+        <div class="answer-item">
+          <div class="answer-header">Q1の解答: C</div>
+          <div class="answer-content">
+            <p><code>@Service</code>はクラスがビジネスロジックを担当するService層のコンポーネントであることを示すアノテーションです。内部的には<code>@Component</code>の特殊化であり、SpringのDIコンテナにBeanとして登録されます。HTTPリクエストの受付は<code>@Controller</code>、データアクセスは<code>@Repository</code>の役割です。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q2の解答: B</div>
+          <div class="answer-content">
+            <p>Spring Boot（Spring Framework 4.3以降）では、クラスにコンストラクタが1つしかない場合、<code>@Autowired</code>を省略しても自動的に依存性注入が行われます。<code>final</code>フィールドを使うことで、注入後にフィールドが再代入されることを防ぎ、不変性を保証できます。これが現在推奨されるDIパターンです。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q3の解答: C</div>
+          <div class="answer-content">
+            <p>Service層の導入は設計の改善（保守性・テスタビリティ・再利用性の向上）が目的であり、処理速度には直接的な影響はありません。むしろメソッド呼び出しが1段増えるため、わずかなオーバーヘッドが加わりますが、実用上は無視できるレベルです。パフォーマンス改善には、クエリの最適化やキャッシュの導入といった別のアプローチが必要です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="page-nav">
+    <a href="10sh-layout-design.html" class="page-nav-btn prev">
+      <span>&#8592;</span>
+      <div>
+        <div class="page-nav-label">前の章</div>
+        <div class="page-nav-title">第10章</div>
+      </div>
+    </a>
+    <a href="12sh-testing.html" class="page-nav-btn next">
+      <div>
+        <div class="page-nav-label">次の章</div>
+        <div class="page-nav-title">第12章</div>
+      </div>
+      <span>&#8594;</span>
+    </a>
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

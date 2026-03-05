@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第6章 データを更新・削除する - Spring Boot ハンズオン</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #F1FFFE;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <!-- グローバルナビゲーション -->
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-spring-handson.js"></script>
+
+  <div class="container">
+    <!-- ヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+      <div class="chapter-number">6</div>
+      <h1 class="chapter-title">データを更新・削除する</h1>
+      <p class="chapter-subtitle">編集画面と削除機能を実装し、CRUDの全操作を完成させる</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">6-1</span><span>CRUD操作の全体像</span></li>
+        <li class="toc-item"><span class="toc-number">6-2</span><span>編集画面を作る</span></li>
+        <li class="toc-item"><span class="toc-number">6-3</span><span>更新処理を実装する</span></li>
+        <li class="toc-item"><span class="toc-number">6-4</span><span>削除機能を実装する</span></li>
+        <li class="toc-item"><span class="toc-number">6-5</span><span>一覧画面に編集・削除ボタンを追加する</span></li>
+        <li class="toc-item"><span class="toc-number">6-6</span><span>まとめ</span></li>
+      </ul>
+    </nav>
+
+    <!-- セクション 6-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-1</span>
+        <h2 class="section-title">CRUD操作の全体像</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>前章でデータの新規登録（Create）ができるようになりました。一覧表示（Read）は第4章で実装済みです。この章では残りの更新（Update）と削除（Delete）を実装し、CRUDを完成させます。</p>
+      </div>
+
+      <!-- 6-1-1 CRUDの進捗を確認する -->
+      <div class="subsection">
+        <h3 class="subsection-title">6-1-1 CRUDの進捗を確認する</h3>
+
+        <div class="content-block">
+          <!-- CRUD図解 -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">CRUD操作と実装状況</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; font-size:13px;">
+              <div style="background:#d1fae5; border:2px solid #10b981; border-radius:10px; padding:14px; text-align:center;">
+                <span class="material-icons" style="color:#10b981; font-size:28px; display:block; margin-bottom:4px;">check_circle</span>
+                <strong style="font-size:16px;">Create</strong>
+                <div style="color:#064e3b; margin-top:4px;">新規登録 <span style="font-size:11px;">（第5章）</span></div>
+                <div style="margin-top:6px; font-size:11px; color:#64748b;">@PostMapping + save()</div>
+              </div>
+              <div style="background:#d1fae5; border:2px solid #10b981; border-radius:10px; padding:14px; text-align:center;">
+                <span class="material-icons" style="color:#10b981; font-size:28px; display:block; margin-bottom:4px;">check_circle</span>
+                <strong style="font-size:16px;">Read</strong>
+                <div style="color:#064e3b; margin-top:4px;">一覧表示 <span style="font-size:11px;">（第4章）</span></div>
+                <div style="margin-top:6px; font-size:11px; color:#64748b;">@GetMapping + findAll()</div>
+              </div>
+              <div style="background:#E0F7FA; border:2px solid #0097A7; border-radius:10px; padding:14px; text-align:center;">
+                <span class="material-icons" style="color:#0097A7; font-size:28px; display:block; margin-bottom:4px;">edit</span>
+                <strong style="font-size:16px;">Update</strong>
+                <div style="color:#00838F; margin-top:4px;">更新 <span style="font-size:11px;">（この章）</span></div>
+                <div style="margin-top:6px; font-size:11px; color:#64748b;">findById() + save()</div>
+              </div>
+              <div style="background:#E0F7FA; border:2px solid #0097A7; border-radius:10px; padding:14px; text-align:center;">
+                <span class="material-icons" style="color:#0097A7; font-size:28px; display:block; margin-bottom:4px;">delete</span>
+                <strong style="font-size:16px;">Delete</strong>
+                <div style="color:#00838F; margin-top:4px;">削除 <span style="font-size:11px;">（この章）</span></div>
+                <div style="margin-top:6px; font-size:11px; color:#64748b;">deleteById()</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6-1-2 更新・削除に必要なもの -->
+      <div class="subsection">
+        <h3 class="subsection-title">6-1-2 更新・削除に必要なもの</h3>
+
+        <div class="content-block">
+          <p>更新と削除では、<strong>どのデータを対象にするか</strong>を指定する必要があります。そのためにTodoの<code>id</code>をURLに含めます。</p>
+
+          <table style="width:100%; border-collapse:collapse; margin:16px 0; font-size:14px;">
+            <thead>
+              <tr style="background:#E0F7FA;">
+                <th style="padding:12px; border:1px solid #e2e8f0;">操作</th>
+                <th style="padding:12px; border:1px solid #e2e8f0;">HTTPメソッド</th>
+                <th style="padding:12px; border:1px solid #e2e8f0;">URL</th>
+                <th style="padding:12px; border:1px solid #e2e8f0;">処理</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:12px; border:1px solid #e2e8f0;">編集画面表示</td>
+                <td style="padding:12px; border:1px solid #e2e8f0;">GET</td>
+                <td style="padding:12px; border:1px solid #e2e8f0;"><code>/todo/edit/{id}</code></td>
+                <td style="padding:12px; border:1px solid #e2e8f0;">既存データを表示</td>
+              </tr>
+              <tr>
+                <td style="padding:12px; border:1px solid #e2e8f0;">更新処理</td>
+                <td style="padding:12px; border:1px solid #e2e8f0;">POST</td>
+                <td style="padding:12px; border:1px solid #e2e8f0;"><code>/todo/update/{id}</code></td>
+                <td style="padding:12px; border:1px solid #e2e8f0;">データを上書き保存</td>
+              </tr>
+              <tr>
+                <td style="padding:12px; border:1px solid #e2e8f0;">削除処理</td>
+                <td style="padding:12px; border:1px solid #e2e8f0;">POST</td>
+                <td style="padding:12px; border:1px solid #e2e8f0;"><code>/todo/delete/{id}</code></td>
+                <td style="padding:12px; border:1px solid #e2e8f0;">データを削除</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> {id} はパス変数</div>
+            <div class="info-box-content">
+              <p>URLに含まれる<code>{id}</code>は<strong>パス変数（Path Variable）</strong>と呼ばれ、<code>@PathVariable</code>アノテーションで受け取ります。例えば<code>/todo/edit/3</code>にアクセスするとid=3のTodoが対象になります。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 6-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-2</span>
+        <h2 class="section-title">編集画面を作る</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>まずは編集画面のHTMLテンプレートと、それを表示するControllerメソッドを作成します。</p>
+      </div>
+
+      <!-- 6-2-1 edit.htmlを作成する -->
+      <div class="subsection">
+        <h3 class="subsection-title">6-2-1 edit.htmlを作成する</h3>
+
+        <div class="content-block">
+          <p><code>src/main/resources/templates/todo</code> ディレクトリに <code>edit.html</code> を新規作成し、以下のコードを手で入力してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/resources/templates/todo/edit.html</span>
+            </div>
+            <pre class="code-content"><code>&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;Todo - 編集&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Todoを編集する&lt;/h1&gt;
+
+  &lt;form th:action="@{/todo/update/{id}(id=${todo.id})}" th:object="${todo}" method="post"&gt;
+    &lt;div&gt;
+      &lt;label for="title"&gt;タイトル:&lt;/label&gt;
+      &lt;input type="text" id="title" th:field="*{title}"&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="description"&gt;説明:&lt;/label&gt;
+      &lt;textarea id="description" th:field="*{description}"&gt;&lt;/textarea&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="dueDate"&gt;期限日:&lt;/label&gt;
+      &lt;input type="date" id="dueDate" th:field="*{dueDate}"&gt;
+    &lt;/div&gt;
+    &lt;button type="submit"&gt;更新する&lt;/button&gt;
+  &lt;/form&gt;
+
+  &lt;a th:href="@{/todo}"&gt;一覧に戻る&lt;/a&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+          </div>
+
+          <p>create.htmlとほぼ同じ構造ですが、以下の2点が異なります。</p>
+
+          <!-- 差分図解 -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">create.html との違い</div>
+            <div style="display:grid; gap:12px; font-size:13px;">
+              <div style="display:flex; align-items:flex-start; gap:12px;">
+                <div style="background:#0097A7; color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; font-size:12px;">1</div>
+                <div style="background:white; border:1px solid #e2e8f0; border-radius:8px; padding:12px; flex:1;">
+                  <strong>送信先URLにidを含む</strong><br>
+                  <code>th:action="@{/todo/update/{id}(id=${todo.id})}"</code><br>
+                  <span style="color:#64748b;">Thymeleafのパス変数式で、todoのidをURLに埋め込みます。</span>
+                </div>
+              </div>
+              <div style="display:flex; align-items:flex-start; gap:12px;">
+                <div style="background:#0097A7; color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; font-size:12px;">2</div>
+                <div style="background:white; border:1px solid #e2e8f0; border-radius:8px; padding:12px; flex:1;">
+                  <strong>フォームに既存の値が入っている</strong><br>
+                  <span style="color:#64748b;">Controllerからデータベースの既存Todoを渡すため、<code>th:field</code>が現在の値を自動表示します。</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6-2-2 編集画面表示メソッドを追加する -->
+      <div class="subsection">
+        <h3 class="subsection-title">6-2-2 編集画面表示メソッドを追加する</h3>
+
+        <div class="content-block">
+          <p><code>TodoController.java</code> を開き、以下のメソッドを追加してください。importに<code>PathVariable</code>を追加するのを忘れないでください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java のimportに追加</span>
+            </div>
+            <pre class="code-content"><code>import org.springframework.web.bind.annotation.PathVariable;</code></pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java にメソッド追加</span>
+            </div>
+            <pre class="code-content"><code>// 編集画面表示
+@GetMapping("/todo/edit/{id}")
+public String showEditForm(@PathVariable Long id, Model model) {
+    Todo todo = todoRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("不正なID: " + id));
+    model.addAttribute("todo", todo);
+    return "todo/edit";
+}</code></pre>
+          </div>
+
+          <!-- Optional図解 -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">findById() と Optional</div>
+            <div style="display:flex; flex-direction:column; gap:10px; font-size:13px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="background:#0097A7; color:white; padding:6px 14px; border-radius:6px; font-weight:600; min-width:130px; text-align:center;">findById(3)</div>
+                <div style="color:#94a3b8;">&#8594;</div>
+                <div style="background:white; border:1px solid #e2e8f0; border-radius:6px; padding:6px 14px;">Optional&lt;Todo&gt; を返す</div>
+              </div>
+              <div style="display:flex; gap:24px; margin-left:40px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="color:#10b981; font-weight:700;">存在する場合</span>
+                  <div style="color:#94a3b8;">&#8594;</div>
+                  <div style="background:#d1fae5; border-radius:6px; padding:6px 14px;">.orElseThrow() で Todoを取り出す</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:24px; margin-left:40px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="color:#ef4444; font-weight:700;">存在しない場合</span>
+                  <div style="color:#94a3b8;">&#8594;</div>
+                  <div style="background:#fef2f2; border-radius:6px; padding:6px 14px;">IllegalArgumentException を投げる</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">warning</span> なぜOptionalなのか</div>
+            <div class="info-box-content">
+              <p><code>findById()</code>は指定したIDのデータが見つからない可能性があるため、<code>Optional&lt;Todo&gt;</code>を返します。<code>.orElseThrow()</code>を使うことで、データが見つからなかった場合にエラーを発生させます。<code>.get()</code>を直接呼ぶのは推奨されません。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 6-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-3</span>
+        <h2 class="section-title">更新処理を実装する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>編集画面で変更した内容をデータベースに保存する処理を追加します。</p>
+      </div>
+
+      <!-- 6-3-1 更新メソッドを追加する -->
+      <div class="subsection">
+        <h3 class="subsection-title">6-3-1 更新メソッドを追加する</h3>
+
+        <div class="content-block">
+          <p><code>TodoController.java</code> に以下のメソッドを追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java にメソッド追加</span>
+            </div>
+            <pre class="code-content"><code>// 更新処理
+@PostMapping("/todo/update/{id}")
+public String updateTodo(@PathVariable Long id, @ModelAttribute Todo todo) {
+    todo.setId(id);
+    todoRepository.save(todo);
+    return "redirect:/todo";
+}</code></pre>
+          </div>
+
+          <p><code>todo.setId(id)</code> でURLから受け取ったIDをTodoオブジェクトに設定しています。JPAの<code>save()</code>メソッドは、IDが設定されている場合はUPDATE、IDがnullの場合はINSERTを実行します。</p>
+
+          <!-- save()の判定図解 -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">save() の動作判定</div>
+            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; font-size:13px;">
+              <div style="background:white; border:2px solid #10b981; border-radius:12px; padding:16px; text-align:center; min-width:180px;">
+                <div style="font-weight:700; color:#10b981; font-size:14px; margin-bottom:8px;">id = null</div>
+                <div style="background:#d1fae5; padding:8px; border-radius:6px;">INSERT（新規登録）</div>
+              </div>
+              <div style="background:white; border:2px solid #0097A7; border-radius:12px; padding:16px; text-align:center; min-width:180px;">
+                <div style="font-weight:700; color:#0097A7; font-size:14px; margin-bottom:8px;">id = 3</div>
+                <div style="background:#E0F7FA; padding:8px; border-radius:6px;">UPDATE（上書き更新）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6-3-2 実行して確認しましょう -->
+      <div class="subsection">
+        <h3 class="subsection-title">6-3-2 実行して確認しましょう</h3>
+
+        <div class="content-block">
+          <p>アプリケーションを再起動し、ブラウザで <code>http://localhost:8080/todo/edit/1</code> にアクセスしてみましょう。</p>
+
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:12px; color:#0097A7;"><span class="material-icons" style="vertical-align:middle;">monitor</span> 期待する表示</div>
+            <div style="background:white; border:1px solid #cbd5e1; border-radius:8px; padding:20px; font-size:14px;">
+              <div style="font-size:24px; font-weight:700; margin-bottom:16px;">Todoを編集する</div>
+              <div style="margin-bottom:12px;">
+                <div style="font-weight:500; margin-bottom:4px;">タイトル:</div>
+                <div style="border:1px solid #cbd5e1; border-radius:4px; padding:8px; background:white;">Spring Boot入門</div>
+              </div>
+              <div style="margin-bottom:12px;">
+                <div style="font-weight:500; margin-bottom:4px;">説明:</div>
+                <div style="border:1px solid #cbd5e1; border-radius:4px; padding:8px; background:white;">チュートリアルを完了する</div>
+              </div>
+              <div style="margin-bottom:16px;">
+                <div style="font-weight:500; margin-bottom:4px;">期限日:</div>
+                <div style="border:1px solid #cbd5e1; border-radius:4px; padding:8px; background:white; width:180px;">2026-03-31</div>
+              </div>
+              <div style="background:#0097A7; color:white; display:inline-block; padding:8px 20px; border-radius:4px; font-weight:500;">更新する</div>
+            </div>
+            <p style="margin-top:8px; font-size:12px; color:#64748b;">data.sqlの初期データが入力欄に表示されているはずです。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 6-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-4</span>
+        <h2 class="section-title">削除機能を実装する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>次に削除機能を追加します。削除はHTMLテンプレートの追加は不要で、Controllerにメソッドを1つ追加するだけです。</p>
+      </div>
+
+      <!-- 6-4-1 削除メソッドを追加する -->
+      <div class="subsection">
+        <h3 class="subsection-title">6-4-1 削除メソッドを追加する</h3>
+
+        <div class="content-block">
+          <p><code>TodoController.java</code> に以下のメソッドを追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java にメソッド追加</span>
+            </div>
+            <pre class="code-content"><code>// 削除処理
+@PostMapping("/todo/delete/{id}")
+public String deleteTodo(@PathVariable Long id) {
+    todoRepository.deleteById(id);
+    return "redirect:/todo";
+}</code></pre>
+          </div>
+
+          <p><code>deleteById(id)</code> は指定したIDのデータを削除します。削除後は一覧画面にリダイレクトします。</p>
+
+          <!-- 削除フロー図解 -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">削除処理の流れ</div>
+            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; font-size:13px;">
+              <div style="background:white; border:2px solid #ef4444; border-radius:10px; padding:12px 16px; text-align:center;">
+                <div style="font-weight:700; color:#ef4444;">削除ボタン</div>
+                <div style="font-size:11px; color:#64748b;">POST /todo/delete/3</div>
+              </div>
+              <div style="color:#94a3b8; font-size:20px;">&#8594;</div>
+              <div style="background:white; border:2px solid #0097A7; border-radius:10px; padding:12px 16px; text-align:center;">
+                <div style="font-weight:700; color:#0097A7;">Controller</div>
+                <div style="font-size:11px; color:#64748b;">deleteById(3)</div>
+              </div>
+              <div style="color:#94a3b8; font-size:20px;">&#8594;</div>
+              <div style="background:white; border:2px solid #1e293b; border-radius:10px; padding:12px 16px; text-align:center;">
+                <div style="font-weight:700; color:#1e293b;">DB</div>
+                <div style="font-size:11px; color:#64748b;">DELETE WHERE id=3</div>
+              </div>
+              <div style="color:#94a3b8; font-size:20px;">&#8594;</div>
+              <div style="background:white; border:2px solid #10b981; border-radius:10px; padding:12px 16px; text-align:center;">
+                <div style="font-weight:700; color:#10b981;">リダイレクト</div>
+                <div style="font-size:11px; color:#64748b;">redirect:/todo</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">warning</span> 削除にGETを使わない理由</div>
+            <div class="info-box-content">
+              <p>削除をGETリクエスト（リンク）で実装すると、検索エンジンのクローラーやブラウザのプリフェッチ機能がURLにアクセスしただけでデータが削除されてしまいます。データを変更する操作は必ずPOSTメソッドで行いましょう。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 6-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-5</span>
+        <h2 class="section-title">一覧画面に編集・削除ボタンを追加する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>編集・削除のController処理はできましたが、一覧画面からアクセスする方法がまだありません。list.htmlにボタンを追加しましょう。</p>
+      </div>
+
+      <!-- 6-5-1 テーブルに操作列を追加する -->
+      <div class="subsection">
+        <h3 class="subsection-title">6-5-1 テーブルに操作列を追加する</h3>
+
+        <div class="content-block">
+          <p><code>list.html</code> のテーブルに「操作」列を追加します。<code>&lt;thead&gt;</code>に列ヘッダーを追加し、<code>&lt;tbody&gt;</code>の各行に編集リンクと削除ボタンを追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">list.html の &lt;thead&gt; に追加</span>
+            </div>
+            <pre class="code-content"><code>&lt;th&gt;操作&lt;/th&gt;</code></pre>
+          </div>
+
+          <p>次に、<code>th:each</code>ループ内の<code>&lt;tr&gt;</code>に以下の<code>&lt;td&gt;</code>を追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">list.html の各行(&lt;tr&gt;内)に追加</span>
+            </div>
+            <pre class="code-content"><code>&lt;td&gt;
+  &lt;a th:href="@{/todo/edit/{id}(id=${todo.id})}"&gt;編集&lt;/a&gt;
+  &lt;form th:action="@{/todo/delete/{id}(id=${todo.id})}" method="post"
+        style="display:inline;"&gt;
+    &lt;button type="submit" onclick="return confirm('削除しますか？')"&gt;
+      削除
+    &lt;/button&gt;
+  &lt;/form&gt;
+&lt;/td&gt;</code></pre>
+          </div>
+
+          <!-- 一覧画面イメージ -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:12px; color:#0097A7;"><span class="material-icons" style="vertical-align:middle;">monitor</span> 一覧画面のイメージ</div>
+            <div style="background:white; border:1px solid #cbd5e1; border-radius:8px; padding:20px; font-size:14px; overflow-x:auto;">
+              <div style="font-size:24px; font-weight:700; margin-bottom:8px;">Todo一覧</div>
+              <div style="margin-bottom:16px;"><span style="color:#0097A7;">+ 新規追加</span></div>
+              <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                  <tr style="background:#f8fafc;">
+                    <th style="padding:8px; border:1px solid #e2e8f0; text-align:left;">タイトル</th>
+                    <th style="padding:8px; border:1px solid #e2e8f0; text-align:left;">説明</th>
+                    <th style="padding:8px; border:1px solid #e2e8f0; text-align:left;">期限日</th>
+                    <th style="padding:8px; border:1px solid #e2e8f0; text-align:left;">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="padding:8px; border:1px solid #e2e8f0;">Spring Boot入門</td>
+                    <td style="padding:8px; border:1px solid #e2e8f0;">チュートリアルを完了する</td>
+                    <td style="padding:8px; border:1px solid #e2e8f0;">2026-03-31</td>
+                    <td style="padding:8px; border:1px solid #e2e8f0;"><span style="color:#0097A7;">編集</span> <span style="background:#ef4444; color:white; padding:2px 8px; border-radius:3px; font-size:12px;">削除</span></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px; border:1px solid #e2e8f0;">JPA学習</td>
+                    <td style="padding:8px; border:1px solid #e2e8f0;">エンティティの関連を理解</td>
+                    <td style="padding:8px; border:1px solid #e2e8f0;">2026-04-15</td>
+                    <td style="padding:8px; border:1px solid #e2e8f0;"><span style="color:#0097A7;">編集</span> <span style="background:#ef4444; color:white; padding:2px 8px; border-radius:3px; font-size:12px;">削除</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <p>実行して確認しましょう。編集リンクをクリックすると編集画面に遷移し、削除ボタンを押すと確認ダイアログが表示されます。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 6-6 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 6-6</span>
+        <h2 class="section-title">まとめ</h2>
+      </div>
+
+      <div class="content-block">
+        <p>CRUD操作が全て完成しました。ここまでの進捗を確認しましょう。</p>
+
+        <!-- この時点でのファイル構成 -->
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+            <span class="code-title">この時点でのプロジェクト構成</span>
+          </div>
+          <pre class="code-content"><code>src/main/
+├── java/com/example/todo/
+│   ├── TodoApplication.java
+│   ├── controller/
+│   │   └── TodoController.java   ... CRUD全メソッド完成
+│   ├── entity/
+│   │   └── Todo.java
+│   └── repository/
+│       └── TodoRepository.java
+└── resources/
+    ├── templates/todo/
+    │   ├── list.html              ... 編集・削除ボタン追加
+    │   ├── create.html
+    │   └── edit.html              ... ★ 今回新規作成
+    ├── data.sql
+    └── application.properties</code></pre>
+        </div>
+
+        <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+          <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">この章で学んだこと</div>
+          <div style="display:grid; gap:12px; font-size:14px;">
+            <div style="display:flex; align-items:flex-start; gap:10px;">
+              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
+              <div><strong>@PathVariable</strong> - URLのパス変数を受け取る</div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:10px;">
+              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
+              <div><strong>findById() + Optional</strong> - IDで1件取得し、存在しない場合のハンドリング</div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:10px;">
+              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
+              <div><strong>save()の二面性</strong> - idがnullならINSERT、idがあればUPDATE</div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:10px;">
+              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
+              <div><strong>deleteById()</strong> - IDを指定してデータを削除</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習問題 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Practice</span>
+        <h2 class="section-title">6章 練習問題</h2>
+      </div>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <div class="exercise-number">Q1</div>
+          <div class="exercise-content">
+            <p><code>todoRepository.findById(id)</code> の戻り値の型として正しいものはどれですか。</p>
+            <ol type="A">
+              <li><code>Todo</code></li>
+              <li><code>Optional&lt;Todo&gt;</code></li>
+              <li><code>List&lt;Todo&gt;</code></li>
+              <li><code>null</code></li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q2</div>
+          <div class="exercise-content">
+            <p><code>todoRepository.save(todo)</code> でUPDATEが実行される条件はどれですか。</p>
+            <ol type="A">
+              <li>Todoオブジェクトのtitleフィールドが空文字のとき</li>
+              <li>Todoオブジェクトのidフィールドがnullのとき</li>
+              <li>Todoオブジェクトのidフィールドに値がセットされているとき</li>
+              <li>TodoオブジェクトのcreatedAtフィールドが過去の日付のとき</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q3</div>
+          <div class="exercise-content">
+            <p>削除処理をGETリクエスト（リンク）ではなくPOSTリクエスト（フォーム）で実装する理由として最も適切なものはどれですか。</p>
+            <ol type="A">
+              <li>GETリクエストではURLにパラメータを含められないため</li>
+              <li>POSTリクエストの方がGETリクエストより処理速度が速いため</li>
+              <li>GETリクエストはクローラーやプリフェッチで意図しない削除が起きる可能性があるため</li>
+              <li>POSTリクエストでないとSpring Bootがエラーを出すため</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解答 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Answer</span>
+        <h2 class="section-title">6章 解説・解答</h2>
+      </div>
+      <div class="answer-list">
+        <div class="answer-item">
+          <div class="answer-header">Q1の解答: B</div>
+          <div class="answer-content">
+            <p><code>findById()</code>の戻り値は<code>Optional&lt;Todo&gt;</code>です。指定したIDのデータが存在しない可能性があるため、nullを直接返す代わりにOptionalで包んで返します。<code>.orElseThrow()</code>や<code>.orElse()</code>を使って値を取り出すのが推奨される方法です。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q2の解答: C</div>
+          <div class="answer-content">
+            <p>JPAの<code>save()</code>メソッドは、エンティティのIDフィールドの状態で動作が変わります。IDがnullの場合は新規レコードとしてINSERT文が実行され、IDに値がセットされている場合は既存レコードの更新としてUPDATE文が実行されます。これがcreateとupdateで同じ<code>save()</code>メソッドを使える理由です。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q3の解答: C</div>
+          <div class="answer-content">
+            <p>GETリクエストはブックマークやリンクの共有、検索エンジンのクローラー、ブラウザのプリフェッチ（先読み）機能などで、ユーザーの意図とは関係なくアクセスされる可能性があります。削除のような副作用のある操作をGETで実装すると、これらの機能が動作しただけでデータが削除されてしまいます。POSTリクエストはフォーム送信でしか発生しないため安全です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="page-nav">
+    <a href="5sh-form-create.html" class="page-nav-btn prev">
+      <span>&#8592;</span>
+      <div>
+        <div class="page-nav-label">前の章</div>
+        <div class="page-nav-title">第5章</div>
+      </div>
+    </a>
+    <a href="7sh-validation.html" class="page-nav-btn next">
+      <div>
+        <div class="page-nav-label">次の章</div>
+        <div class="page-nav-title">第7章</div>
+      </div>
+      <span>&#8594;</span>
+    </a>
+  </div>
+
+  <!-- 共通フッター -->
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

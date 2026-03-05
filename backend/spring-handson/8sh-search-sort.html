@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第8章 検索とソート機能を追加する - Spring Boot ハンズオン</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #F1FFFE;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <!-- グローバルナビゲーション -->
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-spring-handson.js"></script>
+
+  <div class="container">
+    <!-- ヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+      <div class="chapter-number">8</div>
+      <h1 class="chapter-title">検索とソート機能を追加する</h1>
+      <p class="chapter-subtitle">タイトル検索と期限日ソートを実装し、データの絞り込みを学ぶ</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">8-1</span><span>検索機能の設計</span></li>
+        <li class="toc-item"><span class="toc-number">8-2</span><span>カスタムクエリメソッドを作る</span></li>
+        <li class="toc-item"><span class="toc-number">8-3</span><span>@Queryでカスタム検索を書く</span></li>
+        <li class="toc-item"><span class="toc-number">8-4</span><span>検索フォームを一覧画面に追加する</span></li>
+        <li class="toc-item"><span class="toc-number">8-5</span><span>ソート機能を追加する</span></li>
+        <li class="toc-item"><span class="toc-number">8-6</span><span>まとめ</span></li>
+      </ul>
+    </nav>
+
+    <!-- セクション 8-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-1</span>
+        <h2 class="section-title">検索機能の設計</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>Todoの数が増えてくると、目的のTodoを見つけるのが大変になります。この章ではタイトルによるキーワード検索と、期限日によるソート機能を追加します。</p>
+      </div>
+
+      <!-- 8-1-1 検索機能の全体の流れ -->
+      <div class="subsection">
+        <h3 class="subsection-title">8-1-1 検索機能の全体の流れ</h3>
+
+        <div class="content-block">
+          <!-- 検索フロー図解 -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">検索の処理フロー</div>
+            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; font-size:13px;">
+              <div style="background:#0097A7; color:white; padding:12px 16px; border-radius:10px; text-align:center; min-width:130px;">
+                <span class="material-icons" style="display:block; font-size:24px; margin-bottom:4px;">search</span>
+                <strong>検索フォーム</strong><br><span style="font-size:11px;">キーワード入力</span>
+              </div>
+              <div style="color:#94a3b8; font-size:20px;">&#8594;</div>
+              <div style="background:#0097A7; color:white; padding:12px 16px; border-radius:10px; text-align:center; min-width:130px;">
+                <span class="material-icons" style="display:block; font-size:24px; margin-bottom:4px;">dns</span>
+                <strong>Controller</strong><br><span style="font-size:11px;">@RequestParam</span>
+              </div>
+              <div style="color:#94a3b8; font-size:20px;">&#8594;</div>
+              <div style="background:#00838F; color:white; padding:12px 16px; border-radius:10px; text-align:center; min-width:130px;">
+                <span class="material-icons" style="display:block; font-size:24px; margin-bottom:4px;">storage</span>
+                <strong>Repository</strong><br><span style="font-size:11px;">LIKE検索</span>
+              </div>
+              <div style="color:#94a3b8; font-size:20px;">&#8594;</div>
+              <div style="background:#1e293b; color:white; padding:12px 16px; border-radius:10px; text-align:center; min-width:130px;">
+                <span class="material-icons" style="display:block; font-size:24px; margin-bottom:4px;">database</span>
+                <strong>DB</strong><br><span style="font-size:11px;">WHERE LIKE '%..%'</span>
+              </div>
+              <div style="color:#94a3b8; font-size:20px;">&#8594;</div>
+              <div style="background:#0097A7; color:white; padding:12px 16px; border-radius:10px; text-align:center; min-width:130px;">
+                <span class="material-icons" style="display:block; font-size:24px; margin-bottom:4px;">list</span>
+                <strong>結果表示</strong><br><span style="font-size:11px;">絞り込み一覧</span>
+              </div>
+            </div>
+          </div>
+
+          <p>検索はGETリクエストで行います。<code>/todo?keyword=Spring</code>のように、URLパラメータとしてキーワードを渡します。GETリクエストなので検索結果をブックマークしたり、URLを共有することもできます。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 8-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-2</span>
+        <h2 class="section-title">カスタムクエリメソッドを作る</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>Spring Data JPAには、メソッド名のルールに従ってメソッドを定義するだけで、SQLを書かずにクエリを実行できる機能があります。</p>
+      </div>
+
+      <!-- 8-2-1 Spring Dataのメソッド名規則 -->
+      <div class="subsection">
+        <h3 class="subsection-title">8-2-1 Spring Dataのメソッド名規則</h3>
+
+        <div class="content-block">
+          <p>Spring Data JPAはメソッド名を解析して、自動的にSQLクエリを生成します。</p>
+
+          <table style="width:100%; border-collapse:collapse; margin:16px 0; font-size:14px;">
+            <thead>
+              <tr style="background:#E0F7FA;">
+                <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">メソッド名</th>
+                <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">生成されるSQL</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:12px; border:1px solid #e2e8f0;"><code>findByTitle(String title)</code></td>
+                <td style="padding:12px; border:1px solid #e2e8f0;">WHERE title = ?</td>
+              </tr>
+              <tr>
+                <td style="padding:12px; border:1px solid #e2e8f0;"><code>findByTitleContaining(String keyword)</code></td>
+                <td style="padding:12px; border:1px solid #e2e8f0;">WHERE title LIKE '%keyword%'</td>
+              </tr>
+              <tr>
+                <td style="padding:12px; border:1px solid #e2e8f0;"><code>findByDueDateBefore(LocalDate date)</code></td>
+                <td style="padding:12px; border:1px solid #e2e8f0;">WHERE due_date &lt; ?</td>
+              </tr>
+              <tr>
+                <td style="padding:12px; border:1px solid #e2e8f0;"><code>findByTitleAndDescription(...)</code></td>
+                <td style="padding:12px; border:1px solid #e2e8f0;">WHERE title = ? AND description = ?</td>
+              </tr>
+              <tr>
+                <td style="padding:12px; border:1px solid #e2e8f0;"><code>findAllByOrderByDueDateAsc()</code></td>
+                <td style="padding:12px; border:1px solid #e2e8f0;">ORDER BY due_date ASC</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- メソッド名解析図解 -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">メソッド名の構造</div>
+            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px; font-size:14px; font-family:'JetBrains Mono', monospace;">
+              <span style="background:#0097A7; color:white; padding:8px 12px; border-radius:6px;">findBy</span>
+              <span style="background:#f59e0b; color:white; padding:8px 12px; border-radius:6px;">Title</span>
+              <span style="background:#8b5cf6; color:white; padding:8px 12px; border-radius:6px;">Containing</span>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:4px; margin-top:8px; font-size:12px;">
+              <span style="color:#0097A7; min-width:80px; text-align:center;">操作</span>
+              <span style="color:#f59e0b; min-width:80px; text-align:center;">フィールド名</span>
+              <span style="color:#8b5cf6; min-width:80px; text-align:center;">条件キーワード</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8-2-2 TodoRepositoryに検索メソッドを追加する -->
+      <div class="subsection">
+        <h3 class="subsection-title">8-2-2 TodoRepositoryに検索メソッドを追加する</h3>
+
+        <div class="content-block">
+          <p><code>TodoRepository.java</code> を開き、以下のメソッドを追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoRepository.java にメソッド追加</span>
+            </div>
+            <pre class="code-content"><code>package com.example.todo.repository;
+
+import com.example.todo.entity.Todo;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface TodoRepository extends JpaRepository&lt;Todo, Long&gt; {
+
+    // タイトルにキーワードを含むTodoを検索
+    List&lt;Todo&gt; findByTitleContaining(String keyword);
+}</code></pre>
+          </div>
+
+          <p>たったこれだけです。メソッドの中身（SQL）はSpring Data JPAが自動生成します。インターフェースにメソッド定義を追加するだけで検索機能が使えるのが、Spring Data JPAの強力な特徴です。</p>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> なぜ実装を書かなくてよいのか</div>
+            <div class="info-box-content">
+              <p>Spring Data JPAは、アプリケーション起動時にRepositoryインターフェースのメソッド名を解析し、対応するSQL（実際にはJPQL）を自動生成します。<code>findByTitleContaining</code>は「Titleフィールドに対してContaining（部分一致）で検索する」と解釈されます。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 8-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-3</span>
+        <h2 class="section-title">@Queryでカスタム検索を書く</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>メソッド名からの自動生成は便利ですが、複雑な検索条件ではメソッド名が長くなりすぎます。そのような場合は<code>@Query</code>アノテーションで直接JPQLを書くことができます。</p>
+      </div>
+
+      <!-- 8-3-1 @QueryアノテーションによるJPQL -->
+      <div class="subsection">
+        <h3 class="subsection-title">8-3-1 @Queryアノテーションの書き方</h3>
+
+        <div class="content-block">
+          <p><code>TodoRepository.java</code> に以下のメソッドを追加してみましょう。これは先ほどの<code>findByTitleContaining</code>と同じ処理をJPQLで書いたものです。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoRepository.java のimportに追加</span>
+            </div>
+            <pre class="code-content"><code>import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;</code></pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoRepository.java にメソッド追加</span>
+            </div>
+            <pre class="code-content"><code>// @Queryを使ったカスタム検索
+@Query("SELECT t FROM Todo t WHERE t.title LIKE %:keyword%")
+List&lt;Todo&gt; searchByTitle(@Param("keyword") String keyword);</code></pre>
+          </div>
+
+          <!-- JPQL解説図解 -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">JPQLの構文</div>
+            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px; font-size:13px; font-family:'JetBrains Mono', monospace; margin-bottom:12px;">
+              <span style="background:#0097A7; color:white; padding:6px 10px; border-radius:6px;">SELECT t</span>
+              <span style="background:#10b981; color:white; padding:6px 10px; border-radius:6px;">FROM Todo t</span>
+              <span style="background:#f59e0b; color:white; padding:6px 10px; border-radius:6px;">WHERE</span>
+              <span style="background:#8b5cf6; color:white; padding:6px 10px; border-radius:6px;">t.title LIKE %:keyword%</span>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:12px;">
+              <div style="background:white; border:1px solid #e2e8f0; border-radius:6px; padding:10px;">
+                <strong style="color:#0097A7;">SQLとの違い</strong>
+                <p style="color:#64748b; margin-top:4px;">JPQLはテーブル名ではなく<strong>Entityクラス名</strong>を、カラム名ではなく<strong>フィールド名</strong>を使います。</p>
+              </div>
+              <div style="background:white; border:1px solid #e2e8f0; border-radius:6px; padding:10px;">
+                <strong style="color:#8b5cf6;">:keyword</strong>
+                <p style="color:#64748b; margin-top:4px;"><code>@Param("keyword")</code>で指定した引数の値がここに代入されます。SQLインジェクションも防げます。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> どちらを使うべき？</div>
+            <div class="info-box-content">
+              <p>単純な条件ならメソッド名規則（<code>findByTitleContaining</code>）が簡潔でおすすめです。複数テーブルのJOINや複雑な条件が必要な場合は<code>@Query</code>を使いましょう。今回はどちらの方法も知っておくために両方を実装しましたが、次のセクションでは<code>findByTitleContaining</code>を使います。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 8-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-4</span>
+        <h2 class="section-title">検索フォームを一覧画面に追加する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>Repositoryに検索メソッドを追加したので、次はControllerとHTMLテンプレートから使えるようにします。</p>
+      </div>
+
+      <!-- 8-4-1 Controllerの一覧メソッドを修正する -->
+      <div class="subsection">
+        <h3 class="subsection-title">8-4-1 Controllerの一覧メソッドを修正する</h3>
+
+        <div class="content-block">
+          <p><code>TodoController.java</code> の <code>list</code> メソッドを以下のように変更してください。importに<code>RequestParam</code>を追加するのも忘れずに。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java のimportに追加</span>
+            </div>
+            <pre class="code-content"><code>import org.springframework.web.bind.annotation.RequestParam;</code></pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java の list メソッドを変更</span>
+            </div>
+            <pre class="code-content"><code>// 一覧表示（検索対応）
+@GetMapping("/todo")
+public String list(@RequestParam(name = "keyword", required = false) String keyword,
+                   Model model) {
+    List&lt;Todo&gt; todos;
+    if (keyword != null && !keyword.isEmpty()) {
+        todos = todoRepository.findByTitleContaining(keyword);
+    } else {
+        todos = todoRepository.findAll();
+    }
+    model.addAttribute("todos", todos);
+    model.addAttribute("keyword", keyword);
+    return "todo/list";
+}</code></pre>
+          </div>
+
+          <p>importに<code>java.util.List</code>も必要です。忘れずに追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java のimportに追加</span>
+            </div>
+            <pre class="code-content"><code>import java.util.List;</code></pre>
+          </div>
+
+          <!-- @RequestParam図解 -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">@RequestParam の動作</div>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:13px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="background:white; border:2px solid #0097A7; border-radius:8px; padding:8px 14px; font-family:'JetBrains Mono', monospace;">/todo?keyword=Spring</div>
+                <span style="color:#94a3b8;">&#8594;</span>
+                <div style="background:#E0F7FA; border-radius:8px; padding:8px 14px;">keyword = "Spring"</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="background:white; border:2px solid #0097A7; border-radius:8px; padding:8px 14px; font-family:'JetBrains Mono', monospace;">/todo</div>
+                <span style="color:#94a3b8;">&#8594;</span>
+                <div style="background:#E0F7FA; border-radius:8px; padding:8px 14px;">keyword = null <span style="color:#64748b;">(required = false)</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8-4-2 list.htmlに検索フォームを追加する -->
+      <div class="subsection">
+        <h3 class="subsection-title">8-4-2 list.htmlに検索フォームを追加する</h3>
+
+        <div class="content-block">
+          <p><code>list.html</code> を開き、「+ 新規追加」リンクの上に検索フォームを追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">list.html に検索フォーム追加（h1の下）</span>
+            </div>
+            <pre class="code-content"><code>&lt;form th:action="@{/todo}" method="get" style="margin:16px 0;"&gt;
+  &lt;input type="text" name="keyword" th:value="${keyword}"
+         placeholder="タイトルで検索..."&gt;
+  &lt;button type="submit"&gt;検索&lt;/button&gt;
+  &lt;a th:href="@{/todo}"&gt;クリア&lt;/a&gt;
+&lt;/form&gt;</code></pre>
+          </div>
+
+          <p>ポイントは <code>method="get"</code> と <code>th:value="${keyword}"</code> です。GETメソッドで送信するためURLパラメータとして渡され、検索後もキーワードが入力欄に残ります。</p>
+
+          <!-- 検索結果画面イメージ -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:12px; color:#0097A7;"><span class="material-icons" style="vertical-align:middle;">monitor</span> 検索時の画面イメージ</div>
+            <div style="background:white; border:1px solid #cbd5e1; border-radius:8px; padding:20px; font-size:14px;">
+              <div style="font-size:24px; font-weight:700; margin-bottom:12px;">Todo一覧</div>
+              <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+                <div style="border:1px solid #cbd5e1; border-radius:4px; padding:6px 12px; background:white; flex:1; max-width:250px;">Spring</div>
+                <div style="background:#0097A7; color:white; padding:6px 16px; border-radius:4px; font-weight:500; font-size:13px;">検索</div>
+                <span style="color:#0097A7; font-size:13px;">クリア</span>
+              </div>
+              <div style="margin-bottom:12px;"><span style="color:#0097A7;">+ 新規追加</span></div>
+              <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                  <tr style="background:#f8fafc;">
+                    <th style="padding:8px; border:1px solid #e2e8f0; text-align:left;">タイトル</th>
+                    <th style="padding:8px; border:1px solid #e2e8f0; text-align:left;">説明</th>
+                    <th style="padding:8px; border:1px solid #e2e8f0; text-align:left;">期限日</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="padding:8px; border:1px solid #e2e8f0;"><strong style="background:#fef3c7;">Spring</strong> Boot入門</td>
+                    <td style="padding:8px; border:1px solid #e2e8f0;">チュートリアルを完了する</td>
+                    <td style="padding:8px; border:1px solid #e2e8f0;">2026-03-31</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p style="color:#64748b; font-size:12px; margin-top:8px;">「Spring」を含むTodoのみ表示されます</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 8-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-5</span>
+        <h2 class="section-title">ソート機能を追加する</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>検索に加えて、期限日の昇順（近い順）・降順（遠い順）でソートできるようにしましょう。</p>
+      </div>
+
+      <!-- 8-5-1 Sort.byを使ったソート -->
+      <div class="subsection">
+        <h3 class="subsection-title">8-5-1 Sort.byを使ったソート</h3>
+
+        <div class="content-block">
+          <p>Spring Data JPAの<code>Sort</code>クラスを使うと、動的にソート順を変更できます。<code>TodoController.java</code> の <code>list</code> メソッドをさらに修正しましょう。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java のimportに追加</span>
+            </div>
+            <pre class="code-content"><code>import org.springframework.data.domain.Sort;</code></pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoController.java の list メソッドを変更（最終版）</span>
+            </div>
+            <pre class="code-content"><code>// 一覧表示（検索 + ソート対応）
+@GetMapping("/todo")
+public String list(@RequestParam(name = "keyword", required = false) String keyword,
+                   @RequestParam(name = "sort", required = false,
+                                 defaultValue = "dueDateAsc") String sortParam,
+                   Model model) {
+    Sort sort;
+    switch (sortParam) {
+        case "dueDateDesc":
+            sort = Sort.by(Sort.Direction.DESC, "dueDate");
+            break;
+        case "titleAsc":
+            sort = Sort.by(Sort.Direction.ASC, "title");
+            break;
+        default:
+            sort = Sort.by(Sort.Direction.ASC, "dueDate");
+    }
+
+    List&lt;Todo&gt; todos;
+    if (keyword != null && !keyword.isEmpty()) {
+        todos = todoRepository.findByTitleContaining(keyword, sort);
+    } else {
+        todos = todoRepository.findAll(sort);
+    }
+    model.addAttribute("todos", todos);
+    model.addAttribute("keyword", keyword);
+    model.addAttribute("currentSort", sortParam);
+    return "todo/list";
+}</code></pre>
+          </div>
+
+          <p><code>findByTitleContaining</code> に <code>Sort</code> 引数を追加したので、Repositoryのメソッドも合わせて更新します。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoRepository.java のメソッドを変更</span>
+            </div>
+            <pre class="code-content"><code>import org.springframework.data.domain.Sort;
+
+public interface TodoRepository extends JpaRepository&lt;Todo, Long&gt; {
+
+    // タイトルにキーワードを含むTodoを検索（ソート対応）
+    List&lt;Todo&gt; findByTitleContaining(String keyword, Sort sort);
+
+    // @Queryを使ったカスタム検索（参考）
+    @Query("SELECT t FROM Todo t WHERE t.title LIKE %:keyword%")
+    List&lt;Todo&gt; searchByTitle(@Param("keyword") String keyword);
+}</code></pre>
+          </div>
+
+          <!-- Sort.by図解 -->
+          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">Sort の仕組み</div>
+            <div style="display:grid; gap:10px; font-size:13px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <code style="background:white; border:1px solid #e2e8f0; padding:6px 12px; border-radius:6px; min-width:260px;">Sort.by(Direction.ASC, "dueDate")</code>
+                <span style="color:#94a3b8;">&#8594;</span>
+                <span style="background:#E0F7FA; padding:6px 12px; border-radius:6px;">ORDER BY due_date ASC</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <code style="background:white; border:1px solid #e2e8f0; padding:6px 12px; border-radius:6px; min-width:260px;">Sort.by(Direction.DESC, "dueDate")</code>
+                <span style="color:#94a3b8;">&#8594;</span>
+                <span style="background:#E0F7FA; padding:6px 12px; border-radius:6px;">ORDER BY due_date DESC</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <code style="background:white; border:1px solid #e2e8f0; padding:6px 12px; border-radius:6px; min-width:260px;">Sort.by(Direction.ASC, "title")</code>
+                <span style="color:#94a3b8;">&#8594;</span>
+                <span style="background:#E0F7FA; padding:6px 12px; border-radius:6px;">ORDER BY title ASC</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8-5-2 ソートリンクをHTMLに追加する -->
+      <div class="subsection">
+        <h3 class="subsection-title">8-5-2 ソートリンクをHTMLに追加する</h3>
+
+        <div class="content-block">
+          <p><code>list.html</code> の検索フォームの下に、ソート切り替えリンクを追加してください。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">list.html に追加（検索フォームの下）</span>
+            </div>
+            <pre class="code-content"><code>&lt;div style="margin:8px 0; font-size:small;"&gt;
+  並び替え:
+  &lt;a th:href="@{/todo(keyword=${keyword}, sort='dueDateAsc')}"&gt;期限日 ↑&lt;/a&gt; |
+  &lt;a th:href="@{/todo(keyword=${keyword}, sort='dueDateDesc')}"&gt;期限日 ↓&lt;/a&gt; |
+  &lt;a th:href="@{/todo(keyword=${keyword}, sort='titleAsc')}"&gt;タイトル順&lt;/a&gt;
+&lt;/div&gt;</code></pre>
+          </div>
+
+          <p>Thymeleafの <code>@{/todo(keyword=${keyword}, sort='dueDateAsc')}</code> は、URLパラメータ付きのリンクを生成します。検索キーワードを保持したままソートが切り替わります。</p>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> 実行して確認しましょう</div>
+            <div class="info-box-content">
+              <p>アプリケーションを再起動し、一覧画面で以下を試してください。<br>
+              (1) キーワードを入力して「検索」 → 絞り込み結果が表示される<br>
+              (2) 「期限日 ↑」「期限日 ↓」をクリック → ソート順が変わる<br>
+              (3) 検索 + ソートを組み合わせる → 両方が反映される</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 8-6 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 8-6</span>
+        <h2 class="section-title">まとめ</h2>
+      </div>
+
+      <div class="content-block">
+        <p>この章では検索とソート機能を追加しました。</p>
+
+        <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
+          <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">この章で学んだこと</div>
+          <div style="display:grid; gap:12px; font-size:14px;">
+            <div style="display:flex; align-items:flex-start; gap:10px;">
+              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
+              <div><strong>メソッド名規則</strong> - <code>findByTitleContaining</code>でSQLを書かずにLIKE検索</div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:10px;">
+              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
+              <div><strong>@Query</strong> - JPQLで複雑なクエリを直接記述</div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:10px;">
+              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
+              <div><strong>@RequestParam</strong> - URLパラメータをControllerで受け取る</div>
+            </div>
+            <div style="display:flex; align-items:flex-start; gap:10px;">
+              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
+              <div><strong>Sort.by()</strong> - 動的なソート順の指定</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+            <span class="code-title">この時点でのプロジェクト構成</span>
+          </div>
+          <pre class="code-content"><code>src/main/
+├── java/com/example/todo/
+│   ├── TodoApplication.java
+│   ├── controller/
+│   │   └── TodoController.java   ... ★ 検索・ソートロジック追加
+│   ├── entity/
+│   │   └── Todo.java
+│   └── repository/
+│       └── TodoRepository.java   ... ★ 検索メソッド・@Query 追加
+└── resources/
+    ├── templates/todo/
+    │   ├── list.html              ... ★ 検索フォーム・ソートリンク追加
+    │   ├── create.html
+    │   └── edit.html
+    ├── data.sql
+    └── application.properties</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習問題 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Practice</span>
+        <h2 class="section-title">8章 練習問題</h2>
+      </div>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <div class="exercise-number">Q1</div>
+          <div class="exercise-content">
+            <p>Spring Data JPAで「titleフィールドにキーワードを含むデータを検索する」メソッド名として正しいものはどれですか。</p>
+            <ol type="A">
+              <li><code>findByTitleLike(String keyword)</code></li>
+              <li><code>findByTitleContaining(String keyword)</code></li>
+              <li><code>searchByTitle(String keyword)</code></li>
+              <li><code>findByTitleEquals(String keyword)</code></li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q2</div>
+          <div class="exercise-content">
+            <p>以下の<code>@Query</code>アノテーションの記述で、空欄に入るJPQLとして正しいものはどれですか。<br>
+            <code>@Query("______")</code><br>
+            <code>List&lt;Todo&gt; searchByTitle(@Param("keyword") String keyword);</code></p>
+            <ol type="A">
+              <li><code>SELECT * FROM todo WHERE title LIKE '%' + :keyword + '%'</code></li>
+              <li><code>SELECT t FROM Todo t WHERE t.title LIKE %:keyword%</code></li>
+              <li><code>SELECT Todo FROM Todo WHERE title CONTAINS :keyword</code></li>
+              <li><code>FIND Todo WHERE Todo.title HAS :keyword</code></li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q3</div>
+          <div class="exercise-content">
+            <p><code>@RequestParam(name = "keyword", required = false)</code> の説明として正しいものはどれですか。</p>
+            <ol type="A">
+              <li>URLパラメータ「keyword」が必ず必要で、ない場合は400エラーになる</li>
+              <li>URLパラメータ「keyword」がなくてもよく、ない場合はnullが設定される</li>
+              <li>リクエストボディからJSON形式の「keyword」を取得する</li>
+              <li>URLパスの一部として「keyword」を取得する</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解答 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Answer</span>
+        <h2 class="section-title">8章 解説・解答</h2>
+      </div>
+      <div class="answer-list">
+        <div class="answer-item">
+          <div class="answer-header">Q1の解答: B</div>
+          <div class="answer-content">
+            <p>Spring Data JPAのメソッド名規則で、部分一致検索（LIKE '%keyword%'）を行うには<code>Containing</code>キーワードを使います。<code>findByTitleContaining</code>は「titleに指定した文字列を含むレコードを検索する」という意味になります。<code>Like</code>は自分で%を付ける必要があり、<code>Equals</code>は完全一致です。<code>searchByTitle</code>はSpring Data JPAの命名規則に合致しないため、自動でクエリが生成されません。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q2の解答: B</div>
+          <div class="answer-content">
+            <p>JPQLはSQLに似ていますが、テーブル名の代わりにEntityクラス名（<code>Todo</code>）を、カラム名の代わりにフィールド名（<code>t.title</code>）を使います。パラメータは<code>:keyword</code>の形式で、<code>@Param("keyword")</code>で引数と紐づけます。LIKE検索の<code>%</code>は文字列の前後に直接置くことができます。選択肢Aは通常のSQL構文であり、JPQLでは使えません。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q3の解答: B</div>
+          <div class="answer-content">
+            <p><code>@RequestParam</code>はURLパラメータ（クエリストリング）を受け取るアノテーションです。<code>required = false</code>を指定すると、パラメータが存在しない場合にnullが設定されます（<code>required = true</code>がデフォルトで、パラメータがないと400エラー）。URLパスの一部を受け取るのは<code>@PathVariable</code>、リクエストボディのJSONを受け取るのは<code>@RequestBody</code>です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="page-nav">
+    <a href="7sh-validation.html" class="page-nav-btn prev">
+      <span>&#8592;</span>
+      <div>
+        <div class="page-nav-label">前の章</div>
+        <div class="page-nav-title">第7章</div>
+      </div>
+    </a>
+    <a href="9sh-status-filter.html" class="page-nav-btn next">
+      <div>
+        <div class="page-nav-label">次の章</div>
+        <div class="page-nav-title">第9章</div>
+      </div>
+      <span>&#8594;</span>
+    </a>
+  </div>
+
+  <!-- 共通フッター -->
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

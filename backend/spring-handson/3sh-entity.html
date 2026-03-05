@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第3章 エンティティとテーブル設計 - Spring Boot ハンズオン</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #F1FFFE;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <!-- グローバルナビゲーション -->
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-spring-handson.js"></script>
+
+  <div class="container">
+    <!-- ヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">build</span> Hands-on</div>
+      <div class="chapter-number">3</div>
+      <h1 class="chapter-title">エンティティとテーブル設計</h1>
+      <p class="chapter-subtitle">Todo Entityを作成し、H2データベースにテーブルを自動生成する</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">3-1</span><span>データベースとEntityの関係</span></li>
+        <li class="toc-item"><span class="toc-number">3-2</span><span>Todo Entityクラスを作成する</span></li>
+        <li class="toc-item"><span class="toc-number">3-3</span><span>H2 Consoleでテーブルを確認する</span></li>
+        <li class="toc-item"><span class="toc-number">3-4</span><span>初期データを投入する</span></li>
+        <li class="toc-item"><span class="toc-number">3-5</span><span>まとめ</span></li>
+      </ul>
+    </nav>
+
+    <!-- セクション 3-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-1</span>
+        <h2 class="section-title">データベースとEntityの関係</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>前章までのTodoデータはControllerにハードコードされていました。アプリを再起動するとデータは消えません（最初から同じデータが表示されるだけ）が、追加・変更はできません。データを永続化するために、データベースを使いましょう。</p>
+      </div>
+
+      <!-- 3-1-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">3-1-1 テーブルとEntityの対応</h3>
+        <div class="content-block">
+          <p>JPAでは、データベースのテーブルとJavaのクラスを1対1で対応させます。このJavaクラスを <strong>Entity（エンティティ）</strong> と呼びます。</p>
+
+          <!-- テーブル ↔ Entity の対応図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">compare_arrows</span>
+              テーブル ↔ Entity の対応
+            </h4>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start;">
+              <!-- DB側 -->
+              <div style="flex: 1; min-width: 250px;">
+                <div style="font-weight: 700; color: #1e40af; font-size: 0.88rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                  <span class="material-icons" style="font-size: 1.1rem;">storage</span> データベース（テーブル）
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; border: 2px solid #3b82f6; border-radius: 8px; overflow: hidden;">
+                  <thead>
+                    <tr><th colspan="2" style="background: #3b82f6; color: white; padding: 8px 12px; text-align: center;">TODO テーブル</th></tr>
+                    <tr style="background: #dbeafe;">
+                      <th style="padding: 6px 12px; text-align: left; border-bottom: 1px solid #93c5fd;">カラム名</th>
+                      <th style="padding: 6px 12px; text-align: left; border-bottom: 1px solid #93c5fd;">型</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;"><strong>id</strong> (PK)</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">BIGINT</td></tr>
+                    <tr style="background: #fafafa;"><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">title</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">VARCHAR(255)</td></tr>
+                    <tr><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">description</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">VARCHAR(500)</td></tr>
+                    <tr style="background: #fafafa;"><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">due_date</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">DATE</td></tr>
+                    <tr><td style="padding: 6px 12px;">created_at</td><td style="padding: 6px 12px;">TIMESTAMP</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- 矢印 -->
+              <div style="display: flex; align-items: center; color: #0097A7; font-size: 2rem; font-weight: 700; padding-top: 60px;">↔</div>
+
+              <!-- Java側 -->
+              <div style="flex: 1; min-width: 250px;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.88rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                  <span class="material-icons" style="font-size: 1.1rem;">code</span> Java（Entity クラス）
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; border: 2px solid #22c55e; border-radius: 8px; overflow: hidden;">
+                  <thead>
+                    <tr><th colspan="2" style="background: #22c55e; color: white; padding: 8px 12px; text-align: center;">Todo クラス</th></tr>
+                    <tr style="background: #dcfce7;">
+                      <th style="padding: 6px 12px; text-align: left; border-bottom: 1px solid #86efac;">フィールド名</th>
+                      <th style="padding: 6px 12px; text-align: left; border-bottom: 1px solid #86efac;">型</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;"><strong>id</strong></td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">Long</td></tr>
+                    <tr style="background: #fafafa;"><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">title</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">String</td></tr>
+                    <tr><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">description</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">String</td></tr>
+                    <tr style="background: #fafafa;"><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">dueDate</td><td style="padding: 6px 12px; border-bottom: 1px solid #e2e8f0;">LocalDate</td></tr>
+                    <tr><td style="padding: 6px 12px;">createdAt</td><td style="padding: 6px 12px;">LocalDateTime</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div style="background: #e0f7fa; border: 1px solid #80deea; border-radius: 8px; padding: 12px 16px; margin-top: 16px;">
+              <p style="margin: 0; color: #00695c; font-size: 0.82rem; line-height: 1.7;">
+                <strong>ポイント:</strong> テーブルのカラム名は <code>due_date</code>（スネークケース）、Javaのフィールド名は <code>dueDate</code>（キャメルケース）。JPAが自動で変換してくれます。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3-1-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">3-1-2 H2データベースとは</h3>
+        <div class="content-block">
+          <p>H2は <strong>インメモリデータベース</strong> です。通常のデータベース（MySQL、PostgreSQL）のように別途インストールする必要がなく、アプリケーションに組み込まれて動作します。</p>
+
+          <!-- H2の特徴図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">dns</span>
+              H2データベースの特徴
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+              <div style="background: #dcfce7; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #22c55e; font-size: 2rem;">speed</span>
+                <div style="font-weight: 700; color: #166534; margin-top: 8px; font-size: 0.88rem;">高速</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">メモリ上で動くので高速</div>
+              </div>
+              <div style="background: #dbeafe; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #3b82f6; font-size: 2rem;">download_done</span>
+                <div style="font-weight: 700; color: #1e40af; margin-top: 8px; font-size: 0.88rem;">インストール不要</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">依存関係に追加するだけ</div>
+              </div>
+              <div style="background: #fef3c7; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #f59e0b; font-size: 2rem;">restart_alt</span>
+                <div style="font-weight: 700; color: #92400e; margin-top: 8px; font-size: 0.88rem;">揮発性</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">アプリ停止でデータ消失</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> 本番環境では</div>
+            <div class="info-box-content">
+              <p>H2は開発・学習用です。本番環境ではMySQL、PostgreSQL等の永続データベースを使います。Spring Bootは設定ファイルを変えるだけでDBを切り替えられるため、学習中はH2を使い、後から本番用DBに移行できます。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 3-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-2</span>
+        <h2 class="section-title">Todo Entityクラスを作成する</h2>
+      </div>
+
+      <!-- 3-2-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">3-2-1 entityパッケージを作成する</h3>
+        <div class="content-block">
+          <p><code>src/main/java/com/example/todo/</code> の中に <code>entity</code> パッケージ（フォルダ）を新規作成してください。この中にEntityクラスを配置します。</p>
+        </div>
+      </div>
+
+      <!-- 3-2-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">3-2-2 Todo.javaを作成する</h3>
+        <div class="content-block">
+          <p><code>entity</code> パッケージに <code>Todo.java</code> を新規作成し、<strong>以下のコードを手で入力してください。</strong>1つずつアノテーションの意味を解説するので、打ちながら理解しましょう。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/java/com/example/todo/entity/Todo.java</span>
+            </div>
+            <pre class="code-content"><code>package com.example.todo.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "todos")
+public class Todo {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 255)
+    private String title;
+
+    @Column(length = 500)
+    private String description;
+
+    @Column(name = "due_date")
+    private LocalDate dueDate;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    // デフォルトコンストラクタ（JPAに必須）
+    public Todo() {
+    }
+
+    // Getter / Setter
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+}</code></pre>
+          </div>
+
+          <!-- アノテーション解説の図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">label</span>
+              JPAアノテーションの意味
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="background: #dbeafe; border-radius: 10px; padding: 14px 16px; border-left: 5px solid #3b82f6;">
+                <code style="font-weight: 700; color: #1e40af; font-size: 0.9rem;">@Entity</code>
+                <div style="font-size: 0.82rem; color: #334155; margin-top: 4px;">「このクラスはDBテーブルに対応するEntityだよ」とJPAに伝える。これがないとテーブルが作られない。</div>
+              </div>
+              <div style="background: #dcfce7; border-radius: 10px; padding: 14px 16px; border-left: 5px solid #22c55e;">
+                <code style="font-weight: 700; color: #166534; font-size: 0.9rem;">@Table(name = "todos")</code>
+                <div style="font-size: 0.82rem; color: #334155; margin-top: 4px;">テーブル名を指定。省略するとクラス名がそのままテーブル名になる（Todo → todo）。</div>
+              </div>
+              <div style="background: #fef3c7; border-radius: 10px; padding: 14px 16px; border-left: 5px solid #f59e0b;">
+                <code style="font-weight: 700; color: #92400e; font-size: 0.9rem;">@Id</code>
+                <div style="font-size: 0.82rem; color: #334155; margin-top: 4px;">主キー（Primary Key）であることを示す。テーブルの各行を一意に識別するカラム。</div>
+              </div>
+              <div style="background: #f3e8ff; border-radius: 10px; padding: 14px 16px; border-left: 5px solid #a855f7;">
+                <code style="font-weight: 700; color: #7e22ce; font-size: 0.9rem;">@GeneratedValue(strategy = GenerationType.IDENTITY)</code>
+                <div style="font-size: 0.82rem; color: #334155; margin-top: 4px;">IDを自動採番する。INSERTするたびにDBが自動で1, 2, 3...と番号を振る。</div>
+              </div>
+              <div style="background: #fef2f2; border-radius: 10px; padding: 14px 16px; border-left: 5px solid #ef4444;">
+                <code style="font-weight: 700; color: #dc2626; font-size: 0.9rem;">@Column(nullable = false, length = 255)</code>
+                <div style="font-size: 0.82rem; color: #334155; margin-top: 4px;">カラムの制約を指定。nullable=false でNOT NULL制約、length で最大文字数を設定。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">tips_and_updates</span> デフォルトコンストラクタが必須な理由</div>
+            <div class="info-box-content">
+              <p>JPAはDBからデータを取り出すとき、まず引数なしのコンストラクタでインスタンスを作り、その後setterでフィールドに値を設定します。そのため、引数なしのコンストラクタ（デフォルトコンストラクタ）が必須です。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 3-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-3</span>
+        <h2 class="section-title">H2 Consoleでテーブルを確認する</h2>
+      </div>
+
+      <!-- 3-3-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">3-3-1 アプリケーションを起動する</h3>
+        <div class="content-block">
+          <p>Entityクラスを作成したら、アプリケーションを起動してください。起動すると、JPAが自動的にEntityに対応するテーブルをH2データベースに作成します。</p>
+
+          <p>コンソールに以下のようなSQL文が表示されるはずです（<code>spring.jpa.show-sql=true</code> を設定したため）。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">コンソール出力</span>
+            </div>
+            <pre class="code-content"><code>Hibernate: create table todos (
+    id bigint generated by default as identity,
+    title varchar(255) not null,
+    description varchar(500),
+    due_date date,
+    created_at timestamp(6),
+    primary key (id)
+)</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> 自動テーブル作成の仕組み</div>
+            <div class="info-box-content">
+              <p><code>spring.jpa.hibernate.ddl-auto=update</code> の設定により、Entityクラスの構造に合わせてテーブルが自動生成されます。フィールドを追加すれば、カラムも自動で追加されます。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3-3-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">3-3-2 H2 Consoleにアクセスする</h3>
+        <div class="content-block">
+          <p>ブラウザで <strong>http://localhost:8080/h2-console</strong> にアクセスしてください。ログイン画面が表示されます。</p>
+
+          <p><strong>以下の値を入力してください。</strong></p>
+
+          <!-- H2 Console接続設定 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">login</span>
+              H2 Console 接続設定
+            </h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+              <tbody>
+                <tr><td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; width: 40%; font-weight: 600;">JDBC URL</td><td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>jdbc:h2:mem:tododb</code></td></tr>
+                <tr style="background: #fafafa;"><td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">User Name</td><td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>sa</code></td></tr>
+                <tr><td style="padding: 8px 14px; font-weight: 600;">Password</td><td style="padding: 8px 14px;">（空欄のまま）</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>「Connect」をクリックすると、左側に <strong>TODOS</strong> テーブルが表示されます。テーブル名をクリックして「Run」を押すと、テーブル構造を確認できます。</p>
+
+          <!-- 期待される表示 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #22c55e;">check_circle</span>
+              期待される表示
+            </h4>
+            <div style="background: white; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden;">
+              <div style="background: #f3f4f6; padding: 8px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #d1d5db;">
+                <div style="display: flex; gap: 6px;">
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #22c55e;"></div>
+                </div>
+                <div style="flex: 1; background: white; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; color: #64748b;">localhost:8080/h2-console</div>
+              </div>
+              <div style="padding: 16px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+                  SELECT * FROM TODOS;
+                </div>
+                <div style="font-size: 0.85rem; color: #64748b; text-align: center; padding: 12px;">
+                  （まだデータがないため、ヘッダー行のみ表示されます）
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; border: 1px solid #e2e8f0;">
+                  <thead>
+                    <tr style="background: #e0f7fa;">
+                      <th style="padding: 6px 10px; text-align: left; border: 1px solid #e2e8f0;">ID</th>
+                      <th style="padding: 6px 10px; text-align: left; border: 1px solid #e2e8f0;">TITLE</th>
+                      <th style="padding: 6px 10px; text-align: left; border: 1px solid #e2e8f0;">DESCRIPTION</th>
+                      <th style="padding: 6px 10px; text-align: left; border: 1px solid #e2e8f0;">DUE_DATE</th>
+                      <th style="padding: 6px 10px; text-align: left; border: 1px solid #e2e8f0;">CREATED_AT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td colspan="5" style="padding: 10px; text-align: center; color: #94a3b8; border: 1px solid #e2e8f0;">（データなし）</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="warning-box">
+            <div class="warning-box-header">
+              <span class="warning-box-icon"><span class="material-icons">warning</span></span>
+              <span class="warning-box-title">JDBC URLに注意</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #78716c;">
+              <p>H2 ConsoleのデフォルトJDBC URLは <code>jdbc:h2:~/test</code> です。これを <code>jdbc:h2:mem:tododb</code> に変更し忘れると、アプリとは別のDBに接続してしまい、TODOSテーブルが見つかりません。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 3-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-4</span>
+        <h2 class="section-title">初期データを投入する</h2>
+      </div>
+
+      <!-- 3-4-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">3-4-1 data.sqlを作成する</h3>
+        <div class="content-block">
+          <p>Spring Bootは起動時に <code>src/main/resources/data.sql</code> というファイルがあれば、自動でSQLを実行してくれます。ここに初期データのINSERT文を書きましょう。</p>
+
+          <p><code>src/main/resources/</code> に <code>data.sql</code> を新規作成し、<strong>以下のSQLを手で入力してください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/resources/data.sql</span>
+            </div>
+            <pre class="code-content"><code>INSERT INTO todos (title, description, due_date, created_at)
+VALUES ('Spring Bootの環境構築', 'Initializrでプロジェクトを作成する', '2026-03-10', '2026-03-01 09:00:00');
+
+INSERT INTO todos (title, description, due_date, created_at)
+VALUES ('Thymeleafの基本を学ぶ', 'テンプレートエンジンの使い方を習得', '2026-03-15', '2026-03-01 10:00:00');
+
+INSERT INTO todos (title, description, due_date, created_at)
+VALUES ('Entityクラスを作成する', 'JPA EntityでTodoテーブルを定義', '2026-03-20', '2026-03-01 11:00:00');</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3-4-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">3-4-2 application.propertiesに設定を追加する</h3>
+        <div class="content-block">
+          <p>data.sql を確実に実行するために、<code>application.properties</code> に<strong>以下の1行を追加してください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">application.properties に追加</span>
+            </div>
+            <pre class="code-content"><code># data.sql を Hibernate のテーブル作成後に実行する
+spring.jpa.defer-datasource-initialization=true</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> なぜこの設定が必要か</div>
+            <div class="info-box-content">
+              <p>Spring Boot 2.5以降、data.sqlはHibernateのテーブル作成<strong>前</strong>に実行されるようになりました。テーブルがまだ存在しない状態でINSERTを実行するとエラーになるため、<code>defer-datasource-initialization=true</code> でテーブル作成後に実行するよう指定します。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3-4-3 -->
+      <div class="subsection">
+        <h3 class="subsection-title">3-4-3 実行して確認しましょう</h3>
+        <div class="content-block">
+          <p>アプリケーションを再起動して、H2 Consoleで <code>SELECT * FROM TODOS;</code> を実行してください。</p>
+
+          <!-- 期待される結果 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #22c55e;">check_circle</span>
+              期待される結果
+            </h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+              <thead>
+                <tr style="background: #e0f7fa;">
+                  <th style="padding: 6px 10px; text-align: left; border: 1px solid #e2e8f0;">ID</th>
+                  <th style="padding: 6px 10px; text-align: left; border: 1px solid #e2e8f0;">TITLE</th>
+                  <th style="padding: 6px 10px; text-align: left; border: 1px solid #e2e8f0;">DESCRIPTION</th>
+                  <th style="padding: 6px 10px; text-align: left; border: 1px solid #e2e8f0;">DUE_DATE</th>
+                  <th style="padding: 6px 10px; text-align: left; border: 1px solid #e2e8f0;">CREATED_AT</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">1</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">Spring Bootの環境構築</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">Initializrでプロジェクトを...</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">2026-03-10</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">2026-03-01 09:00:00</td></tr>
+                <tr style="background: #fafafa;"><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">2</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">Thymeleafの基本を学ぶ</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">テンプレートエンジンの使い...</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">2026-03-15</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">2026-03-01 10:00:00</td></tr>
+                <tr><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">3</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">Entityクラスを作成する</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">JPA EntityでTodoテーブル...</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">2026-03-20</td><td style="padding: 6px 10px; border: 1px solid #e2e8f0;">2026-03-01 11:00:00</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>3件のデータが表示されれば成功です。IDが自動で1, 2, 3と採番されていることを確認してください。</p>
+
+          <!-- この時点のファイル構成 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">folder_open</span>
+              この時点でのファイル構成
+            </h4>
+            <div style="background: #1e293b; border-radius: 10px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.9;">
+              <div style="color: #fbbf24; font-weight: 700;">todo/src/main/</div>
+              <div style="color: #e2e8f0;">├── java/com/example/todo/</div>
+              <div style="color: #e2e8f0;">│   ├── TodoApplication.java</div>
+              <div style="color: #e2e8f0;">│   ├── controller/</div>
+              <div style="color: #e2e8f0;">│   │   ├── HelloController.java</div>
+              <div style="color: #e2e8f0;">│   │   └── TodoController.java</div>
+              <div style="color: #fbbf24;">│   └── entity/</div>
+              <div style="color: #86efac;">│       └── Todo.java <span style="color: #64748b;">← 新規作成</span></div>
+              <div style="color: #e2e8f0;">└── resources/</div>
+              <div style="color: #86efac;">    ├── application.properties <span style="color: #64748b;">← 1行追加</span></div>
+              <div style="color: #86efac;">    ├── data.sql <span style="color: #64748b;">← 新規作成</span></div>
+              <div style="color: #e2e8f0;">    └── templates/</div>
+              <div style="color: #e2e8f0;">        ├── hello.html</div>
+              <div style="color: #e2e8f0;">        └── todo/</div>
+              <div style="color: #e2e8f0;">            ├── list.html</div>
+              <div style="color: #e2e8f0;">            └── detail.html</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 3-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 3-5</span>
+        <h2 class="section-title">まとめ</h2>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">3-5-1 この章で学んだこと</h3>
+        <div class="content-block">
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">summarize</span>
+              Chapter 3 まとめ
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">table_chart</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">Entity = テーブル</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">Javaクラスとテーブルの1対1対応</div>
+              </div>
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">label</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">JPA アノテーション</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">@Entity @Id @Column で定義</div>
+              </div>
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">storage</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">H2 Console</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">ブラウザでDB操作を確認</div>
+              </div>
+            </div>
+          </div>
+
+          <p>Entityとテーブルの準備ができました。しかし、まだControllerからDBにアクセスする方法がありません。次の章では <strong>Repository</strong> を使って、DBからデータを取得し一覧画面に表示します。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習問題 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Exercise</span>
+        <h2 class="section-title">3章 練習問題</h2>
+      </div>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <div class="exercise-number">Q1</div>
+          <div class="exercise-content">
+            <p>JPAのEntityクラスで、主キーフィールドに付与するアノテーションの正しい組み合わせはどれですか。</p>
+            <ol type="A">
+              <li><code>@Column</code> と <code>@GeneratedValue</code></li>
+              <li><code>@Id</code> と <code>@GeneratedValue</code></li>
+              <li><code>@Entity</code> と <code>@Id</code></li>
+              <li><code>@Table</code> と <code>@Column</code></li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q2</div>
+          <div class="exercise-content">
+            <p>以下のEntityクラスで、データベースに作成されるカラム名はどれですか（Spring Bootのデフォルト設定の場合）。</p>
+            <div class="code-block" style="margin: 12px 0;">
+              <div class="code-header"><div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div><span class="code-title">Java</span></div>
+              <pre class="code-content"><code>@Column
+private LocalDate dueDate;</code></pre>
+            </div>
+            <ol type="A">
+              <li>dueDate</li>
+              <li>due_date</li>
+              <li>DUEDATE</li>
+              <li>DUE_DATE</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q3</div>
+          <div class="exercise-content">
+            <p>H2 Consoleにブラウザからアクセスするために、application.propertiesに必要な設定はどれですか。</p>
+            <ol type="A">
+              <li><code>spring.h2.console.enabled=true</code></li>
+              <li><code>spring.h2.browser.enabled=true</code></li>
+              <li><code>spring.datasource.console=true</code></li>
+              <li><code>h2.console.auto-start=true</code></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解答 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Answer</span>
+        <h2 class="section-title">3章 解説・解答</h2>
+      </div>
+      <div class="answer-list">
+        <div class="answer-item">
+          <div class="answer-header">Q1の解答: B</div>
+          <div class="answer-content">
+            <p>主キーには <code>@Id</code>（主キーであることを示す）と <code>@GeneratedValue</code>（自動採番を指定する）の2つを組み合わせて使います。<code>@Entity</code> はクラスレベル、<code>@Table</code> や <code>@Column</code> はテーブル・カラムの詳細設定で、主キーの定義とは直接関係ありません。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q2の解答: B</div>
+          <div class="answer-content">
+            <p>Spring Boot（Hibernate）のデフォルトの命名戦略では、Javaのキャメルケース（<code>dueDate</code>）はスネークケース（<code>due_date</code>）に自動変換されます。大文字の位置にアンダースコアが挿入され、すべて小文字に変換されます。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q3の解答: A</div>
+          <div class="answer-content">
+            <p>H2 Consoleはデフォルトで無効です。<code>spring.h2.console.enabled=true</code> を設定することで、ブラウザから <code>/h2-console</code> にアクセスできるようになります。パスは <code>spring.h2.console.path</code> で変更可能です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="2sh-thymeleaf.html" class="page-nav-btn prev">
+      <span>&#8592;</span>
+      <div>
+        <div class="page-nav-label">前の章</div>
+        <div class="page-nav-title">第2章 HTMLテンプレートを表示する</div>
+      </div>
+    </a>
+    <a href="4sh-repository.html" class="page-nav-btn next">
+      <div>
+        <div class="page-nav-label">次の章</div>
+        <div class="page-nav-title">第4章 リポジトリでデータを取得する</div>
+      </div>
+      <span>&#8594;</span>
+    </a>
+  </div>
+
+  <!-- 共通フッター -->
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

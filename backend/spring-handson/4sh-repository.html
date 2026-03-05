@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第4章 リポジトリでデータを取得する - Spring Boot ハンズオン</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --primary-lighter: #F1FFFE;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+  </style>
+</head>
+<body>
+  <!-- グローバルナビゲーション -->
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-spring-handson.js"></script>
+
+  <div class="container">
+    <!-- ヘッダー -->
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">build</span> Hands-on</div>
+      <div class="chapter-number">4</div>
+      <h1 class="chapter-title">リポジトリでデータを取得する</h1>
+      <p class="chapter-subtitle">JpaRepositoryを使って全件取得し、一覧画面にデータを表示する</p>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc">
+      <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
+      <ul class="toc-list">
+        <li class="toc-item"><span class="toc-number">4-1</span><span>Repositoryパターンとは</span></li>
+        <li class="toc-item"><span class="toc-number">4-2</span><span>TodoRepositoryインターフェースを作成する</span></li>
+        <li class="toc-item"><span class="toc-number">4-3</span><span>Controllerからリポジトリを使う</span></li>
+        <li class="toc-item"><span class="toc-number">4-4</span><span>一覧画面にデータを表示する</span></li>
+        <li class="toc-item"><span class="toc-number">4-5</span><span>まとめ</span></li>
+      </ul>
+    </nav>
+
+    <!-- セクション 4-1 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-1</span>
+        <h2 class="section-title">Repositoryパターンとは</h2>
+      </div>
+
+      <div class="intro-text">
+        <p>前章でEntityとテーブル、初期データが準備できました。しかしControllerからDBにアクセスする方法がまだありません。ここで登場するのが <strong>Repository（リポジトリ）</strong> です。</p>
+      </div>
+
+      <!-- 4-1-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">4-1-1 データアクセスの全体像</h3>
+        <div class="content-block">
+          <p>Spring Bootアプリケーションでは、データは以下の流れで取得・表示されます。</p>
+
+          <!-- アーキテクチャ図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">architecture</span>
+              データ取得の流れ
+            </h4>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;">
+              <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 14px 16px; text-align: center; min-width: 100px;">
+                <span class="material-icons" style="color: #3b82f6; font-size: 1.5rem;">language</span>
+                <div style="font-size: 0.78rem; font-weight: 700; color: #1e40af; margin-top: 4px;">ブラウザ</div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="color: #94a3b8; font-size: 0.7rem;">リクエスト</div>
+                <div style="color: #3b82f6; font-size: 1.2rem;">→</div>
+              </div>
+
+              <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 14px 16px; text-align: center; min-width: 110px;">
+                <span class="material-icons" style="color: #22c55e; font-size: 1.5rem;">alt_route</span>
+                <div style="font-size: 0.78rem; font-weight: 700; color: #166534; margin-top: 4px;">Controller</div>
+                <div style="font-size: 0.68rem; color: #64748b;">交通整理</div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="color: #94a3b8; font-size: 0.7rem;">データ要求</div>
+                <div style="color: #22c55e; font-size: 1.2rem;">→</div>
+              </div>
+
+              <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 14px 16px; text-align: center; min-width: 110px;">
+                <span class="material-icons" style="color: #a855f7; font-size: 1.5rem;">inventory</span>
+                <div style="font-size: 0.78rem; font-weight: 700; color: #7e22ce; margin-top: 4px;">Repository</div>
+                <div style="font-size: 0.68rem; color: #64748b;">DB操作</div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="color: #94a3b8; font-size: 0.7rem;">SQL</div>
+                <div style="color: #a855f7; font-size: 1.2rem;">→</div>
+              </div>
+
+              <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 14px 16px; text-align: center; min-width: 100px;">
+                <span class="material-icons" style="color: #f59e0b; font-size: 1.5rem;">storage</span>
+                <div style="font-size: 0.78rem; font-weight: 700; color: #92400e; margin-top: 4px;">Database</div>
+                <div style="font-size: 0.68rem; color: #64748b;">H2</div>
+              </div>
+            </div>
+            <div style="text-align: center; margin-top: 16px; font-size: 0.82rem; color: #64748b;">
+              ControllerはRepositoryにデータ操作を依頼し、自分ではSQLを書かない
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4-1-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">4-1-2 JpaRepositoryの魔法</h3>
+        <div class="content-block">
+          <p>Spring Data JPAの <code>JpaRepository</code> インターフェースを継承するだけで、よく使うDB操作メソッドが <strong>自動で使える</strong> ようになります。SQLを1行も書く必要がありません。</p>
+
+          <!-- JpaRepositoryが提供するメソッド -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">auto_awesome</span>
+              JpaRepositoryが提供するメソッド（抜粋）
+            </h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+              <thead>
+                <tr style="background: #e0f7fa;">
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid #0097A7; font-weight: 700;">メソッド</th>
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid #0097A7; font-weight: 700;">実行されるSQL</th>
+                  <th style="padding: 10px 14px; text-align: left; border-bottom: 2px solid #0097A7; font-weight: 700;">用途</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>findAll()</code></td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>SELECT * FROM todos</code></td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">全件取得</td>
+                </tr>
+                <tr style="background: #fafafa;">
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>findById(id)</code></td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>SELECT * FROM todos WHERE id = ?</code></td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">1件取得</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>save(entity)</code></td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>INSERT / UPDATE</code></td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">保存・更新</td>
+                </tr>
+                <tr style="background: #fafafa;">
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>deleteById(id)</code></td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;"><code>DELETE FROM todos WHERE id = ?</code></td>
+                  <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0;">削除</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 14px;"><code>count()</code></td>
+                  <td style="padding: 8px 14px;"><code>SELECT COUNT(*) FROM todos</code></td>
+                  <td style="padding: 8px 14px;">件数取得</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> なぜSQLを書かなくていいのか</div>
+            <div class="info-box-content">
+              <p>Spring Data JPAが、インターフェースの型情報（<code>Todo</code> と <code>Long</code>）からEntity構造を読み取り、実行時にSQL文を自動生成して実行してくれるからです。この仕組みによって開発者はビジネスロジックに集中できます。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 4-2 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-2</span>
+        <h2 class="section-title">TodoRepositoryインターフェースを作成する</h2>
+      </div>
+
+      <!-- 4-2-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">4-2-1 repositoryパッケージを作成する</h3>
+        <div class="content-block">
+          <p><code>src/main/java/com/example/todo/</code> の中に <code>repository</code> パッケージ（フォルダ）を新規作成してください。</p>
+        </div>
+      </div>
+
+      <!-- 4-2-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">4-2-2 TodoRepository.javaを作成する</h3>
+        <div class="content-block">
+          <p><code>repository</code> パッケージに <code>TodoRepository.java</code> を新規作成し、<strong>以下のコードを手で入力してください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/java/com/example/todo/repository/TodoRepository.java</span>
+            </div>
+            <pre class="code-content"><code>package com.example.todo.repository;
+
+import com.example.todo.entity.Todo;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface TodoRepository extends JpaRepository&lt;Todo, Long&gt; {
+
+}</code></pre>
+          </div>
+
+          <p>これだけです。中身が空のインターフェースですが、<code>JpaRepository&lt;Todo, Long&gt;</code> を継承しているだけで、前述の <code>findAll()</code>, <code>findById()</code>, <code>save()</code>, <code>deleteById()</code> 等のメソッドがすべて使えます。</p>
+
+          <!-- JpaRepository の型パラメータ図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">description</span>
+              型パラメータの意味
+            </h4>
+            <div style="background: #1e293b; border-radius: 10px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; line-height: 2.0; text-align: center;">
+              <div style="color: #e2e8f0;">JpaRepository&lt;<span style="color: #86efac; font-weight: 700; background: rgba(134,239,172,0.15); padding: 2px 8px; border-radius: 4px;">Todo</span>, <span style="color: #fbbf24; font-weight: 700; background: rgba(251,191,36,0.15); padding: 2px 8px; border-radius: 4px;">Long</span>&gt;</div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+              <div style="background: #dcfce7; border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.88rem;">Todo</div>
+                <div style="font-size: 0.78rem; color: #64748b;">操作対象のEntityクラス</div>
+              </div>
+              <div style="background: #fef3c7; border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-weight: 700; color: #92400e; font-size: 0.88rem;">Long</div>
+                <div style="font-size: 0.78rem; color: #64748b;">主キー（id）の型</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">tips_and_updates</span> classではなくinterfaceで書く理由</div>
+            <div class="info-box-content">
+              <p>Repositoryは <code>interface</code>（インターフェース）として書きます。Spring Data JPAが実行時に自動でこのインターフェースの実装クラスを生成してくれるため、開発者はメソッドの「仕様」だけ定義すればOKです。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 4-3 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-3</span>
+        <h2 class="section-title">Controllerからリポジトリを使う</h2>
+      </div>
+
+      <!-- 4-3-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">4-3-1 DI（依存性注入）を理解する</h3>
+        <div class="content-block">
+          <p>ControllerでRepositoryを使うには、<strong>DI（Dependency Injection: 依存性注入）</strong> という仕組みを使います。難しく聞こえますが、やることはシンプルです。</p>
+
+          <!-- DI の図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">settings_input_component</span>
+              DI（依存性注入）のイメージ
+            </h4>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: stretch;">
+              <!-- DIなし -->
+              <div style="flex: 1; min-width: 220px; background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 16px;">
+                <div style="font-weight: 700; color: #dc2626; font-size: 0.88rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                  <span class="material-icons" style="font-size: 1rem;">close</span> DIなし（自分で作る）
+                </div>
+                <div style="background: #1e293b; border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;">
+                  <div style="color: #fca5a5;">// 自分でnewする</div>
+                  <div style="color: #e2e8f0;">TodoRepository repo</div>
+                  <div style="color: #e2e8f0;">  = <span style="color: #fca5a5;">new TodoRepository()</span>;</div>
+                </div>
+                <div style="font-size: 0.78rem; color: #dc2626; margin-top: 8px;">Springでは動かない</div>
+              </div>
+              <!-- DIあり -->
+              <div style="flex: 1; min-width: 220px; background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 16px;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.88rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                  <span class="material-icons" style="font-size: 1rem;">check</span> DI（Springが渡す）
+                </div>
+                <div style="background: #1e293b; border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;">
+                  <div style="color: #86efac;">// コンストラクタで受け取る</div>
+                  <div style="color: #e2e8f0;">public TodoController(</div>
+                  <div style="color: #e2e8f0;">  <span style="color: #86efac;">TodoRepository repo</span>) {</div>
+                  <div style="color: #e2e8f0;">  this.repo = repo;</div>
+                  <div style="color: #e2e8f0;">}</div>
+                </div>
+                <div style="font-size: 0.78rem; color: #166534; margin-top: 8px;">Springが自動でインスタンスを渡す</div>
+              </div>
+            </div>
+            <div style="background: #e0f7fa; border: 1px solid #80deea; border-radius: 8px; padding: 12px 16px; margin-top: 16px;">
+              <p style="margin: 0; color: #00695c; font-size: 0.82rem; line-height: 1.7;">
+                <strong>DI = 「使いたい部品をコンストラクタの引数に書くだけ」</strong>。Springが起動時に自動でインスタンスを作って渡してくれます。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4-3-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">4-3-2 TodoControllerを書き換える</h3>
+        <div class="content-block">
+          <p><code>TodoController.java</code> をDBからデータを取得するように書き換えましょう。<strong>ファイル全体を以下の内容に置き換えてください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/java/com/example/todo/controller/TodoController.java</span>
+            </div>
+            <pre class="code-content"><code>package com.example.todo.controller;
+
+import com.example.todo.entity.Todo;
+import com.example.todo.repository.TodoRepository;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import java.util.List;
+
+@Controller
+public class TodoController {
+
+    private final TodoRepository todoRepository;
+
+    // コンストラクタインジェクション
+    public TodoController(TodoRepository todoRepository) {
+        this.todoRepository = todoRepository;
+    }
+
+    @GetMapping("/todos")
+    public String list(Model model) {
+        // DBから全件取得
+        List&lt;Todo&gt; todos = todoRepository.findAll();
+        model.addAttribute("todos", todos);
+        return "todo/list";
+    }
+
+    @GetMapping("/todos/{id}")
+    public String detail(@PathVariable("id") Long id, Model model) {
+        // DBから1件取得
+        Todo todo = todoRepository.findById(id).orElse(null);
+        model.addAttribute("todo", todo);
+        return "todo/detail";
+    }
+}</code></pre>
+          </div>
+
+          <!-- 変更点の図解 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">compare</span>
+              前章との変更点
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="background: #fef2f2; border-radius: 8px; padding: 12px 16px; border-left: 4px solid #ef4444;">
+                <div style="font-weight: 700; color: #dc2626; font-size: 0.82rem;">Before: ハードコードされた仮データ</div>
+                <div style="font-size: 0.78rem; color: #64748b; font-family: 'JetBrains Mono', monospace; margin-top: 4px;">List&lt;String&gt; todos = List.of("...", "...", "...");</div>
+              </div>
+              <div style="text-align: center; color: #0097A7; font-size: 1.2rem;">↓</div>
+              <div style="background: #dcfce7; border-radius: 8px; padding: 12px 16px; border-left: 4px solid #22c55e;">
+                <div style="font-weight: 700; color: #166534; font-size: 0.82rem;">After: データベースから取得</div>
+                <div style="font-size: 0.78rem; color: #64748b; font-family: 'JetBrains Mono', monospace; margin-top: 4px;">List&lt;Todo&gt; todos = todoRepository.findAll();</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">info</span> findById().orElse(null) とは</div>
+            <div class="info-box-content">
+              <p><code>findById()</code> は <code>Optional&lt;Todo&gt;</code> を返します。Optionalは「データがあるかもしれないし、ないかもしれない」ことを表す型です。<code>.orElse(null)</code> で「データがなければnullを返す」という意味になります。Optionalの詳細はJava基礎で学習しています。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 4-4 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-4</span>
+        <h2 class="section-title">一覧画面にデータを表示する</h2>
+      </div>
+
+      <!-- 4-4-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">4-4-1 一覧ページをテーブルに改良する</h3>
+        <div class="content-block">
+          <p>データがEntityオブジェクト（title, description, dueDate等のフィールドを持つ）になったので、HTMLもテーブル形式に改良しましょう。<strong><code>list.html</code> を以下の内容に置き換えてください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/resources/templates/todo/list.html</span>
+            </div>
+            <pre class="code-content"><code>&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Todoリスト&lt;/title&gt;
+    &lt;style&gt;
+        body { font-family: sans-serif; margin: 20px; }
+        h1 { color: #0097A7; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+        th { background-color: #0097A7; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        a { color: #0097A7; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Todoリスト&lt;/h1&gt;
+
+    &lt;table&gt;
+        &lt;thead&gt;
+            &lt;tr&gt;
+                &lt;th&gt;ID&lt;/th&gt;
+                &lt;th&gt;タイトル&lt;/th&gt;
+                &lt;th&gt;説明&lt;/th&gt;
+                &lt;th&gt;期限日&lt;/th&gt;
+                &lt;th&gt;操作&lt;/th&gt;
+            &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+            &lt;tr th:each="todo : ${todos}"&gt;
+                &lt;td th:text="${todo.id}"&gt;1&lt;/td&gt;
+                &lt;td th:text="${todo.title}"&gt;サンプル&lt;/td&gt;
+                &lt;td th:text="${todo.description}"&gt;説明&lt;/td&gt;
+                &lt;td th:text="${todo.dueDate}"&gt;2026-01-01&lt;/td&gt;
+                &lt;td&gt;
+                    &lt;a th:href="@{/todos/{id}(id=${todo.id})}"&gt;詳細&lt;/a&gt;
+                &lt;/td&gt;
+            &lt;/tr&gt;
+        &lt;/tbody&gt;
+    &lt;/table&gt;
+
+    &lt;p&gt;合計: &lt;span th:text="${#lists.size(todos)}"&gt;0&lt;/span&gt; 件&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> todo.title でアクセスできる理由</div>
+            <div class="info-box-content">
+              <p>ThymeleafはJavaBeans規約に従い、<code>${todo.title}</code> を <code>todo.getTitle()</code> として実行します。そのためEntityクラスにgetterメソッドが必要です。前章で <code>getTitle()</code> 等を定義しているので、問題なくアクセスできます。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4-4-2 -->
+      <div class="subsection">
+        <h3 class="subsection-title">4-4-2 詳細ページも更新する</h3>
+        <div class="content-block">
+          <p><code>detail.html</code> もEntityオブジェクトに対応するように更新しましょう。<strong>以下の内容に置き換えてください。</strong></p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/main/resources/templates/todo/detail.html</span>
+            </div>
+            <pre class="code-content"><code>&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Todo詳細&lt;/title&gt;
+    &lt;style&gt;
+        body { font-family: sans-serif; margin: 20px; }
+        h1 { color: #0097A7; }
+        .detail { background: #f5f5f5; padding: 16px; border-radius: 8px; }
+        .detail p { margin: 8px 0; }
+        .label { font-weight: bold; color: #555; }
+        a { color: #0097A7; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Todo詳細&lt;/h1&gt;
+
+    &lt;div class="detail" th:if="${todo != null}"&gt;
+        &lt;p&gt;&lt;span class="label"&gt;ID:&lt;/span&gt; &lt;span th:text="${todo.id}"&gt;1&lt;/span&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;span class="label"&gt;タイトル:&lt;/span&gt; &lt;span th:text="${todo.title}"&gt;サンプル&lt;/span&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;span class="label"&gt;説明:&lt;/span&gt; &lt;span th:text="${todo.description}"&gt;説明&lt;/span&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;span class="label"&gt;期限日:&lt;/span&gt; &lt;span th:text="${todo.dueDate}"&gt;2026-01-01&lt;/span&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;span class="label"&gt;作成日時:&lt;/span&gt; &lt;span th:text="${todo.createdAt}"&gt;2026-01-01 00:00:00&lt;/span&gt;&lt;/p&gt;
+    &lt;/div&gt;
+
+    &lt;p th:if="${todo == null}" style="color: red;"&gt;指定されたTodoが見つかりません。&lt;/p&gt;
+
+    &lt;p style="margin-top: 16px;"&gt;&lt;a th:href="@{/todos}"&gt;← 一覧に戻る&lt;/a&gt;&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4-4-3 -->
+      <div class="subsection">
+        <h3 class="subsection-title">4-4-3 実行して確認しましょう</h3>
+        <div class="content-block">
+          <p>アプリケーションを再起動して、ブラウザで <strong>http://localhost:8080/todos</strong> にアクセスしてください。</p>
+
+          <!-- 期待される表示 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #22c55e;">check_circle</span>
+              期待される表示
+            </h4>
+            <div style="background: white; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden;">
+              <div style="background: #f3f4f6; padding: 8px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #d1d5db;">
+                <div style="display: flex; gap: 6px;">
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #22c55e;"></div>
+                </div>
+                <div style="flex: 1; background: white; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; color: #64748b;">localhost:8080/todos</div>
+              </div>
+              <div style="padding: 20px;">
+                <div style="font-size: 1.5rem; font-weight: 700; color: #0097A7; margin-bottom: 16px;">Todoリスト</div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                  <thead>
+                    <tr style="background: #0097A7; color: white;">
+                      <th style="padding: 8px 12px; text-align: left;">ID</th>
+                      <th style="padding: 8px 12px; text-align: left;">タイトル</th>
+                      <th style="padding: 8px 12px; text-align: left;">説明</th>
+                      <th style="padding: 8px 12px; text-align: left;">期限日</th>
+                      <th style="padding: 8px 12px; text-align: left;">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">1</td><td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">Spring Bootの環境構築</td><td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">Initializrでプロジェクトを作成する</td><td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">2026-03-10</td><td style="padding: 8px 12px; border-bottom: 1px solid #ddd;"><a style="color: #0097A7;">詳細</a></td></tr>
+                    <tr style="background: #f2f2f2;"><td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">2</td><td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">Thymeleafの基本を学ぶ</td><td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">テンプレートエンジンの使い方を習得</td><td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">2026-03-15</td><td style="padding: 8px 12px; border-bottom: 1px solid #ddd;"><a style="color: #0097A7;">詳細</a></td></tr>
+                    <tr><td style="padding: 8px 12px;">3</td><td style="padding: 8px 12px;">Entityクラスを作成する</td><td style="padding: 8px 12px;">JPA EntityでTodoテーブルを定義</td><td style="padding: 8px 12px;">2026-03-20</td><td style="padding: 8px 12px;"><a style="color: #0097A7;">詳細</a></td></tr>
+                  </tbody>
+                </table>
+                <div style="font-size: 0.88rem; color: #334155; margin-top: 12px;">合計: 3 件</div>
+              </div>
+            </div>
+          </div>
+
+          <p>data.sqlで投入した3件のデータがテーブル形式で表示されていれば成功です。「詳細」リンクをクリックして、詳細ページも正しく表示されることを確認してください。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- セクション 4-5 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Section 4-5</span>
+        <h2 class="section-title">まとめ</h2>
+      </div>
+
+      <!-- 4-5-1 -->
+      <div class="subsection">
+        <h3 class="subsection-title">4-5-1 ここまでの全体像</h3>
+        <div class="content-block">
+          <!-- この時点のファイル構成 -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">folder_open</span>
+              この時点でのファイル構成
+            </h4>
+            <div style="background: #1e293b; border-radius: 10px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.9;">
+              <div style="color: #fbbf24; font-weight: 700;">todo/src/main/java/com/example/todo/</div>
+              <div style="color: #e2e8f0;">├── TodoApplication.java</div>
+              <div style="color: #e2e8f0;">├── <span style="color: #fbbf24;">controller/</span></div>
+              <div style="color: #e2e8f0;">│   ├── HelloController.java</div>
+              <div style="color: #86efac;">│   └── TodoController.java <span style="color: #64748b;">← 書き換え</span></div>
+              <div style="color: #e2e8f0;">├── <span style="color: #fbbf24;">entity/</span></div>
+              <div style="color: #e2e8f0;">│   └── Todo.java</div>
+              <div style="color: #fbbf24;">└── repository/</div>
+              <div style="color: #86efac;">    └── TodoRepository.java <span style="color: #64748b;">← 新規作成</span></div>
+            </div>
+          </div>
+
+          <!-- アーキテクチャまとめ -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">summarize</span>
+              Chapter 1-4 で作ったもの
+            </h4>
+            <svg viewBox="0 0 600 220" style="width: 100%; max-width: 600px; display: block; margin: 0 auto;">
+              <!-- Controller -->
+              <rect x="10" y="20" width="160" height="80" rx="12" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+              <text x="90" y="50" text-anchor="middle" font-size="11" fill="#64748b">@Controller</text>
+              <text x="90" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">TodoController</text>
+              <text x="90" y="88" text-anchor="middle" font-size="10" fill="#64748b">list() / detail()</text>
+
+              <!-- Repository -->
+              <rect x="220" y="20" width="160" height="80" rx="12" fill="#f3e8ff" stroke="#a855f7" stroke-width="2"/>
+              <text x="300" y="50" text-anchor="middle" font-size="11" fill="#64748b">JpaRepository</text>
+              <text x="300" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#7e22ce">TodoRepository</text>
+              <text x="300" y="88" text-anchor="middle" font-size="10" fill="#64748b">findAll() / findById()</text>
+
+              <!-- Database -->
+              <rect x="430" y="20" width="160" height="80" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+              <text x="510" y="50" text-anchor="middle" font-size="11" fill="#64748b">H2 Database</text>
+              <text x="510" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">todos テーブル</text>
+              <text x="510" y="88" text-anchor="middle" font-size="10" fill="#64748b">3件のデータ</text>
+
+              <!-- View -->
+              <rect x="10" y="130" width="160" height="70" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+              <text x="90" y="158" text-anchor="middle" font-size="11" fill="#64748b">Thymeleaf</text>
+              <text x="90" y="178" text-anchor="middle" font-size="13" font-weight="700" fill="#1e40af">list.html / detail.html</text>
+
+              <!-- Entity -->
+              <rect x="220" y="130" width="160" height="70" rx="12" fill="#e0f7fa" stroke="#0097A7" stroke-width="2"/>
+              <text x="300" y="158" text-anchor="middle" font-size="11" fill="#64748b">@Entity</text>
+              <text x="300" y="178" text-anchor="middle" font-size="13" font-weight="700" fill="#00695c">Todo.java</text>
+
+              <!-- 矢印 -->
+              <line x1="170" y1="60" x2="218" y2="60" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+              <line x1="380" y1="60" x2="428" y2="60" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+              <line x1="90" y1="100" x2="90" y2="128" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+              <line x1="300" y1="100" x2="300" y2="128" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+              <defs>
+                <marker id="arrow-gray" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#64748b"/></marker>
+              </defs>
+            </svg>
+          </div>
+
+          <p>これで <strong>データベースからデータを取得して画面に表示する</strong> 一連の流れが完成しました。次の章では、フォームを使って <strong>新しいTodoをデータベースに登録する</strong> 機能を作ります。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 練習問題 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Exercise</span>
+        <h2 class="section-title">4章 練習問題</h2>
+      </div>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <div class="exercise-number">Q1</div>
+          <div class="exercise-content">
+            <p><code>JpaRepository&lt;Todo, Long&gt;</code> の2つの型パラメータが表すものの正しい組み合わせはどれですか。</p>
+            <ol type="A">
+              <li>Todo = テーブル名, Long = カラム数</li>
+              <li>Todo = Entityクラス, Long = 主キーの型</li>
+              <li>Todo = Repository名, Long = レコード数</li>
+              <li>Todo = パッケージ名, Long = バージョン番号</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q2</div>
+          <div class="exercise-content">
+            <p>Spring BootでControllerにRepositoryを渡すDI（依存性注入）の正しい方法はどれですか。</p>
+            <ol type="A">
+              <li><code>TodoRepository repo = new TodoRepository();</code></li>
+              <li>コンストラクタの引数として <code>TodoRepository</code> を受け取る</li>
+              <li><code>TodoRepository.getInstance()</code> で取得する</li>
+              <li><code>ApplicationContext.getBean(TodoRepository.class)</code> で取得する</li>
+            </ol>
+          </div>
+        </div>
+        <div class="exercise-item">
+          <div class="exercise-number">Q3</div>
+          <div class="exercise-content">
+            <p>JpaRepositoryのメソッドで、<code>findById(1L)</code> の戻り値の型はどれですか。</p>
+            <ol type="A">
+              <li><code>Todo</code></li>
+              <li><code>List&lt;Todo&gt;</code></li>
+              <li><code>Optional&lt;Todo&gt;</code></li>
+              <li><code>null</code></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解答 -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-number">Answer</span>
+        <h2 class="section-title">4章 解説・解答</h2>
+      </div>
+      <div class="answer-list">
+        <div class="answer-item">
+          <div class="answer-header">Q1の解答: B</div>
+          <div class="answer-content">
+            <p><code>JpaRepository&lt;Todo, Long&gt;</code> の第1型パラメータは操作対象のEntityクラス（Todo）、第2型パラメータは主キーフィールド（id）のJava型（Long）です。これによりSpring Data JPAは、どのテーブルに対してどのような型のIDでクエリを実行すべきかを判断します。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q2の解答: B</div>
+          <div class="answer-content">
+            <p>Spring BootではDI（依存性注入）として、<strong>コンストラクタインジェクション</strong>が推奨されています。コンストラクタの引数に <code>TodoRepository</code> を宣言するだけで、SpringがTodoRepositoryのインスタンスを自動生成して渡してくれます。<code>new</code> で自分で作ってはいけません（Spring管理外になり、DB接続等が機能しません）。選択肢Dも技術的には可能ですが、推奨されません。</p>
+          </div>
+        </div>
+        <div class="answer-item">
+          <div class="answer-header">Q3の解答: C</div>
+          <div class="answer-content">
+            <p><code>findById()</code> は <code>Optional&lt;Todo&gt;</code> を返します。Optionalは「値が存在するかもしれないし、存在しないかもしれない」ことを明示的に表す型です。指定したIDのデータが存在しない場合、Optionalは空（empty）になります。<code>.orElse()</code> や <code>.orElseThrow()</code> で値を取り出すか、例外をスローできます。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="3sh-entity.html" class="page-nav-btn prev">
+      <span>&#8592;</span>
+      <div>
+        <div class="page-nav-label">前の章</div>
+        <div class="page-nav-title">第3章 エンティティとテーブル設計</div>
+      </div>
+    </a>
+    <a href="5sh-form-create.html" class="page-nav-btn next">
+      <div>
+        <div class="page-nav-label">次の章</div>
+        <div class="page-nav-title">第5章 フォームからデータを登録する</div>
+      </div>
+      <span>&#8594;</span>
+    </a>
+  </div>
+
+  <!-- 共通フッター -->
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>
