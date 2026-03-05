@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>第7章 バリデーションとエラー表示 - Spring Boot ハンズオン</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="../../shared/common.css">
   <style>
@@ -26,7 +28,7 @@
   <div class="container">
     <!-- ヘッダー -->
     <header class="chapter-header">
-      <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
+      <div class="chapter-badge"><span class="material-icons">build</span> Hands-on</div>
       <div class="chapter-number">7</div>
       <h1 class="chapter-title">バリデーションとエラー表示</h1>
       <p class="chapter-subtitle">入力チェックを追加し、エラーメッセージをフォームに表示する</p>
@@ -38,10 +40,9 @@
       <ul class="toc-list">
         <li class="toc-item"><span class="toc-number">7-1</span><span>なぜバリデーションが必要か</span></li>
         <li class="toc-item"><span class="toc-number">7-2</span><span>Entityにバリデーションアノテーションを追加する</span></li>
-        <li class="toc-item"><span class="toc-number">7-3</span><span>Controllerでバリデーションを実行する</span></li>
+        <li class="toc-item"><span class="toc-number">7-3</span><span>@ValidとBindingResultでエラーを検出する</span></li>
         <li class="toc-item"><span class="toc-number">7-4</span><span>エラーメッセージをフォームに表示する</span></li>
-        <li class="toc-item"><span class="toc-number">7-5</span><span>日本語エラーメッセージをカスタマイズする</span></li>
-        <li class="toc-item"><span class="toc-number">7-6</span><span>まとめ</span></li>
+        <li class="toc-item"><span class="toc-number">7-5</span><span>カスタムエラーメッセージとまとめ</span></li>
       </ul>
     </nav>
 
@@ -62,23 +63,26 @@
 
         <div class="content-block">
           <!-- 問題例図解 -->
-          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
-            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#ef4444;">バリデーションなしで起きる問題</div>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; font-size:13px;">
-              <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:10px; padding:14px;">
-                <span class="material-icons" style="color:#ef4444; font-size:24px; display:block; margin-bottom:6px;">warning</span>
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #ef4444;">
+              <span class="material-icons" style="color: #ef4444;">report_problem</span>
+              バリデーションなしで起きる問題
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 0.82rem;">
+              <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 14px;">
+                <span class="material-icons" style="color: #ef4444; font-size: 24px; display: block; margin-bottom: 6px;">warning</span>
                 <strong>空のタイトル</strong>
-                <p style="color:#64748b; margin-top:4px;">タイトルなしのTodoが保存され、一覧画面で何のTodoかわからない</p>
+                <p style="color: #64748b; margin-top: 4px;">タイトルなしのTodoが保存され、一覧画面で何のTodoかわからない</p>
               </div>
-              <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:10px; padding:14px;">
-                <span class="material-icons" style="color:#ef4444; font-size:24px; display:block; margin-bottom:6px;">warning</span>
+              <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 14px;">
+                <span class="material-icons" style="color: #ef4444; font-size: 24px; display: block; margin-bottom: 6px;">warning</span>
                 <strong>極端に長い文字列</strong>
-                <p style="color:#64748b; margin-top:4px;">数万文字の入力でデータベースエラーや画面崩れが発生</p>
+                <p style="color: #64748b; margin-top: 4px;">数万文字の入力でデータベースエラーや画面崩れが発生</p>
               </div>
-              <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:10px; padding:14px;">
-                <span class="material-icons" style="color:#ef4444; font-size:24px; display:block; margin-bottom:6px;">warning</span>
+              <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 14px;">
+                <span class="material-icons" style="color: #ef4444; font-size: 24px; display: block; margin-bottom: 6px;">warning</span>
                 <strong>過去の期限日</strong>
-                <p style="color:#64748b; margin-top:4px;">すでに過ぎた日付が設定され、意味のないTodoが作られる</p>
+                <p style="color: #64748b; margin-top: 4px;">すでに過ぎた日付が設定され、意味のないTodoが作られる</p>
               </div>
             </div>
           </div>
@@ -87,36 +91,46 @@
 
       <!-- 7-1-2 バリデーションの実装方針 -->
       <div class="subsection">
-        <h3 class="subsection-title">7-1-2 バリデーションの実装方針</h3>
+        <h3 class="subsection-title">7-1-2 バリデーション実装の3ステップ</h3>
 
         <div class="content-block">
           <p>Spring Bootではバリデーションを3つのステップで実装します。</p>
 
           <!-- 実装ステップ図解 -->
-          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
-            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">バリデーション実装の3ステップ</div>
-            <div style="display:flex; flex-direction:column; gap:12px; font-size:13px;">
-              <div style="display:flex; align-items:center; gap:12px;">
-                <div style="background:#0097A7; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">1</div>
-                <div style="background:white; border:2px solid #0097A7; border-radius:8px; padding:12px 16px; flex:1;">
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">format_list_numbered</span>
+              バリデーション実装の3ステップ
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.85rem;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #0097A7; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">1</div>
+                <div style="background: white; border: 2px solid #0097A7; border-radius: 8px; padding: 12px 16px; flex: 1;">
                   <strong>Entity</strong> にバリデーションアノテーションを追加<br>
-                  <span style="color:#64748b;">（どのフィールドにどんなルールを適用するか）</span>
+                  <span style="color: #64748b; font-size: 0.8rem;">（どのフィールドにどんなルールを適用するか）</span>
                 </div>
               </div>
-              <div style="display:flex; align-items:center; gap:12px;">
-                <div style="background:#0097A7; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">2</div>
-                <div style="background:white; border:2px solid #0097A7; border-radius:8px; padding:12px 16px; flex:1;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #0097A7; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">2</div>
+                <div style="background: white; border: 2px solid #0097A7; border-radius: 8px; padding: 12px 16px; flex: 1;">
                   <strong>Controller</strong> に <code>@Valid</code> と <code>BindingResult</code> を追加<br>
-                  <span style="color:#64748b;">（エラーがあったらフォームに戻す）</span>
+                  <span style="color: #64748b; font-size: 0.8rem;">（エラーがあったらフォームに戻す）</span>
                 </div>
               </div>
-              <div style="display:flex; align-items:center; gap:12px;">
-                <div style="background:#0097A7; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">3</div>
-                <div style="background:white; border:2px solid #0097A7; border-radius:8px; padding:12px 16px; flex:1;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #0097A7; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">3</div>
+                <div style="background: white; border: 2px solid #0097A7; border-radius: 8px; padding: 12px 16px; flex: 1;">
                   <strong>HTMLテンプレート</strong> にエラーメッセージ表示を追加<br>
-                  <span style="color:#64748b;">（ユーザーに何が問題かを伝える）</span>
+                  <span style="color: #64748b; font-size: 0.8rem;">（ユーザーに何が問題かを伝える）</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> build.gradleの依存関係を確認</div>
+            <div class="info-box-content">
+              <p>バリデーションを使うには <code>spring-boot-starter-validation</code> が必要です。第1章の Spring Initializr で「Validation」を選択していれば <code>build.gradle</code> に自動追加されています。もし追加されていなければ、<code>dependencies</code> ブロックに <code>implementation 'org.springframework.boot:spring-boot-starter-validation'</code> を追加してください。</p>
             </div>
           </div>
         </div>
@@ -139,41 +153,41 @@
         <h3 class="subsection-title">7-2-1 主なバリデーションアノテーション</h3>
 
         <div class="content-block">
-          <p>Spring Bootの<code>spring-boot-starter-validation</code>（プロジェクト作成時に追加済み）が提供するアノテーションの中から、よく使うものを確認しましょう。</p>
+          <p>Spring Bootの <code>spring-boot-starter-validation</code> が提供するアノテーションの中から、よく使うものを確認しましょう。</p>
 
-          <table style="width:100%; border-collapse:collapse; margin:16px 0; font-size:14px;">
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.85rem;">
             <thead>
-              <tr style="background:#E0F7FA;">
-                <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">アノテーション</th>
-                <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">説明</th>
-                <th style="padding:12px; border:1px solid #e2e8f0; text-align:left;">対象</th>
+              <tr style="background: #E0F7FA;">
+                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">アノテーション</th>
+                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">説明</th>
+                <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: left;">対象</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td style="padding:12px; border:1px solid #e2e8f0;"><code>@NotBlank</code></td>
-                <td style="padding:12px; border:1px solid #e2e8f0;">null、空文字、空白のみを拒否</td>
-                <td style="padding:12px; border:1px solid #e2e8f0;">String</td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;"><code>@NotBlank</code></td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;">null、空文字、空白のみを拒否</td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;">String</td>
               </tr>
               <tr>
-                <td style="padding:12px; border:1px solid #e2e8f0;"><code>@NotNull</code></td>
-                <td style="padding:12px; border:1px solid #e2e8f0;">nullを拒否（空文字はOK）</td>
-                <td style="padding:12px; border:1px solid #e2e8f0;">全型</td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;"><code>@NotNull</code></td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;">nullを拒否（空文字はOK）</td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;">全型</td>
               </tr>
               <tr>
-                <td style="padding:12px; border:1px solid #e2e8f0;"><code>@Size(min, max)</code></td>
-                <td style="padding:12px; border:1px solid #e2e8f0;">文字列の長さを制限</td>
-                <td style="padding:12px; border:1px solid #e2e8f0;">String, Collection</td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;"><code>@Size(min, max)</code></td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;">文字列の長さを制限</td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;">String, Collection</td>
               </tr>
               <tr>
-                <td style="padding:12px; border:1px solid #e2e8f0;"><code>@Future</code></td>
-                <td style="padding:12px; border:1px solid #e2e8f0;">未来の日付のみ許可</td>
-                <td style="padding:12px; border:1px solid #e2e8f0;">日付型</td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;"><code>@Future</code></td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;">未来の日付のみ許可</td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;">日付型</td>
               </tr>
               <tr>
-                <td style="padding:12px; border:1px solid #e2e8f0;"><code>@Email</code></td>
-                <td style="padding:12px; border:1px solid #e2e8f0;">メールアドレス形式チェック</td>
-                <td style="padding:12px; border:1px solid #e2e8f0;">String</td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;"><code>@Email</code></td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;">メールアドレス形式チェック</td>
+                <td style="padding: 12px; border: 1px solid #e2e8f0;">String</td>
               </tr>
             </tbody>
           </table>
@@ -216,26 +230,29 @@ private LocalDate dueDate;</code></pre>
           </div>
 
           <!-- アノテーション対応図解 -->
-          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
-            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">フィールドとバリデーションの対応</div>
-            <div style="display:grid; gap:10px; font-size:13px;">
-              <div style="display:flex; align-items:stretch; gap:8px;">
-                <div style="background:#0097A7; color:white; padding:10px 16px; border-radius:8px; min-width:100px; display:flex; align-items:center; justify-content:center; font-weight:600;">title</div>
-                <div style="display:flex; gap:6px; flex-wrap:wrap; flex:1;">
-                  <span style="background:#E0F7FA; color:#00838F; padding:6px 12px; border-radius:6px; font-weight:500;">@NotBlank</span>
-                  <span style="background:#E0F7FA; color:#00838F; padding:6px 12px; border-radius:6px; font-weight:500;">@Size(max=100)</span>
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">link</span>
+              フィールドとバリデーションの対応
+            </h4>
+            <div style="display: grid; gap: 10px; font-size: 0.85rem;">
+              <div style="display: flex; align-items: stretch; gap: 8px;">
+                <div style="background: #0097A7; color: white; padding: 10px 16px; border-radius: 8px; min-width: 100px; display: flex; align-items: center; justify-content: center; font-weight: 600;">title</div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; flex: 1;">
+                  <span style="background: #E0F7FA; color: #00838F; padding: 6px 12px; border-radius: 6px; font-weight: 500;">@NotBlank</span>
+                  <span style="background: #E0F7FA; color: #00838F; padding: 6px 12px; border-radius: 6px; font-weight: 500;">@Size(max=100)</span>
                 </div>
               </div>
-              <div style="display:flex; align-items:stretch; gap:8px;">
-                <div style="background:#0097A7; color:white; padding:10px 16px; border-radius:8px; min-width:100px; display:flex; align-items:center; justify-content:center; font-weight:600;">description</div>
-                <div style="display:flex; gap:6px; flex-wrap:wrap; flex:1;">
-                  <span style="background:#E0F7FA; color:#00838F; padding:6px 12px; border-radius:6px; font-weight:500;">@Size(max=500)</span>
+              <div style="display: flex; align-items: stretch; gap: 8px;">
+                <div style="background: #0097A7; color: white; padding: 10px 16px; border-radius: 8px; min-width: 100px; display: flex; align-items: center; justify-content: center; font-weight: 600;">description</div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; flex: 1;">
+                  <span style="background: #E0F7FA; color: #00838F; padding: 6px 12px; border-radius: 6px; font-weight: 500;">@Size(max=500)</span>
                 </div>
               </div>
-              <div style="display:flex; align-items:stretch; gap:8px;">
-                <div style="background:#0097A7; color:white; padding:10px 16px; border-radius:8px; min-width:100px; display:flex; align-items:center; justify-content:center; font-weight:600;">dueDate</div>
-                <div style="display:flex; gap:6px; flex-wrap:wrap; flex:1;">
-                  <span style="background:#E0F7FA; color:#00838F; padding:6px 12px; border-radius:6px; font-weight:500;">@Future</span>
+              <div style="display: flex; align-items: stretch; gap: 8px;">
+                <div style="background: #0097A7; color: white; padding: 10px 16px; border-radius: 8px; min-width: 100px; display: flex; align-items: center; justify-content: center; font-weight: 600;">dueDate</div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; flex: 1;">
+                  <span style="background: #E0F7FA; color: #00838F; padding: 6px 12px; border-radius: 6px; font-weight: 500;">@Future</span>
                 </div>
               </div>
             </div>
@@ -244,7 +261,7 @@ private LocalDate dueDate;</code></pre>
           <div class="info-box">
             <div class="info-box-title"><span class="material-icons">lightbulb</span> @NotBlank vs @NotNull vs @NotEmpty</div>
             <div class="info-box-content">
-              <p><code>@NotNull</code>はnullのみ拒否（空文字""はOK）、<code>@NotEmpty</code>はnullと空文字を拒否（空白" "はOK）、<code>@NotBlank</code>はnull・空文字・空白を全て拒否します。文字列フィールドには<code>@NotBlank</code>を使うのが最も安全です。</p>
+              <p><code>@NotNull</code> はnullのみ拒否（空文字""はOK）、<code>@NotEmpty</code> はnullと空文字を拒否（空白" "はOK）、<code>@NotBlank</code> はnull・空文字・空白を全て拒否します。文字列フィールドには <code>@NotBlank</code> を使うのが最も安全です。</p>
             </div>
           </div>
         </div>
@@ -255,7 +272,7 @@ private LocalDate dueDate;</code></pre>
     <section class="section">
       <div class="section-header">
         <span class="section-number">Section 7-3</span>
-        <h2 class="section-title">Controllerでバリデーションを実行する</h2>
+        <h2 class="section-title">@ValidとBindingResultでエラーを検出する</h2>
       </div>
 
       <div class="intro-text">
@@ -264,7 +281,7 @@ private LocalDate dueDate;</code></pre>
 
       <!-- 7-3-1 @ValidとBindingResultを追加する -->
       <div class="subsection">
-        <h3 class="subsection-title">7-3-1 @ValidとBindingResultを追加する</h3>
+        <h3 class="subsection-title">7-3-1 新規作成メソッドにバリデーションを追加する</h3>
 
         <div class="content-block">
           <p><code>TodoController.java</code> を開き、まずimport文を追加してください。</p>
@@ -278,7 +295,7 @@ private LocalDate dueDate;</code></pre>
 import org.springframework.validation.BindingResult;</code></pre>
           </div>
 
-          <p>次に、新規作成の<code>createTodo</code>メソッドを以下のように変更してください。</p>
+          <p>次に、新規作成の <code>createTodo</code> メソッドを以下のように変更してください。</p>
 
           <div class="code-block">
             <div class="code-header">
@@ -286,43 +303,47 @@ import org.springframework.validation.BindingResult;</code></pre>
               <span class="code-title">TodoController.java の createTodo メソッドを変更</span>
             </div>
             <pre class="code-content"><code>// 新規作成処理（バリデーション付き）
-@PostMapping("/todo/create")
+@PostMapping("/todos")
 public String createTodo(@Valid @ModelAttribute Todo todo,
                          BindingResult result) {
     if (result.hasErrors()) {
-        return "todo/create";
+        return "todos/create";
     }
+    todo.setCreatedAt(LocalDateTime.now());
     todoRepository.save(todo);
-    return "redirect:/todo";
+    return "redirect:/todos";
 }</code></pre>
           </div>
 
           <!-- バリデーションフロー図解 -->
-          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
-            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">バリデーションの処理フロー</div>
-            <div style="display:flex; flex-direction:column; gap:10px; font-size:13px;">
-              <div style="display:flex; align-items:center; gap:12px;">
-                <div style="background:#0097A7; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">1</div>
-                <div style="background:white; border:1px solid #e2e8f0; border-radius:8px; padding:10px 16px; flex:1;">フォームから送信されたデータを <code>@ModelAttribute</code> でTodoに変換</div>
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">account_tree</span>
+              バリデーションの処理フロー
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #0097A7; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">1</div>
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 16px; flex: 1;">フォームから送信されたデータを <code>@ModelAttribute</code> でTodoに変換</div>
               </div>
-              <div style="display:flex; align-items:center; gap:12px;">
-                <div style="background:#0097A7; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">2</div>
-                <div style="background:white; border:1px solid #e2e8f0; border-radius:8px; padding:10px 16px; flex:1;"><code>@Valid</code> によりEntity上のバリデーションアノテーションを実行</div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #0097A7; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">2</div>
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 16px; flex: 1;"><code>@Valid</code> によりEntity上のバリデーションアノテーションを実行</div>
               </div>
-              <div style="display:flex; align-items:center; gap:12px;">
-                <div style="background:#0097A7; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">3</div>
-                <div style="background:white; border:1px solid #e2e8f0; border-radius:8px; padding:10px 16px; flex:1;">エラー結果が <code>BindingResult</code> に格納される</div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #0097A7; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">3</div>
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 16px; flex: 1;">エラー結果が <code>BindingResult</code> に格納される</div>
               </div>
-              <div style="margin-left:44px; display:flex; gap:16px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                  <span style="color:#ef4444; font-weight:700;">エラーあり</span>
-                  <span style="color:#94a3b8;">&#8594;</span>
-                  <span style="background:#fef2f2; padding:6px 12px; border-radius:6px;">フォーム画面に戻す</span>
+              <div style="margin-left: 44px; display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: #ef4444; font-weight: 700;">エラーあり</span>
+                  <span style="color: #94a3b8;">&#8594;</span>
+                  <span style="background: #fef2f2; padding: 6px 12px; border-radius: 6px;">フォーム画面に戻す</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                  <span style="color:#10b981; font-weight:700;">エラーなし</span>
-                  <span style="color:#94a3b8;">&#8594;</span>
-                  <span style="background:#d1fae5; padding:6px 12px; border-radius:6px;">save() で保存</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: #10b981; font-weight: 700;">エラーなし</span>
+                  <span style="color: #94a3b8;">&#8594;</span>
+                  <span style="background: #d1fae5; padding: 6px 12px; border-radius: 6px;">save() で保存</span>
                 </div>
               </div>
             </div>
@@ -331,7 +352,7 @@ public String createTodo(@Valid @ModelAttribute Todo todo,
           <div class="info-box">
             <div class="info-box-title"><span class="material-icons">warning</span> BindingResultの位置に注意</div>
             <div class="info-box-content">
-              <p><code>BindingResult</code>は<code>@Valid</code>を付けた引数の<strong>直後</strong>に書く必要があります。間に他の引数を挟むと正しく動作しません。</p>
+              <p><code>BindingResult</code> は <code>@Valid</code> を付けた引数の<strong>直後</strong>に書く必要があります。間に他の引数を挟むと正しく動作しません。</p>
             </div>
           </div>
         </div>
@@ -342,7 +363,7 @@ public String createTodo(@Valid @ModelAttribute Todo todo,
         <h3 class="subsection-title">7-3-2 更新メソッドにもバリデーションを追加する</h3>
 
         <div class="content-block">
-          <p>同様に、<code>updateTodo</code>メソッドにもバリデーションを追加しましょう。</p>
+          <p>同様に、<code>updateTodo</code> メソッドにもバリデーションを追加しましょう。</p>
 
           <div class="code-block">
             <div class="code-header">
@@ -350,17 +371,17 @@ public String createTodo(@Valid @ModelAttribute Todo todo,
               <span class="code-title">TodoController.java の updateTodo メソッドを変更</span>
             </div>
             <pre class="code-content"><code>// 更新処理（バリデーション付き）
-@PostMapping("/todo/update/{id}")
+@PostMapping("/todos/{id}")
 public String updateTodo(@PathVariable Long id,
                          @Valid @ModelAttribute Todo todo,
                          BindingResult result) {
     if (result.hasErrors()) {
         todo.setId(id);
-        return "todo/edit";
+        return "todos/edit";
     }
     todo.setId(id);
     todoRepository.save(todo);
-    return "redirect:/todo";
+    return "redirect:/todos";
 }</code></pre>
           </div>
 
@@ -377,7 +398,7 @@ public String updateTodo(@PathVariable Long id,
       </div>
 
       <div class="intro-text">
-        <p>バリデーションエラーが発生したとき、ユーザーにどの入力が間違っているかを伝える必要があります。Thymeleafの<code>th:errors</code>を使ってエラーメッセージを表示しましょう。</p>
+        <p>バリデーションエラーが発生したとき、ユーザーにどの入力が間違っているかを伝える必要があります。Thymeleafの <code>th:errors</code> を使ってエラーメッセージを表示しましょう。</p>
       </div>
 
       <!-- 7-4-1 create.htmlにエラー表示を追加する -->
@@ -392,7 +413,7 @@ public String updateTodo(@PathVariable Long id,
               <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
               <span class="code-title">create.html のフォーム部分を変更</span>
             </div>
-            <pre class="code-content"><code>&lt;form th:action="@{/todo/create}" th:object="${todo}" method="post"&gt;
+            <pre class="code-content"><code>&lt;form th:action="@{/todos}" th:object="${todo}" method="post"&gt;
   &lt;div&gt;
     &lt;label for="title"&gt;タイトル:&lt;/label&gt;
     &lt;input type="text" id="title" th:field="*{title}"
@@ -414,25 +435,29 @@ public String updateTodo(@PathVariable Long id,
     &lt;span th:if="${#fields.hasErrors('dueDate')}" th:errors="*{dueDate}"
           style="color:red; font-size:small;"&gt;&lt;/span&gt;
   &lt;/div&gt;
-  &lt;button type="submit"&gt;登録する&lt;/button&gt;
+  &lt;button type="submit"&gt;登録&lt;/button&gt;
+  &lt;a th:href="@{/todos}"&gt;キャンセル&lt;/a&gt;
 &lt;/form&gt;</code></pre>
           </div>
 
           <!-- エラー表示の仕組み図解 -->
-          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
-            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">Thymeleaf エラー表示の仕組み</div>
-            <div style="display:grid; gap:12px; font-size:13px;">
-              <div style="background:white; border:2px solid #0097A7; border-radius:10px; padding:14px;">
-                <code style="color:#0097A7; font-weight:700;">th:if="${#fields.hasErrors('title')}"</code>
-                <p style="margin-top:6px; color:#64748b;">titleフィールドにエラーがある場合のみ、この要素を表示します。</p>
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">code</span>
+              Thymeleaf エラー表示の仕組み
+            </h4>
+            <div style="display: grid; gap: 12px; font-size: 0.85rem;">
+              <div style="background: white; border: 2px solid #0097A7; border-radius: 10px; padding: 14px;">
+                <code style="color: #0097A7; font-weight: 700;">th:if="${#fields.hasErrors('title')}"</code>
+                <p style="margin-top: 6px; color: #64748b;">titleフィールドにエラーがある場合のみ、この要素を表示します。</p>
               </div>
-              <div style="background:white; border:2px solid #0097A7; border-radius:10px; padding:14px;">
-                <code style="color:#0097A7; font-weight:700;">th:errors="*{title}"</code>
-                <p style="margin-top:6px; color:#64748b;">titleフィールドのエラーメッセージを出力します。Entityの<code>message</code>属性の値が使われます。</p>
+              <div style="background: white; border: 2px solid #0097A7; border-radius: 10px; padding: 14px;">
+                <code style="color: #0097A7; font-weight: 700;">th:errors="*{title}"</code>
+                <p style="margin-top: 6px; color: #64748b;">titleフィールドのエラーメッセージを出力します。Entityの <code>message</code> 属性の値が使われます。</p>
               </div>
-              <div style="background:white; border:2px solid #0097A7; border-radius:10px; padding:14px;">
-                <code style="color:#0097A7; font-weight:700;">th:classappend="${...} ? 'error-input'"</code>
-                <p style="margin-top:6px; color:#64748b;">エラーがある入力欄にCSSクラスを追加し、赤枠などのスタイルを適用できます。</p>
+              <div style="background: white; border: 2px solid #0097A7; border-radius: 10px; padding: 14px;">
+                <code style="color: #0097A7; font-weight: 700;">th:classappend="${...} ? 'error-input'"</code>
+                <p style="margin-top: 6px; color: #64748b;">エラーがある入力欄にCSSクラスを追加し、赤枠などのスタイルを適用できます。</p>
               </div>
             </div>
           </div>
@@ -444,25 +469,43 @@ public String updateTodo(@PathVariable Long id,
         <h3 class="subsection-title">7-4-2 実行して確認しましょう</h3>
 
         <div class="content-block">
-          <p>アプリケーションを再起動し、新規作成画面でタイトルを空のまま「登録する」を押してみましょう。</p>
+          <p>アプリケーションを再起動し、新規作成画面でタイトルを空のまま「登録」を押してみましょう。</p>
 
-          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
-            <div style="font-weight:700; font-size:15px; margin-bottom:12px; color:#0097A7;"><span class="material-icons" style="vertical-align:middle;">monitor</span> エラー表示のイメージ</div>
-            <div style="background:white; border:1px solid #cbd5e1; border-radius:8px; padding:20px; font-size:14px;">
-              <div style="font-size:24px; font-weight:700; margin-bottom:16px;">Todoを追加する</div>
-              <div style="margin-bottom:4px;">
-                <div style="font-weight:500; margin-bottom:4px;">タイトル:</div>
-                <div style="border:2px solid #ef4444; border-radius:4px; padding:8px; background:#fef2f2;"></div>
-                <div style="color:#ef4444; font-size:12px; margin-top:4px;">タイトルは必須です</div>
+          <!-- エラー表示の画面イメージ -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #ef4444;">error_outline</span>
+              期待される表示（エラー時）
+            </h4>
+            <div style="background: white; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden;">
+              <div style="background: #f3f4f6; padding: 8px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #d1d5db;">
+                <div style="display: flex; gap: 6px;">
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: #22c55e;"></div>
+                </div>
+                <div style="flex: 1; background: white; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; color: #64748b;">localhost:8080/todos/new</div>
               </div>
-              <div style="margin-top:12px; margin-bottom:12px;">
-                <div style="font-weight:500; margin-bottom:4px;">説明:</div>
-                <div style="border:1px solid #cbd5e1; border-radius:4px; padding:8px 8px 32px; background:#f8fafc;"></div>
-              </div>
-              <div style="margin-bottom:4px;">
-                <div style="font-weight:500; margin-bottom:4px;">期限日:</div>
-                <div style="border:2px solid #ef4444; border-radius:4px; padding:8px; background:#fef2f2; width:180px;">2020-01-01</div>
-                <div style="color:#ef4444; font-size:12px; margin-top:4px;">期限日は未来の日付を指定してください</div>
+              <div style="padding: 24px;">
+                <div style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 16px;">Todoを新規作成</div>
+                <div style="margin-bottom: 12px;">
+                  <div style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 4px;">タイトル:</div>
+                  <div style="border: 2px solid #ef4444; border-radius: 4px; padding: 8px; background: #fef2f2;"></div>
+                  <div style="color: #ef4444; font-size: 0.78rem; margin-top: 4px;">タイトルは必須です</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                  <div style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 4px;">説明:</div>
+                  <div style="border: 1px solid #d1d5db; border-radius: 4px; padding: 8px 8px 32px; background: white;"></div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                  <div style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 4px;">期限日:</div>
+                  <div style="border: 2px solid #ef4444; border-radius: 4px; padding: 8px; background: #fef2f2; width: 180px;">2020-01-01</div>
+                  <div style="color: #ef4444; font-size: 0.78rem; margin-top: 4px;">期限日は未来の日付を指定してください</div>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                  <div style="background: #0097A7; color: white; padding: 8px 20px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">登録</div>
+                  <div style="color: #0097A7; padding: 8px 20px; font-size: 0.85rem;">キャンセル</div>
+                </div>
               </div>
             </div>
           </div>
@@ -476,35 +519,38 @@ public String updateTodo(@PathVariable Long id,
     <section class="section">
       <div class="section-header">
         <span class="section-number">Section 7-5</span>
-        <h2 class="section-title">日本語エラーメッセージをカスタマイズする</h2>
+        <h2 class="section-title">カスタムエラーメッセージとまとめ</h2>
       </div>
 
       <div class="intro-text">
-        <p>アノテーションの<code>message</code>属性に直接日本語を書く方法は簡単ですが、メッセージを一括管理したい場合は<code>messages.properties</code>ファイルを使う方法もあります。</p>
+        <p>アノテーションの <code>message</code> 属性に直接日本語を書く方法は簡単ですが、メッセージを一括管理したい場合は <code>messages.properties</code> ファイルを使う方法もあります。</p>
       </div>
 
-      <!-- 7-5-1 message属性による方法（現在の方式） -->
+      <!-- 7-5-1 メッセージ管理の2つの方法 -->
       <div class="subsection">
         <h3 class="subsection-title">7-5-1 メッセージ管理の2つの方法</h3>
 
         <div class="content-block">
           <!-- 比較図解 -->
-          <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
-            <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">メッセージ管理方法の比較</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:13px;">
-              <div style="background:white; border:2px solid #10b981; border-radius:10px; padding:16px;">
-                <div style="font-weight:700; color:#10b981; margin-bottom:8px;">方法A: message属性（今回の方式）</div>
-                <code style="font-size:12px;">@NotBlank(message = "タイトルは必須です")</code>
-                <ul style="margin-top:8px; padding-left:16px; color:#64748b;">
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">compare</span>
+              メッセージ管理方法の比較
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; font-size: 0.85rem;">
+              <div style="background: white; border: 2px solid #10b981; border-radius: 10px; padding: 16px;">
+                <div style="font-weight: 700; color: #10b981; margin-bottom: 8px;">方法A: message属性（今回の方式）</div>
+                <code style="font-size: 0.78rem;">@NotBlank(message = "タイトルは必須です")</code>
+                <ul style="margin-top: 8px; padding-left: 16px; color: #64748b; font-size: 0.82rem;">
                   <li>シンプルで直感的</li>
                   <li>小規模アプリに最適</li>
                   <li>メッセージがコードに散らばる</li>
                 </ul>
               </div>
-              <div style="background:white; border:2px solid #64748b; border-radius:10px; padding:16px;">
-                <div style="font-weight:700; color:#64748b; margin-bottom:8px;">方法B: messages.properties</div>
-                <code style="font-size:12px;">NotBlank.todo.title=タイトルは必須です</code>
-                <ul style="margin-top:8px; padding-left:16px; color:#64748b;">
+              <div style="background: white; border: 2px solid #64748b; border-radius: 10px; padding: 16px;">
+                <div style="font-weight: 700; color: #64748b; margin-bottom: 8px;">方法B: messages.properties</div>
+                <code style="font-size: 0.78rem;">NotBlank.todo.title=タイトルは必須です</code>
+                <ul style="margin-top: 8px; padding-left: 16px; color: #64748b; font-size: 0.82rem;">
                   <li>メッセージを一括管理</li>
                   <li>多言語対応が容易</li>
                   <li>大規模アプリ向け</li>
@@ -513,71 +559,72 @@ public String updateTodo(@PathVariable Long id,
             </div>
           </div>
 
-          <p>今回のTodoアプリではmessage属性を直接書く方法（方法A）で十分です。将来的にアプリが大きくなった場合は、<code>messages.properties</code>に移行することを検討しましょう。</p>
+          <p>今回のTodoアプリでは message 属性を直接書く方法（方法A）で十分です。将来的にアプリが大きくなった場合は、<code>messages.properties</code> に移行することを検討しましょう。</p>
 
           <div class="info-box">
             <div class="info-box-title"><span class="material-icons">lightbulb</span> messages.propertiesの作り方（参考）</div>
             <div class="info-box-content">
-              <p><code>src/main/resources/messages.properties</code>を作成し、<code>NotBlank.todo.title=タイトルは必須です</code>のように「アノテーション名.オブジェクト名.フィールド名=メッセージ」の形式で記述します。Entityのmessage属性は省略できます。</p>
+              <p><code>src/main/resources/messages.properties</code> を作成し、<code>NotBlank.todo.title=タイトルは必須です</code> のように「アノテーション名.オブジェクト名.フィールド名=メッセージ」の形式で記述します。Entityの message 属性は省略できます。</p>
             </div>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- セクション 7-6 -->
-    <section class="section">
-      <div class="section-header">
-        <span class="section-number">Section 7-6</span>
-        <h2 class="section-title">まとめ</h2>
-      </div>
+      <!-- 7-5-2 この章のまとめ -->
+      <div class="subsection">
+        <h3 class="subsection-title">7-5-2 この章のまとめ</h3>
 
-      <div class="content-block">
-        <p>この章ではバリデーション機能を実装しました。</p>
-
-        <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:24px; margin:24px 0;">
-          <div style="font-weight:700; font-size:15px; margin-bottom:16px; color:#0097A7;">この章で学んだこと</div>
-          <div style="display:grid; gap:12px; font-size:14px;">
-            <div style="display:flex; align-items:flex-start; gap:10px;">
-              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
-              <div><strong>バリデーションアノテーション</strong> - <code>@NotBlank</code>, <code>@Size</code>, <code>@Future</code> でルールを宣言</div>
-            </div>
-            <div style="display:flex; align-items:flex-start; gap:10px;">
-              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
-              <div><strong>@Valid</strong> - Controllerのメソッド引数でバリデーションを有効化</div>
-            </div>
-            <div style="display:flex; align-items:flex-start; gap:10px;">
-              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
-              <div><strong>BindingResult</strong> - バリデーション結果を受け取り、エラー有無を判定</div>
-            </div>
-            <div style="display:flex; align-items:flex-start; gap:10px;">
-              <span class="material-icons" style="color:#0097A7; font-size:20px; margin-top:2px;">check_circle</span>
-              <div><strong>th:errors / th:if</strong> - テンプレートでフィールドごとのエラーメッセージを表示</div>
+        <div class="content-block">
+          <!-- まとめカード -->
+          <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
+            <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
+              <span class="material-icons" style="color: #0097A7;">summarize</span>
+              Chapter 7 まとめ
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">rule</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">@NotBlank / @Size / @Future</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">Entityにルールを宣言</div>
+              </div>
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">verified</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">@Valid + BindingResult</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">Controllerでエラー検出</div>
+              </div>
+              <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
+                <span class="material-icons" style="color: #0097A7; font-size: 2rem;">error_outline</span>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">th:errors / th:if</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">フォームにエラー表示</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="code-block">
-          <div class="code-header">
-            <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
-            <span class="code-title">この時点でのプロジェクト構成</span>
-          </div>
-          <pre class="code-content"><code>src/main/
+          <!-- ファイル構成 -->
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">この時点でのプロジェクト構成</span>
+            </div>
+            <pre class="code-content"><code>src/main/
 ├── java/com/example/todo/
 │   ├── TodoApplication.java
 │   ├── controller/
 │   │   └── TodoController.java   ... @Valid + BindingResult 追加
 │   ├── entity/
-│   │   └── Todo.java             ... ★ バリデーションアノテーション追加
+│   │   └── Todo.java             ... バリデーションアノテーション追加
 │   └── repository/
 │       └── TodoRepository.java
 └── resources/
-    ├── templates/todo/
+    ├── templates/todos/
     │   ├── list.html
-    │   ├── create.html            ... ★ エラー表示追加
-    │   └── edit.html              ... ★ エラー表示追加
+    │   ├── create.html            ... エラー表示追加
+    │   └── edit.html              ... エラー表示追加
     ├── data.sql
     └── application.properties</code></pre>
+          </div>
+
+          <p>次の章では、タイトルによる<strong>キーワード検索</strong>と期限日による<strong>ソート機能</strong>を追加します。MyBatisの <code>@Select</code> アノテーションでSQLを書き、データの絞り込みを実装しましょう。</p>
         </div>
       </div>
     </section>
@@ -585,7 +632,7 @@ public String updateTodo(@PathVariable Long id,
     <!-- 練習問題 -->
     <section class="section">
       <div class="section-header">
-        <span class="section-number">Practice</span>
+        <span class="section-number">Exercise</span>
         <h2 class="section-title">7章 練習問題</h2>
       </div>
       <div class="exercise-list">
@@ -606,17 +653,17 @@ public String updateTodo(@PathVariable Long id,
           <div class="exercise-content">
             <p>Controllerメソッドで <code>BindingResult</code> を使う際の注意点として正しいものはどれですか。</p>
             <ol type="A">
-              <li><code>BindingResult</code>はメソッドの最初の引数に置く必要がある</li>
-              <li><code>BindingResult</code>は<code>@Valid</code>を付けた引数の直後に置く必要がある</li>
-              <li><code>BindingResult</code>はメソッドの最後の引数に置く必要がある</li>
-              <li><code>BindingResult</code>はどこに置いても動作する</li>
+              <li><code>BindingResult</code> はメソッドの最初の引数に置く必要がある</li>
+              <li><code>BindingResult</code> は <code>@Valid</code> を付けた引数の直後に置く必要がある</li>
+              <li><code>BindingResult</code> はメソッドの最後の引数に置く必要がある</li>
+              <li><code>BindingResult</code> はどこに置いても動作する</li>
             </ol>
           </div>
         </div>
         <div class="exercise-item">
           <div class="exercise-number">Q3</div>
           <div class="exercise-content">
-            <p>バリデーションエラー時に <code>return "todo/create";</code> としたとき、ユーザーが入力した値はどうなりますか。</p>
+            <p>バリデーションエラー時に <code>return "todos/create";</code> としたとき、ユーザーが入力した値はどうなりますか。</p>
             <ol type="A">
               <li>全てクリアされ、空のフォームが表示される</li>
               <li>入力した値が保持されたまま、エラーメッセージとともにフォームが再表示される</li>
@@ -638,37 +685,38 @@ public String updateTodo(@PathVariable Long id,
         <div class="answer-item">
           <div class="answer-header">Q1の解答: C</div>
           <div class="answer-content">
-            <p><code>@NotBlank</code>はnull、空文字("")、空白のみ(" ")の全てを拒否します。<code>@NotNull</code>はnullのみ拒否し空文字は通します。<code>@NotEmpty</code>はnullと空文字を拒否しますが空白のみの文字列は通します。<code>@Required</code>はSpring Bootのバリデーションアノテーションには存在しません。</p>
+            <p><code>@NotBlank</code> はnull、空文字("")、空白のみ(" ")の全てを拒否します。<code>@NotNull</code> はnullのみ拒否し空文字は通します。<code>@NotEmpty</code> はnullと空文字を拒否しますが空白のみの文字列は通します。<code>@Required</code> はSpring Bootのバリデーションアノテーションには存在しません。</p>
           </div>
         </div>
         <div class="answer-item">
           <div class="answer-header">Q2の解答: B</div>
           <div class="answer-content">
-            <p><code>BindingResult</code>は<code>@Valid</code>を付けた引数の<strong>直後</strong>に配置する必要があります。Spring Bootは引数の順序を見て、どの引数のバリデーション結果をどの<code>BindingResult</code>に格納するかを判断します。間に別の引数を挟むと、バリデーションエラーが発生した時点で例外がスローされてしまいます。</p>
+            <p><code>BindingResult</code> は <code>@Valid</code> を付けた引数の<strong>直後</strong>に配置する必要があります。Spring Bootは引数の順序を見て、どの引数のバリデーション結果をどの <code>BindingResult</code> に格納するかを判断します。間に別の引数を挟むと、バリデーションエラーが発生した時点で例外がスローされてしまいます。</p>
           </div>
         </div>
         <div class="answer-item">
           <div class="answer-header">Q3の解答: B</div>
           <div class="answer-content">
-            <p>エラー時にテンプレート名を返す（リダイレクトではない）場合、<code>@ModelAttribute</code>で受け取ったTodoオブジェクトがそのままテンプレートに渡されます。そのため、ユーザーが入力した値は保持されたまま、<code>th:field</code>によってフォームに再表示されます。<code>th:errors</code>がエラーメッセージを表示するので、ユーザーはどこを修正すればよいか分かります。</p>
+            <p>エラー時にテンプレート名を返す（リダイレクトではない）場合、<code>@ModelAttribute</code> で受け取ったTodoオブジェクトがそのままテンプレートに渡されます。そのため、ユーザーが入力した値は保持されたまま、<code>th:field</code> によってフォームに再表示されます。<code>th:errors</code> がエラーメッセージを表示するので、ユーザーはどこを修正すればよいか分かります。</p>
           </div>
         </div>
       </div>
     </section>
   </div>
 
+  <!-- ページナビゲーション -->
   <div class="page-nav">
     <a href="6sh-update-delete.html" class="page-nav-btn prev">
       <span>&#8592;</span>
       <div>
         <div class="page-nav-label">前の章</div>
-        <div class="page-nav-title">第6章</div>
+        <div class="page-nav-title">第6章 データを更新・削除する</div>
       </div>
     </a>
     <a href="8sh-search-sort.html" class="page-nav-btn next">
       <div>
         <div class="page-nav-label">次の章</div>
-        <div class="page-nav-title">第8章</div>
+        <div class="page-nav-title">第8章 検索とソート機能を追加する</div>
       </div>
       <span>&#8594;</span>
     </a>

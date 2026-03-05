@@ -15,7 +15,7 @@ const navData = {
         { href: "1sh-project-setup.html", num: "1", text: "プロジェクト作成と初期設定" },
         { href: "2sh-thymeleaf.html", num: "2", text: "HTMLテンプレートを表示する" },
         { href: "3sh-entity.html", num: "3", text: "エンティティとテーブル設計" },
-        { href: "4sh-repository.html", num: "4", text: "リポジトリでデータを取得する" },
+        { href: "4sh-repository.html", num: "4", text: "Mapperでデータを取得する" },
         { href: "5sh-form-create.html", num: "5", text: "フォームからデータを登録する" },
         { href: "6sh-update-delete.html", num: "6", text: "データを更新・削除する" },
         { href: "7sh-validation.html", num: "7", text: "バリデーションとエラー表示" },

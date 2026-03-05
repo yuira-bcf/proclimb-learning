@@ -186,9 +186,7 @@ public enum TodoStatus {
               <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
               <span class="code-title">Todo.java に追加するフィールド</span>
             </div>
-            <pre class="code-content"><code>    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TodoStatus status = TodoStatus.NOT_STARTED;</code></pre>
+            <pre class="code-content"><code>    private TodoStatus status = TodoStatus.NOT_STARTED;</code></pre>
           </div>
 
           <p>続けて、getterとsetterも追加しましょう。</p>
@@ -207,40 +205,36 @@ public enum TodoStatus {
     }</code></pre>
           </div>
 
-          <!-- @Enumerated解説図 -->
+          <!-- MyBatis Enum解説図 -->
           <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
             <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
               <span class="material-icons" style="color: #0097A7;">storage</span>
-              @Enumerated の保存方式の違い
+              MyBatisのEnum自動マッピング
             </h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div style="background: #dcfce7; border-radius: 10px; padding: 16px; border-top: 3px solid #22c55e;">
-                <div style="font-weight: 700; color: #166534; font-size: 0.85rem; margin-bottom: 8px;">EnumType.STRING（推奨）</div>
+                <div style="font-weight: 700; color: #166534; font-size: 0.85rem; margin-bottom: 8px;">Javaコード側</div>
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #334155; background: #f1f5f9; border-radius: 6px; padding: 8px; line-height: 1.8;">
-                  status = '<span style="color: #16a34a; font-weight: 600;">NOT_STARTED</span>'<br>
-                  status = '<span style="color: #16a34a; font-weight: 600;">COMPLETED</span>'
+                  todo.setStatus(<span style="color: #16a34a; font-weight: 600;">TodoStatus.COMPLETED</span>);
                 </div>
-                <p style="font-size: 0.78rem; color: #64748b; margin-top: 8px;">人間が読める。Enumの順番を変えても安全。</p>
+                <p style="font-size: 0.78rem; color: #64748b; margin-top: 8px;">Enumの定数名をそのまま使用。型安全。</p>
               </div>
-              <div style="background: #fef2f2; border-radius: 10px; padding: 16px; border-top: 3px solid #ef4444;">
-                <div style="font-weight: 700; color: #dc2626; font-size: 0.85rem; margin-bottom: 8px;">EnumType.ORDINAL（非推奨）</div>
+              <div style="background: #dbeafe; border-radius: 10px; padding: 16px; border-top: 3px solid #3b82f6;">
+                <div style="font-weight: 700; color: #1e40af; font-size: 0.85rem; margin-bottom: 8px;">データベース側</div>
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #334155; background: #f1f5f9; border-radius: 6px; padding: 8px; line-height: 1.8;">
-                  status = <span style="color: #dc2626; font-weight: 600;">0</span><br>
-                  status = <span style="color: #dc2626; font-weight: 600;">2</span>
+                  status = '<span style="color: #1e40af; font-weight: 600;">COMPLETED</span>'
                 </div>
-                <p style="font-size: 0.78rem; color: #64748b; margin-top: 8px;">数字だけでは意味不明。順番を変えるとデータが壊れる。</p>
+                <p style="font-size: 0.78rem; color: #64748b; margin-top: 8px;">MyBatisが自動で文字列名に変換して保存。</p>
               </div>
             </div>
+            <p style="text-align: center; color: #64748b; font-size: 0.78rem; margin-top: 12px;">MyBatisはデフォルトでEnumの<code style="font-size: 0.75rem;">name()</code>（定数名）を使ってVARCHAR列と相互変換します。JPAのように<code style="font-size: 0.75rem;">@Enumerated</code>アノテーションは不要です。</p>
           </div>
 
-          <p>必要なimport文も忘れずに追加してください。</p>
-          <div class="code-block">
-            <div class="code-header">
-              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
-              <span class="code-title">Todo.java に追加するimport</span>
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> なぜアノテーションが不要なのか</div>
+            <div class="info-box-content">
+              <p>MyBatisには<code>EnumTypeHandler</code>という仕組みが組み込まれており、JavaのEnum型とデータベースのVARCHAR型を自動的に変換してくれます。Enumの定数名（<code>NOT_STARTED</code>、<code>COMPLETED</code>など）がそのまま文字列としてDBに保存され、読み出し時には自動的にEnum定数に戻されます。Todo.javaはただのPOJO（普通のJavaクラス）なので、特別なアノテーションは一切必要ありません。</p>
             </div>
-            <pre class="code-content"><code>import jakarta.persistence.Enumerated;
-import jakarta.persistence.EnumType;</code></pre>
           </div>
         </div>
       </div>
@@ -253,7 +247,7 @@ import jakarta.persistence.EnumType;</code></pre>
             <div>src/main/java/com/example/todo/</div>
             <div style="padding-left: 20px;">
               <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> Todo.java <span style="color: #fbbf24;">&#8592; statusフィールド追加</span><br>
-              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoRepository.java<br>
+              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoMapper.java<br>
               <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoController.java<br>
               <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> <span style="color: #86efac;">TodoStatus.java</span> <span style="color: #86efac;">&#8592; NEW!</span><br>
               <span style="color: #64748b;">&#9492;&#9472;&#9472;</span> TodoApplication.java
@@ -315,15 +309,17 @@ import jakarta.persistence.EnumType;</code></pre>
             </div>
             <pre class="code-content"><code>    @PostMapping("/{id}/toggle-status")
     public String toggleStatus(@PathVariable Long id) {
-        Todo todo = todoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("不正なID: " + id));
+        Todo todo = todoMapper.findById(id);
+        if (todo == null) {
+            throw new IllegalArgumentException("不正なID: " + id);
+        }
         todo.setStatus(todo.getStatus().next());
-        todoRepository.save(todo);
+        todoMapper.update(todo);
         return "redirect:/todos";
     }</code></pre>
           </div>
 
-          <p>このメソッドは、URLパスに含まれるIDでTodoを検索し、現在のステータスの<code>next()</code>を呼んで次の状態に進め、保存してから一覧にリダイレクトします。</p>
+          <p>このメソッドは、URLパスに含まれるIDでTodoを検索し、現在のステータスの<code>next()</code>を呼んで次の状態に進め、更新してから一覧にリダイレクトします。MyBatisの<code>findById()</code>はnullを返す可能性があるため、nullチェックを行っています。</p>
         </div>
       </div>
 
@@ -403,42 +399,41 @@ import jakarta.persistence.EnumType;</code></pre>
       </div>
 
       <div class="subsection">
-        <h3 class="subsection-title">9-4-1 Repositoryにフィルタ用メソッドを追加する</h3>
+        <h3 class="subsection-title">9-4-1 Mapperにフィルタ用メソッドを追加する</h3>
         <div class="content-block">
-          <p><code>TodoRepository.java</code>に以下のメソッドを追加してください。</p>
+          <p><code>TodoMapper.java</code>に以下のメソッドを追加してください。</p>
 
           <div class="code-block">
             <div class="code-header">
               <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
-              <span class="code-title">TodoRepository.java に追加</span>
+              <span class="code-title">TodoMapper.java に追加</span>
             </div>
-            <pre class="code-content"><code>    List&lt;Todo&gt; findByStatus(TodoStatus status);</code></pre>
+            <pre class="code-content"><code>    @Select("SELECT * FROM todo WHERE status = #{status}")
+    List&lt;Todo&gt; findByStatus(TodoStatus status);</code></pre>
           </div>
 
-          <p>Spring Data JPAの命名規則に従って<code>findByStatus</code>と書くだけで、自動的に<code>WHERE status = ?</code>のSQLが生成されます。import文に<code>TodoStatus</code>を追加するのを忘れないでください。</p>
+          <p>MyBatisでは<code>@Select</code>アノテーションに直接SQLを書きます。<code>#{status}</code>は引数の値がバインドされるプレースホルダです。TodoStatus型の引数を渡すと、MyBatisが自動的にEnumの定数名（文字列）に変換してSQLに渡します。</p>
 
-          <!-- クエリ自動生成の仕組み図 -->
+          <!-- MyBatis SQLマッピングの仕組み図 -->
           <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
             <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #334155;">
               <span class="material-icons" style="color: #0097A7;">auto_fix_high</span>
-              メソッド名からSQLが自動生成される仕組み
+              MyBatisのSQLマッピングの仕組み
             </h4>
             <div style="display: flex; flex-direction: column; gap: 12px;">
               <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; border-left: 4px solid #0097A7;">
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-bottom: 8px;">
-                  <span style="color: #0097A7; font-weight: 600;">findBy</span><span style="color: #7c3aed; font-weight: 600;">Status</span>(<span style="color: #dc2626;">TodoStatus status</span>)
+                  <span style="color: #0097A7; font-weight: 600;">@Select</span>("SELECT * FROM todo WHERE status = <span style="color: #7c3aed; font-weight: 600;">#{status}</span>")
                 </div>
                 <div style="font-size: 0.75rem; color: #334155;">
-                  <span style="color: #0097A7;">&#8595; 接頭辞</span>
-                  &nbsp;&nbsp;&nbsp;
-                  <span style="color: #7c3aed;">&#8595; プロパティ名</span>
-                  &nbsp;&nbsp;&nbsp;
-                  <span style="color: #dc2626;">&#8595; 引数</span>
+                  <span style="color: #0097A7;">&#8595; SQLアノテーション</span>
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  <span style="color: #7c3aed;">&#8595; パラメータバインド</span>
                 </div>
               </div>
               <div style="text-align: center; color: #0097A7; font-size: 1.2rem;">&#8595;</div>
               <div style="background: #1e293b; border-radius: 10px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;">
-                <span style="color: #7dd3fc;">SELECT</span> * <span style="color: #7dd3fc;">FROM</span> todo <span style="color: #7dd3fc;">WHERE</span> status = <span style="color: #fbbf24;">?</span>
+                <span style="color: #7dd3fc;">SELECT</span> * <span style="color: #7dd3fc;">FROM</span> todo <span style="color: #7dd3fc;">WHERE</span> status = <span style="color: #fbbf24;">'NOT_STARTED'</span>
               </div>
             </div>
           </div>
@@ -460,9 +455,9 @@ import jakarta.persistence.EnumType;</code></pre>
                        Model model) {
         List&lt;Todo&gt; todos;
         if (status != null) {
-            todos = todoRepository.findByStatus(status);
+            todos = todoMapper.findByStatus(status);
         } else {
-            todos = todoRepository.findAll();
+            todos = todoMapper.findAll();
         }
         model.addAttribute("todos", todos);
         model.addAttribute("currentStatus", status);
@@ -582,8 +577,8 @@ import jakarta.persistence.EnumType;</code></pre>
               </div>
               <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; text-align: center;">
                 <span class="material-icons" style="color: #0097A7; font-size: 2rem;">storage</span>
-                <div style="font-weight: 700; color: #00838F; font-size: 0.9rem; margin-top: 8px;">@Enumerated</div>
-                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">EnumType.STRINGで安全に保存</div>
+                <div style="font-weight: 700; color: #00838F; font-size: 0.9rem; margin-top: 8px;">MyBatis Enum変換</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">自動でVARCHARと相互変換</div>
               </div>
               <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; text-align: center;">
                 <span class="material-icons" style="color: #0097A7; font-size: 2rem;">filter_alt</span>
@@ -608,24 +603,24 @@ import jakarta.persistence.EnumType;</code></pre>
         <div class="exercise-item">
           <div class="exercise-number">Q1</div>
           <div class="exercise-content">
-            <p>JPAでEnumをデータベースに保存する際、<code>@Enumerated</code>アノテーションの設定として推奨されるのはどれですか。</p>
+            <p>MyBatisでJavaのEnum型をデータベースに保存する際の動作について正しいものはどれですか。</p>
             <ol type="A">
-              <li>@Enumerated(EnumType.ORDINAL) -- Enumの定義順（0, 1, 2...）で保存する</li>
-              <li>@Enumerated(EnumType.STRING) -- Enumの名前（文字列）で保存する</li>
-              <li>@Enumerated を付けなくても自動的にSTRINGで保存される</li>
-              <li>@Enumerated(EnumType.INTEGER) -- Enumの値をint型で保存する</li>
+              <li>Enumは保存できないため、事前にString型に変換する必要がある</li>
+              <li>MyBatisのEnumTypeHandlerにより、Enumの定数名（name()）が自動的に文字列として保存される</li>
+              <li>Enumの定義順（ordinal: 0, 1, 2...）が自動的に数値として保存される</li>
+              <li>@Enumerated アノテーションを付けないとエラーになる</li>
             </ol>
           </div>
         </div>
         <div class="exercise-item">
           <div class="exercise-number">Q2</div>
           <div class="exercise-content">
-            <p>Spring Data JPAで<code>TodoRepository</code>に<code>List&lt;Todo&gt; findByStatus(TodoStatus status)</code>メソッドを定義したとき、自動生成されるSQLとして正しいものはどれですか。</p>
+            <p>MyBatisの<code>TodoMapper</code>に<code>@Select("SELECT * FROM todo WHERE status = #{status}")</code>と定義したメソッドにTodoStatus.NOT_STARTEDを渡したとき、実行されるSQLとして正しいものはどれですか。</p>
             <ol type="A">
-              <li>SELECT * FROM todo WHERE status LIKE ?</li>
-              <li>SELECT * FROM todo WHERE status = ?</li>
-              <li>SELECT * FROM todo ORDER BY status</li>
-              <li>SELECT status FROM todo</li>
+              <li>SELECT * FROM todo WHERE status LIKE 'NOT_STARTED'</li>
+              <li>SELECT * FROM todo WHERE status = 'NOT_STARTED'</li>
+              <li>SELECT * FROM todo WHERE status = 0</li>
+              <li>SELECT status FROM todo WHERE status = 'NOT_STARTED'</li>
             </ol>
           </div>
         </div>
@@ -654,13 +649,13 @@ import jakarta.persistence.EnumType;</code></pre>
         <div class="answer-item">
           <div class="answer-header">Q1の解答: B</div>
           <div class="answer-content">
-            <p><code>EnumType.STRING</code>を使うと、データベースには<code>"NOT_STARTED"</code>、<code>"COMPLETED"</code>のように文字列で保存されます。<code>EnumType.ORDINAL</code>は定義順の数値（0, 1, 2）で保存するため、Enumの定義順を変更するとデータの意味が変わってしまう危険があります。STRINGを使えばEnum定数の追加・並べ替えにも安全に対応できます。</p>
+            <p>MyBatisにはデフォルトで<code>EnumTypeHandler</code>が組み込まれており、JavaのEnum型を自動的にその定数名（<code>name()</code>の戻り値）で文字列としてデータベースに保存します。JPAの<code>@Enumerated</code>のような特別なアノテーションは不要です。データベース側のカラムは<code>VARCHAR</code>型にしておけば、<code>"NOT_STARTED"</code>、<code>"COMPLETED"</code>のように人間が読める形で保存されます。</p>
           </div>
         </div>
         <div class="answer-item">
           <div class="answer-header">Q2の解答: B</div>
           <div class="answer-content">
-            <p>Spring Data JPAの命名規則では、<code>findBy</code>の後にプロパティ名を続けると、そのプロパティで<code>WHERE</code>句の等値比較を行うSQLが自動生成されます。<code>findByStatus(TodoStatus status)</code>は<code>SELECT * FROM todo WHERE status = ?</code>に変換されます。LIKEによる部分一致検索には<code>findByStatusContaining</code>のような命名を使います。</p>
+            <p>MyBatisの<code>#{status}</code>はプリペアドステートメントのパラメータとしてバインドされます。TodoStatus.NOT_STARTEDを渡すと、EnumTypeHandlerが自動的に文字列<code>"NOT_STARTED"</code>に変換し、<code>SELECT * FROM todo WHERE status = 'NOT_STARTED'</code>が実行されます。<code>@Select</code>に書いたSQLがそのまま使われるため、Spring Data JPAのようなメソッド名からの自動生成ではなく、開発者がSQLを明示的に記述します。</p>
           </div>
         </div>
         <div class="answer-item">

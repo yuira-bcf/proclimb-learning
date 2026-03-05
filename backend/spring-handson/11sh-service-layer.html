@@ -70,7 +70,7 @@
                 <div style="background: white; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem; color: #334155; border-left: 3px solid #f59e0b;">Todoの検索・ソート処理</div>
                 <div style="background: white; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem; color: #334155; border-left: 3px solid #f59e0b;">ステータスの切り替えロジック</div>
                 <div style="background: white; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem; color: #334155; border-left: 3px solid #f59e0b;">期限切れチェック</div>
-                <div style="background: white; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem; color: #334155; border-left: 3px solid #22c55e;">データベースアクセス（Repository呼び出し）</div>
+                <div style="background: white; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem; color: #334155; border-left: 3px solid #22c55e;">データベースアクセス（Mapper呼び出し）</div>
               </div>
               <div style="text-align: center; margin-top: 12px; font-size: 0.75rem; color: #dc2626;">1クラスに全部入りで見通しが悪い</div>
             </div>
@@ -103,12 +103,12 @@
               </div>
               <div style="text-align: center; color: #0097A7; font-size: 1.2rem;">&#8595; 呼び出す &#8595;</div>
               <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 16px; text-align: center;">
-                <div style="font-weight: 700; color: #166534; font-size: 0.95rem;">Repository層（データアクセス）</div>
+                <div style="font-weight: 700; color: #166534; font-size: 0.95rem;">Mapper層（データアクセス）</div>
                 <div style="font-size: 0.78rem; color: #15803d; margin-top: 4px;">データベースへの読み書き（CRUD操作）</div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; margin-top: 6px;">@Repository / JpaRepository</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; margin-top: 6px;">@Mapper / SQLアノテーション</div>
               </div>
             </div>
-            <p style="text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 16px;">ControllerはServiceだけを知り、ServiceはRepositoryだけを知る</p>
+            <p style="text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 16px;">ControllerはServiceだけを知り、ServiceはMapperだけを知る</p>
           </div>
 
           <div class="info-box">
@@ -149,37 +149,47 @@
             <pre class="code-content"><code>package com.example.todo;
 
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class TodoService {
 
-    private final TodoRepository todoRepository;
+    private final TodoMapper todoMapper;
 
     // コンストラクタインジェクション
-    public TodoService(TodoRepository todoRepository) {
-        this.todoRepository = todoRepository;
+    public TodoService(TodoMapper todoMapper) {
+        this.todoMapper = todoMapper;
     }
 
     // 全件取得
     public List&lt;Todo&gt; findAll() {
-        return todoRepository.findAll();
+        return todoMapper.findAll();
     }
 
     // ID指定で1件取得
     public Todo findById(Long id) {
-        return todoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("不正なID: " + id));
+        Todo todo = todoMapper.findById(id);
+        if (todo == null) {
+            throw new IllegalArgumentException("不正なID: " + id);
+        }
+        return todo;
     }
 
-    // 保存（新規・更新共通）
-    public Todo save(Todo todo) {
-        return todoRepository.save(todo);
+    // 新規登録
+    public void insert(Todo todo) {
+        todo.setCreatedAt(LocalDateTime.now());
+        todoMapper.insert(todo);
+    }
+
+    // 更新
+    public void update(Todo todo) {
+        todoMapper.update(todo);
     }
 
     // 削除
     public void deleteById(Long id) {
-        todoRepository.deleteById(id);
+        todoMapper.deleteById(id);
     }
 }</code></pre>
           </div>
@@ -190,7 +200,8 @@ public class TodoService {
               <ul>
                 <li><strong>@Service</strong> -- このクラスがService層のコンポーネントであることをSpringに伝えます。@Componentと同等ですが、役割を明示するため@Serviceを使います。</li>
                 <li><strong>コンストラクタインジェクション</strong> -- <code>final</code>フィールドとコンストラクタでDI（依存性注入）を行います。Spring Bootはコンストラクタが1つの場合、<code>@Autowired</code>を省略できます。</li>
-                <li><strong>orElseThrow()</strong> -- <code>findById()</code>はOptionalを返すため、値がない場合に例外をスローします。この判定ロジックをServiceに閉じ込めることで、Controllerがシンプルになります。</li>
+                <li><strong>nullチェック</strong> -- MyBatisの<code>findById()</code>はデータが見つからない場合にnullを返します（JPAのOptionalとは異なります）。nullの場合に例外をスローする判定ロジックをServiceに閉じ込めることで、Controllerがシンプルになります。</li>
+                <li><strong>insert / update の分離</strong> -- MyBatisではJPAの<code>save()</code>のような新規・更新兼用メソッドがないため、<code>insert()</code>と<code>update()</code>を明示的に分けています。</li>
               </ul>
             </div>
           </div>
@@ -210,13 +221,13 @@ public class TodoService {
               <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="background: #0097A7; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">1</div>
                 <div style="background: #E0F7FA; border-radius: 8px; padding: 12px 16px; flex: 1; font-size: 0.82rem;">
-                  <strong>起動時:</strong> Spring が <code>@Repository</code> 付きの TodoRepository を検出し、インスタンスを作成
+                  <strong>起動時:</strong> Spring が <code>@Mapper</code> 付きの TodoMapper を検出し、インスタンスを作成
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="background: #0097A7; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">2</div>
                 <div style="background: #E0F7FA; border-radius: 8px; padding: 12px 16px; flex: 1; font-size: 0.82rem;">
-                  <strong>起動時:</strong> Spring が <code>@Service</code> 付きの TodoService を検出し、コンストラクタに TodoRepository を注入して作成
+                  <strong>起動時:</strong> Spring が <code>@Service</code> 付きの TodoService を検出し、コンストラクタに TodoMapper を注入して作成
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 12px;">
@@ -228,7 +239,7 @@ public class TodoService {
               <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="background: #0097A7; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">4</div>
                 <div style="background: #E0F7FA; border-radius: 8px; padding: 12px 16px; flex: 1; font-size: 0.82rem;">
-                  <strong>実行時:</strong> HTTPリクエスト → Controller → Service → Repository → DB
+                  <strong>実行時:</strong> HTTPリクエスト → Controller → Service → Mapper → DB
                 </div>
               </div>
             </div>
@@ -246,13 +257,13 @@ public class TodoService {
       </div>
 
       <div class="intro-text">
-        <p>TodoControllerが直接TodoRepositoryを呼んでいた部分を、TodoServiceの呼び出しに段階的に置き換えていきます。</p>
+        <p>TodoControllerが直接TodoMapperを呼んでいた部分を、TodoServiceの呼び出しに段階的に置き換えていきます。</p>
       </div>
 
       <div class="subsection">
         <h3 class="subsection-title">11-3-1 Controller の依存関係を変更する</h3>
         <div class="content-block">
-          <p>まず、TodoControllerのフィールドとコンストラクタを変更します。<code>TodoRepository</code>を<code>TodoService</code>に差し替えてください。</p>
+          <p>まず、TodoControllerのフィールドとコンストラクタを変更します。依存先を<code>TodoMapper</code>から<code>TodoService</code>に差し替えてください。</p>
 
           <div class="code-block">
             <div class="code-header">
@@ -263,10 +274,10 @@ public class TodoService {
 @RequestMapping("/todos")
 public class TodoController {
 
-    private final TodoRepository todoRepository;
+    private final TodoMapper todoMapper;
 
-    public TodoController(TodoRepository todoRepository) {
-        this.todoRepository = todoRepository;
+    public TodoController(TodoMapper todoMapper) {
+        this.todoMapper = todoMapper;
     }
     // ...
 }</code></pre>
@@ -342,7 +353,7 @@ public class TodoController {
             return "layout";
         }
         todo.setId(id);
-        todoService.save(todo);
+        todoService.update(todo);
         return "redirect:/todos";
     }
 
@@ -390,9 +401,9 @@ public class TodoController {
             <pre class="code-content"><code>    // ステータスでフィルタして取得（nullの場合は全件）
     public List&lt;Todo&gt; findAll(TodoStatus status) {
         if (status != null) {
-            return todoRepository.findByStatus(status);
+            return todoMapper.findByStatus(status);
         }
-        return todoRepository.findAll();
+        return todoMapper.findAll();
     }</code></pre>
           </div>
 
@@ -414,7 +425,7 @@ public class TodoController {
     public void toggleStatus(Long id) {
         Todo todo = findById(id);
         todo.setStatus(todo.getStatus().next());
-        todoRepository.save(todo);
+        todoMapper.update(todo);
     }</code></pre>
           </div>
 
@@ -436,7 +447,7 @@ public class TodoController {
             <div style="padding-left: 20px;">
               <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> Todo.java <span style="color: #64748b;">(Entity)</span><br>
               <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoStatus.java <span style="color: #64748b;">(Enum)</span><br>
-              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoRepository.java <span style="color: #64748b;">(Repository層)</span><br>
+              <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoMapper.java <span style="color: #64748b;">(Mapper層)</span><br>
               <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> <span style="color: #86efac;">TodoService.java</span> <span style="color: #86efac;">&#8592; NEW! (Service層)</span><br>
               <span style="color: #64748b;">&#9500;&#9472;&#9472;</span> TodoController.java <span style="color: #fbbf24;">&#8592; リファクタリング済 (Controller層)</span><br>
               <span style="color: #64748b;">&#9492;&#9472;&#9472;</span> TodoApplication.java
@@ -473,7 +484,7 @@ public class TodoController {
                 <div style="font-weight: 700; color: #dc2626; font-size: 0.85rem; margin-bottom: 12px;">Before（Service導入前）</div>
                 <div style="font-size: 0.78rem; color: #334155; line-height: 1.8;">
                   <div style="margin-bottom: 4px;"><strong>行数:</strong> 約80行</div>
-                  <div style="margin-bottom: 4px;"><strong>依存:</strong> TodoRepository（直接）</div>
+                  <div style="margin-bottom: 4px;"><strong>依存:</strong> TodoMapper（直接）</div>
                   <div style="margin-bottom: 4px;"><strong>責務:</strong> HTTP処理 + ロジック + DB呼び出し</div>
                   <div><strong>テスト:</strong> DB接続が必要で困難</div>
                 </div>
@@ -503,9 +514,9 @@ public class TodoController {
               <div style="color: #64748b;">&#8594;</div>
               <div style="background: #fef3c7; border-radius: 8px; padding: 10px 16px; font-weight: 600; color: #92400e;">Service</div>
               <div style="color: #64748b;">&#8594;</div>
-              <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #334155; background: #f1f5f9; padding: 6px 10px; border-radius: 6px;">findById() + save()</div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #334155; background: #f1f5f9; padding: 6px 10px; border-radius: 6px;">findById() + update()</div>
               <div style="color: #64748b;">&#8594;</div>
-              <div style="background: #dcfce7; border-radius: 8px; padding: 10px 16px; font-weight: 600; color: #166534;">Repository</div>
+              <div style="background: #dcfce7; border-radius: 8px; padding: 10px 16px; font-weight: 600; color: #166534;">Mapper</div>
             </div>
           </div>
         </div>
@@ -531,7 +542,7 @@ public class TodoController {
               <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; text-align: center;">
                 <span class="material-icons" style="color: #0097A7; font-size: 2rem;">layers</span>
                 <div style="font-weight: 700; color: #00838F; font-size: 0.9rem; margin-top: 8px;">3層アーキテクチャ</div>
-                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">Controller → Service → Repository</div>
+                <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">Controller → Service → Mapper</div>
               </div>
               <div style="background: #E0F7FA; border-radius: 10px; padding: 16px; text-align: center;">
                 <span class="material-icons" style="color: #0097A7; font-size: 2rem;">settings_suggest</span>
@@ -546,7 +557,7 @@ public class TodoController {
             </div>
           </div>
 
-          <p>次の章では、JUnit5を使ったテストの書き方を学びます。Service層を分離したことで、Repositoryをモック化してServiceだけを単体テストできるようになりました。この恩恵を実感しましょう。</p>
+          <p>次の章では、JUnit5を使ったテストの書き方を学びます。Service層を分離したことで、Mapperをモック化してServiceだけを単体テストできるようになりました。この恩恵を実感しましょう。</p>
         </div>
       </div>
     </section>
@@ -579,10 +590,10 @@ public class TodoController {
                 <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
                 <span class="code-title">TodoService.java</span>
               </div>
-              <pre class="code-content"><code>private final TodoRepository todoRepository;
+              <pre class="code-content"><code>private final TodoMapper todoMapper;
 
-public TodoService(TodoRepository todoRepository) {
-    this.todoRepository = todoRepository;
+public TodoService(TodoMapper todoMapper) {
+    this.todoMapper = todoMapper;
 }</code></pre>
             </div>
             <ol type="A">
@@ -618,13 +629,13 @@ public TodoService(TodoRepository todoRepository) {
         <div class="answer-item">
           <div class="answer-header">Q1の解答: C</div>
           <div class="answer-content">
-            <p><code>@Service</code>はクラスがビジネスロジックを担当するService層のコンポーネントであることを示すアノテーションです。内部的には<code>@Component</code>の特殊化であり、SpringのDIコンテナにBeanとして登録されます。HTTPリクエストの受付は<code>@Controller</code>、データアクセスは<code>@Repository</code>の役割です。</p>
+            <p><code>@Service</code>はクラスがビジネスロジックを担当するService層のコンポーネントであることを示すアノテーションです。内部的には<code>@Component</code>の特殊化であり、SpringのDIコンテナにBeanとして登録されます。HTTPリクエストの受付は<code>@Controller</code>、データアクセスは<code>@Mapper</code>（MyBatis）の役割です。</p>
           </div>
         </div>
         <div class="answer-item">
           <div class="answer-header">Q2の解答: B</div>
           <div class="answer-content">
-            <p>Spring Boot（Spring Framework 4.3以降）では、クラスにコンストラクタが1つしかない場合、<code>@Autowired</code>を省略しても自動的に依存性注入が行われます。<code>final</code>フィールドを使うことで、注入後にフィールドが再代入されることを防ぎ、不変性を保証できます。これが現在推奨されるDIパターンです。</p>
+            <p>Spring Boot（Spring Framework 4.3以降）では、クラスにコンストラクタが1つしかない場合、<code>@Autowired</code>を省略しても自動的に依存性注入が行われます。<code>final</code>フィールドを使うことで、注入後にフィールドが再代入されることを防ぎ、不変性を保証できます。TodoMapperもSpringのDIコンテナに登録されているため、同じ仕組みで注入されます。これが現在推奨されるDIパターンです。</p>
           </div>
         </div>
         <div class="answer-item">

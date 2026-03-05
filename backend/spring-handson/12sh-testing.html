@@ -26,14 +26,14 @@
       <div class="chapter-badge"><span class="material-icons">menu_book</span> Chapter</div>
       <div class="chapter-number">12</div>
       <h1 class="chapter-title">テストを書く</h1>
-      <p class="chapter-subtitle">JUnit5でRepository・Service・Controllerのテストを書き、品質を担保する</p>
+      <p class="chapter-subtitle">JUnit5でMapper・Service・Controllerのテストを書き、品質を担保する</p>
     </header>
 
     <nav class="toc">
       <h2 class="toc-title"><span class="material-icons">list_alt</span> この章の内容</h2>
       <ul class="toc-list">
         <li class="toc-item"><span class="toc-number">12-1</span><span>なぜテストを書くのか</span></li>
-        <li class="toc-item"><span class="toc-number">12-2</span><span>Repositoryテストを書く</span></li>
+        <li class="toc-item"><span class="toc-number">12-2</span><span>Mapperテストを書く</span></li>
         <li class="toc-item"><span class="toc-number">12-3</span><span>Serviceテストを書く</span></li>
         <li class="toc-item"><span class="toc-number">12-4</span><span>Controllerテストを書く</span></li>
         <li class="toc-item"><span class="toc-number">12-5</span><span>テストを実行する</span></li>
@@ -106,7 +106,7 @@
                 <div style="font-size: 0.72rem; color: #2563eb;">MockMvcでHTTPリクエストを模擬</div>
               </div>
               <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 8px; padding: 12px 40px; width: 340px; text-align: center;">
-                <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">Service / Repositoryテスト &#9745;</div>
+                <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">Service / Mapperテスト &#9745;</div>
                 <div style="font-size: 0.72rem; color: #15803d;">個々のクラスの動作を検証</div>
               </div>
             </div>
@@ -116,7 +116,7 @@
           <div class="info-box">
             <div class="info-box-title"><span class="material-icons">info</span> テスト環境について</div>
             <div class="info-box-content">
-              <p>Spring Bootプロジェクトには、JUnit5とMockitoがデフォルトで含まれています（<code>spring-boot-starter-test</code>）。追加の依存関係は不要で、すぐにテストを書き始められます。テストコードは<code>src/test/java/</code>配下に配置します。</p>
+              <p>Spring Bootプロジェクトには、JUnit5とMockitoがデフォルトで含まれています（<code>spring-boot-starter-test</code>）。MyBatisのMapperテストには<code>mybatis-spring-boot-starter-test</code>を<code>pom.xml</code>に追加する必要があります。テストコードは<code>src/test/java/</code>配下に配置します。</p>
             </div>
           </div>
         </div>
@@ -127,98 +127,73 @@
     <section class="section">
       <div class="section-header">
         <span class="section-number">Section 12-2</span>
-        <h2 class="section-title">Repositoryテストを書く</h2>
+        <h2 class="section-title">Mapperテストを書く</h2>
       </div>
 
       <div class="intro-text">
-        <p>最初に、データベースとのやり取りが正しく動作するかを検証するRepositoryテストを書きます。<code>@DataJpaTest</code>を使うと、JPAに関連するコンポーネントだけが起動するため、高速にテストできます。</p>
+        <p>最初に、データベースとのやり取りが正しく動作するかを検証するMapperテストを書きます。<code>@MybatisTest</code>を使うと、MyBatisに関連するコンポーネント（Mapperインターフェース）だけが起動するため、高速にテストできます。</p>
       </div>
 
       <div class="subsection">
         <h3 class="subsection-title">12-2-1 テストクラスを作成する</h3>
         <div class="content-block">
-          <p><code>src/test/java/com/example/todo/</code>ディレクトリに<code>TodoRepositoryTest.java</code>を新規作成してください。以下のコードを手で入力しましょう。</p>
+          <p>まず、<code>pom.xml</code>にMyBatisテスト用の依存関係を追加してください。</p>
 
           <div class="code-block">
             <div class="code-header">
               <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
-              <span class="code-title">src/test/java/com/example/todo/TodoRepositoryTest.java</span>
+              <span class="code-title">pom.xml に追加する依存関係</span>
+            </div>
+            <pre class="code-content"><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;mybatis-spring-boot-starter-test&lt;/artifactId&gt;
+    &lt;version&gt;3.0.4&lt;/version&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+          </div>
+
+          <p>次に、<code>src/test/java/com/example/todo/</code>ディレクトリに<code>TodoMapperTest.java</code>を新規作成してください。以下のコードを手で入力しましょう。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">src/test/java/com/example/todo/TodoMapperTest.java</span>
             </div>
             <pre class="code-content"><code>package com.example.todo;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-@DataJpaTest
-class TodoRepositoryTest {
+@MybatisTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+class TodoMapperTest {
 
     @Autowired
-    private TestEntityManager entityManager;
-
-    @Autowired
-    private TodoRepository todoRepository;
+    private TodoMapper todoMapper;
 
     @Test
-    @DisplayName("ステータスで絞り込めること")
-    void findByStatus_returnsMatchingTodos() {
-        // 準備: テストデータを登録
-        Todo todo1 = new Todo();
-        todo1.setTitle("テスト1");
-        todo1.setStatus(TodoStatus.NOT_STARTED);
-        todo1.setDueDate(LocalDate.of(2026, 4, 1));
-        entityManager.persist(todo1);
-
-        Todo todo2 = new Todo();
-        todo2.setTitle("テスト2");
-        todo2.setStatus(TodoStatus.COMPLETED);
-        todo2.setDueDate(LocalDate.of(2026, 4, 1));
-        entityManager.persist(todo2);
-
-        Todo todo3 = new Todo();
-        todo3.setTitle("テスト3");
-        todo3.setStatus(TodoStatus.NOT_STARTED);
-        todo3.setDueDate(LocalDate.of(2026, 4, 1));
-        entityManager.persist(todo3);
-
-        entityManager.flush();
-
-        // 実行: NOT_STARTEDで検索
-        List&lt;Todo&gt; result = todoRepository.findByStatus(TodoStatus.NOT_STARTED);
-
-        // 検証: 2件返ること
-        assertThat(result).hasSize(2);
-        assertThat(result).allMatch(t -> t.getStatus() == TodoStatus.NOT_STARTED);
+    @DisplayName("全件取得できること")
+    void findAll_returnsAllTodos() {
+        List&lt;Todo&gt; todos = todoMapper.findAll();
+        assertFalse(todos.isEmpty());
     }
 
     @Test
-    @DisplayName("タイトルの部分一致検索ができること")
-    void findByTitleContaining_returnsMatchingTodos() {
-        Todo todo1 = new Todo();
-        todo1.setTitle("Spring Boot勉強");
-        todo1.setStatus(TodoStatus.NOT_STARTED);
-        todo1.setDueDate(LocalDate.of(2026, 4, 1));
-        entityManager.persist(todo1);
-
-        Todo todo2 = new Todo();
-        todo2.setTitle("買い物リスト");
-        todo2.setStatus(TodoStatus.NOT_STARTED);
-        todo2.setDueDate(LocalDate.of(2026, 4, 1));
-        entityManager.persist(todo2);
-
-        entityManager.flush();
-
-        List&lt;Todo&gt; result = todoRepository.findByTitleContaining("Spring");
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getTitle()).contains("Spring");
+    @DisplayName("ステータスで絞り込めること")
+    void findByStatus_filtersByStatus() {
+        List&lt;Todo&gt; todos = todoMapper.findByStatus(TodoStatus.NOT_STARTED);
+        todos.forEach(todo ->
+            assertEquals(TodoStatus.NOT_STARTED, todo.getStatus())
+        );
     }
 }</code></pre>
           </div>
@@ -227,10 +202,10 @@ class TodoRepositoryTest {
             <div class="info-box-title"><span class="material-icons">info</span> コードの解説</div>
             <div class="info-box-content">
               <ul>
-                <li><strong>@DataJpaTest</strong> -- JPA関連のBeanだけを起動する軽量テスト。インメモリH2データベースを使うため高速です。</li>
-                <li><strong>TestEntityManager</strong> -- テスト用のEntityManager。<code>persist()</code>でテストデータを直接DBに登録します。</li>
+                <li><strong>@MybatisTest</strong> -- MyBatis関連のBean（Mapperインターフェース）だけを起動する軽量テスト。<code>mybatis-spring-boot-starter-test</code>が提供するアノテーションです。</li>
+                <li><strong>@AutoConfigureTestDatabase</strong> -- テスト用のデータベース設定。<code>Replace.NONE</code>を指定すると、<code>application.properties</code>のDB設定をそのまま使います。</li>
                 <li><strong>@DisplayName</strong> -- テスト結果レポートに表示される日本語名を付けます。</li>
-                <li><strong>assertThat()</strong> -- AssertJライブラリの検証メソッド。<code>hasSize(2)</code>で件数、<code>allMatch()</code>で全件の条件を検証します。</li>
+                <li><strong>assertFalse / assertEquals</strong> -- JUnit5標準のアサーションメソッド。空でないこと、値が等しいことを検証します。</li>
               </ul>
             </div>
           </div>
@@ -268,7 +243,7 @@ class TodoRepositoryTest {
       </div>
 
       <div class="intro-text">
-        <p>Service層のテストでは、データベースへの実際のアクセスを避けるために<strong>Mockito</strong>を使います。Repositoryの動作をモック（偽物）に置き換えることで、Serviceのビジネスロジックだけを純粋にテストできます。</p>
+        <p>Service層のテストでは、データベースへの実際のアクセスを避けるために<strong>Mockito</strong>を使います。Mapperの動作をモック（偽物）に置き換えることで、Serviceのビジネスロジックだけを純粋にテストできます。</p>
       </div>
 
       <div class="subsection">
@@ -288,17 +263,17 @@ class TodoRepositoryTest {
                 </div>
                 <div style="color: #64748b; font-size: 0.9rem;">&#8594;</div>
                 <div style="background: #f3e8ff; border: 2px dashed #a855f7; border-radius: 10px; padding: 14px 20px; flex: 1; text-align: center;">
-                  <div style="font-weight: 700; color: #7c3aed; font-size: 0.85rem;">TodoRepository</div>
+                  <div style="font-weight: 700; color: #7c3aed; font-size: 0.85rem;">TodoMapper</div>
                   <div style="font-size: 0.72rem; color: #7c3aed;">モック（偽物）</div>
                 </div>
               </div>
               <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; text-align: center; font-size: 0.78rem; color: #00838F;">
-                モックは「findById(1L)を呼ばれたらこのTodoを返す」と<br>事前にプログラムされた偽オブジェクト
+                モックは「findById(1L)を呼ばれたらこのTodoを返す」と<br>事前にプログラムされた偽オブジェクト（Mapperの代わり）
               </div>
             </div>
           </div>
 
-          <p>モック（Mock）は「呼ばれたら決まった値を返す偽物のオブジェクト」です。本物のRepositoryはDBアクセスが必要ですが、モックを使えばDB不要でServiceだけをテストできます。</p>
+          <p>モック（Mock）は「呼ばれたら決まった値を返す偽物のオブジェクト」です。本物のMapperはDBアクセスが必要ですが、モックを使えばDB不要でServiceだけをテストできます。</p>
         </div>
       </div>
 
@@ -321,8 +296,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
@@ -332,7 +305,7 @@ import static org.mockito.Mockito.when;
 class TodoServiceTest {
 
     @Mock
-    private TodoRepository todoRepository;
+    private TodoMapper todoMapper;
 
     @InjectMocks
     private TodoService todoService;
@@ -344,21 +317,21 @@ class TodoServiceTest {
         Todo todo = new Todo();
         todo.setId(1L);
         todo.setTitle("テストTodo");
-        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+        when(todoMapper.findById(1L)).thenReturn(todo);
 
         // 実行
         Todo result = todoService.findById(1L);
 
         // 検証
         assertThat(result.getTitle()).isEqualTo("テストTodo");
-        verify(todoRepository).findById(1L);
+        verify(todoMapper).findById(1L);
     }
 
     @Test
     @DisplayName("存在しないIDで例外がスローされること")
     void findById_throwsException_whenNotFound() {
-        // 準備: 空のOptionalを返すモック
-        when(todoRepository.findById(99L)).thenReturn(Optional.empty());
+        // 準備: nullを返すモック
+        when(todoMapper.findById(99L)).thenReturn(null);
 
         // 実行 & 検証: 例外がスローされることを確認
         assertThatThrownBy(() -> todoService.findById(99L))
@@ -374,14 +347,14 @@ class TodoServiceTest {
         todo.setId(1L);
         todo.setTitle("テスト");
         todo.setStatus(TodoStatus.NOT_STARTED);
-        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+        when(todoMapper.findById(1L)).thenReturn(todo);
 
         // 実行
         todoService.toggleStatus(1L);
 
         // 検証: NOT_STARTED → IN_PROGRESS に変わったこと
         assertThat(todo.getStatus()).isEqualTo(TodoStatus.IN_PROGRESS);
-        verify(todoRepository).save(todo);
+        verify(todoMapper).update(todo);
     }
 }</code></pre>
           </div>
@@ -391,10 +364,10 @@ class TodoServiceTest {
             <div class="info-box-content">
               <ul>
                 <li><strong>@ExtendWith(MockitoExtension.class)</strong> -- JUnit5でMockitoを使うための設定。@Mockや@InjectMocksが動作するようになります。</li>
-                <li><strong>@Mock</strong> -- モックオブジェクトを自動生成します。TodoRepositoryのメソッドは全てnullや空コレクションを返す状態になります。</li>
+                <li><strong>@Mock</strong> -- モックオブジェクトを自動生成します。TodoMapperのメソッドは全てnullや空コレクションを返す状態になります。</li>
                 <li><strong>@InjectMocks</strong> -- テスト対象のクラスを作成し、@Mockオブジェクトを自動注入します。</li>
                 <li><strong>when(...).thenReturn(...)</strong> -- 「このメソッドが呼ばれたら、この値を返せ」というモックの振る舞いを定義します。</li>
-                <li><strong>verify(...)</strong> -- メソッドが実際に呼ばれたことを検証します。save()が呼ばれずにテストが通ってしまう事故を防ぎます。</li>
+                <li><strong>verify(...)</strong> -- メソッドが実際に呼ばれたことを検証します。update()が呼ばれずにテストが通ってしまう事故を防ぎます。</li>
               </ul>
             </div>
           </div>
@@ -498,14 +471,14 @@ class TodoControllerTest {
               <div style="color: #64748b;">&#8594;</div>
               <div style="background: #f3e8ff; border: 2px dashed #a855f7; border-radius: 8px; padding: 10px 16px; font-weight: 600; color: #7c3aed;">Service(Mock)</div>
             </div>
-            <p style="text-align: center; color: #64748b; font-size: 0.78rem; margin-top: 12px;">実際のHTTP通信もDB接続もなし。Controllerのルーティングと戻り値だけをテスト。</p>
+            <p style="text-align: center; color: #64748b; font-size: 0.78rem; margin-top: 12px;">実際のHTTP通信もDB接続もなし。Controllerのルーティングと戻り値だけをテスト。ServiceはモックなのでMapperも不要。</p>
           </div>
 
           <div class="info-box">
             <div class="info-box-title"><span class="material-icons">info</span> アノテーションの解説</div>
             <div class="info-box-content">
               <ul>
-                <li><strong>@WebMvcTest(TodoController.class)</strong> -- 指定したControllerだけを起動する軽量テスト。ServiceやRepositoryは起動しません。</li>
+                <li><strong>@WebMvcTest(TodoController.class)</strong> -- 指定したControllerだけを起動する軽量テスト。ServiceやMapperは起動しません。</li>
                 <li><strong>@MockBean</strong> -- Spring のApplicationContextにモックBeanを登録します。Controllerが依存するServiceをモックで置き換えます。</li>
                 <li><strong>mockMvc.perform(get("/todos"))</strong> -- GET /todos リクエストを模擬的に送信します。</li>
                 <li><strong>andExpect(status().isOk())</strong> -- HTTPステータスが200であることを検証します。</li>
@@ -695,16 +668,16 @@ class TodoControllerTest {
                   <div style="font-size: 0.72rem; color: #92400e;">ステータス切替ロジック</div>
                 </div>
               </div>
-              <div style="text-align: center; color: #64748b;">&#8595; JPA &#8595;</div>
-              <!-- Repository + Entity -->
+              <div style="text-align: center; color: #64748b;">&#8595; MyBatis &#8595;</div>
+              <!-- Mapper + Entity -->
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div style="background: #dcfce7; border: 2px solid #22c55e; border-radius: 10px; padding: 12px; text-align: center;">
-                  <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">TodoRepository</div>
-                  <div style="font-size: 0.7rem; color: #15803d;">JpaRepository</div>
+                  <div style="font-weight: 700; color: #166534; font-size: 0.85rem;">TodoMapper</div>
+                  <div style="font-size: 0.7rem; color: #15803d;">@Mapper + SQLアノテーション</div>
                 </div>
                 <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 10px; padding: 12px; text-align: center;">
                   <div style="font-weight: 700; color: #7c3aed; font-size: 0.85rem;">Todo + TodoStatus</div>
-                  <div style="font-size: 0.7rem; color: #9333ea;">@Entity + Enum</div>
+                  <div style="font-size: 0.7rem; color: #9333ea;">POJO + Enum</div>
                 </div>
               </div>
               <div style="text-align: center; color: #64748b;">&#8595; SQL &#8595;</div>
@@ -733,11 +706,11 @@ class TodoControllerTest {
               </div>
               <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
                 <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">3</div>
-                <div><strong>Entity</strong><br><span style="color: #64748b;">@Entity, @Id, H2 Database</span></div>
+                <div><strong>Entity</strong><br><span style="color: #64748b;">POJO, schema.sql, H2 Database</span></div>
               </div>
               <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
                 <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">4</div>
-                <div><strong>Repository</strong><br><span style="color: #64748b;">JpaRepository, findAll, findById</span></div>
+                <div><strong>Mapper</strong><br><span style="color: #64748b;">@Mapper, @Select, @Insert, @Update</span></div>
               </div>
               <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
                 <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">5</div>
@@ -753,11 +726,11 @@ class TodoControllerTest {
               </div>
               <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
                 <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">8</div>
-                <div><strong>検索・ソート</strong><br><span style="color: #64748b;">@Query, @RequestParam, ORDER BY</span></div>
+                <div><strong>検索・ソート</strong><br><span style="color: #64748b;">@Select, @RequestParam, ORDER BY</span></div>
               </div>
               <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
                 <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">9</div>
-                <div><strong>ステータス管理</strong><br><span style="color: #64748b;">Enum, @Enumerated, フィルタ</span></div>
+                <div><strong>ステータス管理</strong><br><span style="color: #64748b;">Enum, EnumTypeHandler, フィルタ</span></div>
               </div>
               <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
                 <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">10</div>
@@ -769,7 +742,7 @@ class TodoControllerTest {
               </div>
               <div style="background: #E0F7FA; border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: start;">
                 <div style="background: #0097A7; color: white; min-width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">12</div>
-                <div><strong>テスト</strong><br><span style="color: #64748b;">JUnit5, Mockito, MockMvc</span></div>
+                <div><strong>テスト</strong><br><span style="color: #64748b;">JUnit5, Mockito, @MybatisTest</span></div>
               </div>
             </div>
           </div>
@@ -850,12 +823,12 @@ class TodoControllerTest {
         <div class="exercise-item">
           <div class="exercise-number">Q3</div>
           <div class="exercise-content">
-            <p><code>@DataJpaTest</code>アノテーションについて正しい記述はどれですか。</p>
+            <p><code>@MybatisTest</code>アノテーションについて正しい記述はどれですか。</p>
             <ol type="A">
               <li>アプリケーション全体を起動してテストを実行する</li>
-              <li>JPA関連のコンポーネントのみを起動し、インメモリDBを使ってRepositoryをテストする</li>
+              <li>MyBatis関連のコンポーネント（Mapperインターフェース）のみを起動し、Mapperのテストに特化する</li>
               <li>Controllerのエンドポイントをテストするためのアノテーションである</li>
-              <li>テスト実行時に本番データベースに接続してデータを検証する</li>
+              <li>テスト実行時にMockitoのモックを自動注入するためのアノテーションである</li>
             </ol>
           </div>
         </div>
@@ -872,7 +845,7 @@ class TodoControllerTest {
         <div class="answer-item">
           <div class="answer-header">Q1の解答: B</div>
           <div class="answer-content">
-            <p><code>@Mock</code>はモック化（偽物化）する依存先のクラスに付けます。<code>@InjectMocks</code>はテスト対象のクラスに付け、そのクラスのコンストラクタに@Mockオブジェクトが自動注入されます。例えば、TodoServiceをテストする場合、<code>@Mock TodoRepository</code>と<code>@InjectMocks TodoService</code>の組み合わせで、モックのRepositoryが注入されたServiceが作成されます。</p>
+            <p><code>@Mock</code>はモック化（偽物化）する依存先のクラスに付けます。<code>@InjectMocks</code>はテスト対象のクラスに付け、そのクラスのコンストラクタに@Mockオブジェクトが自動注入されます。例えば、TodoServiceをテストする場合、<code>@Mock TodoMapper</code>と<code>@InjectMocks TodoService</code>の組み合わせで、モックのMapperが注入されたServiceが作成されます。</p>
           </div>
         </div>
         <div class="answer-item">
@@ -884,7 +857,7 @@ class TodoControllerTest {
         <div class="answer-item">
           <div class="answer-header">Q3の解答: B</div>
           <div class="answer-content">
-            <p><code>@DataJpaTest</code>はJPA関連のコンポーネント（Entity、Repository、TestEntityManager等）だけを起動する軽量なテスト環境を提供します。デフォルトでインメモリのH2データベースを使用するため、本番DBに影響を与えません。ControllerやServiceは起動されないため、Repositoryの動作検証に特化しています。アプリケーション全体を起動するテストには<code>@SpringBootTest</code>を使います。</p>
+            <p><code>@MybatisTest</code>はMyBatis関連のコンポーネント（Mapperインターフェース、SqlSessionFactory等）だけを起動する軽量なテスト環境を提供します。<code>mybatis-spring-boot-starter-test</code>パッケージに含まれており、ControllerやServiceは起動されないため、Mapperの動作検証に特化しています。アプリケーション全体を起動するテストには<code>@SpringBootTest</code>を使います。</p>
           </div>
         </div>
       </div>

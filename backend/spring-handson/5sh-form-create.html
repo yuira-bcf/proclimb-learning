@@ -40,7 +40,7 @@
       <ul class="toc-list">
         <li class="toc-item"><span class="toc-number">5-1</span><span>登録フォームのHTMLを作成する</span></li>
         <li class="toc-item"><span class="toc-number">5-2</span><span>@PostMappingでフォームデータを受信する</span></li>
-        <li class="toc-item"><span class="toc-number">5-3</span><span>repository.save()でデータを保存する</span></li>
+        <li class="toc-item"><span class="toc-number">5-3</span><span>todoMapper.insert()でデータを保存する</span></li>
         <li class="toc-item"><span class="toc-number">5-4</span><span>PRGパターンとリダイレクト</span></li>
         <li class="toc-item"><span class="toc-number">5-5</span><span>一覧画面に「新規作成」リンクを追加する</span></li>
       </ul>
@@ -81,7 +81,7 @@
               </div>
               <div style="color: #22c55e; font-size: 1.5rem; font-weight: 700;">&#8594;</div>
               <div style="background: #f3e8ff; border: 2px solid #a855f7; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 110px;">
-                <div style="font-size: 0.72rem; color: #64748b;">repository.save()</div>
+                <div style="font-size: 0.72rem; color: #64748b;">todoMapper.insert()</div>
                 <div style="font-size: 0.78rem; font-weight: 600; color: #7e22ce;">DB保存</div>
               </div>
               <div style="color: #a855f7; font-size: 1.5rem; font-weight: 700;">&#8594;</div>
@@ -254,7 +254,7 @@ public String showCreateForm(Model model) {
             <pre class="code-content"><code>@PostMapping("/todos")
 public String createTodo(@ModelAttribute Todo todo) {
     todo.setCreatedAt(LocalDateTime.now());
-    todoRepository.save(todo);
+    todoMapper.insert(todo);
     return "redirect:/todos";
 }</code></pre>
           </div>
@@ -311,41 +311,60 @@ import java.time.LocalDateTime;</code></pre>
     <section class="section">
       <div class="section-header">
         <span class="section-number">Section 5-3</span>
-        <h2 class="section-title">repository.save()でデータを保存する</h2>
+        <h2 class="section-title">todoMapper.insert()でデータを保存する</h2>
       </div>
 
       <!-- 5-3-1 -->
       <div class="subsection">
-        <h3 class="subsection-title">5-3-1 save()メソッドの動作を理解する</h3>
+        <h3 class="subsection-title">5-3-1 insert()メソッドの動作を理解する</h3>
         <div class="content-block">
-          <p><code>JpaRepository</code> の <code>save()</code> メソッドは、渡されたエンティティをデータベースに保存します。重要なのは、<strong>新規登録と更新の両方</strong>に使えるということです。</p>
+          <p>MyBatisの <code>TodoMapper</code> では、操作ごとに専用のメソッドを定義します。新規登録には <code>insert()</code> メソッドを使います。</p>
 
-          <!-- save()の動作図解 -->
+          <p>まず <code>TodoMapper.java</code> に <code>insert</code> メソッドを追加しましょう。</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <div class="code-dots"><span class="code-dot red"></span><span class="code-dot yellow"></span><span class="code-dot green"></span></div>
+              <span class="code-title">TodoMapper.java にメソッドを追加</span>
+            </div>
+            <pre class="code-content"><code>@Insert("INSERT INTO todo (title, description, due_date, completed, created_at) VALUES (#{title}, #{description}, #{dueDate}, #{completed}, #{createdAt})")
+@Options(useGeneratedKeys = true, keyProperty = "id")
+void insert(Todo todo);</code></pre>
+          </div>
+
+          <!-- insert()の動作図解 -->
           <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px 0;">
             <h4 style="margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #334155;">
               <span class="material-icons" style="color: #0097A7;">save</span>
-              save() の動作
+              insert() の動作
             </h4>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
               <div style="background: #dcfce7; border-radius: 12px; padding: 20px; border-left: 5px solid #22c55e;">
-                <div style="font-weight: 700; color: #166534; margin-bottom: 8px;">id が null の場合</div>
-                <div style="font-size: 0.85rem; color: #334155;">INSERT（新規登録）が実行される</div>
+                <div style="font-weight: 700; color: #166534; margin-bottom: 8px;">@Insert アノテーション</div>
+                <div style="font-size: 0.85rem; color: #334155;">SQL文を直接記述してINSERTを実行する</div>
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; margin-top: 8px; background: #f0fdf4; padding: 8px; border-radius: 6px;">
-                  INSERT INTO todo (title, ...) VALUES (?, ...)
+                  INSERT INTO todo (title, ...) VALUES (#{title}, ...)
                 </div>
               </div>
               <div style="background: #dbeafe; border-radius: 12px; padding: 20px; border-left: 5px solid #3b82f6;">
-                <div style="font-weight: 700; color: #1e40af; margin-bottom: 8px;">id が存在する場合</div>
-                <div style="font-size: 0.85rem; color: #334155;">UPDATE（更新）が実行される</div>
+                <div style="font-weight: 700; color: #1e40af; margin-bottom: 8px;">#{property} プレースホルダ</div>
+                <div style="font-size: 0.85rem; color: #334155;">Todoオブジェクトのフィールド値が自動で埋め込まれる</div>
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; margin-top: 8px; background: #eff6ff; padding: 8px; border-radius: 6px;">
-                  UPDATE todo SET title=?, ... WHERE id=?
+                  #{title} &#8594; todo.getTitle() の値
                 </div>
               </div>
             </div>
             <div style="background: #e0f7fa; border: 1px solid #80deea; border-radius: 8px; padding: 12px 16px; margin-top: 16px;">
               <p style="margin: 0; color: #00695c; font-size: 0.82rem; line-height: 1.7;">
-                フォームから新規作成する場合、<code>id</code> はセットされていないため <code>null</code> です。そのため <code>save()</code> はINSERTを実行します。
+                <code>@Options(useGeneratedKeys = true, keyProperty = "id")</code> を付けると、DBが自動生成した <code>id</code> の値が引数の Todo オブジェクトの <code>id</code> フィールドに自動でセットされます。
               </p>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-title"><span class="material-icons">lightbulb</span> MyBatisの #{} プレースホルダ</div>
+            <div class="info-box-content">
+              <p><code>#{title}</code> のように書くと、MyBatisが引数オブジェクトの対応するフィールド値を安全にバインドします。内部的にはJDBCの <code>PreparedStatement</code> を使うため、SQLインジェクションも防止できます。JPAと異なり、実行されるSQLを自分で明示的に書くのがMyBatisの特徴です。</p>
             </div>
           </div>
         </div>
@@ -365,7 +384,7 @@ import java.time.LocalDateTime;</code></pre>
             <pre class="code-content"><code>package com.example.todo.controller;
 
 import com.example.todo.entity.Todo;
-import com.example.todo.repository.TodoRepository;
+import com.example.todo.mapper.TodoMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -376,16 +395,16 @@ import java.time.LocalDateTime;
 @Controller
 public class TodoController {
 
-    private final TodoRepository todoRepository;
+    private final TodoMapper todoMapper;
 
-    public TodoController(TodoRepository todoRepository) {
-        this.todoRepository = todoRepository;
+    public TodoController(TodoMapper todoMapper) {
+        this.todoMapper = todoMapper;
     }
 
     // 一覧表示（第4章で作成済み）
     @GetMapping("/todos")
     public String list(Model model) {
-        model.addAttribute("todos", todoRepository.findAll());
+        model.addAttribute("todos", todoMapper.findAll());
         return "todos/list";
     }
 
@@ -400,7 +419,7 @@ public class TodoController {
     @PostMapping("/todos")
     public String createTodo(@ModelAttribute Todo todo) {
         todo.setCreatedAt(LocalDateTime.now());
-        todoRepository.save(todo);
+        todoMapper.insert(todo);
         return "redirect:/todos";
     }
 }</code></pre>
@@ -656,8 +675,8 @@ public class TodoController {
               <div style="color: #e2e8f0;">&#9500;&#9472;&#9472; java/com/example/todo/</div>
               <div style="color: #e2e8f0;">&#9474;   &#9500;&#9472;&#9472; entity/</div>
               <div style="color: #e2e8f0;">&#9474;   &#9474;   &#9492;&#9472;&#9472; Todo.java</div>
-              <div style="color: #e2e8f0;">&#9474;   &#9500;&#9472;&#9472; repository/</div>
-              <div style="color: #e2e8f0;">&#9474;   &#9474;   &#9492;&#9472;&#9472; TodoRepository.java</div>
+              <div style="color: #e2e8f0;">&#9474;   &#9500;&#9472;&#9472; mapper/</div>
+              <div style="color: #67e8f9;">&#9474;   &#9474;   &#9492;&#9472;&#9472; TodoMapper.java <span style="color: #64748b;">&#8592; insert() 追加</span></div>
               <div style="color: #e2e8f0;">&#9474;   &#9492;&#9472;&#9472; controller/</div>
               <div style="color: #67e8f9;">&#9474;       &#9492;&#9472;&#9472; TodoController.java <span style="color: #64748b;">&#8592; メソッド追加</span></div>
               <div style="color: #e2e8f0;">&#9492;&#9472;&#9472; resources/templates/todos/</div>
@@ -685,7 +704,7 @@ public class TodoController {
               </div>
               <div style="background: #e0f7fa; border-radius: 10px; padding: 16px; text-align: center;">
                 <span class="material-icons" style="color: #0097A7; font-size: 2rem;">save</span>
-                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">save() + PRG</div>
+                <div style="font-weight: 700; color: #00695c; margin-top: 8px; font-size: 0.88rem;">insert() + PRG</div>
                 <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">保存してリダイレクト</div>
               </div>
             </div>
@@ -730,12 +749,12 @@ public class TodoController {
         <div class="exercise-item">
           <div class="exercise-number">Q3</div>
           <div class="exercise-content">
-            <p><code>JpaRepository</code> の <code>save()</code> メソッドについて正しい説明はどれですか。</p>
+            <p>MyBatisの <code>@Insert</code> で使う <code>#{title}</code> のようなプレースホルダについて正しい説明はどれですか。</p>
             <ol type="A">
-              <li>常にINSERT（新規登録）を実行する</li>
-              <li>常にUPDATE（更新）を実行する</li>
-              <li>idがnullならINSERT、idが存在すればUPDATEを実行する</li>
-              <li>DELETE（削除）も実行できる</li>
+              <li>文字列を直接SQLに連結するため、SQLインジェクションの危険がある</li>
+              <li>引数オブジェクトのフィールド値を安全にバインドし、SQLインジェクションを防止する</li>
+              <li>Thymeleafのテンプレート式と同じ仕組みである</li>
+              <li>数値型のフィールドには使用できない</li>
             </ol>
           </div>
         </div>
@@ -762,9 +781,9 @@ public class TodoController {
           </div>
         </div>
         <div class="answer-item">
-          <div class="answer-header">Q3の解答: C</div>
+          <div class="answer-header">Q3の解答: B</div>
           <div class="answer-content">
-            <p><code>save()</code> メソッドは、渡されたエンティティのIDを見て自動的に動作を切り替えます。IDが <code>null</code> または未設定の場合はINSERT（新規登録）、既に存在するIDが設定されている場合はUPDATE（更新）を実行します。削除は <code>deleteById()</code> など別のメソッドを使います。</p>
+            <p>MyBatisの <code>#{...}</code> プレースホルダは、内部的にJDBCの <code>PreparedStatement</code> を使用してパラメータをバインドします。そのため値が安全にエスケープされ、SQLインジェクション攻撃を防止できます。文字列の直接連結（<code>${...}</code>）とは異なり、型に関係なく安全に利用できます。</p>
           </div>
         </div>
       </div>
