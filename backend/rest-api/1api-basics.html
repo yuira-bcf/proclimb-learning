@@ -1081,6 +1081,148 @@ amount=2000&currency=jpy</code></pre>
                         </div>
                     </div>
 
+                    <!-- 各API連携の技術的な動き 詳細図解 -->
+                    <div class="visual-diagram">
+                        <div class="visual-diagram-title">&#128269; 各API連携の技術的な動き</div>
+                        <div class="api-examples-grid">
+                            <!-- Google Calendar -->
+                            <div class="api-ex-card">
+                                <div class="ex-header">
+                                    <span class="ex-icon">&#128197;</span>Google Calendar 連携
+                                </div>
+                                <div class="ex-flow">
+                                    <div class="ex-node">TODOアプリ<br>タスク追加</div>
+                                    <span class="ex-arrow">&#8594;</span>
+                                    <div class="ex-node ex-api">Calendar<br>API</div>
+                                    <span class="ex-arrow">&#8594;</span>
+                                    <div class="ex-node">カレンダーに<br>予定登録</div>
+                                </div>
+                                <div class="ex-detail">
+                                    <code>POST /calendars/primary/events</code><br>
+                                    タスクの期限日時を <code>start</code> / <code>end</code> に変換し、Googleカレンダーにイベントとして自動登録する
+                                </div>
+                            </div>
+                            <!-- Slack / LINE -->
+                            <div class="api-ex-card">
+                                <div class="ex-header">
+                                    <span class="ex-icon">&#128276;</span>Slack / LINE 通知
+                                </div>
+                                <div class="ex-flow">
+                                    <div class="ex-node">定期バッチ<br>期限チェック</div>
+                                    <span class="ex-arrow">&#8594;</span>
+                                    <div class="ex-node ex-api">Messaging<br>API</div>
+                                    <span class="ex-arrow">&#8594;</span>
+                                    <div class="ex-node">チャットに<br>通知送信</div>
+                                </div>
+                                <div class="ex-detail">
+                                    <code>POST /chat.postMessage</code>（Slack）<br>
+                                    サーバー側で期限が近いタスクを検出し、Webhook または API でメッセージを自動送信する
+                                </div>
+                            </div>
+                            <!-- OpenAI -->
+                            <div class="api-ex-card">
+                                <div class="ex-header">
+                                    <span class="ex-icon">&#129302;</span>OpenAI でAI分類
+                                </div>
+                                <div class="ex-flow">
+                                    <div class="ex-node">ユーザー入力<br>「牛乳を買う」</div>
+                                    <span class="ex-arrow">&#8594;</span>
+                                    <div class="ex-node ex-api">Chat<br>API</div>
+                                    <span class="ex-arrow">&#8594;</span>
+                                    <div class="ex-node">カテゴリ<br>「買い物」</div>
+                                </div>
+                                <div class="ex-detail">
+                                    <code>POST /v1/chat/completions</code><br>
+                                    タスク名をプロンプトに含めて送信。AIが <code>"category": "買い物"</code> のようにJSONで分類結果を返す
+                                </div>
+                            </div>
+                            <!-- Google OAuth -->
+                            <div class="api-ex-card">
+                                <div class="ex-header">
+                                    <span class="ex-icon">&#128274;</span>Google OAuth ログイン
+                                </div>
+                                <div class="ex-flow">
+                                    <div class="ex-node">ユーザー<br>Google認証</div>
+                                    <span class="ex-arrow">&#8594;</span>
+                                    <div class="ex-node ex-api">OAuth<br>API</div>
+                                    <span class="ex-arrow">&#8594;</span>
+                                    <div class="ex-node">ユーザー特定<br>タスク紐付け</div>
+                                </div>
+                                <div class="ex-detail">
+                                    <code>GET /oauth2/v2/userinfo</code><br>
+                                    認証後に取得した <code>id</code> をDBのユーザーIDとして保存。以降はこのIDでタスクを紐付けて管理する
+                                </div>
+                            </div>
+                        </div>
+                        <p style="text-align:center; font-size:0.75rem; color:#555; margin-top:16px; line-height:1.6;">
+                            TODOアプリが外部APIを呼び出すことで、<strong>カレンダー同期・通知・AI分類・認証</strong>など<br>
+                            自前で実装すると膨大な工数がかかる機能を<strong>数行のAPI呼び出しで実現</strong>できる
+                        </p>
+                    </div>
+
+                    <!-- ユーザー操作からAPI連携までのシーケンス図解 -->
+                    <div class="visual-diagram">
+                        <div class="visual-diagram-title">&#128640; 実際の動き：タスク追加時のAPI連携フロー</div>
+                        <div style="max-width: 520px; margin: 0 auto;">
+                            <div style="display: flex; gap: 8px; align-items: stretch; margin-bottom: 10px;">
+                                <div style="flex: 1; background: white; border: 2px solid #b2ebf2; border-radius: 10px; padding: 12px; text-align: center;">
+                                    <div style="font-size: 1.2rem;">&#129489;</div>
+                                    <div style="font-size: 0.72rem; font-weight: 700; color: #333;">ユーザー</div>
+                                </div>
+                                <div style="flex: 1; background: #0097A7; border-radius: 10px; padding: 12px; text-align: center; color: white;">
+                                    <div style="font-size: 1.2rem;">&#9989;</div>
+                                    <div style="font-size: 0.72rem; font-weight: 700;">TODOアプリ</div>
+                                </div>
+                                <div style="flex: 1; background: white; border: 2px solid #b2ebf2; border-radius: 10px; padding: 12px; text-align: center;">
+                                    <div style="font-size: 1.2rem;">&#9729;&#65039;</div>
+                                    <div style="font-size: 0.72rem; font-weight: 700; color: #333;">外部API群</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.7rem;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="flex: 1; text-align: right; color: #0097A7; font-weight: 600;">&#10102; 「レポート提出 期限:明日」</span>
+                                    <span style="color: #0097A7; font-weight: 700;">&#8594;</span>
+                                    <span style="flex: 1; background: #e0f7fa; padding: 4px 8px; border-radius: 6px; font-weight: 600;">POST /api/todo で保存</span>
+                                    <span style="flex: 0.8;"></span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="flex: 1;"></span>
+                                    <span style="flex: 1; text-align: right; color: #0097A7; font-weight: 600;">&#10103; AI分類を依頼</span>
+                                    <span style="color: #0097A7; font-weight: 700;">&#8594;</span>
+                                    <span style="flex: 0.8; background: #f3e5f5; padding: 4px 8px; border-radius: 6px; font-weight: 600;">OpenAI API</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="flex: 1;"></span>
+                                    <span style="flex: 1; text-align: right; color: #666;">&#8592; <code style="background:#e8f5e9; padding:1px 4px; border-radius:3px; font-size:0.65rem;">{"category":"学業"}</code></span>
+                                    <span style="color: #666;">&#8592;</span>
+                                    <span style="flex: 0.8; color: #666; font-size: 0.65rem;">分類結果を返却</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="flex: 1;"></span>
+                                    <span style="flex: 1; text-align: right; color: #0097A7; font-weight: 600;">&#10104; カレンダー登録</span>
+                                    <span style="color: #0097A7; font-weight: 700;">&#8594;</span>
+                                    <span style="flex: 0.8; background: #e3f2fd; padding: 4px 8px; border-radius: 6px; font-weight: 600;">Calendar API</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="flex: 1;"></span>
+                                    <span style="flex: 1; text-align: right; color: #0097A7; font-weight: 600;">&#10105; リマインド設定</span>
+                                    <span style="color: #0097A7; font-weight: 700;">&#8594;</span>
+                                    <span style="flex: 0.8; background: #fff3e0; padding: 4px 8px; border-radius: 6px; font-weight: 600;">Slack API</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="flex: 1; text-align: right; color: #388e3c; font-weight: 600;">&#10106; 完了通知 &#10004;</span>
+                                    <span style="color: #388e3c; font-weight: 700;">&#8592;</span>
+                                    <span style="flex: 1; background: #e8f5e9; padding: 4px 8px; border-radius: 6px; font-weight: 600;">すべて完了・画面に反映</span>
+                                    <span style="flex: 0.8;"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="text-align:center; font-size:0.72rem; color:#555; margin-top:16px; line-height:1.6;">
+                            ユーザーが1回タスクを追加するだけで、裏側では<strong>複数のAPIが連鎖的に動く</strong>。<br>
+                            これが「APIを組み合わせる」ことの威力 &#8212; <strong>1+1+1+1 が 10 以上の価値</strong>を生む。
+                        </p>
+                    </div>
+
                     <div class="info-box">
                         <div class="info-box-header">
                             <span class="info-box-icon"><span class="material-icons">lightbulb</span></span>
