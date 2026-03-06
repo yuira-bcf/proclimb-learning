@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天気情報アプリ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .search-area {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .search-area input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .search-area input:focus {
+      outline: none;
+      border-color: #0097A7;
+    }
+    .search-area button {
+      padding: 10px 20px;
+      background: #0097A7;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .search-area button:hover {
+      background: #00838F;
+    }
+    .search-area button:disabled {
+      background: #b2dfdb;
+      cursor: not-allowed;
+    }
+    #weatherResult { margin-top: 16px; }
+    .loading {
+      text-align: center;
+      color: #888;
+      padding: 20px;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid #ddd;
+      border-top: 4px solid #0097A7;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .error {
+      color: #d32f2f;
+      text-align: center;
+      padding: 20px;
+    }
+    .weather-card {
+      text-align: center;
+      padding: 20px;
+    }
+    .weather-card h2 {
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .weather-card .temp {
+      font-size: 48px;
+      font-weight: bold;
+      color: #0097A7;
+    }
+    .weather-card .desc {
+      font-size: 18px;
+      color: #666;
+      margin: 8px 0;
+    }
+    .weather-card .details {
+      font-size: 14px;
+      color: #888;
+    }
+    .api-key-notice {
+      background: #fff3e0;
+      border: 1px solid #ffcc80;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #e65100;
+      line-height: 1.6;
+    }
+    .api-key-notice a {
+      color: #e65100;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>天気情報アプリ</h1>
+
+    <div class="api-key-notice">
+      <strong>APIキーの設定が必要です</strong><br>
+      <a href="https://openweathermap.org" target="_blank" rel="noopener noreferrer">OpenWeatherMap</a>
+      で無料アカウントを作成し、取得したAPIキーを下記の <code>API_KEY</code> 変数に設定してください。
+    </div>
+
+    <div class="search-area">
+      <input type="text" id="cityInput" placeholder="都市名（例: Tokyo）">
+      <button id="searchBtn" onclick="getWeather()">検索</button>
+    </div>
+    <div id="weatherResult">
+      <p style="text-align: center; color: #888;">都市名（英語）を入力して検索してください</p>
+    </div>
+  </div>
+
+  <script>
+    // ここにOpenWeatherMapのAPIキーを設定してください
+    const API_KEY = 'YOUR_API_KEY';
+
+    // Enterキーで検索
+    document.getElementById('cityInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') getWeather();
+    });
+
+    async function getWeather() {
+      const city = document.getElementById('cityInput').value.trim();
+      const resultDiv = document.getElementById('weatherResult');
+      const btn = document.getElementById('searchBtn');
+
+      // 入力チェック
+      if (!city) {
+        resultDiv.innerHTML = '<p class="error">都市名を入力してください</p>';
+        return;
+      }
+
+      // APIキーチェック
+      if (API_KEY === 'YOUR_API_KEY') {
+        resultDiv.innerHTML = '<p class="error">APIキーが設定されていません。スクリプト内の API_KEY を設定してください。</p>';
+        return;
+      }
+
+      // ローディング表示 & ボタン無効化
+      btn.disabled = true;
+      resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>データを取得中...</p></div>';
+
+      try {
+        // OpenWeatherMap APIを呼び出し
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=ja`;
+        const response = await fetch(url);
+
+        // エラーチェック
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('都市が見つかりませんでした');
+          }
+          if (response.status === 401) {
+            throw new Error('APIキーが無効です。正しいキーを設定してください');
+          }
+          throw new Error(`エラー: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // 結果を表示
+        resultDiv.innerHTML = `
+          <div class="weather-card">
+            <h2>${data.name}</h2>
+            <img src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png"
+                 alt="${data.weather[0].description}">
+            <p class="temp">${Math.round(data.main.temp)}°C</p>
+            <p class="desc">${data.weather[0].description}</p>
+            <p class="details">
+              湿度: ${data.main.humidity}% / 風速: ${data.wind.speed}m/s<br>
+              体感温度: ${Math.round(data.main.feels_like)}°C /
+              気圧: ${data.main.pressure}hPa
+            </p>
+          </div>
+        `;
+      } catch (error) {
+        if (error.name === 'TypeError') {
+          resultDiv.innerHTML = '<p class="error">ネットワーク接続を確認してください</p>';
+        } else {
+          resultDiv.innerHTML = `<p class="error">${error.message}</p>`;
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
