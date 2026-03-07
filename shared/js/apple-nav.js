@@ -19,6 +19,7 @@ const appleNavData = {
         { id: "design",    href: "index.html#design",    text: "デザイン" },
         { id: "software-design", href: "index.html#software-design", text: "ソフトウェア設計" },
         { id: "business",  href: "index.html#business",  text: "ビジネス" },
+        { id: "training",  href: "index.html#training",  text: "応用トレーニング" },
         { id: "exercises", href: "index.html#exercises",  text: "総合演習" }
     ]
 };
