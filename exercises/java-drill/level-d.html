@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Level D — 読める - Java実力養成ドリル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #0097A7;
+      --primary-dark: #00838F;
+      --primary-light: #E0F7FA;
+      --level-color: #43A047;
+      --level-light: #e8f5e9;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+
+    /* Level header */
+    .level-hero {
+      background: linear-gradient(135deg, #2E7D32 0%, #43A047 50%, #66BB6A 100%);
+      color: white;
+      text-align: center;
+      padding: 48px 20px 36px;
+      margin-bottom: 32px;
+    }
+    .level-hero .level-rank { font-size: 3rem; font-weight: 900; line-height: 1; }
+    .level-hero h1 { font-size: 1.5rem; font-weight: 700; margin: 8px 0 4px; }
+    .level-hero .level-sub { font-size: 0.9rem; opacity: 0.85; }
+
+    /* Drill items */
+    .drill-item {
+      background: white;
+      border-radius: 16px;
+      margin: 0 auto 24px;
+      max-width: 900px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .drill-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .drill-badge {
+      background: var(--level-color);
+      color: white;
+      font-weight: 900;
+      font-size: 0.85rem;
+      padding: 8px 14px;
+      border-radius: 10px;
+      white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .drill-theme {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--level-color);
+      background: var(--level-light);
+      padding: 2px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .drill-title { font-size: 1.05rem; font-weight: 700; color: #1d1d1f; }
+    .drill-body { padding: 24px; }
+
+    /* Silver point */
+    .drill-silver {
+      display: flex;
+      gap: 12px;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    .drill-silver .material-icons { color: #f9a825; font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+    .drill-silver strong { display: block; color: #f57f17; font-size: 0.78rem; margin-bottom: 2px; }
+    .drill-silver p { color: #555; margin: 0; }
+
+    /* Task */
+    .drill-task { margin-bottom: 20px; }
+    .drill-task h4 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    .drill-task h4 .material-icons { color: var(--level-color); font-size: 1.1rem; }
+    .drill-task p { font-size: 0.88rem; line-height: 1.7; color: #444; margin-bottom: 10px; }
+    .drill-task ol, .drill-task ul { font-size: 0.88rem; line-height: 1.7; color: #444; padding-left: 1.5em; margin-bottom: 10px; }
+
+    /* Code blocks inside drills */
+    .drill-code {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    .drill-code .keyword { color: #569cd6; }
+    .drill-code .string { color: #ce9178; }
+    .drill-code .comment { color: #6a9955; }
+    .drill-code .number { color: #b5cea8; }
+    .drill-code .type { color: #4ec9b0; }
+    .drill-code .blank {
+      display: inline-block;
+      min-width: 80px;
+      border-bottom: 2px dashed #f9a825;
+      color: #f9a825;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* Hint & Answer (details/summary) */
+    .drill-hint, .drill-answer {
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .drill-hint summary, .drill-answer summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: #555;
+      background: #fafafa;
+      list-style: none;
+    }
+    .drill-hint summary::-webkit-details-marker,
+    .drill-answer summary::-webkit-details-marker { display: none; }
+    .drill-hint summary .material-icons { color: #f9a825; font-size: 1.1rem; }
+    .drill-answer summary .material-icons { color: #43A047; font-size: 1.1rem; }
+    .hint-content, .answer-content {
+      padding: 16px 20px;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: #444;
+    }
+    .answer-content .drill-code { margin: 10px 0; }
+    .answer-content strong { color: #1d1d1f; }
+    .answer-content p { margin-bottom: 8px; }
+
+    /* Page nav */
+    .page-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .page-nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: white;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #333;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      transition: box-shadow 0.2s;
+      flex: 1;
+    }
+    .page-nav-btn:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .page-nav-btn.next { text-align: right; justify-content: flex-end; }
+    .page-nav-label { font-size: 0.72rem; color: #888; }
+    .page-nav-title { font-size: 0.88rem; font-weight: 600; }
+
+    @media (max-width: 480px) {
+      .drill-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .page-nav { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-java-drill.js"></script>
+
+  <div class="level-hero">
+    <div class="level-rank">D</div>
+    <h1>Level D — 読める</h1>
+    <p class="level-sub">コードを読み、出力を予測し、穴埋めで基礎文法を確認する</p>
+  </div>
+
+  <div style="max-width: 900px; margin: 0 auto; padding: 0 20px;">
+
+    <!-- ===================== T1: 変数・データ型・演算子 ===================== -->
+
+    <!-- D-01 -->
+    <div class="drill-item" id="d-01">
+      <div class="drill-header">
+        <div class="drill-badge">D-01</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 変数・データ型・演算子</span>
+          <h3 class="drill-title">プリミティブ型の初期値と型変換</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>プリミティブ型の暗黙の型変換（ワイドニング）と、フィールドのデフォルト初期値は頻出テーマです。ローカル変数には初期値が自動設定されない点にも注意しましょう。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードを読み、出力結果を予測してください。</p>
+<pre class="drill-code"><code><span class="keyword">public class</span> <span class="type">TypeDemo</span> {
+    <span class="keyword">static int</span> sNum;          <span class="comment">// フィールド</span>
+    <span class="keyword">static double</span> sDouble;    <span class="comment">// フィールド</span>
+    <span class="keyword">static boolean</span> sFlag;     <span class="comment">// フィールド</span>
+    <span class="keyword">static char</span> sChar;         <span class="comment">// フィールド</span>
+
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        System.out.println(<span class="string">"A: "</span> + sNum);
+        System.out.println(<span class="string">"B: "</span> + sDouble);
+        System.out.println(<span class="string">"C: "</span> + sFlag);
+        System.out.println(<span class="string">"D: ["</span> + sChar + <span class="string">"]"</span>);
+
+        <span class="keyword">int</span> x = <span class="number">10</span>;
+        <span class="keyword">double</span> y = x;             <span class="comment">// 暗黙の型変換</span>
+        System.out.println(<span class="string">"E: "</span> + y);
+
+        <span class="keyword">double</span> d = <span class="number">9.7</span>;
+        <span class="keyword">int</span> z = (<span class="keyword">int</span>) d;          <span class="comment">// 明示的キャスト</span>
+        System.out.println(<span class="string">"F: "</span> + z);
+
+        <span class="keyword">char</span> c = <span class="string">'A'</span>;
+        <span class="keyword">int</span> n = c;                <span class="comment">// charからintへの暗黙変換</span>
+        System.out.println(<span class="string">"G: "</span> + n);
+    }
+}</code></pre>
+          <p>A〜G の各行の出力を答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>フィールド（static変数・インスタンス変数）にはデフォルト初期値が設定されます: int=0, double=0.0, boolean=false, char='\u0000'（null文字）。</p>
+            <p>int → double は暗黙変換（ワイドニング）、double → int はキャスト必須（ナローイング、小数部切り捨て）。</p>
+            <p>char は内部的に0〜65535の整数値を持ちます。'A' の Unicode値は 65 です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>A: 0
+B: 0.0
+C: false
+D: [ ]
+E: 10.0
+F: 9
+G: 65</code></pre>
+            <p><strong>解説:</strong></p>
+            <p><strong>A〜D:</strong> staticフィールドにはデフォルト初期値が自動設定されます。intは<code>0</code>、doubleは<code>0.0</code>、booleanは<code>false</code>、charは<code>'\u0000'</code>（null文字、表示上は空白）です。</p>
+            <p><strong>E:</strong> int(10) → double への暗黙変換（ワイドニング）により <code>10.0</code> になります。情報の欠落がないため、キャスト不要です。</p>
+            <p><strong>F:</strong> double(9.7) → int への明示的キャスト（ナローイング）では、小数部が切り捨てられ <code>9</code> になります。四捨五入ではありません。</p>
+            <p><strong>G:</strong> char('A') → int への暗黙変換で、Unicodeコードポイント <code>65</code> が得られます。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-02 -->
+    <div class="drill-item" id="d-02">
+      <div class="drill-header">
+        <div class="drill-badge">D-02</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 変数・データ型・演算子</span>
+          <h3 class="drill-title">演算子の優先順位と前置/後置インクリメント</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>前置インクリメント(++x)と後置インクリメント(x++)の違いは試験頻出です。式の中で使われた場合の「評価タイミング」が鍵になります。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードの空欄を埋めて、コメントに示された出力結果になるようにしてください。</p>
+<pre class="drill-code"><code><span class="keyword">public class</span> <span class="type">OperatorDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="keyword">int</span> a = <span class="number">5</span>;
+        <span class="keyword">int</span> b = <span class="blank">【?1】</span>;   <span class="comment">// 後置インクリメント</span>
+        System.out.println(a + <span class="string">", "</span> + b);
+        <span class="comment">// 出力: 6, 5</span>
+
+        <span class="keyword">int</span> c = <span class="number">5</span>;
+        <span class="keyword">int</span> d = <span class="blank">【?2】</span>;   <span class="comment">// 前置インクリメント</span>
+        System.out.println(c + <span class="string">", "</span> + d);
+        <span class="comment">// 出力: 6, 6</span>
+
+        <span class="keyword">int</span> x = <span class="number">10</span>;
+        <span class="keyword">int</span> y = <span class="number">3</span>;
+        <span class="keyword">int</span> result = x <span class="blank">【?3】</span> y;
+        System.out.println(result);
+        <span class="comment">// 出力: 1</span>
+
+        <span class="keyword">boolean</span> flag = <span class="number">10</span> &gt; <span class="number">5</span> <span class="blank">【?4】</span> <span class="number">3</span> &gt; <span class="number">8</span>;
+        System.out.println(flag);
+        <span class="comment">// 出力: true</span>
+    }
+}</code></pre>
+          <p>【?1】〜【?4】に入る式や演算子を答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>後置インクリメント <code>a++</code> は「現在の値を返してから加算」、前置インクリメント <code>++c</code> は「加算してから値を返す」動作です。</p>
+            <p><code>%</code> は剰余演算子で余りを求めます。論理演算子 <code>||</code> はどちらか一方がtrueならtrueです。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+            <p><strong>解答:</strong></p>
+            <ul>
+              <li>【?1】= <code>a++</code></li>
+              <li>【?2】= <code>++c</code></li>
+              <li>【?3】= <code>%</code></li>
+              <li>【?4】= <code>||</code></li>
+            </ul>
+            <p><strong>解説:</strong></p>
+            <p><strong>?1 (a++):</strong> 後置インクリメントは、まずaの現在値(5)をbに代入し、その後aを6に更新します。結果: a=6, b=5。</p>
+            <p><strong>?2 (++c):</strong> 前置インクリメントは、まずcを6に更新し、その値(6)をdに代入します。結果: c=6, d=6。</p>
+            <p><strong>?3 (%):</strong> 10 % 3 は10を3で割った余りで <code>1</code> です。</p>
+            <p><strong>?4 (||):</strong> <code>10 &gt; 5</code> はtrue、<code>3 &gt; 8</code> はfalse。<code>true || false</code> は <code>true</code> です。<code>&amp;&amp;</code>（AND）だとfalseになるので注意。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===================== T2: 文字列操作 ===================== -->
+
+    <!-- D-03 -->
+    <div class="drill-item" id="d-03">
+      <div class="drill-header">
+        <div class="drill-badge">D-03</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 文字列操作</span>
+          <h3 class="drill-title">StringメソッドとString Pool</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>Stringリテラルはプール（String Pool）で共有されるため <code>==</code> でtrueになりますが、newで生成した場合は別オブジェクトになります。<code>==</code> と <code>equals()</code> の違いは最頻出テーマです。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードを読み、出力結果を予測してください。</p>
+<pre class="drill-code"><code><span class="keyword">public class</span> <span class="type">StringDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="type">String</span> s1 = <span class="string">"Hello"</span>;
+        <span class="type">String</span> s2 = <span class="string">"Hello"</span>;
+        <span class="type">String</span> s3 = <span class="keyword">new</span> <span class="type">String</span>(<span class="string">"Hello"</span>);
+
+        System.out.println(<span class="string">"A: "</span> + (s1 == s2));
+        System.out.println(<span class="string">"B: "</span> + (s1 == s3));
+        System.out.println(<span class="string">"C: "</span> + s1.equals(s3));
+
+        <span class="type">String</span> s4 = <span class="string">"Hello World"</span>;
+        System.out.println(<span class="string">"D: "</span> + s4.substring(<span class="number">6</span>));
+        System.out.println(<span class="string">"E: "</span> + s4.substring(<span class="number">0</span>, <span class="number">5</span>));
+        System.out.println(<span class="string">"F: "</span> + s4.indexOf(<span class="string">"World"</span>));
+        System.out.println(<span class="string">"G: "</span> + s4.indexOf(<span class="string">"Java"</span>));
+        System.out.println(<span class="string">"H: "</span> + s4.length());
+    }
+}</code></pre>
+          <p>A〜H の各行の出力を答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>==</code> は参照（アドレス）の比較、<code>equals()</code> は文字列の内容の比較です。</p>
+            <p><code>substring(beginIndex)</code> はbeginIndex以降の文字列を返します。<code>substring(begin, end)</code> はbeginからend-1までです。</p>
+            <p><code>indexOf()</code> は見つかった位置（0始まり）を返し、見つからなければ -1 を返します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>A: true
+B: false
+C: true
+D: World
+E: Hello
+F: 6
+G: -1
+H: 11</code></pre>
+            <p><strong>解説:</strong></p>
+            <p><strong>A (true):</strong> s1とs2は同じリテラル <code>"Hello"</code> なので、String Poolにより同一オブジェクトを参照します。<code>==</code> はtrueです。</p>
+            <p><strong>B (false):</strong> s3は <code>new String()</code> で生成したため、ヒープ上に新しいオブジェクトが作られます。s1とは別の参照なので <code>==</code> はfalseです。</p>
+            <p><strong>C (true):</strong> <code>equals()</code> は文字列の中身を比較するため、trueです。</p>
+            <p><strong>D (World):</strong> <code>substring(6)</code> はインデックス6以降を返します。"Hello World" の6番目は 'W' です。</p>
+            <p><strong>E (Hello):</strong> <code>substring(0, 5)</code> はインデックス0〜4の5文字を返します。</p>
+            <p><strong>F (6):</strong> <code>"World"</code> はインデックス6から始まります。</p>
+            <p><strong>G (-1):</strong> <code>"Java"</code> は含まれないので -1 を返します。</p>
+            <p><strong>H (11):</strong> <code>"Hello World"</code> は空白を含めて11文字です。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-04 -->
+    <div class="drill-item" id="d-04">
+      <div class="drill-header">
+        <div class="drill-badge">D-04</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 文字列操作</span>
+          <h3 class="drill-title">StringBuilderの操作</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>StringBuilderは可変（mutable）な文字列です。Stringと異なりメソッド呼び出しで自身が変更されます。メソッドチェーンも可能で、各操作後の状態を追跡する問題が頻出します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードの空欄を埋めて、コメントに示された出力結果になるようにしてください。</p>
+<pre class="drill-code"><code><span class="keyword">public class</span> <span class="type">SBDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="type">StringBuilder</span> sb = <span class="keyword">new</span> <span class="type">StringBuilder</span>(<span class="string">"Hello"</span>);
+
+        sb.<span class="blank">【?1】</span>(<span class="string">" World"</span>);
+        System.out.println(sb);
+        <span class="comment">// 出力: Hello World</span>
+
+        sb.<span class="blank">【?2】</span>(<span class="number">5</span>, <span class="string">","</span>);
+        System.out.println(sb);
+        <span class="comment">// 出力: Hello, World</span>
+
+        sb.<span class="blank">【?3】</span>(<span class="number">5</span>, <span class="number">6</span>);
+        System.out.println(sb);
+        <span class="comment">// 出力: Hello World</span>
+
+        sb.<span class="blank">【?4】</span>();
+        System.out.println(sb);
+        <span class="comment">// 出力: dlroW olleH</span>
+    }
+}</code></pre>
+          <p>【?1】〜【?4】に入るメソッド名を答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>StringBuilderの主要メソッド: <code>append()</code>（末尾に追加）、<code>insert(offset, str)</code>（指定位置に挿入）、<code>delete(start, end)</code>（範囲削除）、<code>reverse()</code>（逆順）。</p>
+            <p>delete(5, 6)は「インデックス5からインデックス6の手前まで（=インデックス5の1文字）」を削除します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+            <p><strong>解答:</strong></p>
+            <ul>
+              <li>【?1】= <code>append</code></li>
+              <li>【?2】= <code>insert</code></li>
+              <li>【?3】= <code>delete</code></li>
+              <li>【?4】= <code>reverse</code></li>
+            </ul>
+            <p><strong>解説:</strong></p>
+            <p><strong>?1 (append):</strong> <code>sb.append(" World")</code> で末尾に <code>" World"</code> を追加。結果: <code>"Hello World"</code></p>
+            <p><strong>?2 (insert):</strong> <code>sb.insert(5, ",")</code> でインデックス5の位置に <code>","</code> を挿入。結果: <code>"Hello, World"</code></p>
+            <p><strong>?3 (delete):</strong> <code>sb.delete(5, 6)</code> でインデックス5の1文字（カンマ）を削除。結果: <code>"Hello World"</code></p>
+            <p><strong>?4 (reverse):</strong> <code>sb.reverse()</code> で文字列を逆順に。結果: <code>"dlroW olleH"</code></p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===================== T3: 配列 ===================== -->
+
+    <!-- D-05 -->
+    <div class="drill-item" id="d-05">
+      <div class="drill-header">
+        <div class="drill-badge">D-05</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 配列</span>
+          <h3 class="drill-title">配列の宣言・初期化とデフォルト値</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>配列の宣言構文（int[] a と int a[] の違い）、new で生成した配列のデフォルト値、2次元配列の構造はJavaSilverで頻出です。配列のインデックスは0始まりであることも確認しましょう。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードを読み、出力結果を予測してください。</p>
+<pre class="drill-code"><code><span class="keyword">public class</span> <span class="type">ArrayDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="keyword">int</span>[] nums = <span class="keyword">new int</span>[<span class="number">3</span>];
+        System.out.println(<span class="string">"A: "</span> + nums[<span class="number">0</span>]);
+        System.out.println(<span class="string">"B: "</span> + nums.length);
+
+        <span class="type">String</span>[] names = <span class="keyword">new</span> <span class="type">String</span>[<span class="number">2</span>];
+        System.out.println(<span class="string">"C: "</span> + names[<span class="number">0</span>]);
+
+        <span class="keyword">int</span>[] data = {<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>, <span class="number">50</span>};
+        System.out.println(<span class="string">"D: "</span> + data[<span class="number">2</span>]);
+        System.out.println(<span class="string">"E: "</span> + data[data.length - <span class="number">1</span>]);
+
+        <span class="keyword">int</span>[][] matrix = {
+            {<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>},
+            {<span class="number">4</span>, <span class="number">5</span>}
+        };
+        System.out.println(<span class="string">"F: "</span> + matrix.length);
+        System.out.println(<span class="string">"G: "</span> + matrix[<span class="number">1</span>].length);
+        System.out.println(<span class="string">"H: "</span> + matrix[<span class="number">0</span>][<span class="number">2</span>]);
+    }
+}</code></pre>
+          <p>A〜H の各行の出力を答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>new int[3] で生成した配列の要素はすべて 0 で初期化されます。new String[2] の場合は null です。</p>
+            <p>2次元配列はジャグ配列（各行の長さが異なってもOK）です。<code>matrix.length</code> は行数、<code>matrix[1].length</code> は2行目の列数です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>A: 0
+B: 3
+C: null
+D: 30
+E: 50
+F: 2
+G: 2
+H: 3</code></pre>
+            <p><strong>解説:</strong></p>
+            <p><strong>A (0):</strong> <code>new int[3]</code> で生成した配列のデフォルト値は 0 です。</p>
+            <p><strong>B (3):</strong> 配列の <code>length</code> は要素数を返します。</p>
+            <p><strong>C (null):</strong> <code>new String[2]</code> の参照型配列のデフォルト値は null です。println で null と表示されます。</p>
+            <p><strong>D (30):</strong> <code>data[2]</code> はインデックス2（3番目の要素）で 30 です。</p>
+            <p><strong>E (50):</strong> <code>data[data.length - 1]</code> は <code>data[4]</code> で最後の要素 50 です。</p>
+            <p><strong>F (2):</strong> <code>matrix.length</code> は行数（外側の配列の長さ）で 2 です。</p>
+            <p><strong>G (2):</strong> <code>matrix[1]</code> は <code>{4, 5}</code> なので長さ 2 です。Javaの2次元配列はジャグ配列が可能です。</p>
+            <p><strong>H (3):</strong> <code>matrix[0][2]</code> は1行目の3番目の要素で 3 です。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-06 -->
+    <div class="drill-item" id="d-06">
+      <div class="drill-header">
+        <div class="drill-badge">D-06</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 配列</span>
+          <h3 class="drill-title">拡張for文と配列コピー</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>拡張for文（for-each）の構文と、Arrays.copyOf による配列コピーが独立したコピーになる点が重要です。参照型の配列コピーでは浅いコピーになることも押さえましょう。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードの空欄を埋めて、コメントに示された出力結果になるようにしてください。</p>
+<pre class="drill-code"><code><span class="keyword">import</span> java.util.Arrays;
+
+<span class="keyword">public class</span> <span class="type">ArrayCopyDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="keyword">int</span>[] original = {<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>};
+
+        <span class="comment">// 拡張for文で合計を計算</span>
+        <span class="keyword">int</span> sum = <span class="number">0</span>;
+        <span class="keyword">for</span> (<span class="blank">【?1】</span> : original) {
+            sum += num;
+        }
+        System.out.println(<span class="string">"合計: "</span> + sum);
+        <span class="comment">// 出力: 合計: 15</span>
+
+        <span class="comment">// 配列コピー</span>
+        <span class="keyword">int</span>[] copy = <span class="blank">【?2】</span>;
+        copy[<span class="number">0</span>] = <span class="number">99</span>;
+        System.out.println(<span class="string">"original[0]: "</span> + original[<span class="number">0</span>]);
+        <span class="comment">// 出力: original[0]: 1</span>
+
+        <span class="comment">// 参照の代入（コピーではない）</span>
+        <span class="keyword">int</span>[] ref = <span class="blank">【?3】</span>;
+        ref[<span class="number">0</span>] = <span class="number">99</span>;
+        System.out.println(<span class="string">"original[0]: "</span> + original[<span class="number">0</span>]);
+        <span class="comment">// 出力: original[0]: 99</span>
+    }
+}</code></pre>
+          <p>【?1】〜【?3】に入るコードを答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>拡張for文の構文は <code>for (型 変数名 : 配列)</code> です。</p>
+            <p><code>Arrays.copyOf(元配列, 長さ)</code> は新しい配列を作成します（独立したコピー）。</p>
+            <p>配列変数を直接代入すると、同じ配列オブジェクトへの参照が共有されます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+            <p><strong>解答:</strong></p>
+            <ul>
+              <li>【?1】= <code>int num</code></li>
+              <li>【?2】= <code>Arrays.copyOf(original, original.length)</code></li>
+              <li>【?3】= <code>original</code></li>
+            </ul>
+            <p><strong>解説:</strong></p>
+            <p><strong>?1 (int num):</strong> 拡張for文は <code>for (int num : original)</code> と書きます。配列の各要素が順番にnumに代入されます。</p>
+            <p><strong>?2 (Arrays.copyOf):</strong> <code>Arrays.copyOf(original, original.length)</code> は新しい配列を作成し、要素をコピーします。copyを変更してもoriginalには影響しません。</p>
+            <p><strong>?3 (original):</strong> <code>int[] ref = original</code> は参照の代入です。refとoriginalは同じ配列オブジェクトを指すため、refを通じた変更はoriginalにも反映されます。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===================== T4: フロー制御 ===================== -->
+
+    <!-- D-07 -->
+    <div class="drill-item" id="d-07">
+      <div class="drill-header">
+        <div class="drill-badge">D-07</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フロー制御</span>
+          <h3 class="drill-title">switchのfall-throughとbreak</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>switch文でbreakを書き忘れるとfall-through（次のcaseにそのまま突入）が起きます。この挙動を問う問題は非常に頻出です。default節の位置にも注意しましょう。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードを読み、出力結果を予測してください。</p>
+<pre class="drill-code"><code><span class="keyword">public class</span> <span class="type">SwitchDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="keyword">int</span> day = <span class="number">3</span>;
+        <span class="keyword">switch</span> (day) {
+            <span class="keyword">case</span> <span class="number">1</span>:
+                System.out.println(<span class="string">"月曜"</span>);
+                <span class="keyword">break</span>;
+            <span class="keyword">case</span> <span class="number">2</span>:
+                System.out.println(<span class="string">"火曜"</span>);
+                <span class="keyword">break</span>;
+            <span class="keyword">case</span> <span class="number">3</span>:
+                System.out.println(<span class="string">"水曜"</span>);
+            <span class="keyword">case</span> <span class="number">4</span>:
+                System.out.println(<span class="string">"木曜"</span>);
+            <span class="keyword">case</span> <span class="number">5</span>:
+                System.out.println(<span class="string">"金曜"</span>);
+                <span class="keyword">break</span>;
+            <span class="keyword">default</span>:
+                System.out.println(<span class="string">"週末"</span>);
+        }
+
+        System.out.println(<span class="string">"---"</span>);
+
+        <span class="type">String</span> grade = <span class="string">"B"</span>;
+        <span class="keyword">if</span> (grade.equals(<span class="string">"A"</span>)) {
+            System.out.println(<span class="string">"優秀"</span>);
+        } <span class="keyword">else if</span> (grade.equals(<span class="string">"B"</span>)) {
+            System.out.println(<span class="string">"良好"</span>);
+        } <span class="keyword">else if</span> (grade.equals(<span class="string">"C"</span>)) {
+            System.out.println(<span class="string">"普通"</span>);
+        } <span class="keyword">else</span> {
+            System.out.println(<span class="string">"不明"</span>);
+        }
+    }
+}</code></pre>
+          <p>すべての出力行を順番に答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>case 3 にはbreakがありません。一致したcaseの処理を実行した後、breakに出会うまで後続のcaseの処理も実行し続けます（fall-through）。</p>
+            <p>if-else if は上から順に条件を評価し、最初に一致した分岐のみ実行します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>水曜
+木曜
+金曜
+---
+良好</code></pre>
+            <p><strong>解説:</strong></p>
+            <p><strong>switch部分:</strong> day=3 なので case 3 に一致し「水曜」を出力します。しかし case 3 にbreakがないため、case 4（「木曜」）、case 5（「金曜」）にfall-throughします。case 5 にbreakがあるので、そこで脱出します。defaultは実行されません。</p>
+            <p><strong>if-else部分:</strong> grade は "B" なので、2番目の条件 <code>grade.equals("B")</code> に一致し「良好」のみ出力されます。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-08 -->
+    <div class="drill-item" id="d-08">
+      <div class="drill-header">
+        <div class="drill-badge">D-08</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フロー制御</span>
+          <h3 class="drill-title">ループとbreak/continue</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>for / while / do-while の実行順序の違い、およびbreak（ループ脱出）とcontinue（次の繰り返しへスキップ）の動作は試験頻出です。do-whileは「最低1回実行」される点に注意です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードの空欄を埋めて、コメントに示された出力結果になるようにしてください。</p>
+<pre class="drill-code"><code><span class="keyword">public class</span> <span class="type">LoopDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="comment">// 1〜5を出力（3はスキップ）</span>
+        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">5</span>; i++) {
+            <span class="keyword">if</span> (i == <span class="number">3</span>) <span class="blank">【?1】</span>;
+            System.out.print(i + <span class="string">" "</span>);
+        }
+        System.out.println();
+        <span class="comment">// 出力: 1 2 4 5</span>
+
+        <span class="comment">// 1から順に出力、3で停止</span>
+        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">5</span>; i++) {
+            <span class="keyword">if</span> (i == <span class="number">3</span>) <span class="blank">【?2】</span>;
+            System.out.print(i + <span class="string">" "</span>);
+        }
+        System.out.println();
+        <span class="comment">// 出力: 1 2</span>
+
+        <span class="comment">// do-while: 条件がfalseでも1回は実行</span>
+        <span class="keyword">int</span> x = <span class="number">10</span>;
+        <span class="blank">【?3】</span> {
+            System.out.print(x + <span class="string">" "</span>);
+            x++;
+        } <span class="blank">【?4】</span> (x &lt; <span class="number">5</span>);
+        System.out.println();
+        <span class="comment">// 出力: 10</span>
+    }
+}</code></pre>
+          <p>【?1】〜【?4】に入るキーワードを答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>continue</code> はそのループの残りの処理をスキップして次の繰り返しに進みます。<code>break</code> はループ全体を終了します。</p>
+            <p>do-while文の構文は <code>do { ... } while (条件);</code> です。条件判定がループ本体の後にあるため、最低1回は実行されます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+            <p><strong>解答:</strong></p>
+            <ul>
+              <li>【?1】= <code>continue</code></li>
+              <li>【?2】= <code>break</code></li>
+              <li>【?3】= <code>do</code></li>
+              <li>【?4】= <code>while</code></li>
+            </ul>
+            <p><strong>解説:</strong></p>
+            <p><strong>?1 (continue):</strong> i==3 のとき <code>continue</code> で <code>System.out.print()</code> をスキップし、次のi=4に進みます。結果: <code>1 2 4 5</code></p>
+            <p><strong>?2 (break):</strong> i==3 のとき <code>break</code> でforループ全体を脱出します。i=3以降は出力されません。結果: <code>1 2</code></p>
+            <p><strong>?3, ?4 (do, while):</strong> <code>do { ... } while (x &lt; 5);</code> の形です。x=10 で条件 <code>x &lt; 5</code> はfalseですが、do-whileは最低1回実行されるので <code>10</code> が出力されます。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===================== T5: クラス・メソッド ===================== -->
+
+    <!-- D-09 -->
+    <div class="drill-item" id="d-09">
+      <div class="drill-header">
+        <div class="drill-badge">D-09</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 クラス・メソッド</span>
+          <h3 class="drill-title">フィールド・メソッド・thisキーワード</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>thisキーワードはインスタンス自身への参照です。コンストラクタやメソッドの引数名がフィールド名と同じ場合、thisで明示的にフィールドを指定する必要があります。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードを読み、出力結果を予測してください。</p>
+<pre class="drill-code"><code><span class="keyword">public class</span> <span class="type">Person</span> {
+    <span class="type">String</span> name;
+    <span class="keyword">int</span> age;
+
+    <span class="type">Person</span>(<span class="type">String</span> name, <span class="keyword">int</span> age) {
+        <span class="keyword">this</span>.name = name;
+        <span class="keyword">this</span>.age = age;
+    }
+
+    <span class="keyword">void</span> greet() {
+        System.out.println(<span class="string">"I am "</span> + name + <span class="string">", age "</span> + age);
+    }
+
+    <span class="keyword">void</span> birthday() {
+        age++;
+        System.out.println(<span class="string">"Happy Birthday! Now "</span> + age);
+    }
+
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="type">Person</span> p1 = <span class="keyword">new</span> <span class="type">Person</span>(<span class="string">"Alice"</span>, <span class="number">25</span>);
+        <span class="type">Person</span> p2 = <span class="keyword">new</span> <span class="type">Person</span>(<span class="string">"Bob"</span>, <span class="number">30</span>);
+
+        p1.greet();
+        p2.greet();
+        p1.birthday();
+        p1.greet();
+    }
+}</code></pre>
+          <p>すべての出力行を順番に答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>各Personオブジェクトは独立したフィールド（name, age）を持ちます。p1.birthday()はp1のageだけを変更し、p2には影響しません。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>I am Alice, age 25
+I am Bob, age 30
+Happy Birthday! Now 26
+I am Alice, age 26</code></pre>
+            <p><strong>解説:</strong></p>
+            <p><strong>1行目:</strong> p1("Alice", 25) の greet() で <code>I am Alice, age 25</code>。</p>
+            <p><strong>2行目:</strong> p2("Bob", 30) の greet() で <code>I am Bob, age 30</code>。</p>
+            <p><strong>3行目:</strong> p1.birthday() で p1.age が 25→26 にインクリメントされ、<code>Happy Birthday! Now 26</code>。</p>
+            <p><strong>4行目:</strong> 再度 p1.greet() を呼ぶと age が 26 に更新済みなので <code>I am Alice, age 26</code>。</p>
+            <p>ポイント: インスタンスごとにフィールドは独立しています。p1のageを変更してもp2には影響しません。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-10 -->
+    <div class="drill-item" id="d-10">
+      <div class="drill-header">
+        <div class="drill-badge">D-10</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 クラス・メソッド</span>
+          <h3 class="drill-title">コンストラクタ・オーバーロード・static</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>コンストラクタのオーバーロード、this()によるコンストラクタチェーン、staticメンバの特性（インスタンスではなくクラスに属する）は頻出テーマです。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードの空欄を埋めて、コメントに示された出力結果になるようにしてください。</p>
+<pre class="drill-code"><code><span class="keyword">public class</span> <span class="type">Counter</span> {
+    <span class="blank">【?1】</span> <span class="keyword">int</span> count = <span class="number">0</span>;     <span class="comment">// すべてのインスタンスで共有</span>
+    <span class="type">String</span> label;
+
+    <span class="type">Counter</span>(<span class="type">String</span> label) {
+        <span class="keyword">this</span>.label = label;
+        count++;
+    }
+
+    <span class="type">Counter</span>() {
+        <span class="blank">【?2】</span>(<span class="string">"default"</span>);       <span class="comment">// 別のコンストラクタを呼ぶ</span>
+    }
+
+    <span class="keyword">void</span> show() {
+        System.out.println(label + <span class="string">": count="</span> + count);
+    }
+
+    <span class="keyword">static int</span> <span class="blank">【?3】</span>() {     <span class="comment">// countを返すstaticメソッド</span>
+        <span class="keyword">return</span> count;
+    }
+
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="type">Counter</span> c1 = <span class="keyword">new</span> <span class="type">Counter</span>(<span class="string">"A"</span>);
+        <span class="type">Counter</span> c2 = <span class="keyword">new</span> <span class="type">Counter</span>(<span class="string">"B"</span>);
+        <span class="type">Counter</span> c3 = <span class="keyword">new</span> <span class="type">Counter</span>();
+        c1.show();
+        System.out.println(<span class="string">"Total: "</span> + <span class="type">Counter</span>.getCount());
+    }
+}
+<span class="comment">// 出力:
+// A: count=3
+// Total: 3</span></code></pre>
+          <p>【?1】〜【?3】に入るキーワードやメソッド名を答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>static</code> フィールドはクラスに1つだけ存在し、全インスタンスで共有されます。</p>
+            <p><code>this("default")</code> は同じクラスの別のコンストラクタを呼び出します（コンストラクタチェーン）。</p>
+            <p>staticメソッドから呼ばれている <code>Counter.getCount()</code> がメソッド名のヒントです。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+            <p><strong>解答:</strong></p>
+            <ul>
+              <li>【?1】= <code>static</code></li>
+              <li>【?2】= <code>this</code></li>
+              <li>【?3】= <code>getCount</code></li>
+            </ul>
+            <p><strong>解説:</strong></p>
+            <p><strong>?1 (static):</strong> <code>static int count</code> はクラス変数です。すべてのCounterインスタンスで共有され、コンストラクタが呼ばれるたびに+1されます。3回newしたのでcount=3です。</p>
+            <p><strong>?2 (this):</strong> <code>this("default")</code> は引数ありコンストラクタ <code>Counter(String label)</code> を呼び出します。this()はコンストラクタの先頭行でのみ使用できます。</p>
+            <p><strong>?3 (getCount):</strong> main内で <code>Counter.getCount()</code> と呼ばれているので、メソッド名は <code>getCount</code> です。staticメソッドなのでクラス名で呼び出せます。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===================== T6: 継承・インタフェース・ポリモーフィズム ===================== -->
+
+    <!-- D-11 -->
+    <div class="drill-item" id="d-11">
+      <div class="drill-header">
+        <div class="drill-badge">D-11</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 継承・インタフェース・ポリモーフィズム</span>
+          <h3 class="drill-title">継承チェーンとsuperの呼び出し順序</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>コンストラクタの呼び出し順序は「親クラス → 子クラス」です。明示的にsuper()を書かなくても、コンパイラが自動的に親クラスの引数なしコンストラクタを挿入します。オーバーライドされたメソッドがどちらのクラスの実装を呼ぶかも重要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードを読み、出力結果を予測してください。</p>
+<pre class="drill-code"><code><span class="keyword">class</span> <span class="type">Animal</span> {
+    <span class="type">String</span> name;
+
+    <span class="type">Animal</span>() {
+        System.out.println(<span class="string">"Animal constructor"</span>);
+        name = <span class="string">"Unknown"</span>;
+    }
+
+    <span class="type">Animal</span>(<span class="type">String</span> name) {
+        System.out.println(<span class="string">"Animal("</span> + name + <span class="string">")"</span>);
+        <span class="keyword">this</span>.name = name;
+    }
+
+    <span class="keyword">void</span> speak() {
+        System.out.println(name + <span class="string">" speaks"</span>);
+    }
+}
+
+<span class="keyword">class</span> <span class="type">Dog</span> <span class="keyword">extends</span> <span class="type">Animal</span> {
+    <span class="type">Dog</span>(<span class="type">String</span> name) {
+        <span class="keyword">super</span>(name);
+        System.out.println(<span class="string">"Dog constructor"</span>);
+    }
+
+    @Override
+    <span class="keyword">void</span> speak() {
+        System.out.println(name + <span class="string">" barks"</span>);
+    }
+}
+
+<span class="keyword">public class</span> <span class="type">InheritDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="type">Dog</span> d = <span class="keyword">new</span> <span class="type">Dog</span>(<span class="string">"Pochi"</span>);
+        d.speak();
+
+        System.out.println(<span class="string">"---"</span>);
+
+        <span class="type">Animal</span> a = <span class="keyword">new</span> <span class="type">Dog</span>(<span class="string">"Hachi"</span>);
+        a.speak();
+    }
+}</code></pre>
+          <p>すべての出力行を順番に答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>子クラスのコンストラクタでは、まずsuper()で親クラスのコンストラクタが実行されます。</p>
+            <p><code>Animal a = new Dog("Hachi")</code> の場合、変数の型はAnimalですが、実際のオブジェクトはDogです。speak()はオーバーライドされているので、Dogのspeak()が呼ばれます（ポリモーフィズム）。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>Animal(Pochi)
+Dog constructor
+Pochi barks
+---
+Animal(Hachi)
+Dog constructor
+Hachi barks</code></pre>
+            <p><strong>解説:</strong></p>
+            <p><strong>1-2行目:</strong> <code>new Dog("Pochi")</code> で、Dogのコンストラクタが呼ばれます。まず <code>super("Pochi")</code> でAnimal(String)コンストラクタが実行され「Animal(Pochi)」を出力。続いてDogコンストラクタの残りで「Dog constructor」を出力。</p>
+            <p><strong>3行目:</strong> d.speak() はDogでオーバーライドされたspeak()を呼び「Pochi barks」。</p>
+            <p><strong>5-6行目:</strong> <code>new Dog("Hachi")</code> も同様のコンストラクタチェーン。</p>
+            <p><strong>7行目:</strong> 変数aの型はAnimalですが、実際のオブジェクトはDogなので、<strong>ポリモーフィズム</strong>によりDogのspeak()が呼ばれ「Hachi barks」が出力されます。これがJavaの動的バインディングです。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-12 -->
+    <div class="drill-item" id="d-12">
+      <div class="drill-header">
+        <div class="drill-badge">D-12</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 継承・インタフェース・ポリモーフィズム</span>
+          <h3 class="drill-title">抽象クラスとインタフェースのdefaultメソッド</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>抽象クラスはインスタンス化できず、抽象メソッドは子クラスでの実装が必須です。インタフェースのdefaultメソッド（Java 8以降）は、実装クラスでオーバーライドしなくても使える点が頻出です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードの空欄を埋めて、コメントに示された出力結果になるようにしてください。</p>
+<pre class="drill-code"><code><span class="blank">【?1】</span> <span class="keyword">class</span> <span class="type">Shape</span> {
+    <span class="type">String</span> color;
+
+    <span class="type">Shape</span>(<span class="type">String</span> color) {
+        <span class="keyword">this</span>.color = color;
+    }
+
+    <span class="blank">【?2】</span> <span class="keyword">double</span> area();   <span class="comment">// サブクラスで実装する</span>
+
+    <span class="keyword">void</span> describe() {
+        System.out.println(color + <span class="string">" shape, area="</span> + area());
+    }
+}
+
+<span class="keyword">interface</span> <span class="type">Printable</span> {
+    <span class="blank">【?3】</span> <span class="keyword">void</span> print() {   <span class="comment">// デフォルト実装あり</span>
+        System.out.println(<span class="string">"Printing..."</span>);
+    }
+}
+
+<span class="keyword">class</span> <span class="type">Circle</span> <span class="keyword">extends</span> <span class="type">Shape</span> <span class="keyword">implements</span> <span class="type">Printable</span> {
+    <span class="keyword">double</span> radius;
+
+    <span class="type">Circle</span>(<span class="type">String</span> color, <span class="keyword">double</span> radius) {
+        <span class="blank">【?4】</span>(color);
+        <span class="keyword">this</span>.radius = radius;
+    }
+
+    @Override
+    <span class="keyword">public double</span> area() {
+        <span class="keyword">return</span> <span class="number">3.14</span> * radius * radius;
+    }
+}
+
+<span class="keyword">public class</span> <span class="type">AbstractDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="type">Circle</span> c = <span class="keyword">new</span> <span class="type">Circle</span>(<span class="string">"Red"</span>, <span class="number">5.0</span>);
+        c.describe();
+        c.print();
+    }
+}
+<span class="comment">// 出力:
+// Red shape, area=78.5
+// Printing...</span></code></pre>
+          <p>【?1】〜【?4】に入るキーワードを答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>抽象クラスは <code>abstract class</code>、抽象メソッドは <code>abstract 戻り値型 メソッド名()</code> です。</p>
+            <p>インタフェースのデフォルトメソッドは <code>default</code> キーワードを付けます。</p>
+            <p>子クラスのコンストラクタから親クラスのコンストラクタを呼ぶには <code>super</code> を使います。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+            <p><strong>解答:</strong></p>
+            <ul>
+              <li>【?1】= <code>abstract</code></li>
+              <li>【?2】= <code>abstract</code></li>
+              <li>【?3】= <code>default</code></li>
+              <li>【?4】= <code>super</code></li>
+            </ul>
+            <p><strong>解説:</strong></p>
+            <p><strong>?1 (abstract):</strong> Shapeは抽象メソッドarea()を持つため、<code>abstract class</code> として宣言する必要があります。抽象クラスは直接インスタンス化できません。</p>
+            <p><strong>?2 (abstract):</strong> <code>abstract double area()</code> は本体を持たない抽象メソッドです。サブクラス（Circle）で必ず実装する必要があります。</p>
+            <p><strong>?3 (default):</strong> インタフェースの <code>default void print()</code> はデフォルト実装を持つメソッドです。Circleではオーバーライドしていないため、Printableのデフォルト実装「Printing...」がそのまま使われます。</p>
+            <p><strong>?4 (super):</strong> <code>super(color)</code> で親クラスShape(String)コンストラクタを呼び出します。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===================== T7: 例外処理 ===================== -->
+
+    <!-- D-13 -->
+    <div class="drill-item" id="d-13">
+      <div class="drill-header">
+        <div class="drill-badge">D-13</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 例外処理</span>
+          <h3 class="drill-title">try-catch-finallyの実行順序</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>finallyブロックは例外の有無に関わらず必ず実行されます。try内で例外が発生した場合、tryの残りは実行されずcatchに移行する点、複数catchの順序（子クラス→親クラス）も重要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードを読み、出力結果を予測してください。</p>
+<pre class="drill-code"><code><span class="keyword">public class</span> <span class="type">ExceptionDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        System.out.println(<span class="string">"Start"</span>);
+        <span class="keyword">try</span> {
+            System.out.println(<span class="string">"Try-1"</span>);
+            <span class="keyword">int</span> result = <span class="number">10</span> / <span class="number">0</span>;
+            System.out.println(<span class="string">"Try-2"</span>);
+        } <span class="keyword">catch</span> (<span class="type">ArithmeticException</span> e) {
+            System.out.println(<span class="string">"Catch: "</span> + e.getMessage());
+        } <span class="keyword">finally</span> {
+            System.out.println(<span class="string">"Finally"</span>);
+        }
+        System.out.println(<span class="string">"End"</span>);
+
+        System.out.println(<span class="string">"==="</span>);
+
+        <span class="keyword">try</span> {
+            System.out.println(<span class="string">"A"</span>);
+            <span class="type">String</span> s = <span class="keyword">null</span>;
+            System.out.println(s.length());
+        } <span class="keyword">catch</span> (<span class="type">NullPointerException</span> e) {
+            System.out.println(<span class="string">"B"</span>);
+        } <span class="keyword">catch</span> (<span class="type">Exception</span> e) {
+            System.out.println(<span class="string">"C"</span>);
+        } <span class="keyword">finally</span> {
+            System.out.println(<span class="string">"D"</span>);
+        }
+    }
+}</code></pre>
+          <p>すべての出力行を順番に答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>10 / 0</code> は ArithmeticException をスローします。例外発生後、tryの残り（"Try-2"）はスキップされます。</p>
+            <p><code>null.length()</code> は NullPointerException をスローします。catchは上から順にマッチングされ、最初に一致したブロックのみ実行されます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>Start
+Try-1
+Catch: / by zero
+Finally
+End
+===
+A
+B
+D</code></pre>
+            <p><strong>解説:</strong></p>
+            <p><strong>前半:</strong></p>
+            <ul>
+              <li>「Start」を出力後、tryブロックに入り「Try-1」を出力。</li>
+              <li><code>10 / 0</code> で ArithmeticException が発生。「Try-2」はスキップ。</li>
+              <li>catchブロックで「Catch: / by zero」を出力。</li>
+              <li>finallyブロックで「Finally」を出力（例外の有無に関わらず実行）。</li>
+              <li>例外が処理されたので、通常通り「End」を出力。</li>
+            </ul>
+            <p><strong>後半:</strong></p>
+            <ul>
+              <li>「A」を出力後、<code>null.length()</code> で NullPointerException が発生。</li>
+              <li>最初のcatch (NullPointerException) に一致し「B」を出力。catch (Exception) はスキップ。</li>
+              <li>finallyブロックで「D」を出力。「C」は出力されません。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-14 -->
+    <div class="drill-item" id="d-14">
+      <div class="drill-header">
+        <div class="drill-badge">D-14</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 例外処理</span>
+          <h3 class="drill-title">検査例外・非検査例外とthrows</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>検査例外（checked exception）はコンパイル時にtry-catchまたはthrows宣言が必要です。非検査例外（RuntimeException系）はコンパイラに強制されません。例外クラスの階層構造も理解しておきましょう。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードの空欄を埋めて、正しくコンパイル・実行できるようにしてください。</p>
+<pre class="drill-code"><code><span class="keyword">import</span> java.io.IOException;
+
+<span class="keyword">public class</span> <span class="type">ThrowsDrill</span> {
+
+    <span class="comment">// 検査例外をスローする可能性があるメソッド</span>
+    <span class="keyword">static void</span> readFile() <span class="blank">【?1】</span> <span class="type">IOException</span> {
+        <span class="keyword">throw new</span> <span class="type">IOException</span>(<span class="string">"File not found"</span>);
+    }
+
+    <span class="comment">// 非検査例外をスローするメソッド（throws不要）</span>
+    <span class="keyword">static void</span> divide(<span class="keyword">int</span> a, <span class="keyword">int</span> b) {
+        <span class="keyword">if</span> (b == <span class="number">0</span>) {
+            <span class="blank">【?2】</span> <span class="keyword">new</span> <span class="type">ArithmeticException</span>(<span class="string">"Cannot divide by zero"</span>);
+        }
+        System.out.println(a / b);
+    }
+
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="comment">// 検査例外は必ずtry-catchで処理</span>
+        <span class="blank">【?3】</span> {
+            readFile();
+        } <span class="blank">【?4】</span> (<span class="type">IOException</span> e) {
+            System.out.println(<span class="string">"Caught: "</span> + e.getMessage());
+        }
+
+        <span class="comment">// 非検査例外はtry-catchなしでも呼べる</span>
+        divide(<span class="number">10</span>, <span class="number">2</span>);
+    }
+}
+<span class="comment">// 出力:
+// Caught: File not found
+// 5</span></code></pre>
+          <p>【?1】〜【?4】に入るキーワードを答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>検査例外をスローする可能性があるメソッドは <code>throws 例外名</code> を宣言する必要があります。</p>
+            <p>例外を投げるには <code>throw</code> キーワードを使います（throwsとは別）。</p>
+            <p>検査例外を呼び出す側は <code>try { ... } catch (...) { ... }</code> で囲む必要があります。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+            <p><strong>解答:</strong></p>
+            <ul>
+              <li>【?1】= <code>throws</code></li>
+              <li>【?2】= <code>throw</code></li>
+              <li>【?3】= <code>try</code></li>
+              <li>【?4】= <code>catch</code></li>
+            </ul>
+            <p><strong>解説:</strong></p>
+            <p><strong>?1 (throws):</strong> <code>throws IOException</code> はメソッド宣言で「このメソッドはIOExceptionをスローする可能性がある」と宣告します。検査例外（IOException, SQLExceptionなど）はこの宣言が必須です。</p>
+            <p><strong>?2 (throw):</strong> <code>throw new ArithmeticException(...)</code> は例外オブジェクトを実際にスローします。<strong>throws</strong>（宣言）と<strong>throw</strong>（実行）の違いを区別しましょう。</p>
+            <p><strong>?3, ?4 (try, catch):</strong> 検査例外をスローするメソッドを呼び出す場合、<code>try-catch</code> で処理するか、呼び出し元にもthrowsを付ける必要があります。</p>
+            <p><strong>非検査例外:</strong> ArithmeticExceptionはRuntimeExceptionのサブクラスなので、throws宣言やtry-catchは任意です。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===================== T8: コレクション・ラムダ・日時 ===================== -->
+
+    <!-- D-15 -->
+    <div class="drill-item" id="d-15">
+      <div class="drill-header">
+        <div class="drill-badge">D-15</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 コレクション・ラムダ・日時</span>
+          <h3 class="drill-title">ArrayList/HashMapの基本操作</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>ArrayListの要素追加・削除・取得、HashMapのput/get/containsKeyはJavaSilverで必須です。ArrayListのインデックスは0始まりで、remove(index)とremove(Object)の挙動の違いにも注意しましょう。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードを読み、出力結果を予測してください。</p>
+<pre class="drill-code"><code><span class="keyword">import</span> java.util.ArrayList;
+<span class="keyword">import</span> java.util.HashMap;
+
+<span class="keyword">public class</span> <span class="type">CollectionDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="type">ArrayList</span>&lt;<span class="type">String</span>&gt; list = <span class="keyword">new</span> <span class="type">ArrayList</span>&lt;&gt;();
+        list.add(<span class="string">"Java"</span>);
+        list.add(<span class="string">"Python"</span>);
+        list.add(<span class="string">"Go"</span>);
+        System.out.println(<span class="string">"A: "</span> + list.size());
+        System.out.println(<span class="string">"B: "</span> + list.get(<span class="number">1</span>));
+
+        list.remove(<span class="number">0</span>);
+        System.out.println(<span class="string">"C: "</span> + list);
+
+        list.add(<span class="number">0</span>, <span class="string">"Rust"</span>);
+        System.out.println(<span class="string">"D: "</span> + list);
+        System.out.println(<span class="string">"E: "</span> + list.contains(<span class="string">"Go"</span>));
+
+        System.out.println(<span class="string">"---"</span>);
+
+        <span class="type">HashMap</span>&lt;<span class="type">String</span>, <span class="type">Integer</span>&gt; map = <span class="keyword">new</span> <span class="type">HashMap</span>&lt;&gt;();
+        map.put(<span class="string">"Alice"</span>, <span class="number">90</span>);
+        map.put(<span class="string">"Bob"</span>, <span class="number">85</span>);
+        map.put(<span class="string">"Alice"</span>, <span class="number">95</span>);
+        System.out.println(<span class="string">"F: "</span> + map.size());
+        System.out.println(<span class="string">"G: "</span> + map.get(<span class="string">"Alice"</span>));
+        System.out.println(<span class="string">"H: "</span> + map.containsKey(<span class="string">"Charlie"</span>));
+    }
+}</code></pre>
+          <p>A〜H の各行の出力を答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>list.remove(0)</code> はインデックス0の要素を削除します。削除後、後続の要素が前に詰まります。</p>
+            <p><code>list.add(0, "Rust")</code> はインデックス0の位置に挿入します。</p>
+            <p>HashMapで同じキーにputすると、値が上書きされます。sizeはキーの数です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>A: 3
+B: Python
+C: [Python, Go]
+D: [Rust, Python, Go]
+E: true
+---
+F: 2
+G: 95
+H: false</code></pre>
+            <p><strong>解説:</strong></p>
+            <p><strong>A (3):</strong> 3つの要素を追加したので size() は 3 です。</p>
+            <p><strong>B (Python):</strong> <code>get(1)</code> はインデックス1の要素。[Java, Python, Go] の1番目は "Python" です。</p>
+            <p><strong>C ([Python, Go]):</strong> <code>remove(0)</code> で "Java" を削除。残りは [Python, Go] です。</p>
+            <p><strong>D ([Rust, Python, Go]):</strong> <code>add(0, "Rust")</code> で先頭に "Rust" を挿入。</p>
+            <p><strong>E (true):</strong> "Go" はリストに含まれているので true です。</p>
+            <p><strong>F (2):</strong> "Alice" キーに2回putしていますが、2回目は値の上書きです。キーは "Alice" と "Bob" の2つなので size() は 2 です。</p>
+            <p><strong>G (95):</strong> "Alice" の値は最初90でしたが、95に上書きされています。</p>
+            <p><strong>H (false):</strong> "Charlie" はputしていないので containsKey() は false です。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-16 -->
+    <div class="drill-item" id="d-16">
+      <div class="drill-header">
+        <div class="drill-badge">D-16</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 コレクション・ラムダ・日時</span>
+          <h3 class="drill-title">ラムダ式の基本構文とLocalDate</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>ラムダ式は関数型インタフェース（抽象メソッドが1つのインタフェース）の実装を簡潔に書く構文です。LocalDateはイミュータブル（不変）で、plusDays()などは新しいオブジェクトを返す点が頻出です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>次のコードの空欄を埋めて、コメントに示された出力結果になるようにしてください。</p>
+<pre class="drill-code"><code><span class="keyword">import</span> java.time.LocalDate;
+<span class="keyword">import</span> java.time.Month;
+<span class="keyword">import</span> java.util.ArrayList;
+<span class="keyword">import</span> java.util.Collections;
+
+<span class="keyword">interface</span> <span class="type">Greeting</span> {
+    <span class="type">String</span> greet(<span class="type">String</span> name);
+}
+
+<span class="keyword">public class</span> <span class="type">LambdaDrill</span> {
+    <span class="keyword">public static void</span> main(<span class="type">String</span>[] args) {
+        <span class="comment">// ラムダ式で Greeting を実装</span>
+        <span class="type">Greeting</span> hello = <span class="blank">【?1】</span> <span class="string">"Hello, "</span> + name;
+        System.out.println(hello.greet(<span class="string">"Java"</span>));
+        <span class="comment">// 出力: Hello, Java</span>
+
+        <span class="comment">// ラムダ式でソート（降順）</span>
+        <span class="type">ArrayList</span>&lt;<span class="type">Integer</span>&gt; nums = <span class="keyword">new</span> <span class="type">ArrayList</span>&lt;&gt;();
+        nums.add(<span class="number">3</span>); nums.add(<span class="number">1</span>); nums.add(<span class="number">4</span>); nums.add(<span class="number">1</span>); nums.add(<span class="number">5</span>);
+        Collections.sort(nums, (a, b) <span class="blank">【?2】</span> b - a);
+        System.out.println(nums);
+        <span class="comment">// 出力: [5, 4, 3, 1, 1]</span>
+
+        <span class="comment">// LocalDate操作</span>
+        <span class="type">LocalDate</span> date = LocalDate.of(<span class="number">2026</span>, Month.MARCH, <span class="number">7</span>);
+        <span class="type">LocalDate</span> nextWeek = date.<span class="blank">【?3】</span>(<span class="number">7</span>);
+        System.out.println(<span class="string">"today: "</span> + date);
+        System.out.println(<span class="string">"next:  "</span> + nextWeek);
+        <span class="comment">// 出力: today: 2026-03-07</span>
+        <span class="comment">// 出力: next:  2026-03-14</span>
+
+        <span class="comment">// LocalDateはイミュータブル</span>
+        date.plusMonths(<span class="number">1</span>);
+        System.out.println(<span class="string">"still: "</span> + date);
+        <span class="comment">// 出力: still: 2026-03-07</span>
+    }
+}</code></pre>
+          <p>【?1】〜【?3】に入るコードを答えてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>ラムダ式の基本構文: <code>(引数) -&gt; 式</code> または <code>(引数) -&gt; { 文; }</code></p>
+            <p>1つの引数の場合は括弧を省略可: <code>name -&gt;</code></p>
+            <p>LocalDateの <code>plusDays(n)</code> は新しいLocalDateオブジェクトを返します。元のオブジェクトは変更されません（イミュータブル）。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+            <p><strong>解答:</strong></p>
+            <ul>
+              <li>【?1】= <code>name -&gt;</code></li>
+              <li>【?2】= <code>-&gt;</code></li>
+              <li>【?3】= <code>plusDays</code></li>
+            </ul>
+            <p><strong>解説:</strong></p>
+            <p><strong>?1 (name -&gt;):</strong> <code>name -&gt; "Hello, " + name</code> は、Greetingインタフェースのgreet(String name)メソッドをラムダ式で実装しています。引数が1つの場合、括弧は省略できます（<code>(name) -&gt;</code> でもOK）。</p>
+            <p><strong>?2 (-&gt;):</strong> <code>(a, b) -&gt; b - a</code> はComparatorの実装です。<code>b - a</code> で降順ソートになります（昇順は <code>a - b</code>）。</p>
+            <p><strong>?3 (plusDays):</strong> <code>date.plusDays(7)</code> は7日後の新しいLocalDateを返します。LocalDateはイミュータブルなので、元のdateは変更されません。</p>
+            <p><strong>イミュータブルの罠:</strong> 最後の <code>date.plusMonths(1)</code> は戻り値を変数に受けていないため、dateは変化しません。<code>date = date.plusMonths(1)</code> と書かないと反映されません。これはJavaSilverの定番ひっかけ問題です。</p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ページナビゲーション -->
+  <div class="page-nav">
+    <a href="index.html" class="page-nav-btn prev">
+      <span>←</span>
+      <div>
+        <div class="page-nav-label">コース一覧</div>
+        <div class="page-nav-title">Java実力養成ドリル</div>
+      </div>
+    </a>
+    <a href="level-c.html" class="page-nav-btn next">
+      <div>
+        <div class="page-nav-label">次のレベル</div>
+        <div class="page-nav-title">Level C — 書ける</div>
+      </div>
+      <span>→</span>
+    </a>
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>
