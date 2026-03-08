@@ -11,10 +11,7 @@ const navData = {
     },
     chapters: [
         { href: "level-d.html", num: "D", text: "Level D — 読める" },
-        { href: "level-c.html", num: "C", text: "Level C — 書ける" },
-        { href: "level-b.html", num: "B", text: "Level B — 組み合わせられる" },
-        { href: "level-a.html", num: "A", text: "Level A — 見抜ける" },
-        { href: "level-s.html", num: "S", text: "Level S — 解き切れる" }
+        { href: "level-c.html", num: "C", text: "Level C — 書ける" }
     ],
     categories: [
         { href: "../../index.html", text: "ダッシュボード" },
