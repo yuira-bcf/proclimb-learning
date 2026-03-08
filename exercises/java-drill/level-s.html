@@ -1,0 +1,4405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Level S — 総合実装 | Java実力養成ドリル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --level-color: #6A1B9A;
+      --level-light: #f3e5f5;
+      --level-dark: #4A148C;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Hero */
+    .level-hero {
+      background: linear-gradient(135deg, #4A148C 0%, #6A1B9A 50%, #AB47BC 100%);
+      color: white;
+      text-align: center;
+      padding: 80px 20px 60px;
+    }
+    .level-hero .hero-icon {
+      font-size: 3.5rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .level-hero h1 {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .level-hero .hero-sub {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      font-weight: 400;
+      margin-bottom: 20px;
+    }
+    .level-hero .hero-badges {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .level-hero .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.2);
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* Container */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    /* Drill item */
+    .drill-item {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .drill-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      background: #fafbfc;
+    }
+    .drill-badge {
+      background: var(--level-color);
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .drill-meta {
+      flex: 1;
+    }
+    .drill-theme {
+      font-size: 0.72rem;
+      color: var(--level-color);
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      display: block;
+    }
+    .drill-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1d1d1f;
+    }
+    .drill-body {
+      padding: 24px;
+    }
+
+    /* Silver point */
+    .drill-silver {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .drill-silver > .material-icons {
+      color: #f9a825;
+      font-size: 1.4rem;
+      margin-top: 2px;
+    }
+    .drill-silver strong {
+      display: block;
+      font-size: 0.82rem;
+      color: #f57f17;
+      margin-bottom: 4px;
+    }
+    .drill-silver p {
+      font-size: 0.85rem;
+      color: #5d4037;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Task */
+    .drill-task {
+      margin-bottom: 20px;
+    }
+    .drill-task h4 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1d1d1f;
+      margin-bottom: 12px;
+    }
+    .drill-task h4 .material-icons {
+      color: var(--level-color);
+      font-size: 1.2rem;
+    }
+    .drill-task p, .drill-task ul, .drill-task ol {
+      font-size: 0.88rem;
+      line-height: 1.8;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .drill-task ul, .drill-task ol {
+      padding-left: 1.5em;
+    }
+    .drill-task li {
+      margin-bottom: 4px;
+    }
+
+    /* Code block */
+    .drill-code {
+      background: #1e293b;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      padding: 20px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    .drill-code code {
+      font-family: inherit;
+    }
+
+    /* Expected output */
+    .expected-output {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 12px 0;
+    }
+    .expected-output .label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #16a34a;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .expected-output pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: #166534;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    /* Hint */
+    .drill-hint {
+      margin-bottom: 8px;
+    }
+    .drill-hint summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #f57c00;
+      padding: 10px 14px;
+      background: #fff3e0;
+      border-radius: 10px;
+      list-style: none;
+      user-select: none;
+    }
+    .drill-hint summary::-webkit-details-marker { display: none; }
+    .drill-hint summary .material-icons { font-size: 1.1rem; }
+    .drill-hint[open] summary { border-radius: 10px 10px 0 0; }
+    .hint-content {
+      background: #fff8e1;
+      padding: 16px 18px;
+      border-radius: 0 0 10px 10px;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: #5d4037;
+    }
+    .hint-content code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0,0,0,0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.82rem;
+    }
+
+    /* Answer */
+    .drill-answer {
+      margin-top: 8px;
+    }
+    .drill-answer summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--level-color);
+      padding: 10px 14px;
+      background: var(--level-light);
+      border-radius: 10px;
+      list-style: none;
+      user-select: none;
+    }
+    .drill-answer summary::-webkit-details-marker { display: none; }
+    .drill-answer summary .material-icons { color: #6A1B9A; font-size: 1.1rem; }
+    .drill-answer[open] summary { border-radius: 10px 10px 0 0; }
+    .answer-content {
+      background: #f8fbff;
+      padding: 20px;
+      border-radius: 0 0 10px 10px;
+      border: 1px solid #f3e5f5;
+      border-top: none;
+    }
+    .answer-content p {
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .answer-content h5 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--level-dark);
+      margin: 16px 0 8px;
+    }
+    .answer-content ul {
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: #333;
+      padding-left: 1.5em;
+      margin-bottom: 10px;
+    }
+
+    /* Signature block */
+    .signature-block {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 10px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: #334155;
+      line-height: 1.6;
+    }
+
+    /* Page nav */
+    .page-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 40px;
+      gap: 16px;
+    }
+    .page-nav a {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--level-color);
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 12px 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .page-nav a:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Theme separator */
+    .theme-separator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 36px 0 20px;
+      padding: 12px 20px;
+      background: var(--level-light);
+      border-radius: 12px;
+      border-left: 4px solid var(--level-color);
+    }
+    .theme-separator .material-icons {
+      color: var(--level-color);
+      font-size: 1.3rem;
+    }
+    .theme-separator h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--level-dark);
+    }
+    .theme-separator span.theme-count {
+      font-size: 0.75rem;
+      color: #666;
+      font-weight: 400;
+      margin-left: auto;
+    }
+
+    @media (max-width: 480px) {
+      .level-hero h1 { font-size: 1.6rem; }
+      .drill-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+      .drill-body { padding: 16px; }
+      .drill-code { font-size: 0.75rem; padding: 14px; }
+      .page-nav { flex-direction: column; }
+      .page-nav a { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body data-active="training">
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-java-drill.js"></script>
+
+  <!-- Hero -->
+  <div class="level-hero">
+    <span class="hero-icon"><span class="material-icons" style="font-size:3.5rem;">emoji_events</span></span>
+    <h1>Level S — 総合実装</h1>
+    <p class="hero-sub">全テーマを横断した総合プロジェクト実装</p>
+    <div class="hero-badges">
+      <div class="hero-badge">
+        <span class="material-icons" style="font-size:1rem;">assignment</span>
+        16課題
+      </div>
+      <div class="hero-badge">
+        <span class="material-icons" style="font-size:1rem;">category</span>
+        8テーマ
+      </div>
+      <div class="hero-badge">
+        <span class="material-icons" style="font-size:1rem;">verified</span>
+        JavaSilver対応
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- ===== T1: 変数・データ型・演算子 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">data_object</span>
+      <h2>T1 変数・データ型・演算子</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-01 -->
+    <div class="drill-item" id="s-01">
+      <div class="drill-header">
+        <div class="drill-badge">S-01</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 変数・データ型・演算子</span>
+          <h3 class="drill-title">家計簿アプリケーション</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>enum型の定義と使用、LocalDateの操作、ArrayListとジェネリクス、String.format()によるフォーマット出力、型変換（int/double混在演算）を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>収入と支出を管理する家計簿アプリケーションを、以下の3クラス＋1 enum で実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>Category</code>（enum）: <code>FOOD</code>, <code>TRANSPORT</code>, <code>ENTERTAINMENT</code>, <code>SALARY</code>, <code>OTHER</code> の5つ。日本語名を返す <code>getLabel()</code> メソッドを持つ</li>
+            <li><code>Entry</code>: フィールドは <code>LocalDate date</code>, <code>int amount</code>（収入は正、支出は負）, <code>Category category</code>, <code>String memo</code>。コンストラクタとgetterを持つ</li>
+            <li><code>Ledger</code>: <code>ArrayList&lt;Entry&gt;</code> で記録を管理。<code>add(Entry)</code>, <code>totalByCategory(Category)</code>（カテゴリ別合計）, <code>monthlyReport(int year, int month)</code>（月次レポート文字列）を持つ</li>
+          </ul>
+          <p><code>main</code> メソッドで数件のEntryを登録し、カテゴリ別集計と月次レポートを出力してください。</p>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== 2026年3月 月次レポート ===
+日付       カテゴリ     金額     メモ
+2026-03-01 給与       +250,000 3月分給与
+2026-03-05 食費        -3,200  スーパー
+2026-03-08 交通費      -1,500  通勤定期
+2026-03-10 娯楽        -2,800  映画
+2026-03-15 食費        -4,500  外食
+
+--- カテゴリ別集計 ---
+給与:     +250,000
+食費:       -7,700
+交通費:     -1,500
+娯楽:       -2,800
+
+収入合計: +250,000
+支出合計:  -16,000
+残高:     +234,000</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>enumにフィールドとコンストラクタを持たせて日本語ラベルを定義します。<code>enum Category { FOOD("食費"), ... ; private final String label; Category(String label) { this.label = label; } }</code> のパターンです。<code>String.format()</code> で桁揃えし、<code>%,d</code> でカンマ区切りにできます。ArrayList の <code>stream().filter().mapToInt().sum()</code> も使えますが、for文でも十分です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+enum Category {
+    FOOD("食費"), TRANSPORT("交通費"), ENTERTAINMENT("娯楽"),
+    SALARY("給与"), OTHER("その他");
+
+    private final String label;
+    Category(String label) { this.label = label; }
+    public String getLabel() { return label; }
+}
+
+class Entry {
+    private LocalDate date;
+    private int amount;
+    private Category category;
+    private String memo;
+
+    public Entry(LocalDate date, int amount, Category category, String memo) {
+        this.date = date;
+        this.amount = amount;
+        this.category = category;
+        this.memo = memo;
+    }
+
+    public LocalDate getDate() { return date; }
+    public int getAmount() { return amount; }
+    public Category getCategory() { return category; }
+    public String getMemo() { return memo; }
+}
+
+class Ledger {
+    private List&lt;Entry&gt; entries = new ArrayList&lt;&gt;();
+
+    public void add(Entry entry) {
+        entries.add(entry);
+    }
+
+    public int totalByCategory(Category category) {
+        int total = 0;
+        for (Entry e : entries) {
+            if (e.getCategory() == category) {
+                total += e.getAmount();
+            }
+        }
+        return total;
+    }
+
+    public String monthlyReport(int year, int month) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("=== %d年%d月 月次レポート ===\n", year, month));
+        sb.append(String.format("%-10s %-8s %8s %s\n", "日付", "カテゴリ", "金額", "メモ"));
+
+        List&lt;Entry&gt; monthly = new ArrayList&lt;&gt;();
+        for (Entry e : entries) {
+            if (e.getDate().getYear() == year &amp;&amp; e.getDate().getMonthValue() == month) {
+                monthly.add(e);
+            }
+        }
+
+        for (Entry e : monthly) {
+            String sign = e.getAmount() &gt;= 0 ? "+" : "";
+            sb.append(String.format("%-10s %-8s %s%,d %s\n",
+                e.getDate(), e.getCategory().getLabel(),
+                sign, e.getAmount(), e.getMemo()));
+        }
+
+        sb.append("\n--- カテゴリ別集計 ---\n");
+        int totalIncome = 0;
+        int totalExpense = 0;
+        for (Category c : Category.values()) {
+            int catTotal = 0;
+            for (Entry e : monthly) {
+                if (e.getCategory() == c) {
+                    catTotal += e.getAmount();
+                }
+            }
+            if (catTotal != 0) {
+                String sign = catTotal &gt;= 0 ? "+" : "";
+                sb.append(String.format("%-8s %s%,d\n", c.getLabel() + ":", sign, catTotal));
+            }
+            if (catTotal &gt;= 0) {
+                totalIncome += catTotal;
+            } else {
+                totalExpense += catTotal;
+            }
+        }
+
+        sb.append(String.format("\n収入合計: +%,d\n", totalIncome));
+        sb.append(String.format("支出合計: %,d\n", totalExpense));
+        sb.append(String.format("残高:     +%,d", totalIncome + totalExpense));
+        return sb.toString();
+    }
+}
+
+public class HouseholdApp {
+    public static void main(String[] args) {
+        Ledger ledger = new Ledger();
+        ledger.add(new Entry(LocalDate.of(2026, 3, 1),  250000, Category.SALARY,        "3月分給与"));
+        ledger.add(new Entry(LocalDate.of(2026, 3, 5),   -3200, Category.FOOD,           "スーパー"));
+        ledger.add(new Entry(LocalDate.of(2026, 3, 8),   -1500, Category.TRANSPORT,      "通勤定期"));
+        ledger.add(new Entry(LocalDate.of(2026, 3, 10),  -2800, Category.ENTERTAINMENT,  "映画"));
+        ledger.add(new Entry(LocalDate.of(2026, 3, 15),  -4500, Category.FOOD,           "外食"));
+
+        System.out.println(ledger.monthlyReport(2026, 3));
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>enumにフィールド・コンストラクタ・メソッドを持たせるパターンはJavaSilverで頻出。<code>values()</code> で全列挙値を取得できます。</li>
+              <li><code>LocalDate.of()</code> で日付を生成し、<code>getYear()</code> / <code>getMonthValue()</code> でフィルタリングしています。</li>
+              <li><code>String.format("%,d", value)</code> で数値にカンマ区切りを適用。フォーマット指定子はJavaSilverの出題範囲です。</li>
+              <li>収入（正の値）と支出（負の値）を同じ <code>int amount</code> で管理することで、合計計算がシンプルになります。</li>
+              <li><code>ArrayList</code> のジェネリクス型パラメータと拡張for文の組み合わせはJavaの基本パターンです。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-02 -->
+    <div class="drill-item" id="s-02">
+      <div class="drill-header">
+        <div class="drill-badge">S-02</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 変数・データ型・演算子</span>
+          <h3 class="drill-title">成績管理システム</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>HashMap&lt;K,V&gt; の操作、Comparatorによるソート、double演算の精度、三項演算子、複数クラスの連携設計を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>学生の成績を管理し、統計情報を出力するシステムを以下の3クラスで実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>Student</code>: <code>String id</code>, <code>String name</code> をフィールドに持つ。コンストラクタとgetterを実装</li>
+            <li><code>Grade</code>: <code>Student student</code>, <code>String subject</code>, <code>int score</code> をフィールドに持つ</li>
+            <li><code>GradeManager</code>: <code>ArrayList&lt;Grade&gt;</code> で全成績を管理。以下のメソッドを実装:
+              <ul>
+                <li><code>addGrade(Grade)</code>: 成績を追加</li>
+                <li><code>averageByStudent(String studentId)</code>: 学生別平均点（小数第1位）</li>
+                <li><code>averageBySubject(String subject)</code>: 科目別平均点（小数第1位）</li>
+                <li><code>ranking(String subject)</code>: 科目の順位表（点数降順）を文字列で返す</li>
+                <li><code>passOrFail(String studentId, int threshold)</code>: 全科目が閾値以上なら "合格"、そうでなければ "不合格" を返す</li>
+              </ul>
+            </li>
+          </ul>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== 学生別平均点 ===
+田中太郎: 78.3
+鈴木花子: 88.7
+佐藤一郎: 65.0
+
+=== 科目別平均点 ===
+Java:   80.0
+SQL:    73.3
+HTML:   78.7
+
+=== Java 順位表 ===
+1位: 鈴木花子 (95点)
+2位: 田中太郎 (80点)
+3位: 佐藤一郎 (65点)
+
+=== 合否判定（60点以上で合格）===
+田中太郎: 合格
+鈴木花子: 合格
+佐藤一郎: 不合格</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>平均点の計算は <code>合計 / (double) 科目数</code> でdoubleに変換します。ソートには <code>Collections.sort(list, Comparator.comparingInt(Grade::getScore).reversed())</code> が使えます。合否判定では全科目をチェックし、1つでも閾値未満があれば不合格です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+class Student {
+    private String id;
+    private String name;
+
+    public Student(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public String getId() { return id; }
+    public String getName() { return name; }
+}
+
+class Grade {
+    private Student student;
+    private String subject;
+    private int score;
+
+    public Grade(Student student, String subject, int score) {
+        this.student = student;
+        this.subject = subject;
+        this.score = score;
+    }
+
+    public Student getStudent() { return student; }
+    public String getSubject() { return subject; }
+    public int getScore() { return score; }
+}
+
+class GradeManager {
+    private List&lt;Grade&gt; grades = new ArrayList&lt;&gt;();
+
+    public void addGrade(Grade grade) {
+        grades.add(grade);
+    }
+
+    public double averageByStudent(String studentId) {
+        int sum = 0;
+        int count = 0;
+        for (Grade g : grades) {
+            if (g.getStudent().getId().equals(studentId)) {
+                sum += g.getScore();
+                count++;
+            }
+        }
+        if (count == 0) return 0.0;
+        return Math.round(sum / (double) count * 10.0) / 10.0;
+    }
+
+    public double averageBySubject(String subject) {
+        int sum = 0;
+        int count = 0;
+        for (Grade g : grades) {
+            if (g.getSubject().equals(subject)) {
+                sum += g.getScore();
+                count++;
+            }
+        }
+        if (count == 0) return 0.0;
+        return Math.round(sum / (double) count * 10.0) / 10.0;
+    }
+
+    public String ranking(String subject) {
+        List&lt;Grade&gt; subjectGrades = new ArrayList&lt;&gt;();
+        for (Grade g : grades) {
+            if (g.getSubject().equals(subject)) {
+                subjectGrades.add(g);
+            }
+        }
+        Collections.sort(subjectGrades,
+            Comparator.comparingInt(Grade::getScore).reversed());
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i &lt; subjectGrades.size(); i++) {
+            Grade g = subjectGrades.get(i);
+            sb.append(String.format("%d位: %s (%d点)\n",
+                i + 1, g.getStudent().getName(), g.getScore()));
+        }
+        return sb.toString().trim();
+    }
+
+    public String passOrFail(String studentId, int threshold) {
+        for (Grade g : grades) {
+            if (g.getStudent().getId().equals(studentId)
+                    &amp;&amp; g.getScore() &lt; threshold) {
+                return "不合格";
+            }
+        }
+        return "合格";
+    }
+}
+
+public class GradeSystem {
+    public static void main(String[] args) {
+        Student tanaka = new Student("S001", "田中太郎");
+        Student suzuki = new Student("S002", "鈴木花子");
+        Student sato   = new Student("S003", "佐藤一郎");
+
+        GradeManager gm = new GradeManager();
+        gm.addGrade(new Grade(tanaka, "Java", 80));
+        gm.addGrade(new Grade(tanaka, "SQL",  75));
+        gm.addGrade(new Grade(tanaka, "HTML", 80));
+        gm.addGrade(new Grade(suzuki, "Java", 95));
+        gm.addGrade(new Grade(suzuki, "SQL",  85));
+        gm.addGrade(new Grade(suzuki, "HTML", 86));
+        gm.addGrade(new Grade(sato,   "Java", 65));
+        gm.addGrade(new Grade(sato,   "SQL",  60));
+        gm.addGrade(new Grade(sato,   "HTML", 70));
+
+        System.out.println("=== 学生別平均点 ===");
+        System.out.println("田中太郎: " + gm.averageByStudent("S001"));
+        System.out.println("鈴木花子: " + gm.averageByStudent("S002"));
+        System.out.println("佐藤一郎: " + gm.averageByStudent("S003"));
+
+        System.out.println("\n=== 科目別平均点 ===");
+        System.out.println("Java:   " + gm.averageBySubject("Java"));
+        System.out.println("SQL:    " + gm.averageBySubject("SQL"));
+        System.out.println("HTML:   " + gm.averageBySubject("HTML"));
+
+        System.out.println("\n=== Java 順位表 ===");
+        System.out.println(gm.ranking("Java"));
+
+        System.out.println("\n=== 合否判定（60点以上で合格）===");
+        System.out.println("田中太郎: " + gm.passOrFail("S001", 60));
+        System.out.println("鈴木花子: " + gm.passOrFail("S002", 60));
+        System.out.println("佐藤一郎: " + gm.passOrFail("S003", 60));
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>sum / (double) count</code> のキャストにより、int同士の除算による切り捨てを防止しています。JavaSilverでは型変換の優先順位が頻出です。</li>
+              <li><code>Comparator.comparingInt().reversed()</code> はJava 8以降のメソッド参照とラムダ式の出題範囲に対応しています。</li>
+              <li><code>passOrFail</code> では早期リターンパターンを使い、1つでも閾値未満があれば即座に "不合格" を返します。</li>
+              <li>複数クラスの連携（Student を Grade が参照、Grade を GradeManager が管理）は実務的な設計の基本です。</li>
+              <li><code>String.equals()</code> による文字列比較と <code>==</code> による参照比較の違いはJavaSilverの定番出題です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T2: 文字列操作 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">text_fields</span>
+      <h2>T2 文字列操作</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-03 -->
+    <div class="drill-item" id="s-03">
+      <div class="drill-header">
+        <div class="drill-badge">S-03</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 文字列操作</span>
+          <h3 class="drill-title">ログ解析ツール</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>String.split(), substring(), indexOf(), contains() などの文字列メソッド、正規表現の基礎、LocalDateTime.parse() による日時解析を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の形式のログ文字列を解析するツールを実装してください。</p>
+          <p><strong>ログ形式:</strong> <code>"2026-03-08 10:30:15 [INFO] User login: admin"</code></p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>LogEntry</code>: <code>LocalDateTime timestamp</code>, <code>String level</code>（INFO/WARN/ERROR）, <code>String message</code> をフィールドに持つ。文字列からパースする <code>static parse(String line)</code> メソッドを実装</li>
+            <li><code>LogAnalyzer</code>: <code>ArrayList&lt;LogEntry&gt;</code> で管理。以下のメソッドを実装:
+              <ul>
+                <li><code>addLog(String line)</code>: 文字列をパースして追加</li>
+                <li><code>filterByLevel(String level)</code>: レベルでフィルタした一覧を返す</li>
+                <li><code>searchByKeyword(String keyword)</code>: メッセージにキーワードを含むログを返す</li>
+                <li><code>summary()</code>: レベル別件数の統計サマリーを返す</li>
+              </ul>
+            </li>
+          </ul>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== ERROR レベルのログ ===
+2026-03-08 10:35:22 [ERROR] Database connection failed
+2026-03-08 10:40:05 [ERROR] Null pointer at UserService.java:42
+
+=== "User" キーワード検索 ===
+2026-03-08 10:30:15 [INFO] User login: admin
+2026-03-08 10:32:00 [WARN] User session timeout: guest
+2026-03-08 10:40:05 [ERROR] Null pointer at UserService.java:42
+
+=== 統計サマリー ===
+総ログ数: 6
+INFO:  2件
+WARN:  2件
+ERROR: 2件</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>ログのパースには <code>substring()</code> と <code>indexOf()</code> を組み合わせます。日時部分は先頭19文字（<code>substring(0, 19)</code>）、レベルは <code>[</code> と <code>]</code> の間、メッセージは <code>] </code> の後です。<code>LocalDateTime.parse()</code> に <code>DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")</code> を渡して変換します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+class LogEntry {
+    private static final DateTimeFormatter FMT =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private LocalDateTime timestamp;
+    private String level;
+    private String message;
+
+    public LogEntry(LocalDateTime timestamp, String level, String message) {
+        this.timestamp = timestamp;
+        this.level = level;
+        this.message = message;
+    }
+
+    public static LogEntry parse(String line) {
+        String dateStr = line.substring(0, 19);
+        LocalDateTime ts = LocalDateTime.parse(dateStr, FMT);
+
+        int bracketStart = line.indexOf('[');
+        int bracketEnd = line.indexOf(']');
+        String level = line.substring(bracketStart + 1, bracketEnd);
+
+        String message = line.substring(bracketEnd + 2);
+        return new LogEntry(ts, level, message);
+    }
+
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public String getLevel() { return level; }
+    public String getMessage() { return message; }
+
+    @Override
+    public String toString() {
+        return timestamp.format(FMT) + " [" + level + "] " + message;
+    }
+}
+
+class LogAnalyzer {
+    private List&lt;LogEntry&gt; logs = new ArrayList&lt;&gt;();
+
+    public void addLog(String line) {
+        logs.add(LogEntry.parse(line));
+    }
+
+    public List&lt;LogEntry&gt; filterByLevel(String level) {
+        List&lt;LogEntry&gt; result = new ArrayList&lt;&gt;();
+        for (LogEntry entry : logs) {
+            if (entry.getLevel().equals(level)) {
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    public List&lt;LogEntry&gt; searchByKeyword(String keyword) {
+        List&lt;LogEntry&gt; result = new ArrayList&lt;&gt;();
+        for (LogEntry entry : logs) {
+            if (entry.getMessage().contains(keyword)
+                    || entry.toString().contains(keyword)) {
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    public String summary() {
+        int infoCount = 0, warnCount = 0, errorCount = 0;
+        for (LogEntry entry : logs) {
+            switch (entry.getLevel()) {
+                case "INFO":  infoCount++;  break;
+                case "WARN":  warnCount++;  break;
+                case "ERROR": errorCount++; break;
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("総ログ数: ").append(logs.size()).append("\n");
+        sb.append("INFO:  ").append(infoCount).append("件\n");
+        sb.append("WARN:  ").append(warnCount).append("件\n");
+        sb.append("ERROR: ").append(errorCount).append("件");
+        return sb.toString();
+    }
+}
+
+public class LogAnalyzerApp {
+    public static void main(String[] args) {
+        LogAnalyzer analyzer = new LogAnalyzer();
+        analyzer.addLog("2026-03-08 10:30:15 [INFO] User login: admin");
+        analyzer.addLog("2026-03-08 10:31:00 [INFO] Data export completed");
+        analyzer.addLog("2026-03-08 10:32:00 [WARN] User session timeout: guest");
+        analyzer.addLog("2026-03-08 10:33:45 [WARN] Disk usage above 80%");
+        analyzer.addLog("2026-03-08 10:35:22 [ERROR] Database connection failed");
+        analyzer.addLog("2026-03-08 10:40:05 [ERROR] Null pointer at UserService.java:42");
+
+        System.out.println("=== ERROR レベルのログ ===");
+        for (LogEntry entry : analyzer.filterByLevel("ERROR")) {
+            System.out.println(entry);
+        }
+
+        System.out.println("\n=== \"User\" キーワード検索 ===");
+        for (LogEntry entry : analyzer.searchByKeyword("User")) {
+            System.out.println(entry);
+        }
+
+        System.out.println("\n=== 統計サマリー ===");
+        System.out.println(analyzer.summary());
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>substring()</code> は開始インデックス（含む）〜終了インデックス（含まない）です。JavaSilverでは境界値の問題が頻出です。</li>
+              <li><code>indexOf()</code> は見つからない場合 <code>-1</code> を返します。本番コードではnullチェックと合わせて防御的に実装します。</li>
+              <li><code>DateTimeFormatter</code> はスレッドセーフなので <code>static final</code> で共有できます。<code>SimpleDateFormat</code> はスレッドセーフではない点に注意。</li>
+              <li><code>switch</code> 文の <code>case</code> ラベルに文字列を使えるのはJava 7以降の機能です。</li>
+              <li><code>toString()</code> をオーバーライドすることで、<code>System.out.println(entry)</code> で直接出力できます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-04 -->
+    <div class="drill-item" id="s-04">
+      <div class="drill-header">
+        <div class="drill-badge">S-04</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 文字列操作</span>
+          <h3 class="drill-title">簡易テストフレームワーク</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>Runnableインタフェースとラムダ式、例外のキャッチとメッセージ取得、StringBuilderによる文字列組み立て、<code>Objects.equals()</code> による安全な比較を問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>JUnitのような簡易テストフレームワークを実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>TestResult</code>: <code>String testName</code>, <code>boolean passed</code>, <code>String message</code> をフィールドに持つ</li>
+            <li><code>TestRunner</code>: 以下のメソッドを実装:
+              <ul>
+                <li><code>assertEquals(String testName, Object expected, Object actual)</code>: 値が等しいかテスト</li>
+                <li><code>assertTrue(String testName, boolean condition)</code>: 条件がtrueかテスト</li>
+                <li><code>assertThrows(String testName, Class&lt;? extends Exception&gt; exType, Runnable action)</code>: 指定例外が発生するかテスト</li>
+                <li><code>runAll()</code>: 全テスト結果のレポートを出力</li>
+              </ul>
+            </li>
+          </ul>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== テスト実行結果 ===
+[PASS] 足し算テスト
+[PASS] 文字列等価テスト
+[FAIL] わざと失敗テスト - expected: &lt;100&gt; but was: &lt;200&gt;
+[PASS] true条件テスト
+[FAIL] false条件テスト - condition was false
+[PASS] 例外発生テスト
+[FAIL] 例外未発生テスト - expected ArithmeticException but none was thrown
+
+--- 結果サマリー ---
+合計: 7件  成功: 4件  失敗: 3件
+成功率: 57.1%</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>assertThrows</code> では <code>try { action.run(); /* 例外なし→失敗 */ } catch (Exception e) { if (exType.isInstance(e)) /* 成功 */ }</code> のパターンです。<code>Objects.equals()</code> を使うと null 安全な比較ができます。テスト結果は <code>ArrayList&lt;TestResult&gt;</code> に蓄積し、最後にまとめて出力します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+class TestResult {
+    private String testName;
+    private boolean passed;
+    private String message;
+
+    public TestResult(String testName, boolean passed, String message) {
+        this.testName = testName;
+        this.passed = passed;
+        this.message = message;
+    }
+
+    public String getTestName() { return testName; }
+    public boolean isPassed() { return passed; }
+    public String getMessage() { return message; }
+}
+
+class TestRunner {
+    private List&lt;TestResult&gt; results = new ArrayList&lt;&gt;();
+
+    public void assertEquals(String testName, Object expected, Object actual) {
+        if (Objects.equals(expected, actual)) {
+            results.add(new TestResult(testName, true, ""));
+        } else {
+            String msg = "expected: &lt;" + expected + "&gt; but was: &lt;" + actual + "&gt;";
+            results.add(new TestResult(testName, false, msg));
+        }
+    }
+
+    public void assertTrue(String testName, boolean condition) {
+        if (condition) {
+            results.add(new TestResult(testName, true, ""));
+        } else {
+            results.add(new TestResult(testName, false, "condition was false"));
+        }
+    }
+
+    public void assertThrows(String testName,
+            Class&lt;? extends Exception&gt; exType, Runnable action) {
+        try {
+            action.run();
+            String msg = "expected " + exType.getSimpleName()
+                       + " but none was thrown";
+            results.add(new TestResult(testName, false, msg));
+        } catch (Exception e) {
+            if (exType.isInstance(e)) {
+                results.add(new TestResult(testName, true, ""));
+            } else {
+                String msg = "expected " + exType.getSimpleName()
+                           + " but was " + e.getClass().getSimpleName();
+                results.add(new TestResult(testName, false, msg));
+            }
+        }
+    }
+
+    public void runAll() {
+        System.out.println("=== テスト実行結果 ===");
+        int passCount = 0;
+        for (TestResult r : results) {
+            if (r.isPassed()) {
+                System.out.println("[PASS] " + r.getTestName());
+                passCount++;
+            } else {
+                System.out.println("[FAIL] " + r.getTestName()
+                    + " - " + r.getMessage());
+            }
+        }
+        int total = results.size();
+        int failCount = total - passCount;
+        double rate = Math.round(passCount / (double) total * 1000.0) / 10.0;
+
+        System.out.println("\n--- 結果サマリー ---");
+        System.out.println("合計: " + total + "件  成功: " + passCount
+            + "件  失敗: " + failCount + "件");
+        System.out.println("成功率: " + rate + "%");
+    }
+}
+
+public class TestFrameworkApp {
+    public static void main(String[] args) {
+        TestRunner runner = new TestRunner();
+
+        runner.assertEquals("足し算テスト", 3, 1 + 2);
+        runner.assertEquals("文字列等価テスト", "hello", "hel" + "lo");
+        runner.assertEquals("わざと失敗テスト", 100, 200);
+
+        runner.assertTrue("true条件テスト", 10 &gt; 5);
+        runner.assertTrue("false条件テスト", 3 &gt; 7);
+
+        runner.assertThrows("例外発生テスト",
+            ArithmeticException.class, () -&gt; { int x = 1 / 0; });
+        runner.assertThrows("例外未発生テスト",
+            ArithmeticException.class, () -&gt; { int x = 1 + 1; });
+
+        runner.runAll();
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>Objects.equals()</code> は両方nullでも <code>true</code> を返し、片方nullでも <code>NullPointerException</code> にならない安全な比較メソッドです。</li>
+              <li><code>Runnable</code> インタフェースはラムダ式 <code>() -&gt; { ... }</code> で実装できます。JavaSilverでは関数型インタフェースとラムダ式が出題範囲です。</li>
+              <li><code>Class.isInstance()</code> は <code>instanceof</code> の動的版で、実行時に型チェックができます。</li>
+              <li><code>getSimpleName()</code> でクラス名のみ（パッケージなし）を取得しています。</li>
+              <li>try-catch で例外の発生有無を制御フローとして使うパターンは、テストフレームワークの実装で定番です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T3: 配列 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">view_array</span>
+      <h2>T3 配列</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-05 -->
+    <div class="drill-item" id="s-05">
+      <div class="drill-header">
+        <div class="drill-badge">S-05</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 配列</span>
+          <h3 class="drill-title">座席予約システム</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>2次元配列の宣言・初期化・走査、例外のスロー（throw new IllegalStateException）、配列の境界チェック、オブジェクト配列の操作を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>映画館の座席予約システムを以下の2クラスで実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>Seat</code>: <code>int row</code>, <code>int col</code>, <code>boolean reserved</code>, <code>String reservedBy</code> をフィールドに持つ。<code>reserve(String name)</code> で予約（予約済みなら <code>IllegalStateException</code>）、<code>cancel()</code> でキャンセル</li>
+            <li><code>Theater</code>: <code>Seat[10][5]</code>（10行5列）で座席管理。以下のメソッドを実装:
+              <ul>
+                <li><code>reserve(int row, int col, String name)</code>: 指定座席を予約</li>
+                <li><code>cancel(int row, int col)</code>: 予約をキャンセル</li>
+                <li><code>display()</code>: 座席表を表示（空席: <code>[ ]</code>、予約済み: <code>[X]</code>）</li>
+                <li><code>countEmpty()</code>: 空席数を返す</li>
+                <li><code>findConsecutive(int row, int count)</code>: 指定行で連続count席の空きを探す（開始列を返す、なければ-1）</li>
+              </ul>
+            </li>
+          </ul>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== 座席予約 ===
+予約成功: A1 (田中)
+予約成功: A2 (鈴木)
+予約成功: B3 (佐藤)
+予約失敗: A1 は予約済みです
+
+=== 座席表 ===
+    1   2   3   4   5
+A [X] [X] [ ] [ ] [ ]
+B [ ] [ ] [X] [ ] [ ]
+C [ ] [ ] [ ] [ ] [ ]
+...
+
+空席数: 47 / 50
+
+=== 連続空席検索 ===
+A列で連続3席: 3列目から
+B列で連続4席: 見つかりません</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>2次元配列の初期化は <code>new Seat[10][5]</code> で宣言し、二重forループで各要素を <code>new Seat(row, col)</code> で生成します。連続空席検索は、指定行の各列を走査し、連続する空席のカウントを追跡します。カウントが目標数に達したら <code>開始列</code> を返します。行番号 → 'A'+row で文字変換できます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>class Seat {
+    private int row;
+    private int col;
+    private boolean reserved;
+    private String reservedBy;
+
+    public Seat(int row, int col) {
+        this.row = row;
+        this.col = col;
+        this.reserved = false;
+        this.reservedBy = null;
+    }
+
+    public void reserve(String name) {
+        if (reserved) {
+            throw new IllegalStateException(
+                getSeatName() + " は予約済みです");
+        }
+        this.reserved = true;
+        this.reservedBy = name;
+    }
+
+    public void cancel() {
+        this.reserved = false;
+        this.reservedBy = null;
+    }
+
+    public boolean isReserved() { return reserved; }
+    public String getReservedBy() { return reservedBy; }
+
+    public String getSeatName() {
+        return (char)('A' + row) + "" + (col + 1);
+    }
+}
+
+class Theater {
+    private Seat[][] seats;
+    private static final int ROWS = 10;
+    private static final int COLS = 5;
+
+    public Theater() {
+        seats = new Seat[ROWS][COLS];
+        for (int r = 0; r &lt; ROWS; r++) {
+            for (int c = 0; c &lt; COLS; c++) {
+                seats[r][c] = new Seat(r, c);
+            }
+        }
+    }
+
+    public void reserve(int row, int col, String name) {
+        seats[row][col].reserve(name);
+    }
+
+    public void cancel(int row, int col) {
+        seats[row][col].cancel();
+    }
+
+    public String display() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("    ");
+        for (int c = 0; c &lt; COLS; c++) {
+            sb.append(String.format("%-4d", c + 1));
+        }
+        sb.append("\n");
+
+        for (int r = 0; r &lt; ROWS; r++) {
+            sb.append((char)('A' + r)).append(" ");
+            for (int c = 0; c &lt; COLS; c++) {
+                sb.append(seats[r][c].isReserved() ? "[X] " : "[ ] ");
+            }
+            sb.append("\n");
+        }
+        return sb.toString().trim();
+    }
+
+    public int countEmpty() {
+        int count = 0;
+        for (int r = 0; r &lt; ROWS; r++) {
+            for (int c = 0; c &lt; COLS; c++) {
+                if (!seats[r][c].isReserved()) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    public int findConsecutive(int row, int count) {
+        int consecutive = 0;
+        int startCol = 0;
+        for (int c = 0; c &lt; COLS; c++) {
+            if (!seats[row][c].isReserved()) {
+                if (consecutive == 0) {
+                    startCol = c;
+                }
+                consecutive++;
+                if (consecutive == count) {
+                    return startCol;
+                }
+            } else {
+                consecutive = 0;
+            }
+        }
+        return -1;
+    }
+
+    public int getTotalSeats() {
+        return ROWS * COLS;
+    }
+}
+
+public class TheaterApp {
+    public static void main(String[] args) {
+        Theater theater = new Theater();
+
+        System.out.println("=== 座席予約 ===");
+        theater.reserve(0, 0, "田中");
+        System.out.println("予約成功: A1 (田中)");
+
+        theater.reserve(0, 1, "鈴木");
+        System.out.println("予約成功: A2 (鈴木)");
+
+        theater.reserve(1, 2, "佐藤");
+        System.out.println("予約成功: B3 (佐藤)");
+
+        try {
+            theater.reserve(0, 0, "山田");
+        } catch (IllegalStateException e) {
+            System.out.println("予約失敗: " + e.getMessage());
+        }
+
+        System.out.println("\n=== 座席表 ===");
+        System.out.println(theater.display());
+
+        System.out.println("\n空席数: " + theater.countEmpty()
+            + " / " + theater.getTotalSeats());
+
+        System.out.println("\n=== 連続空席検索 ===");
+        int result1 = theater.findConsecutive(0, 3);
+        System.out.println("A列で連続3席: "
+            + (result1 &gt;= 0 ? (result1 + 1) + "列目から" : "見つかりません"));
+
+        int result2 = theater.findConsecutive(1, 4);
+        System.out.println("B列で連続4席: "
+            + (result2 &gt;= 0 ? (result2 + 1) + "列目から" : "見つかりません"));
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>new Seat[10][5]</code> は参照型の2次元配列で、各要素はデフォルト <code>null</code> です。明示的に <code>new Seat()</code> で初期化が必要です。</li>
+              <li><code>throw new IllegalStateException()</code> で不正操作時に例外をスローします。呼び出し元での <code>try-catch</code> パターンはJavaSilverで頻出です。</li>
+              <li><code>(char)('A' + row)</code> で行番号をアルファベットに変換しています。char型の算術演算はint昇格が起こるため、charにキャストが必要です。</li>
+              <li>連続空席検索のアルゴリズムは「スライディングウィンドウ」の簡易版です。空席が途切れたらカウントをリセットします。</li>
+              <li>定数は <code>static final</code> で宣言し、マジックナンバーを避けるのが良い設計習慣です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-06 -->
+    <div class="drill-item" id="s-06">
+      <div class="drill-header">
+        <div class="drill-badge">S-06</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 配列</span>
+          <h3 class="drill-title">画像フィルタシミュレータ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>2次元int配列の操作、インタフェースの定義と実装（ポリモーフィズム）、配列のディープコピー、境界値チェック（ArrayIndexOutOfBoundsException防止）を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>2次元int配列をグレースケール画像に見立て、フィルタ処理を適用するシミュレータを実装してください。各ピクセル値は0〜255です。</p>
+          <p><strong>クラス/インタフェース構成:</strong></p>
+          <ul>
+            <li><code>Image</code>: <code>int[][] pixels</code> をフィールドに持つ。<code>getWidth()</code>, <code>getHeight()</code>, <code>getPixel(row, col)</code>, <code>setPixel(row, col, value)</code>, <code>copy()</code>（ディープコピー）, <code>display()</code>（値を3桁揃えで出力）を実装</li>
+            <li><code>Filter</code>（インタフェース）: <code>Image apply(Image source)</code> メソッドを定義</li>
+            <li><code>BrightnessFilter</code>: 全ピクセルに指定値を加算（0〜255にクランプ）</li>
+            <li><code>InvertFilter</code>: 全ピクセルを <code>255 - value</code> に変換</li>
+            <li><code>BlurFilter</code>: 各ピクセルを周囲3x3の平均値に置換（境界は範囲内のみで計算）</li>
+          </ul>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== 元画像 (5x5) ===
+  0  50 100  50   0
+ 50 100 200 100  50
+100 200 255 200 100
+ 50 100 200 100  50
+  0  50 100  50   0
+
+=== 明度+50 ===
+ 50 100 150 100  50
+100 150 250 150 100
+150 250 255 250 150
+100 150 250 150 100
+ 50 100 150 100  50
+
+=== 反転 ===
+255 205 155 205 255
+205 155   5 155 205
+155   5   0   5 155
+205 155   5 155 205
+255 205 155 205 255
+
+=== ぼかし ===
+ 50  83 100  83  50
+ 83 128 156 128  83
+100 156 172 156 100
+ 83 128 156 128  83
+ 50  83 100  83  50</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>ディープコピーは <code>new int[height][width]</code> で新しい配列を作り、各行を <code>Arrays.copyOf()</code> または手動コピーします。クランプは <code>Math.max(0, Math.min(255, value))</code> です。ぼかしフィルタでは元画像の <code>copy()</code> を取ってから計算し、境界チェックに <code>if (r+dr &gt;= 0 &amp;&amp; r+dr &lt; height &amp;&amp; ...)</code> を使います。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>class Image {
+    private int[][] pixels;
+
+    public Image(int[][] pixels) {
+        this.pixels = new int[pixels.length][];
+        for (int i = 0; i &lt; pixels.length; i++) {
+            this.pixels[i] = new int[pixels[i].length];
+            for (int j = 0; j &lt; pixels[i].length; j++) {
+                this.pixels[i][j] = pixels[i][j];
+            }
+        }
+    }
+
+    public int getHeight() { return pixels.length; }
+    public int getWidth()  { return pixels[0].length; }
+    public int getPixel(int row, int col) { return pixels[row][col]; }
+
+    public void setPixel(int row, int col, int value) {
+        pixels[row][col] = Math.max(0, Math.min(255, value));
+    }
+
+    public Image copy() {
+        return new Image(pixels);
+    }
+
+    public String display() {
+        StringBuilder sb = new StringBuilder();
+        for (int r = 0; r &lt; getHeight(); r++) {
+            for (int c = 0; c &lt; getWidth(); c++) {
+                sb.append(String.format("%4d", pixels[r][c]));
+            }
+            if (r &lt; getHeight() - 1) sb.append("\n");
+        }
+        return sb.toString();
+    }
+}
+
+interface Filter {
+    Image apply(Image source);
+}
+
+class BrightnessFilter implements Filter {
+    private int amount;
+
+    public BrightnessFilter(int amount) {
+        this.amount = amount;
+    }
+
+    @Override
+    public Image apply(Image source) {
+        Image result = source.copy();
+        for (int r = 0; r &lt; result.getHeight(); r++) {
+            for (int c = 0; c &lt; result.getWidth(); c++) {
+                result.setPixel(r, c, source.getPixel(r, c) + amount);
+            }
+        }
+        return result;
+    }
+}
+
+class InvertFilter implements Filter {
+    @Override
+    public Image apply(Image source) {
+        Image result = source.copy();
+        for (int r = 0; r &lt; result.getHeight(); r++) {
+            for (int c = 0; c &lt; result.getWidth(); c++) {
+                result.setPixel(r, c, 255 - source.getPixel(r, c));
+            }
+        }
+        return result;
+    }
+}
+
+class BlurFilter implements Filter {
+    @Override
+    public Image apply(Image source) {
+        Image result = source.copy();
+        int height = source.getHeight();
+        int width  = source.getWidth();
+
+        for (int r = 0; r &lt; height; r++) {
+            for (int c = 0; c &lt; width; c++) {
+                int sum = 0;
+                int count = 0;
+                for (int dr = -1; dr &lt;= 1; dr++) {
+                    for (int dc = -1; dc &lt;= 1; dc++) {
+                        int nr = r + dr;
+                        int nc = c + dc;
+                        if (nr &gt;= 0 &amp;&amp; nr &lt; height
+                                &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; width) {
+                            sum += source.getPixel(nr, nc);
+                            count++;
+                        }
+                    }
+                }
+                result.setPixel(r, c, sum / count);
+            }
+        }
+        return result;
+    }
+}
+
+public class ImageFilterApp {
+    public static void main(String[] args) {
+        int[][] data = {
+            {  0,  50, 100,  50,   0},
+            { 50, 100, 200, 100,  50},
+            {100, 200, 255, 200, 100},
+            { 50, 100, 200, 100,  50},
+            {  0,  50, 100,  50,   0}
+        };
+
+        Image original = new Image(data);
+        System.out.println("=== 元画像 (5x5) ===");
+        System.out.println(original.display());
+
+        Filter brightness = new BrightnessFilter(50);
+        Image bright = brightness.apply(original);
+        System.out.println("\n=== 明度+50 ===");
+        System.out.println(bright.display());
+
+        Filter invert = new InvertFilter();
+        Image inverted = invert.apply(original);
+        System.out.println("\n=== 反転 ===");
+        System.out.println(inverted.display());
+
+        Filter blur = new BlurFilter();
+        Image blurred = blur.apply(original);
+        System.out.println("\n=== ぼかし ===");
+        System.out.println(blurred.display());
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>コンストラクタでディープコピーを行うことで、外部から渡された配列への変更が内部状態に影響しない「防御的コピー」を実現しています。</li>
+              <li><code>interface Filter</code> と各実装クラスの関係は、ポリモーフィズムの典型例です。<code>Filter</code> 型の変数で異なるフィルタを統一的に扱えます。</li>
+              <li><code>Math.max(0, Math.min(255, value))</code> のクランプパターンは、値を有効範囲内に収めるイディオムです。</li>
+              <li>ぼかしフィルタの境界チェックでは、配列の範囲外アクセスを防止しています。<code>ArrayIndexOutOfBoundsException</code> はJavaSilverの頻出例外です。</li>
+              <li><code>@Override</code> アノテーションを付けることで、インタフェースのメソッドを正しく実装していることをコンパイラが検証します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T4: フロー制御 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">account_tree</span>
+      <h2>T4 フロー制御</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-07 -->
+    <div class="drill-item" id="s-07">
+      <div class="drill-header">
+        <div class="drill-badge">S-07</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フロー制御</span>
+          <h3 class="drill-title">テキストアドベンチャーゲーム</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>HashMap&lt;String, Object&gt; によるデータ管理、switch文/if-else ifチェーン、ArrayListの追加・削除・検索、String.split()によるコマンド解析、複数クラスの連携を問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>テキストベースのアドベンチャーゲームエンジンを以下の4クラスで実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>Item</code>: <code>String name</code>, <code>String description</code> をフィールドに持つ</li>
+            <li><code>Room</code>: <code>String name</code>, <code>String description</code>, <code>HashMap&lt;String, Room&gt; exits</code>（方向→部屋）, <code>ArrayList&lt;Item&gt; items</code> をフィールドに持つ。<code>addExit(String direction, Room room)</code>, <code>addItem(Item item)</code>, <code>removeItem(String name)</code> を実装</li>
+            <li><code>Player</code>: <code>Room currentRoom</code>, <code>ArrayList&lt;Item&gt; inventory</code> をフィールドに持つ。<code>move(String direction)</code>, <code>takeItem(String name)</code>, <code>useItem(String name)</code>, <code>showInventory()</code> を実装</li>
+            <li><code>GameEngine</code>: <code>Player player</code> を管理し、<code>processCommand(String command)</code> でコマンドを解析・実行。対応コマンド: <code>go &lt;direction&gt;</code>, <code>take &lt;item&gt;</code>, <code>use &lt;item&gt;</code>, <code>look</code>, <code>inventory</code></li>
+          </ul>
+          <p><code>main</code> メソッドで3部屋のマップを作成し、一連のコマンドをシミュレーション実行してください。</p>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>&gt; look
+【玄関ホール】
+薄暗い玄関ホール。北にドアが見える。
+出口: north, east
+アイテム: 古びた鍵
+
+&gt; take 古びた鍵
+古びた鍵 を拾った。
+
+&gt; inventory
+=== 所持品 ===
+- 古びた鍵: 錆びた鉄製の鍵
+
+&gt; go north
+北に移動した。
+【書斎】
+本棚が並ぶ書斎。机の上にメモがある。
+
+&gt; go east
+東に移動した。
+【宝物庫（施錠中）】
+頑丈な扉の先に宝箱が見える。鍵が必要だ。
+
+&gt; use 古びた鍵
+古びた鍵 を使った！扉が開いた！
+★ 宝箱を発見！ゲームクリア！</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>コマンド解析は <code>command.split(" ", 2)</code> で動詞と引数に分割します。<code>HashMap&lt;String, Room&gt;</code> で方向をキーに次の部屋を管理します。<code>useItem</code> では特定のアイテム×特定の部屋の組み合わせで条件分岐します。Player の <code>move</code> では <code>currentRoom.getExits().get(direction)</code> で移動先を取得し、nullなら「その方向には行けない」と返します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+class Item {
+    private String name;
+    private String description;
+
+    public Item(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
+
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+}
+
+class Room {
+    private String name;
+    private String description;
+    private Map&lt;String, Room&gt; exits;
+    private List&lt;Item&gt; items;
+
+    public Room(String name, String description) {
+        this.name = name;
+        this.description = description;
+        this.exits = new HashMap&lt;&gt;();
+        this.items = new ArrayList&lt;&gt;();
+    }
+
+    public void addExit(String direction, Room room) {
+        exits.put(direction, room);
+    }
+
+    public void addItem(Item item) { items.add(item); }
+
+    public Item removeItem(String name) {
+        for (int i = 0; i &lt; items.size(); i++) {
+            if (items.get(i).getName().equals(name)) {
+                return items.remove(i);
+            }
+        }
+        return null;
+    }
+
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public Map&lt;String, Room&gt; getExits() { return exits; }
+    public List&lt;Item&gt; getItems() { return items; }
+}
+
+class Player {
+    private Room currentRoom;
+    private List&lt;Item&gt; inventory;
+
+    public Player(Room startRoom) {
+        this.currentRoom = startRoom;
+        this.inventory = new ArrayList&lt;&gt;();
+    }
+
+    public String move(String direction) {
+        Room next = currentRoom.getExits().get(direction);
+        if (next == null) {
+            return "その方向には行けません。";
+        }
+        currentRoom = next;
+        return direction + " に移動した。\n【" + currentRoom.getName()
+            + "】\n" + currentRoom.getDescription();
+    }
+
+    public String takeItem(String name) {
+        Item item = currentRoom.removeItem(name);
+        if (item == null) {
+            return name + " は見つかりません。";
+        }
+        inventory.add(item);
+        return name + " を拾った。";
+    }
+
+    public String useItem(String name) {
+        Item target = null;
+        for (Item item : inventory) {
+            if (item.getName().equals(name)) {
+                target = item;
+                break;
+            }
+        }
+        if (target == null) {
+            return name + " を持っていません。";
+        }
+
+        if (name.equals("古びた鍵")
+                &amp;&amp; currentRoom.getName().equals("宝物庫（施錠中）")) {
+            inventory.remove(target);
+            return name + " を使った！扉が開いた！\n"
+                + "★ 宝箱を発見！ゲームクリア！";
+        }
+        return "ここでは " + name + " を使えません。";
+    }
+
+    public String showInventory() {
+        if (inventory.isEmpty()) {
+            return "=== 所持品 ===\n（なし）";
+        }
+        StringBuilder sb = new StringBuilder("=== 所持品 ===\n");
+        for (Item item : inventory) {
+            sb.append("- ").append(item.getName())
+              .append(": ").append(item.getDescription()).append("\n");
+        }
+        return sb.toString().trim();
+    }
+
+    public Room getCurrentRoom() { return currentRoom; }
+}
+
+class GameEngine {
+    private Player player;
+
+    public GameEngine(Player player) {
+        this.player = player;
+    }
+
+    public String processCommand(String command) {
+        String[] parts = command.split(" ", 2);
+        String verb = parts[0];
+        String arg = parts.length &gt; 1 ? parts[1] : "";
+
+        switch (verb) {
+            case "go":
+                return player.move(arg);
+            case "take":
+                return player.takeItem(arg);
+            case "use":
+                return player.useItem(arg);
+            case "look":
+                return look();
+            case "inventory":
+                return player.showInventory();
+            default:
+                return "不明なコマンド: " + verb;
+        }
+    }
+
+    private String look() {
+        Room room = player.getCurrentRoom();
+        StringBuilder sb = new StringBuilder();
+        sb.append("【").append(room.getName()).append("】\n");
+        sb.append(room.getDescription()).append("\n");
+
+        sb.append("出口: ");
+        sb.append(String.join(", ", room.getExits().keySet()));
+        sb.append("\n");
+
+        if (!room.getItems().isEmpty()) {
+            sb.append("アイテム: ");
+            List&lt;String&gt; names = new ArrayList&lt;&gt;();
+            for (Item item : room.getItems()) {
+                names.add(item.getName());
+            }
+            sb.append(String.join(", ", names));
+        }
+        return sb.toString().trim();
+    }
+}
+
+public class AdventureApp {
+    public static void main(String[] args) {
+        Room hall = new Room("玄関ホール",
+            "薄暗い玄関ホール。北にドアが見える。");
+        Room study = new Room("書斎",
+            "本棚が並ぶ書斎。机の上にメモがある。");
+        Room vault = new Room("宝物庫（施錠中）",
+            "頑丈な扉の先に宝箱が見える。鍵が必要だ。");
+
+        hall.addExit("north", study);
+        hall.addExit("east", vault);
+        study.addExit("south", hall);
+        study.addExit("east", vault);
+        vault.addExit("west", hall);
+
+        hall.addItem(new Item("古びた鍵", "錆びた鉄製の鍵"));
+
+        Player player = new Player(hall);
+        GameEngine engine = new GameEngine(player);
+
+        String[] commands = {
+            "look", "take 古びた鍵", "inventory",
+            "go north", "go east", "use 古びた鍵"
+        };
+
+        for (String cmd : commands) {
+            System.out.println("&gt; " + cmd);
+            System.out.println(engine.processCommand(cmd));
+            System.out.println();
+        }
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>HashMap&lt;String, Room&gt;</code> で方向文字列をキーにした部屋の接続を管理しています。<code>get()</code> が null を返す場合の処理はJavaSilverの出題範囲です。</li>
+              <li><code>split(" ", 2)</code> の第2引数は分割の最大数です。これにより「go north」を <code>["go", "north"]</code> に分割し、スペースを含む引数にも対応します。</li>
+              <li>switch文による文字列分岐はJava 7以降の機能です。各caseにbreak/returnがない場合のフォールスルーはJavaSilver頻出の罠です。</li>
+              <li><code>ArrayList.remove(Object)</code> はオブジェクト参照で削除し、<code>remove(int)</code> はインデックスで削除します。この違いはJavaSilverで出題されます。</li>
+              <li>ゲームのルール（鍵×宝物庫の組み合わせ）をハードコードしていますが、実務ではイベントシステムやコールバックで拡張性を持たせます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-08 -->
+    <div class="drill-item" id="s-08">
+      <div class="drill-header">
+        <div class="drill-badge">S-08</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フロー制御</span>
+          <h3 class="drill-title">タスク管理アプリ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>enumの状態遷移パターン、LocalDateによる期限管理、Comparatorによるソート、例外スロー（IllegalStateException）、Listのフィルタリングと集計を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>タスク管理アプリケーションを以下のクラスとenumで実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>Priority</code>（enum）: <code>HIGH</code>, <code>MEDIUM</code>, <code>LOW</code>。それぞれ日本語ラベルを持つ</li>
+            <li><code>Status</code>（enum）: <code>TODO</code>, <code>IN_PROGRESS</code>, <code>DONE</code>。有効な遷移のみ許可するメソッド <code>canTransitionTo(Status next)</code> を持つ（TODO→IN_PROGRESS、IN_PROGRESS→DONE のみ有効）</li>
+            <li><code>Task</code>: <code>int id</code>, <code>String title</code>, <code>Priority priority</code>, <code>Status status</code>, <code>LocalDate deadline</code> をフィールドに持つ。<code>changeStatus(Status next)</code> で不正遷移時に <code>IllegalStateException</code> をスロー</li>
+            <li><code>TaskManager</code>: <code>ArrayList&lt;Task&gt;</code> で管理。以下のメソッドを実装:
+              <ul>
+                <li><code>add(Task)</code>: タスク追加</li>
+                <li><code>filterByStatus(Status)</code>: ステータスでフィルタ</li>
+                <li><code>filterByPriority(Priority)</code>: 優先度でフィルタ</li>
+                <li><code>sortByDeadline()</code>: 期限順ソートした一覧を返す</li>
+                <li><code>statistics()</code>: ステータス別件数と期限切れ件数を集計</li>
+              </ul>
+            </li>
+          </ul>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== 全タスク一覧（期限順）===
+#1 [高] API設計書の作成 (TODO) 期限: 2026-03-10
+#3 [中] テストコード追加 (TODO) 期限: 2026-03-12
+#2 [高] ログイン機能実装 (進行中) 期限: 2026-03-15
+#4 [低] README更新 (TODO) 期限: 2026-03-20
+
+=== ステータス変更 ===
+#1: TODO → 進行中 ... 成功
+#1: 進行中 → 完了 ... 成功
+#1: 完了 → TODO ... 失敗（不正な遷移: 完了 → TODO）
+
+=== 高優先度タスク ===
+#1 [高] API設計書の作成 (完了) 期限: 2026-03-10
+#2 [高] ログイン機能実装 (進行中) 期限: 2026-03-15
+
+=== 統計 ===
+TODO:     2件
+進行中:   1件
+完了:     1件
+期限切れ: 0件</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>Status enumの <code>canTransitionTo</code> は <code>switch</code> 文で現在の状態ごとに遷移先を制限します。<code>Collections.sort(list, Comparator.comparing(Task::getDeadline))</code> で期限順ソート。<code>LocalDate.now()</code> で今日の日付を取得し、<code>deadline.isBefore(LocalDate.now())</code> で期限切れ判定します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+enum Priority {
+    HIGH("高"), MEDIUM("中"), LOW("低");
+
+    private final String label;
+    Priority(String label) { this.label = label; }
+    public String getLabel() { return label; }
+}
+
+enum Status {
+    TODO("TODO"), IN_PROGRESS("進行中"), DONE("完了");
+
+    private final String label;
+    Status(String label) { this.label = label; }
+    public String getLabel() { return label; }
+
+    public boolean canTransitionTo(Status next) {
+        switch (this) {
+            case TODO:        return next == IN_PROGRESS;
+            case IN_PROGRESS: return next == DONE;
+            case DONE:        return false;
+            default:          return false;
+        }
+    }
+}
+
+class Task {
+    private int id;
+    private String title;
+    private Priority priority;
+    private Status status;
+    private LocalDate deadline;
+
+    public Task(int id, String title, Priority priority, LocalDate deadline) {
+        this.id = id;
+        this.title = title;
+        this.priority = priority;
+        this.status = Status.TODO;
+        this.deadline = deadline;
+    }
+
+    public void changeStatus(Status next) {
+        if (!status.canTransitionTo(next)) {
+            throw new IllegalStateException(
+                "不正な遷移: " + status.getLabel() + " → " + next.getLabel());
+        }
+        this.status = next;
+    }
+
+    public int getId() { return id; }
+    public String getTitle() { return title; }
+    public Priority getPriority() { return priority; }
+    public Status getStatus() { return status; }
+    public LocalDate getDeadline() { return deadline; }
+
+    @Override
+    public String toString() {
+        return "#" + id + " [" + priority.getLabel() + "] "
+            + title + " (" + status.getLabel() + ") 期限: " + deadline;
+    }
+}
+
+class TaskManager {
+    private List&lt;Task&gt; tasks = new ArrayList&lt;&gt;();
+
+    public void add(Task task) { tasks.add(task); }
+
+    public List&lt;Task&gt; filterByStatus(Status status) {
+        List&lt;Task&gt; result = new ArrayList&lt;&gt;();
+        for (Task t : tasks) {
+            if (t.getStatus() == status) {
+                result.add(t);
+            }
+        }
+        return result;
+    }
+
+    public List&lt;Task&gt; filterByPriority(Priority priority) {
+        List&lt;Task&gt; result = new ArrayList&lt;&gt;();
+        for (Task t : tasks) {
+            if (t.getPriority() == priority) {
+                result.add(t);
+            }
+        }
+        return result;
+    }
+
+    public List&lt;Task&gt; sortByDeadline() {
+        List&lt;Task&gt; sorted = new ArrayList&lt;&gt;(tasks);
+        Collections.sort(sorted,
+            Comparator.comparing(Task::getDeadline));
+        return sorted;
+    }
+
+    public String statistics() {
+        int todoCount = 0, progressCount = 0, doneCount = 0;
+        int overdueCount = 0;
+        LocalDate today = LocalDate.now();
+
+        for (Task t : tasks) {
+            switch (t.getStatus()) {
+                case TODO:        todoCount++;     break;
+                case IN_PROGRESS: progressCount++; break;
+                case DONE:        doneCount++;     break;
+            }
+            if (t.getStatus() != Status.DONE
+                    &amp;&amp; t.getDeadline().isBefore(today)) {
+                overdueCount++;
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("TODO:     ").append(todoCount).append("件\n");
+        sb.append("進行中:   ").append(progressCount).append("件\n");
+        sb.append("完了:     ").append(doneCount).append("件\n");
+        sb.append("期限切れ: ").append(overdueCount).append("件");
+        return sb.toString();
+    }
+}
+
+public class TaskApp {
+    public static void main(String[] args) {
+        TaskManager manager = new TaskManager();
+        Task t1 = new Task(1, "API設計書の作成",     Priority.HIGH,   LocalDate.of(2026, 3, 10));
+        Task t2 = new Task(2, "ログイン機能実装",     Priority.HIGH,   LocalDate.of(2026, 3, 15));
+        Task t3 = new Task(3, "テストコード追加",     Priority.MEDIUM, LocalDate.of(2026, 3, 12));
+        Task t4 = new Task(4, "README更新",          Priority.LOW,    LocalDate.of(2026, 3, 20));
+
+        manager.add(t1);
+        manager.add(t2);
+        manager.add(t3);
+        manager.add(t4);
+
+        t2.changeStatus(Status.IN_PROGRESS);
+
+        System.out.println("=== 全タスク一覧（期限順）===");
+        for (Task t : manager.sortByDeadline()) {
+            System.out.println(t);
+        }
+
+        System.out.println("\n=== ステータス変更 ===");
+        try {
+            t1.changeStatus(Status.IN_PROGRESS);
+            System.out.println("#1: TODO → 進行中 ... 成功");
+        } catch (IllegalStateException e) {
+            System.out.println("#1: 失敗（" + e.getMessage() + "）");
+        }
+        try {
+            t1.changeStatus(Status.DONE);
+            System.out.println("#1: 進行中 → 完了 ... 成功");
+        } catch (IllegalStateException e) {
+            System.out.println("#1: 失敗（" + e.getMessage() + "）");
+        }
+        try {
+            t1.changeStatus(Status.TODO);
+            System.out.println("#1: 完了 → TODO ... 成功");
+        } catch (IllegalStateException e) {
+            System.out.println("#1: 完了 → TODO ... 失敗（" + e.getMessage() + "）");
+        }
+
+        System.out.println("\n=== 高優先度タスク ===");
+        for (Task t : manager.filterByPriority(Priority.HIGH)) {
+            System.out.println(t);
+        }
+
+        System.out.println("\n=== 統計 ===");
+        System.out.println(manager.statistics());
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>enumにメソッド（<code>canTransitionTo</code>）を持たせることで、状態遷移ルールをenum自身にカプセル化しています。これはState Patternの簡易版です。</li>
+              <li><code>IllegalStateException</code> は非検査例外（RuntimeException のサブクラス）のため、throws宣言は不要です。検査例外との違いはJavaSilverで頻出です。</li>
+              <li><code>Comparator.comparing(Task::getDeadline)</code> はメソッド参照を使ったComparator生成で、Java 8以降の機能です。</li>
+              <li><code>new ArrayList&lt;&gt;(tasks)</code> で元のリストをコピーしてからソートすることで、元の順序を保持しています。</li>
+              <li><code>LocalDate.isBefore()</code> で期限切れ判定。<code>isAfter()</code>, <code>isEqual()</code> と合わせてJavaSilverの出題範囲です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T5: クラス・メソッド ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">class_</span>
+      <h2>T5 クラス・メソッド</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-09 -->
+    <div class="drill-item" id="s-09">
+      <div class="drill-header">
+        <div class="drill-badge">S-09</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 クラス・メソッド</span>
+          <h3 class="drill-title">社員管理システム</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>staticフィールドによる自動採番、LocalDateと期間計算（ChronoUnit / Period）、ArrayListとHashMapの組み合わせ、Comparatorによるソート、String.format()によるCSV風出力を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>社員情報を管理するシステムを、以下の2クラスで実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>Employee</code>: フィールドは <code>int id</code>（static採番で自動付与）, <code>String name</code>, <code>String department</code>, <code>LocalDate hireDate</code>, <code>int salary</code>。コンストラクタではidを自動インクリメント。<code>getYearsOfService()</code> で勤続年数を返す</li>
+            <li><code>EmployeeManager</code>: <code>ArrayList&lt;Employee&gt;</code> で社員を管理。以下のメソッドを持つ:
+              <ul>
+                <li><code>add(Employee)</code> — 社員追加</li>
+                <li><code>findByDepartment(String)</code> — 部門別検索（Listで返す）</li>
+                <li><code>totalSalaryByDepartment()</code> — 部門別給与合計をHashMapで返す</li>
+                <li><code>salaryRanking()</code> — 給与降順のリストを返す</li>
+                <li><code>exportCsv()</code> — 全社員をCSV文字列で返す</li>
+              </ul>
+            </li>
+          </ul>
+          <p><code>main</code> メソッドで社員を5名登録し、部門別検索・給与集計・ランキング・CSV出力を実行してください。</p>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== 社員管理システム ===
+
+--- 開発部の社員 ---
+[1] 田中太郎 (開発部) 入社:2020-04-01 勤続6年 給与:450,000
+[3] 鈴木花子 (開発部) 入社:2022-04-01 勤続4年 給与:380,000
+
+--- 部門別給与合計 ---
+開発部: 830,000
+営業部: 720,000
+人事部: 400,000
+
+--- 給与ランキング ---
+1位: 田中太郎 450,000
+2位: 佐藤次郎 400,000
+3位: 山田誠   400,000
+4位: 鈴木花子 380,000
+5位: 高橋美咲 320,000
+
+--- CSV出力 ---
+id,name,department,hireDate,salary
+1,田中太郎,開発部,2020-04-01,450000
+2,佐藤次郎,営業部,2021-04-01,400000
+3,鈴木花子,開発部,2022-04-01,380000
+4,山田誠,人事部,2023-04-01,400000
+5,高橋美咲,営業部,2024-04-01,320000</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>static int nextId = 1;</code> を Employee クラスに定義し、コンストラクタ内で <code>this.id = nextId++;</code> とすれば自動採番できます。勤続年数は <code>java.time.temporal.ChronoUnit.YEARS.between(hireDate, LocalDate.now())</code> で算出できます。HashMap への集計は <code>map.merge(key, value, Integer::sum)</code> が便利です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+class Employee {
+    private static int nextId = 1;
+
+    private int id;
+    private String name;
+    private String department;
+    private LocalDate hireDate;
+    private int salary;
+
+    public Employee(String name, String department, LocalDate hireDate, int salary) {
+        this.id = nextId++;
+        this.name = name;
+        this.department = department;
+        this.hireDate = hireDate;
+        this.salary = salary;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public String getDepartment() { return department; }
+    public LocalDate getHireDate() { return hireDate; }
+    public int getSalary() { return salary; }
+
+    public long getYearsOfService() {
+        return ChronoUnit.YEARS.between(hireDate, LocalDate.now());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("[%d] %s (%s) 入社:%s 勤続%d年 給与:%,d",
+            id, name, department, hireDate, getYearsOfService(), salary);
+    }
+}
+
+class EmployeeManager {
+    private List&lt;Employee&gt; employees = new ArrayList&lt;&gt;();
+
+    public void add(Employee emp) {
+        employees.add(emp);
+    }
+
+    public List&lt;Employee&gt; findByDepartment(String dept) {
+        List&lt;Employee&gt; result = new ArrayList&lt;&gt;();
+        for (Employee e : employees) {
+            if (e.getDepartment().equals(dept)) {
+                result.add(e);
+            }
+        }
+        return result;
+    }
+
+    public Map&lt;String, Integer&gt; totalSalaryByDepartment() {
+        Map&lt;String, Integer&gt; map = new HashMap&lt;&gt;();
+        for (Employee e : employees) {
+            map.merge(e.getDepartment(), e.getSalary(), Integer::sum);
+        }
+        return map;
+    }
+
+    public List&lt;Employee&gt; salaryRanking() {
+        List&lt;Employee&gt; sorted = new ArrayList&lt;&gt;(employees);
+        sorted.sort(Comparator.comparingInt(Employee::getSalary).reversed());
+        return sorted;
+    }
+
+    public String exportCsv() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("id,name,department,hireDate,salary\n");
+        for (Employee e : employees) {
+            sb.append(String.format("%d,%s,%s,%s,%d\n",
+                e.getId(), e.getName(), e.getDepartment(),
+                e.getHireDate(), e.getSalary()));
+        }
+        return sb.toString().trim();
+    }
+}
+
+public class EmployeeApp {
+    public static void main(String[] args) {
+        EmployeeManager manager = new EmployeeManager();
+        manager.add(new Employee("田中太郎", "開発部", LocalDate.of(2020, 4, 1), 450000));
+        manager.add(new Employee("佐藤次郎", "営業部", LocalDate.of(2021, 4, 1), 400000));
+        manager.add(new Employee("鈴木花子", "開発部", LocalDate.of(2022, 4, 1), 380000));
+        manager.add(new Employee("山田誠",   "人事部", LocalDate.of(2023, 4, 1), 400000));
+        manager.add(new Employee("高橋美咲", "営業部", LocalDate.of(2024, 4, 1), 320000));
+
+        System.out.println("=== 社員管理システム ===\n");
+
+        System.out.println("--- 開発部の社員 ---");
+        for (Employee e : manager.findByDepartment("開発部")) {
+            System.out.println(e);
+        }
+
+        System.out.println("\n--- 部門別給与合計 ---");
+        Map&lt;String, Integer&gt; deptTotals = manager.totalSalaryByDepartment();
+        for (Map.Entry&lt;String, Integer&gt; entry : deptTotals.entrySet()) {
+            System.out.printf("%s: %,d%n", entry.getKey(), entry.getValue());
+        }
+
+        System.out.println("\n--- 給与ランキング ---");
+        List&lt;Employee&gt; ranking = manager.salaryRanking();
+        for (int i = 0; i &lt; ranking.size(); i++) {
+            Employee e = ranking.get(i);
+            System.out.printf("%d位: %-8s %,d%n", i + 1, e.getName(), e.getSalary());
+        }
+
+        System.out.println("\n--- CSV出力 ---");
+        System.out.println(manager.exportCsv());
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>static int nextId</code> はクラス変数で全インスタンスで共有されるため、<code>new</code> のたびにIDが自動インクリメントされます。staticフィールドの挙動はJavaSilver頻出です。</li>
+              <li><code>ChronoUnit.YEARS.between()</code> は2つの <code>Temporal</code> 間の年数を返します。<code>Period.between()</code> との違いを理解しておきましょう。</li>
+              <li><code>Map.merge(key, value, remappingFunction)</code> は既存キーがあれば関数で値を統合、なければputします。集計処理に便利なメソッドです。</li>
+              <li><code>Comparator.comparingInt().reversed()</code> でint型フィールドの降順ソートを実現。メソッド参照 <code>Employee::getSalary</code> と組み合わせます。</li>
+              <li><code>new ArrayList&lt;&gt;(employees)</code> でコピーを作成してからソートすることで、元のリストの順序を保持しています。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-10 -->
+    <div class="drill-item" id="s-10">
+      <div class="drill-header">
+        <div class="drill-badge">S-10</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 クラス・メソッド</span>
+          <h3 class="drill-title">レシピ管理アプリ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>enumの定義と比較、ArrayList内のArrayList（ネストしたジェネリクス）、拡張for文のネスト、HashMapによる集計、Comparatorを使ったソート、Listの <code>contains()</code> メソッドを総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>レシピを管理するアプリケーションを、以下の2クラス＋1 enum で実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>Difficulty</code>（enum）: <code>EASY</code>, <code>MEDIUM</code>, <code>HARD</code>。日本語ラベルを返す <code>getLabel()</code> を持つ</li>
+            <li><code>Recipe</code>: フィールドは <code>String name</code>, <code>List&lt;String&gt; ingredients</code>, <code>List&lt;String&gt; steps</code>, <code>int cookingMinutes</code>, <code>Difficulty difficulty</code>。コンストラクタとgetterを持つ</li>
+            <li><code>RecipeBook</code>: <code>ArrayList&lt;Recipe&gt;</code> で管理。以下のメソッドを持つ:
+              <ul>
+                <li><code>add(Recipe)</code> — レシピ追加</li>
+                <li><code>searchByIngredient(String)</code> — 指定材料を含むレシピのリストを返す</li>
+                <li><code>filterByDifficulty(Difficulty)</code> — 難易度フィルタ</li>
+                <li><code>sortByCookingTime()</code> — 調理時間昇順のリストを返す</li>
+                <li><code>generateShoppingList(List&lt;String&gt; recipeNames)</code> — 複数レシピの材料を統合した買い物リスト（重複排除）</li>
+              </ul>
+            </li>
+          </ul>
+          <p><code>main</code> メソッドで3つ以上のレシピを登録し、各機能を実行してください。</p>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== レシピ管理アプリ ===
+
+--- 「卵」を使うレシピ ---
+- 親子丼 (簡単/20分)
+- オムライス (普通/30分)
+
+--- 簡単レシピ ---
+- 親子丼 (簡単/20分)
+
+--- 調理時間順 ---
+1. 親子丼 (20分)
+2. オムライス (30分)
+3. ビーフシチュー (90分)
+
+--- 買い物リスト（親子丼 + オムライス）---
+□ 鶏もも肉
+□ 卵
+□ 玉ねぎ
+□ だし汁
+□ 醤油
+□ みりん
+□ ご飯
+□ ケチャップ
+□ バター
+□ 牛乳</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>材料検索は <code>recipe.getIngredients().contains(ingredient)</code> で判定できます。買い物リスト生成では重複排除に <code>ArrayList</code> の <code>contains()</code> チェックを使うか、あるいは一度 <code>HashSet</code> に入れてから <code>ArrayList</code> に戻す方法もあります。<code>List.of()</code> を使うと簡潔にリストを初期化できます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+enum Difficulty {
+    EASY("簡単"), MEDIUM("普通"), HARD("難しい");
+
+    private final String label;
+    Difficulty(String label) { this.label = label; }
+    public String getLabel() { return label; }
+}
+
+class Recipe {
+    private String name;
+    private List&lt;String&gt; ingredients;
+    private List&lt;String&gt; steps;
+    private int cookingMinutes;
+    private Difficulty difficulty;
+
+    public Recipe(String name, List&lt;String&gt; ingredients, List&lt;String&gt; steps,
+                  int cookingMinutes, Difficulty difficulty) {
+        this.name = name;
+        this.ingredients = ingredients;
+        this.steps = steps;
+        this.cookingMinutes = cookingMinutes;
+        this.difficulty = difficulty;
+    }
+
+    public String getName() { return name; }
+    public List&lt;String&gt; getIngredients() { return ingredients; }
+    public List&lt;String&gt; getSteps() { return steps; }
+    public int getCookingMinutes() { return cookingMinutes; }
+    public Difficulty getDifficulty() { return difficulty; }
+
+    public String toShortString() {
+        return String.format("%s (%s/%d分)", name, difficulty.getLabel(), cookingMinutes);
+    }
+}
+
+class RecipeBook {
+    private List&lt;Recipe&gt; recipes = new ArrayList&lt;&gt;();
+
+    public void add(Recipe recipe) {
+        recipes.add(recipe);
+    }
+
+    public List&lt;Recipe&gt; searchByIngredient(String ingredient) {
+        List&lt;Recipe&gt; result = new ArrayList&lt;&gt;();
+        for (Recipe r : recipes) {
+            if (r.getIngredients().contains(ingredient)) {
+                result.add(r);
+            }
+        }
+        return result;
+    }
+
+    public List&lt;Recipe&gt; filterByDifficulty(Difficulty diff) {
+        List&lt;Recipe&gt; result = new ArrayList&lt;&gt;();
+        for (Recipe r : recipes) {
+            if (r.getDifficulty() == diff) {
+                result.add(r);
+            }
+        }
+        return result;
+    }
+
+    public List&lt;Recipe&gt; sortByCookingTime() {
+        List&lt;Recipe&gt; sorted = new ArrayList&lt;&gt;(recipes);
+        sorted.sort(Comparator.comparingInt(Recipe::getCookingMinutes));
+        return sorted;
+    }
+
+    public List&lt;String&gt; generateShoppingList(List&lt;String&gt; recipeNames) {
+        Set&lt;String&gt; ingredientSet = new LinkedHashSet&lt;&gt;();
+        for (Recipe r : recipes) {
+            if (recipeNames.contains(r.getName())) {
+                ingredientSet.addAll(r.getIngredients());
+            }
+        }
+        return new ArrayList&lt;&gt;(ingredientSet);
+    }
+}
+
+public class RecipeApp {
+    public static void main(String[] args) {
+        RecipeBook book = new RecipeBook();
+
+        book.add(new Recipe("親子丼",
+            List.of("鶏もも肉", "卵", "玉ねぎ", "だし汁", "醤油", "みりん"),
+            List.of("鶏肉を一口大に切る", "玉ねぎをスライスする",
+                     "だし汁で鶏肉と玉ねぎを煮る", "溶き卵を回し入れて蓋をする"),
+            20, Difficulty.EASY));
+
+        book.add(new Recipe("オムライス",
+            List.of("卵", "ご飯", "玉ねぎ", "鶏もも肉", "ケチャップ", "バター", "牛乳"),
+            List.of("チキンライスを作る", "卵を溶いて牛乳を加える",
+                     "フライパンでオムレツを焼く", "チキンライスに被せる"),
+            30, Difficulty.MEDIUM));
+
+        book.add(new Recipe("ビーフシチュー",
+            List.of("牛すね肉", "じゃがいも", "にんじん", "玉ねぎ", "デミグラスソース", "赤ワイン"),
+            List.of("牛肉を大きめに切って焼く", "野菜を乱切りにする",
+                     "圧力鍋で煮込む", "デミグラスソースを加えてさらに煮込む"),
+            90, Difficulty.HARD));
+
+        System.out.println("=== レシピ管理アプリ ===\n");
+
+        System.out.println("--- 「卵」を使うレシピ ---");
+        for (Recipe r : book.searchByIngredient("卵")) {
+            System.out.println("- " + r.toShortString());
+        }
+
+        System.out.println("\n--- 簡単レシピ ---");
+        for (Recipe r : book.filterByDifficulty(Difficulty.EASY)) {
+            System.out.println("- " + r.toShortString());
+        }
+
+        System.out.println("\n--- 調理時間順 ---");
+        List&lt;Recipe&gt; sorted = book.sortByCookingTime();
+        for (int i = 0; i &lt; sorted.size(); i++) {
+            Recipe r = sorted.get(i);
+            System.out.printf("%d. %s (%d分)%n", i + 1, r.getName(), r.getCookingMinutes());
+        }
+
+        System.out.println("\n--- 買い物リスト（親子丼 + オムライス）---");
+        List&lt;String&gt; shopping = book.generateShoppingList(List.of("親子丼", "オムライス"));
+        for (String item : shopping) {
+            System.out.println("□ " + item);
+        }
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>List.of()</code> はJava 9以降の不変リスト生成メソッドです。JavaSilverでは <code>Arrays.asList()</code> との違い（変更不可）が出題されます。</li>
+              <li><code>LinkedHashSet</code> は挿入順序を保持するSetです。<code>HashSet</code> だと順序が不定になるため、買い物リストの順序を安定させるために使用しています。</li>
+              <li><code>List.contains()</code> は <code>equals()</code> メソッドで比較します。Stringの場合は値比較になるため正しく動作します。</li>
+              <li>enumの比較は <code>==</code> で行います。enumはシングルトンのため <code>equals()</code> と同じ結果ですが、<code>==</code> の方がnull安全です。</li>
+              <li><code>Comparator.comparingInt()</code> はラムダなしでint型ゲッターによるソートを実現するファクトリメソッドです。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T6: 継承・IF・ポリモーフィズム ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">account_tree</span>
+      <h2>T6 継承・IF・ポリモーフィズム</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-11 -->
+    <div class="drill-item" id="s-11">
+      <div class="drill-header">
+        <div class="drill-badge">S-11</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 継承・IF・ポリモーフィズム</span>
+          <h3 class="drill-title">ECサイト注文システム</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>抽象クラスとメソッドオーバーライド、インタフェースによるStrategy パターン、ポリモーフィズム（親クラス型の変数でサブクラスを扱う）、<code>instanceof</code> の使用、ArrayList&lt;親クラス型&gt; を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>ECサイトの注文処理を、以下のクラス階層で実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>Product</code>（抽象クラス）: <code>String name</code>, <code>int price</code>, <code>int stock</code>。抽象メソッド <code>getDescription()</code>、具象メソッド <code>isAvailable()</code></li>
+            <li><code>PhysicalProduct extends Product</code>: 追加フィールド <code>double weightKg</code>。<code>getShippingCost()</code>（重さ×200円）を持つ</li>
+            <li><code>DigitalProduct extends Product</code>: 追加フィールド <code>String downloadUrl</code>。送料0円</li>
+            <li><code>DiscountStrategy</code>（インタフェース）: <code>int apply(int price)</code></li>
+            <li><code>PercentDiscount</code>: 割合割引（例: 10%オフ）</li>
+            <li><code>FixedDiscount</code>: 固定額割引（例: 500円引き）</li>
+            <li><code>BulkDiscount</code>: 3個以上で20%オフ（未満は割引なし）</li>
+            <li><code>Cart</code>: 商品と数量のペアを管理。<code>addItem(Product, int qty)</code>, <code>calculateTotal(DiscountStrategy)</code></li>
+          </ul>
+          <p><code>main</code> メソッドで各種商品をカートに入れ、異なる割引戦略で合計金額を計算してください。</p>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== ECサイト注文システム ===
+
+--- カート内容 ---
+[物理] ワイヤレスマウス ¥3,500 × 2 (送料: ¥120)
+  → 重さ0.30kg / 在庫あり
+[デジタル] Java入門PDF ¥2,800 × 1 (送料: ¥0)
+  → DL: https://example.com/java.pdf
+[物理] USBキーボード ¥8,000 × 1 (送料: ¥300)
+  → 重さ1.50kg / 在庫あり
+
+--- 割引なし ---
+小計: ¥17,800  送料: ¥540  合計: ¥18,340
+
+--- 10%割引適用 ---
+小計: ¥16,020  送料: ¥540  合計: ¥16,560
+
+--- 500円引き適用 ---
+小計: ¥17,300  送料: ¥540  合計: ¥17,840
+
+--- まとめ買い割引（3個以上で20%オフ）適用 ---
+小計: ¥14,240  送料: ¥540  合計: ¥14,780</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>抽象クラス <code>Product</code> のコンストラクタは <code>protected</code> にし、サブクラスから <code>super()</code> で呼び出します。Cartでは <code>ArrayList</code> に商品と数量をまとめたペア（内部クラス <code>CartItem</code>）を持たせると管理しやすくなります。送料計算では <code>instanceof PhysicalProduct</code> で型判定し、ダウンキャストして <code>getShippingCost()</code> を呼びます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.util.ArrayList;
+import java.util.List;
+
+abstract class Product {
+    protected String name;
+    protected int price;
+    protected int stock;
+
+    protected Product(String name, int price, int stock) {
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+    public boolean isAvailable() { return stock &gt; 0; }
+    public abstract String getDescription();
+}
+
+class PhysicalProduct extends Product {
+    private double weightKg;
+
+    public PhysicalProduct(String name, int price, int stock, double weightKg) {
+        super(name, price, stock);
+        this.weightKg = weightKg;
+    }
+
+    public double getWeightKg() { return weightKg; }
+
+    public int getShippingCost() {
+        return (int) (weightKg * 200);
+    }
+
+    @Override
+    public String getDescription() {
+        return String.format("重さ%.2fkg / %s", weightKg, isAvailable() ? "在庫あり" : "在庫なし");
+    }
+}
+
+class DigitalProduct extends Product {
+    private String downloadUrl;
+
+    public DigitalProduct(String name, int price, int stock, String downloadUrl) {
+        super(name, price, stock);
+        this.downloadUrl = downloadUrl;
+    }
+
+    public String getDownloadUrl() { return downloadUrl; }
+
+    @Override
+    public String getDescription() {
+        return "DL: " + downloadUrl;
+    }
+}
+
+interface DiscountStrategy {
+    int apply(int price);
+}
+
+class PercentDiscount implements DiscountStrategy {
+    private int percent;
+
+    public PercentDiscount(int percent) {
+        this.percent = percent;
+    }
+
+    @Override
+    public int apply(int price) {
+        return price - (price * percent / 100);
+    }
+}
+
+class FixedDiscount implements DiscountStrategy {
+    private int amount;
+
+    public FixedDiscount(int amount) {
+        this.amount = amount;
+    }
+
+    @Override
+    public int apply(int price) {
+        return Math.max(0, price - amount);
+    }
+}
+
+class BulkDiscount implements DiscountStrategy {
+    private int totalQty;
+
+    public BulkDiscount(int totalQty) {
+        this.totalQty = totalQty;
+    }
+
+    @Override
+    public int apply(int price) {
+        if (totalQty &gt;= 3) {
+            return price - (price * 20 / 100);
+        }
+        return price;
+    }
+}
+
+class CartItem {
+    private Product product;
+    private int quantity;
+
+    public CartItem(Product product, int quantity) {
+        this.product = product;
+        this.quantity = quantity;
+    }
+
+    public Product getProduct() { return product; }
+    public int getQuantity() { return quantity; }
+}
+
+class Cart {
+    private List&lt;CartItem&gt; items = new ArrayList&lt;&gt;();
+
+    public void addItem(Product product, int qty) {
+        items.add(new CartItem(product, qty));
+    }
+
+    public int getTotalQuantity() {
+        int total = 0;
+        for (CartItem item : items) {
+            total += item.getQuantity();
+        }
+        return total;
+    }
+
+    public int calculateSubtotal() {
+        int subtotal = 0;
+        for (CartItem item : items) {
+            subtotal += item.getProduct().getPrice() * item.getQuantity();
+        }
+        return subtotal;
+    }
+
+    public int calculateShipping() {
+        int shipping = 0;
+        for (CartItem item : items) {
+            if (item.getProduct() instanceof PhysicalProduct) {
+                PhysicalProduct pp = (PhysicalProduct) item.getProduct();
+                shipping += pp.getShippingCost() * item.getQuantity();
+            }
+        }
+        return shipping;
+    }
+
+    public int calculateTotal(DiscountStrategy strategy) {
+        int subtotal = calculateSubtotal();
+        int discounted = strategy.apply(subtotal);
+        return discounted + calculateShipping();
+    }
+
+    public void printCart() {
+        for (CartItem item : items) {
+            Product p = item.getProduct();
+            String type = (p instanceof PhysicalProduct) ? "物理" : "デジタル";
+            int shipping = 0;
+            if (p instanceof PhysicalProduct) {
+                shipping = ((PhysicalProduct) p).getShippingCost() * item.getQuantity();
+            }
+            System.out.printf("[%s] %s ¥%,d × %d (送料: ¥%,d)%n",
+                type, p.getName(), p.getPrice(), item.getQuantity(), shipping);
+            System.out.println("  → " + p.getDescription());
+        }
+    }
+
+    public void printTotal(String label, DiscountStrategy strategy) {
+        int subtotal = strategy.apply(calculateSubtotal());
+        int shipping = calculateShipping();
+        System.out.printf("小計: ¥%,d  送料: ¥%,d  合計: ¥%,d%n",
+            subtotal, shipping, subtotal + shipping);
+    }
+}
+
+public class EcOrderApp {
+    public static void main(String[] args) {
+        Cart cart = new Cart();
+        cart.addItem(new PhysicalProduct("ワイヤレスマウス", 3500, 10, 0.30), 2);
+        cart.addItem(new DigitalProduct("Java入門PDF", 2800, 999,
+            "https://example.com/java.pdf"), 1);
+        cart.addItem(new PhysicalProduct("USBキーボード", 8000, 5, 1.50), 1);
+
+        System.out.println("=== ECサイト注文システム ===\n");
+
+        System.out.println("--- カート内容 ---");
+        cart.printCart();
+
+        DiscountStrategy noDiscount = price -&gt; price;
+
+        System.out.println("\n--- 割引なし ---");
+        cart.printTotal("割引なし", noDiscount);
+
+        System.out.println("\n--- 10%割引適用 ---");
+        cart.printTotal("10%割引", new PercentDiscount(10));
+
+        System.out.println("\n--- 500円引き適用 ---");
+        cart.printTotal("500円引き", new FixedDiscount(500));
+
+        System.out.println("\n--- まとめ買い割引（3個以上で20%オフ）適用 ---");
+        cart.printTotal("まとめ買い", new BulkDiscount(cart.getTotalQuantity()));
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>抽象クラスの <code>protected</code> コンストラクタはサブクラスからのみ呼び出し可能です。<code>new Product(...)</code> は直接呼べずコンパイルエラーになります。</li>
+              <li><code>instanceof</code> によるダウンキャストはJavaSilver頻出です。Java 16以降のパターンマッチング（<code>instanceof PhysicalProduct pp</code>）も確認しておきましょう。</li>
+              <li>StrategyパターンではインタフェースにアルゴリズムのAPIを定義し、各実装クラスで具体的なロジックを提供します。ラムダ式（<code>price -&gt; price</code>）で無名実装も可能です。</li>
+              <li><code>Math.max(0, price - amount)</code> で割引後の価格が負にならないようガードしています。</li>
+              <li><code>super(name, price, stock)</code> はサブクラスのコンストラクタ先頭で親クラスのコンストラクタを明示呼び出しします。省略するとデフォルトコンストラクタが呼ばれますが、親に引数付きしかない場合はコンパイルエラーです。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-12 -->
+    <div class="drill-item" id="s-12">
+      <div class="drill-header">
+        <div class="drill-badge">S-12</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 継承・IF・ポリモーフィズム</span>
+          <h3 class="drill-title">動物園管理シミュレータ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>抽象クラスの継承階層、インタフェースの実装（<code>implements</code>）、ポリモーフィズムによるメソッド呼び出し、<code>ArrayList&lt;抽象型&gt;</code> の操作、HashMapによる集計とiterateを総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>動物園を管理するシミュレータを、以下のクラス階層で実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>Animal</code>（抽象クラス）: <code>String name</code>, <code>String species</code>, <code>int age</code>。抽象メソッド <code>getType()</code>（"哺乳類"/"鳥類"/"爬虫類"を返す）</li>
+            <li><code>Feedable</code>（インタフェース）: <code>void feed()</code>, <code>String getFoodType()</code></li>
+            <li><code>Mammal extends Animal implements Feedable</code>: foodType は "飼料"</li>
+            <li><code>Bird extends Animal implements Feedable</code>: foodType は "種子"</li>
+            <li><code>Reptile extends Animal implements Feedable</code>: foodType は "昆虫"</li>
+            <li><code>Enclosure</code>: <code>String name</code>, <code>ArrayList&lt;Animal&gt;</code>。<code>addAnimal(Animal)</code>, <code>listAnimals()</code></li>
+            <li><code>Zoo</code>: <code>ArrayList&lt;Enclosure&gt;</code>。<code>addEnclosure(Enclosure)</code>, <code>feedAll()</code>, <code>statistics()</code>（種別カウント・平均年齢）</li>
+          </ul>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== 動物園管理シミュレータ ===
+
+--- 展示エリア一覧 ---
+[サバンナエリア] 3匹
+  - ライオン「レオ」(哺乳類/5歳)
+  - キリン「キリン太」(哺乳類/8歳)
+  - ダチョウ「ダチョ」(鳥類/3歳)
+[は虫類館] 2匹
+  - カメレオン「カメ吉」(爬虫類/4歳)
+  - イグアナ「イグ」(爬虫類/6歳)
+
+--- 餌やり ---
+レオに飼料を与えました
+キリン太に飼料を与えました
+ダチョに種子を与えました
+カメ吉に昆虫を与えました
+イグに昆虫を与えました
+
+--- 統計 ---
+哺乳類: 2匹 (平均年齢: 6.5歳)
+鳥類:   1匹 (平均年齢: 3.0歳)
+爬虫類: 2匹 (平均年齢: 5.0歳)
+合計:   5匹 (平均年齢: 5.2歳)</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>全動物が <code>Feedable</code> を実装するので、<code>Animal</code> 型でリストに入れつつ <code>(Feedable) animal</code> にキャストして <code>feed()</code> を呼べます。統計計算では <code>HashMap&lt;String, List&lt;Animal&gt;&gt;</code> に種別ごとにグルーピングし、各リストの <code>size()</code> と年齢平均を計算するとスムーズです。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+abstract class Animal {
+    protected String name;
+    protected String species;
+    protected int age;
+
+    protected Animal(String name, String species, int age) {
+        this.name = name;
+        this.species = species;
+        this.age = age;
+    }
+
+    public String getName() { return name; }
+    public String getSpecies() { return species; }
+    public int getAge() { return age; }
+    public abstract String getType();
+
+    @Override
+    public String toString() {
+        return String.format("%s「%s」(%s/%d歳)", species, name, getType(), age);
+    }
+}
+
+interface Feedable {
+    void feed();
+    String getFoodType();
+}
+
+class Mammal extends Animal implements Feedable {
+    public Mammal(String name, String species, int age) {
+        super(name, species, age);
+    }
+
+    @Override
+    public String getType() { return "哺乳類"; }
+
+    @Override
+    public String getFoodType() { return "飼料"; }
+
+    @Override
+    public void feed() {
+        System.out.println(name + "に" + getFoodType() + "を与えました");
+    }
+}
+
+class Bird extends Animal implements Feedable {
+    public Bird(String name, String species, int age) {
+        super(name, species, age);
+    }
+
+    @Override
+    public String getType() { return "鳥類"; }
+
+    @Override
+    public String getFoodType() { return "種子"; }
+
+    @Override
+    public void feed() {
+        System.out.println(name + "に" + getFoodType() + "を与えました");
+    }
+}
+
+class Reptile extends Animal implements Feedable {
+    public Reptile(String name, String species, int age) {
+        super(name, species, age);
+    }
+
+    @Override
+    public String getType() { return "爬虫類"; }
+
+    @Override
+    public String getFoodType() { return "昆虫"; }
+
+    @Override
+    public void feed() {
+        System.out.println(name + "に" + getFoodType() + "を与えました");
+    }
+}
+
+class Enclosure {
+    private String name;
+    private List&lt;Animal&gt; animals = new ArrayList&lt;&gt;();
+
+    public Enclosure(String name) {
+        this.name = name;
+    }
+
+    public String getName() { return name; }
+    public List&lt;Animal&gt; getAnimals() { return animals; }
+
+    public void addAnimal(Animal animal) {
+        animals.add(animal);
+    }
+
+    public void listAnimals() {
+        System.out.printf("[%s] %d匹%n", name, animals.size());
+        for (Animal a : animals) {
+            System.out.println("  - " + a);
+        }
+    }
+}
+
+class Zoo {
+    private List&lt;Enclosure&gt; enclosures = new ArrayList&lt;&gt;();
+
+    public void addEnclosure(Enclosure enc) {
+        enclosures.add(enc);
+    }
+
+    public void feedAll() {
+        for (Enclosure enc : enclosures) {
+            for (Animal a : enc.getAnimals()) {
+                if (a instanceof Feedable) {
+                    ((Feedable) a).feed();
+                }
+            }
+        }
+    }
+
+    public void statistics() {
+        Map&lt;String, List&lt;Animal&gt;&gt; groups = new HashMap&lt;&gt;();
+        int totalCount = 0;
+        int totalAge = 0;
+
+        for (Enclosure enc : enclosures) {
+            for (Animal a : enc.getAnimals()) {
+                groups.computeIfAbsent(a.getType(), k -&gt; new ArrayList&lt;&gt;()).add(a);
+                totalCount++;
+                totalAge += a.getAge();
+            }
+        }
+
+        for (String type : new String[]{"哺乳類", "鳥類", "爬虫類"}) {
+            List&lt;Animal&gt; list = groups.getOrDefault(type, new ArrayList&lt;&gt;());
+            if (!list.isEmpty()) {
+                double avg = 0;
+                for (Animal a : list) {
+                    avg += a.getAge();
+                }
+                avg /= list.size();
+                System.out.printf("%-4s: %d匹 (平均年齢: %.1f歳)%n", type, list.size(), avg);
+            }
+        }
+        System.out.printf("合計:   %d匹 (平均年齢: %.1f歳)%n",
+            totalCount, (double) totalAge / totalCount);
+    }
+}
+
+public class ZooApp {
+    public static void main(String[] args) {
+        Zoo zoo = new Zoo();
+
+        Enclosure savanna = new Enclosure("サバンナエリア");
+        savanna.addAnimal(new Mammal("レオ", "ライオン", 5));
+        savanna.addAnimal(new Mammal("キリン太", "キリン", 8));
+        savanna.addAnimal(new Bird("ダチョ", "ダチョウ", 3));
+
+        Enclosure reptileHouse = new Enclosure("は虫類館");
+        reptileHouse.addAnimal(new Reptile("カメ吉", "カメレオン", 4));
+        reptileHouse.addAnimal(new Reptile("イグ", "イグアナ", 6));
+
+        zoo.addEnclosure(savanna);
+        zoo.addEnclosure(reptileHouse);
+
+        System.out.println("=== 動物園管理シミュレータ ===\n");
+
+        System.out.println("--- 展示エリア一覧 ---");
+        savanna.listAnimals();
+        reptileHouse.listAnimals();
+
+        System.out.println("\n--- 餌やり ---");
+        zoo.feedAll();
+
+        System.out.println("\n--- 統計 ---");
+        zoo.statistics();
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>抽象クラス <code>Animal</code> とインタフェース <code>Feedable</code> を分離することで、将来的に餌やり不可の動物（展示のみ）も扱えます。この設計判断はJavaSilverで問われます。</li>
+              <li><code>(Feedable) a</code> のキャストは、<code>instanceof</code> で型チェック後に行うのが安全です。チェックなしのキャストは <code>ClassCastException</code> のリスクがあります。</li>
+              <li><code>computeIfAbsent(key, mappingFunction)</code> はキーが存在しない場合のみ関数を実行して値を生成します。<code>getOrDefault()</code> と合わせてMap操作の重要メソッドです。</li>
+              <li><code>protected</code> コンストラクタにすることで、直接 <code>new Animal()</code> はできませんがサブクラスから <code>super()</code> で呼べます。アクセス修飾子の範囲はJavaSilver必須知識です。</li>
+              <li>ポリモーフィズムにより、<code>Animal</code> 型のリストに <code>Mammal</code>/<code>Bird</code>/<code>Reptile</code> を混在させ、<code>getType()</code> は各サブクラスの実装が呼ばれます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T7: 例外処理 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">bug_report</span>
+      <h2>T7 例外処理</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-13 -->
+    <div class="drill-item" id="s-13">
+      <div class="drill-header">
+        <div class="drill-badge">S-13</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 例外処理</span>
+          <h3 class="drill-title">オンラインバンキングシミュレータ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>カスタム例外クラスの階層（検査例外の継承）、try-catch-finallyの使い分け、throwsによる例外伝播、複数catch節の順序（サブクラスが先）、例外メッセージの設計を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>銀行の送金処理をシミュレートするシステムを、以下のクラスで実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>BankException</code>（検査例外・Exceptionを継承）: 基底例外クラス</li>
+            <li><code>InsufficientFundsException extends BankException</code>: 残高不足時にスロー</li>
+            <li><code>TransferLimitException extends BankException</code>: 日次送金限度額超過時にスロー</li>
+            <li><code>AccountNotFoundException extends BankException</code>: 口座未発見時にスロー</li>
+            <li><code>Account</code>: <code>String id</code>, <code>String ownerName</code>, <code>int balance</code>, <code>String type</code>（"普通"/"定期"）。<code>deposit(int)</code>, <code>withdraw(int)</code>（残高チェック付き）</li>
+            <li><code>AuditLogger</code>: <code>ArrayList&lt;String&gt;</code> でログを蓄積。<code>log(String message)</code>, <code>printAll()</code></li>
+            <li><code>TransferService</code>: <code>HashMap&lt;String, Account&gt;</code> で口座管理。日次送金限度額 <code>1,000,000</code>。<code>transfer(String fromId, String toId, int amount)</code> で送金（口座存在チェック・残高チェック・限度額チェック・同一口座チェック）。全操作をAuditLoggerに記録</li>
+          </ul>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== オンラインバンキング ===
+
+--- 送金テスト ---
+[成功] A001 → A002: ¥50,000 送金完了
+[成功] A002 → A003: ¥30,000 送金完了
+[エラー] 残高不足: 口座A003の残高(¥70,000)では¥500,000を送金できません
+[エラー] 口座が見つかりません: A999
+[エラー] 送金先が同一口座です: A001
+[エラー] 日次送金限度額(¥1,000,000)を超過: 累計¥1,080,000
+
+--- 口座残高 ---
+A001(田中太郎/普通): ¥450,000
+A002(佐藤花子/普通): ¥520,000
+A003(山田次郎/定期): ¥70,000
+
+--- 監査ログ ---
+[2026-03-08 10:00:01] 送金成功: A001→A002 ¥50,000
+[2026-03-08 10:00:02] 送金成功: A002→A003 ¥30,000
+[2026-03-08 10:00:03] 送金失敗: A003→A001 残高不足
+[2026-03-08 10:00:04] 送金失敗: A001→A999 口座未発見
+[2026-03-08 10:00:05] 送金失敗: A001→A001 同一口座
+[2026-03-08 10:00:06] 送金失敗: A001→A002 限度額超過</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>カスタム例外は <code>class InsufficientFundsException extends BankException { ... }</code> のように定義します。送金メソッドでは各チェックを順番に行い、条件に合わない場合は対応する例外をスローします。呼び出し側で <code>try-catch(BankException e)</code> でまとめてキャッチするか、個別のサブクラスでキャッチするかを使い分けましょう。<code>finally</code> ブロックでログ出力を保証できます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+class BankException extends Exception {
+    public BankException(String message) {
+        super(message);
+    }
+}
+
+class InsufficientFundsException extends BankException {
+    public InsufficientFundsException(String accountId, int balance, int amount) {
+        super(String.format("残高不足: 口座%sの残高(¥%,d)では¥%,dを送金できません",
+            accountId, balance, amount));
+    }
+}
+
+class TransferLimitException extends BankException {
+    public TransferLimitException(int limit, int accumulated) {
+        super(String.format("日次送金限度額(¥%,d)を超過: 累計¥%,d", limit, accumulated));
+    }
+}
+
+class AccountNotFoundException extends BankException {
+    public AccountNotFoundException(String accountId) {
+        super("口座が見つかりません: " + accountId);
+    }
+}
+
+class Account {
+    private String id;
+    private String ownerName;
+    private int balance;
+    private String type;
+
+    public Account(String id, String ownerName, int balance, String type) {
+        this.id = id;
+        this.ownerName = ownerName;
+        this.balance = balance;
+        this.type = type;
+    }
+
+    public String getId() { return id; }
+    public String getOwnerName() { return ownerName; }
+    public int getBalance() { return balance; }
+    public String getType() { return type; }
+
+    public void deposit(int amount) {
+        balance += amount;
+    }
+
+    public void withdraw(int amount) throws InsufficientFundsException {
+        if (balance &lt; amount) {
+            throw new InsufficientFundsException(id, balance, amount);
+        }
+        balance -= amount;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s(%s/%s): ¥%,d", id, ownerName, type, balance);
+    }
+}
+
+class AuditLogger {
+    private List&lt;String&gt; logs = new ArrayList&lt;&gt;();
+    private int seq = 1;
+
+    public void log(String message) {
+        LocalDateTime now = LocalDateTime.of(2026, 3, 8, 10, 0, seq++);
+        String timestamp = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        logs.add("[" + timestamp + "] " + message);
+    }
+
+    public void printAll() {
+        for (String entry : logs) {
+            System.out.println(entry);
+        }
+    }
+}
+
+class TransferService {
+    private Map&lt;String, Account&gt; accounts = new HashMap&lt;&gt;();
+    private AuditLogger logger;
+    private static final int DAILY_LIMIT = 1000000;
+    private int dailyTotal = 0;
+
+    public TransferService(AuditLogger logger) {
+        this.logger = logger;
+    }
+
+    public void addAccount(Account account) {
+        accounts.put(account.getId(), account);
+    }
+
+    public Account getAccount(String id) {
+        return accounts.get(id);
+    }
+
+    public void transfer(String fromId, String toId, int amount) throws BankException {
+        String logDetail = fromId + "→" + toId;
+        try {
+            if (fromId.equals(toId)) {
+                throw new BankException("送金先が同一口座です: " + fromId);
+            }
+
+            Account from = accounts.get(fromId);
+            if (from == null) {
+                throw new AccountNotFoundException(fromId);
+            }
+
+            Account to = accounts.get(toId);
+            if (to == null) {
+                throw new AccountNotFoundException(toId);
+            }
+
+            if (dailyTotal + amount &gt; DAILY_LIMIT) {
+                throw new TransferLimitException(DAILY_LIMIT, dailyTotal + amount);
+            }
+
+            from.withdraw(amount);
+            to.deposit(amount);
+            dailyTotal += amount;
+
+            logger.log(String.format("送金成功: %s ¥%,d", logDetail, amount));
+            System.out.printf("[成功] %s → %s: ¥%,d 送金完了%n", fromId, toId, amount);
+
+        } catch (InsufficientFundsException e) {
+            logger.log("送金失敗: " + logDetail + " 残高不足");
+            System.out.println("[エラー] " + e.getMessage());
+        } catch (AccountNotFoundException e) {
+            logger.log("送金失敗: " + logDetail + " 口座未発見");
+            System.out.println("[エラー] " + e.getMessage());
+        } catch (TransferLimitException e) {
+            logger.log("送金失敗: " + logDetail + " 限度額超過");
+            System.out.println("[エラー] " + e.getMessage());
+        } catch (BankException e) {
+            logger.log("送金失敗: " + logDetail + " 同一口座");
+            System.out.println("[エラー] " + e.getMessage());
+        }
+    }
+}
+
+public class BankingApp {
+    public static void main(String[] args) throws BankException {
+        AuditLogger logger = new AuditLogger();
+        TransferService service = new TransferService(logger);
+
+        service.addAccount(new Account("A001", "田中太郎", 500000, "普通"));
+        service.addAccount(new Account("A002", "佐藤花子", 500000, "普通"));
+        service.addAccount(new Account("A003", "山田次郎", 100000, "定期"));
+
+        System.out.println("=== オンラインバンキング ===\n");
+        System.out.println("--- 送金テスト ---");
+
+        service.transfer("A001", "A002", 50000);
+        service.transfer("A002", "A003", 30000);
+        service.transfer("A003", "A001", 500000);
+        service.transfer("A001", "A999", 10000);
+        service.transfer("A001", "A001", 10000);
+        service.transfer("A001", "A002", 1000000);
+
+        System.out.println("\n--- 口座残高 ---");
+        System.out.println(service.getAccount("A001"));
+        System.out.println(service.getAccount("A002"));
+        System.out.println(service.getAccount("A003"));
+
+        System.out.println("\n--- 監査ログ ---");
+        logger.printAll();
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>カスタム例外の階層を設計する際、共通の基底例外（<code>BankException</code>）を作ることで、呼び出し側で一括キャッチも個別キャッチもできる柔軟性を持たせます。</li>
+              <li>複数catchの順序はサブクラスを先に書く必要があります。<code>BankException</code>（親）を先に書くとサブクラスのcatchに到達不能になりコンパイルエラーです。</li>
+              <li>検査例外（<code>Exception</code> のサブクラス）は <code>throws</code> 宣言が必要です。非検査例外（<code>RuntimeException</code>）との違いはJavaSilver最頻出トピックです。</li>
+              <li><code>withdraw()</code> で例外をスローし、<code>transfer()</code> で catch する設計により、各メソッドの責務が明確になります。</li>
+              <li>監査ログは成功・失敗に関わらず記録するため、各catchブロック内でもログ出力しています。<code>finally</code> を使う設計も有効です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-14 -->
+    <div class="drill-item" id="s-14">
+      <div class="drill-header">
+        <div class="drill-badge">S-14</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 例外処理</span>
+          <h3 class="drill-title">ファイルベースデータストア</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>インタフェースとその実装、カスタム例外階層（非検査例外と検査例外の使い分け）、HashMapの各種操作（put/get/remove/containsKey/keySet/values）、tryブロック内でのロールバック制御を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>キー・バリュー型のデータストアを、以下のクラスで実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>StoreException</code>（検査例外）: 基底例外</li>
+            <li><code>KeyNotFoundException extends StoreException</code>: キーが存在しない時</li>
+            <li><code>DuplicateKeyException extends StoreException</code>: 既存キーにputしようとした時</li>
+            <li><code>StoreCorruptException extends StoreException</code>: データ整合性エラー時</li>
+            <li><code>KeyValueStore</code>（インタフェース）: <code>put(String key, String value)</code>, <code>get(String key)</code>, <code>delete(String key)</code>, <code>exists(String key)</code>, <code>keys()</code>, <code>values()</code></li>
+            <li><code>InMemoryStore implements KeyValueStore</code>: <code>HashMap&lt;String, String&gt;</code> で実装。さらに <code>batchPut(String[][] entries)</code> メソッドで一括登録（1件でもエラーなら全件ロールバック）</li>
+          </ul>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== ファイルベースデータストア ===
+
+--- 基本操作 ---
+PUT: user:001 = 田中太郎
+PUT: user:002 = 佐藤花子
+PUT: user:003 = 山田次郎
+GET: user:001 → 田中太郎
+EXISTS: user:002 → true
+EXISTS: user:999 → false
+KEYS: [user:001, user:002, user:003]
+VALUES: [田中太郎, 佐藤花子, 山田次郎]
+
+--- エラーハンドリング ---
+[エラー] KeyNotFound: キー 'user:999' は存在しません
+[エラー] DuplicateKey: キー 'user:001' は既に存在します
+
+--- 削除操作 ---
+DELETE: user:002
+KEYS: [user:001, user:003]
+
+--- バッチ操作（成功）---
+BATCH PUT: 2件登録成功
+KEYS: [user:001, user:003, user:004, user:005]
+
+--- バッチ操作（ロールバック）---
+[エラー] バッチ失敗 — ロールバック実行: キー 'user:001' は既に存在します
+KEYS: [user:001, user:003, user:004, user:005]</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>バッチ操作のロールバックは、操作開始前に <code>new HashMap&lt;&gt;(store)</code> でスナップショットを取り、例外発生時にスナップショットで復元します。<code>HashMap.putAll()</code> ではなく、フィールドの参照を差し替える方法でも実現できます。インタフェースのメソッドに <code>throws StoreException</code> を宣言し、実装クラスではサブクラス例外をスローする設計にします。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+class StoreException extends Exception {
+    public StoreException(String message) {
+        super(message);
+    }
+}
+
+class KeyNotFoundException extends StoreException {
+    public KeyNotFoundException(String key) {
+        super("キー '" + key + "' は存在しません");
+    }
+}
+
+class DuplicateKeyException extends StoreException {
+    public DuplicateKeyException(String key) {
+        super("キー '" + key + "' は既に存在します");
+    }
+}
+
+class StoreCorruptException extends StoreException {
+    public StoreCorruptException(String detail) {
+        super("データ整合性エラー: " + detail);
+    }
+}
+
+interface KeyValueStore {
+    void put(String key, String value) throws StoreException;
+    String get(String key) throws StoreException;
+    void delete(String key) throws StoreException;
+    boolean exists(String key);
+    List&lt;String&gt; keys();
+    List&lt;String&gt; values();
+}
+
+class InMemoryStore implements KeyValueStore {
+    private Map&lt;String, String&gt; store = new HashMap&lt;&gt;();
+
+    @Override
+    public void put(String key, String value) throws DuplicateKeyException {
+        if (store.containsKey(key)) {
+            throw new DuplicateKeyException(key);
+        }
+        store.put(key, value);
+    }
+
+    @Override
+    public String get(String key) throws KeyNotFoundException {
+        if (!store.containsKey(key)) {
+            throw new KeyNotFoundException(key);
+        }
+        return store.get(key);
+    }
+
+    @Override
+    public void delete(String key) throws KeyNotFoundException {
+        if (!store.containsKey(key)) {
+            throw new KeyNotFoundException(key);
+        }
+        store.remove(key);
+    }
+
+    @Override
+    public boolean exists(String key) {
+        return store.containsKey(key);
+    }
+
+    @Override
+    public List&lt;String&gt; keys() {
+        return new ArrayList&lt;&gt;(store.keySet());
+    }
+
+    @Override
+    public List&lt;String&gt; values() {
+        return new ArrayList&lt;&gt;(store.values());
+    }
+
+    public void batchPut(String[][] entries) throws StoreException {
+        Map&lt;String, String&gt; snapshot = new HashMap&lt;&gt;(store);
+        try {
+            for (String[] entry : entries) {
+                put(entry[0], entry[1]);
+            }
+        } catch (StoreException e) {
+            store = new HashMap&lt;&gt;(snapshot);
+            throw e;
+        }
+    }
+}
+
+public class DataStoreApp {
+    public static void main(String[] args) {
+        InMemoryStore store = new InMemoryStore();
+
+        System.out.println("=== ファイルベースデータストア ===\n");
+        System.out.println("--- 基本操作 ---");
+
+        try {
+            store.put("user:001", "田中太郎");
+            System.out.println("PUT: user:001 = 田中太郎");
+            store.put("user:002", "佐藤花子");
+            System.out.println("PUT: user:002 = 佐藤花子");
+            store.put("user:003", "山田次郎");
+            System.out.println("PUT: user:003 = 山田次郎");
+
+            System.out.println("GET: user:001 → " + store.get("user:001"));
+            System.out.println("EXISTS: user:002 → " + store.exists("user:002"));
+            System.out.println("EXISTS: user:999 → " + store.exists("user:999"));
+            System.out.println("KEYS: " + store.keys());
+            System.out.println("VALUES: " + store.values());
+        } catch (StoreException e) {
+            System.out.println("[エラー] " + e.getMessage());
+        }
+
+        System.out.println("\n--- エラーハンドリング ---");
+        try {
+            store.get("user:999");
+        } catch (KeyNotFoundException e) {
+            System.out.println("[エラー] KeyNotFound: " + e.getMessage());
+        } catch (StoreException e) {
+            System.out.println("[エラー] " + e.getMessage());
+        }
+
+        try {
+            store.put("user:001", "重複テスト");
+        } catch (DuplicateKeyException e) {
+            System.out.println("[エラー] DuplicateKey: " + e.getMessage());
+        } catch (StoreException e) {
+            System.out.println("[エラー] " + e.getMessage());
+        }
+
+        System.out.println("\n--- 削除操作 ---");
+        try {
+            store.delete("user:002");
+            System.out.println("DELETE: user:002");
+            System.out.println("KEYS: " + store.keys());
+        } catch (StoreException e) {
+            System.out.println("[エラー] " + e.getMessage());
+        }
+
+        System.out.println("\n--- バッチ操作（成功）---");
+        try {
+            store.batchPut(new String[][]{
+                {"user:004", "高橋美咲"},
+                {"user:005", "伊藤健太"}
+            });
+            System.out.println("BATCH PUT: 2件登録成功");
+            System.out.println("KEYS: " + store.keys());
+        } catch (StoreException e) {
+            System.out.println("[エラー] バッチ失敗: " + e.getMessage());
+        }
+
+        System.out.println("\n--- バッチ操作（ロールバック）---");
+        try {
+            store.batchPut(new String[][]{
+                {"user:006", "渡辺翔"},
+                {"user:001", "重複でエラー"}
+            });
+        } catch (StoreException e) {
+            System.out.println("[エラー] バッチ失敗 — ロールバック実行: " + e.getMessage());
+        }
+        System.out.println("KEYS: " + store.keys());
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>インタフェースの <code>throws StoreException</code> に対し、実装クラスではそのサブクラス（<code>DuplicateKeyException</code> 等）をスローできます。逆にインタフェースで宣言していない検査例外はスローできません。</li>
+              <li><code>new HashMap&lt;&gt;(store)</code> でシャローコピーを取ることでスナップショットを作成。ロールバック時に復元します。この「コピー＆リストア」パターンはトランザクション処理の基本です。</li>
+              <li><code>HashMap.containsKey()</code> と <code>HashMap.get()</code> を組み合わせて存在チェック＋取得を行います。<code>get()</code> のみだと戻り値 <code>null</code> が「値がnull」なのか「キーなし」なのか区別できません。</li>
+              <li>catchブロックの順序でサブクラス（<code>KeyNotFoundException</code>）を親クラス（<code>StoreException</code>）より先に書く必要があります。逆にするとコンパイルエラーになります。</li>
+              <li><code>store.keySet()</code> は内部のSetビューを返すため、<code>new ArrayList&lt;&gt;()</code> でコピーして外部に渡すことで、外部からの変更による副作用を防ぎます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T8: コレクション・ラムダ・日時 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">storage</span>
+      <h2>T8 コレクション・ラムダ・日時</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-15 -->
+    <div class="drill-item" id="s-15">
+      <div class="drill-header">
+        <div class="drill-badge">S-15</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 コレクション・ラムダ・日時</span>
+          <h3 class="drill-title">図書館管理システム</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>enum（LoanStatus）、ArrayList・HashMapの組み合わせ、ラムダ式とメソッド参照によるソート・フィルタ、LocalDateの期間計算（ChronoUnit）、拡張for + 条件分岐の複合処理を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>図書館の貸出管理を行うシステムを、以下のクラスで実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>LoanStatus</code>（enum）: <code>ON_LOAN</code>（貸出中）, <code>RETURNED</code>（返却済）, <code>OVERDUE</code>（延滞）</li>
+            <li><code>Book</code>: <code>String isbn</code>, <code>String title</code>, <code>String author</code>, <code>int totalCopies</code></li>
+            <li><code>Member</code>: <code>String id</code>, <code>String name</code></li>
+            <li><code>Loan</code>: <code>Book book</code>, <code>Member member</code>, <code>LocalDate loanDate</code>, <code>LocalDate dueDate</code>, <code>LocalDate returnDate</code>（null=未返却）, <code>LoanStatus status</code></li>
+            <li><code>LibrarySystem</code>: 蔵書・会員・貸出記録を管理。以下のメソッドを実装:
+              <ul>
+                <li><code>lend(String isbn, String memberId)</code> — 貸出（在庫チェック付き）</li>
+                <li><code>returnBook(String isbn, String memberId)</code> — 返却</li>
+                <li><code>checkOverdue(LocalDate today)</code> — 延滞チェック＆ステータス更新</li>
+                <li><code>getMemberHistory(String memberId)</code> — 会員別貸出履歴</li>
+                <li><code>getPopularBooks()</code> — 貸出回数順ランキング</li>
+                <li><code>monthlyReport(int year, int month)</code> — 月次統計</li>
+              </ul>
+            </li>
+          </ul>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== 図書館管理システム ===
+
+--- 貸出処理 ---
+貸出: 「Java入門」→ 田中太郎 (期限: 2026-03-22)
+貸出: 「デザパタ」→ 田中太郎 (期限: 2026-03-22)
+貸出: 「Java入門」→ 佐藤花子 (期限: 2026-03-22)
+貸出: 「SQL基礎」→ 佐藤花子 (期限: 2026-03-22)
+
+--- 返却処理 ---
+返却: 「Java入門」← 田中太郎
+
+--- 延滞チェック（2026-03-25時点）---
+延滞: 「デザパタ」— 田中太郎 (3日超過)
+延滞: 「Java入門」— 佐藤花子 (3日超過)
+延滞: 「SQL基礎」— 佐藤花子 (3日超過)
+
+--- 田中太郎の貸出履歴 ---
+「Java入門」 2026-03-08〜2026-03-10 [返却済]
+「デザパタ」 2026-03-08〜 [延滞]
+
+--- 人気書籍ランキング ---
+1位: Java入門 (2回)
+2位: デザパタ (1回)
+2位: SQL基礎 (1回)
+
+--- 2026年3月 月次統計 ---
+貸出件数: 4
+返却件数: 1
+延滞件数: 3
+アクティブ会員数: 2</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>貸出可能冊数は <code>totalCopies - 現在の貸出数</code> で計算します。延滞チェックでは <code>dueDate.isBefore(today)</code> で判定し、ステータスを <code>OVERDUE</code> に更新します。人気ランキングは <code>HashMap&lt;String, Integer&gt;</code> で ISBN ごとの貸出回数を集計し、<code>entrySet()</code> をソートして出力します。ラムダ式 <code>(a, b) -&gt; b.getValue() - a.getValue()</code> で降順ソートできます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+enum LoanStatus {
+    ON_LOAN("貸出中"), RETURNED("返却済"), OVERDUE("延滞");
+
+    private final String label;
+    LoanStatus(String label) { this.label = label; }
+    public String getLabel() { return label; }
+}
+
+class Book {
+    private String isbn;
+    private String title;
+    private String author;
+    private int totalCopies;
+
+    public Book(String isbn, String title, String author, int totalCopies) {
+        this.isbn = isbn;
+        this.title = title;
+        this.author = author;
+        this.totalCopies = totalCopies;
+    }
+
+    public String getIsbn() { return isbn; }
+    public String getTitle() { return title; }
+    public String getAuthor() { return author; }
+    public int getTotalCopies() { return totalCopies; }
+}
+
+class Member {
+    private String id;
+    private String name;
+
+    public Member(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public String getId() { return id; }
+    public String getName() { return name; }
+}
+
+class Loan {
+    private Book book;
+    private Member member;
+    private LocalDate loanDate;
+    private LocalDate dueDate;
+    private LocalDate returnDate;
+    private LoanStatus status;
+
+    public Loan(Book book, Member member, LocalDate loanDate, LocalDate dueDate) {
+        this.book = book;
+        this.member = member;
+        this.loanDate = loanDate;
+        this.dueDate = dueDate;
+        this.returnDate = null;
+        this.status = LoanStatus.ON_LOAN;
+    }
+
+    public Book getBook() { return book; }
+    public Member getMember() { return member; }
+    public LocalDate getLoanDate() { return loanDate; }
+    public LocalDate getDueDate() { return dueDate; }
+    public LocalDate getReturnDate() { return returnDate; }
+    public LoanStatus getStatus() { return status; }
+
+    public void returnBook(LocalDate date) {
+        this.returnDate = date;
+        this.status = LoanStatus.RETURNED;
+    }
+
+    public void markOverdue() {
+        this.status = LoanStatus.OVERDUE;
+    }
+}
+
+class LibrarySystem {
+    private Map&lt;String, Book&gt; books = new HashMap&lt;&gt;();
+    private Map&lt;String, Member&gt; members = new HashMap&lt;&gt;();
+    private List&lt;Loan&gt; loans = new ArrayList&lt;&gt;();
+
+    public void addBook(Book book) {
+        books.put(book.getIsbn(), book);
+    }
+
+    public void addMember(Member member) {
+        members.put(member.getId(), member);
+    }
+
+    private int currentLoanCount(String isbn) {
+        int count = 0;
+        for (Loan loan : loans) {
+            if (loan.getBook().getIsbn().equals(isbn)
+                    &amp;&amp; loan.getStatus() != LoanStatus.RETURNED) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public void lend(String isbn, String memberId, LocalDate today) {
+        Book book = books.get(isbn);
+        Member member = members.get(memberId);
+        if (book == null || member == null) {
+            System.out.println("[エラー] 書籍または会員が見つかりません");
+            return;
+        }
+        if (currentLoanCount(isbn) &gt;= book.getTotalCopies()) {
+            System.out.println("[エラー] 在庫なし: " + book.getTitle());
+            return;
+        }
+        LocalDate dueDate = today.plusDays(14);
+        Loan loan = new Loan(book, member, today, dueDate);
+        loans.add(loan);
+        System.out.printf("貸出: 「%s」→ %s (期限: %s)%n",
+            book.getTitle(), member.getName(), dueDate);
+    }
+
+    public void returnBook(String isbn, String memberId, LocalDate today) {
+        for (Loan loan : loans) {
+            if (loan.getBook().getIsbn().equals(isbn)
+                    &amp;&amp; loan.getMember().getId().equals(memberId)
+                    &amp;&amp; loan.getStatus() != LoanStatus.RETURNED) {
+                loan.returnBook(today);
+                System.out.printf("返却: 「%s」← %s%n",
+                    loan.getBook().getTitle(), loan.getMember().getName());
+                return;
+            }
+        }
+        System.out.println("[エラー] 該当する貸出記録がありません");
+    }
+
+    public void checkOverdue(LocalDate today) {
+        for (Loan loan : loans) {
+            if (loan.getStatus() == LoanStatus.ON_LOAN
+                    &amp;&amp; loan.getDueDate().isBefore(today)) {
+                loan.markOverdue();
+                long overdueDays = ChronoUnit.DAYS.between(loan.getDueDate(), today);
+                System.out.printf("延滞: 「%s」— %s (%d日超過)%n",
+                    loan.getBook().getTitle(),
+                    loan.getMember().getName(), overdueDays);
+            }
+        }
+    }
+
+    public void getMemberHistory(String memberId) {
+        Member member = members.get(memberId);
+        if (member == null) return;
+        System.out.printf("--- %sの貸出履歴 ---%n", member.getName());
+        for (Loan loan : loans) {
+            if (loan.getMember().getId().equals(memberId)) {
+                String dateRange = loan.getReturnDate() != null
+                    ? loan.getLoanDate() + "〜" + loan.getReturnDate()
+                    : loan.getLoanDate() + "〜";
+                System.out.printf("「%s」 %s [%s]%n",
+                    loan.getBook().getTitle(), dateRange,
+                    loan.getStatus().getLabel());
+            }
+        }
+    }
+
+    public void getPopularBooks() {
+        Map&lt;String, Integer&gt; countMap = new HashMap&lt;&gt;();
+        Map&lt;String, String&gt; titleMap = new HashMap&lt;&gt;();
+        for (Loan loan : loans) {
+            String isbn = loan.getBook().getIsbn();
+            countMap.merge(isbn, 1, Integer::sum);
+            titleMap.put(isbn, loan.getBook().getTitle());
+        }
+
+        List&lt;Map.Entry&lt;String, Integer&gt;&gt; sorted = new ArrayList&lt;&gt;(countMap.entrySet());
+        sorted.sort((a, b) -&gt; b.getValue() - a.getValue());
+
+        int rank = 1;
+        int prevCount = -1;
+        for (int i = 0; i &lt; sorted.size(); i++) {
+            Map.Entry&lt;String, Integer&gt; entry = sorted.get(i);
+            if (entry.getValue() != prevCount) {
+                rank = i + 1;
+            }
+            System.out.printf("%d位: %s (%d回)%n",
+                rank, titleMap.get(entry.getKey()), entry.getValue());
+            prevCount = entry.getValue();
+        }
+    }
+
+    public void monthlyReport(int year, int month) {
+        int lendCount = 0;
+        int returnCount = 0;
+        int overdueCount = 0;
+        Map&lt;String, Boolean&gt; activeMembers = new HashMap&lt;&gt;();
+
+        for (Loan loan : loans) {
+            LocalDate ld = loan.getLoanDate();
+            if (ld.getYear() == year &amp;&amp; ld.getMonthValue() == month) {
+                lendCount++;
+                activeMembers.put(loan.getMember().getId(), true);
+            }
+            if (loan.getReturnDate() != null) {
+                LocalDate rd = loan.getReturnDate();
+                if (rd.getYear() == year &amp;&amp; rd.getMonthValue() == month) {
+                    returnCount++;
+                }
+            }
+            if (loan.getStatus() == LoanStatus.OVERDUE) {
+                overdueCount++;
+            }
+        }
+
+        System.out.printf("--- %d年%d月 月次統計 ---%n", year, month);
+        System.out.printf("貸出件数: %d%n", lendCount);
+        System.out.printf("返却件数: %d%n", returnCount);
+        System.out.printf("延滞件数: %d%n", overdueCount);
+        System.out.printf("アクティブ会員数: %d%n", activeMembers.size());
+    }
+}
+
+public class LibraryApp {
+    public static void main(String[] args) {
+        LibrarySystem lib = new LibrarySystem();
+
+        lib.addBook(new Book("978-1", "Java入門", "著者A", 2));
+        lib.addBook(new Book("978-2", "デザパタ", "著者B", 1));
+        lib.addBook(new Book("978-3", "SQL基礎", "著者C", 1));
+
+        lib.addMember(new Member("M001", "田中太郎"));
+        lib.addMember(new Member("M002", "佐藤花子"));
+
+        System.out.println("=== 図書館管理システム ===\n");
+
+        System.out.println("--- 貸出処理 ---");
+        LocalDate today = LocalDate.of(2026, 3, 8);
+        lib.lend("978-1", "M001", today);
+        lib.lend("978-2", "M001", today);
+        lib.lend("978-1", "M002", today);
+        lib.lend("978-3", "M002", today);
+
+        System.out.println("\n--- 返却処理 ---");
+        lib.returnBook("978-1", "M001", LocalDate.of(2026, 3, 10));
+
+        System.out.println("\n--- 延滞チェック（2026-03-25時点）---");
+        lib.checkOverdue(LocalDate.of(2026, 3, 25));
+
+        System.out.println("\n--- 田中太郎の貸出履歴 ---");
+        lib.getMemberHistory("M001");
+
+        System.out.println("\n--- 人気書籍ランキング ---");
+        lib.getPopularBooks();
+
+        System.out.println();
+        lib.monthlyReport(2026, 3);
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>Map.merge(key, 1, Integer::sum)</code> は集計の定番パターンです。キーが存在すれば値を加算、なければ初期値1をセットします。</li>
+              <li><code>ChronoUnit.DAYS.between(date1, date2)</code> で2つの日付間の日数を計算します。<code>Period.between()</code> との違い（Periodは年月日、ChronoUnitは単一単位）を理解しておきましょう。</li>
+              <li>ランキングで同率順位を処理するために、前回のカウントと比較して順位を更新する制御を入れています。</li>
+              <li><code>LocalDate.plusDays(14)</code> で貸出期限を計算。<code>isBefore()</code> で延滞判定。これらのメソッドはJavaSilver頻出です。</li>
+              <li><code>HashMap</code> を使ってアクティブ会員の重複を排除しています。<code>HashSet</code> でも同様の結果が得られます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-16 -->
+    <div class="drill-item" id="s-16">
+      <div class="drill-header">
+        <div class="drill-badge">S-16</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 コレクション・ラムダ・日時</span>
+          <h3 class="drill-title">プロジェクト管理ツール</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>JavaSilverポイント</strong>
+            <p>複数のenum（Priority/Status）、HashMapのネスト、ArrayListとラムダ式によるフィルタ・ソート、LocalDateの日数計算、再帰的なグラフ探索（依存関係）、Comparatorチェーン（<code>thenComparing</code>）を総合的に問います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>プロジェクトのタスクを管理するツールを、以下のクラスで実装してください。</p>
+          <p><strong>クラス構成:</strong></p>
+          <ul>
+            <li><code>Priority</code>（enum）: <code>HIGH</code>, <code>MEDIUM</code>, <code>LOW</code>。ラベルを持つ</li>
+            <li><code>Status</code>（enum）: <code>TODO</code>, <code>IN_PROGRESS</code>, <code>DONE</code>。ラベルを持つ</li>
+            <li><code>TaskMember</code>: <code>String id</code>, <code>String name</code></li>
+            <li><code>Task</code>: <code>String id</code>, <code>String title</code>, <code>Priority priority</code>, <code>Status status</code>, <code>LocalDate startDate</code>, <code>LocalDate endDate</code>, <code>TaskMember assignee</code>, <code>List&lt;String&gt; dependsOn</code>（依存先タスクIDリスト）</li>
+            <li><code>ProjectManager</code>: タスクとメンバーを管理。以下のメソッドを実装:
+              <ul>
+                <li><code>addTask(Task)</code> / <code>addMember(TaskMember)</code></li>
+                <li><code>assignTask(String taskId, String memberId)</code></li>
+                <li><code>canStart(String taskId)</code> — 依存タスクが全てDONEならtrue</li>
+                <li><code>printGanttChart()</code> — テキストベースのガントチャート</li>
+                <li><code>criticalPath()</code> — 最長経路のタスクIDリスト</li>
+                <li><code>progressReport()</code> — 全体進捗率と優先度別内訳</li>
+              </ul>
+            </li>
+          </ul>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>期待出力</div>
+<pre>=== プロジェクト管理ツール ===
+
+--- タスク一覧 ---
+[T1] 要件定義     高  完了     03/01-03/05 (5日) 担当:田中
+[T2] DB設計       高  完了     03/03-03/07 (5日) 担当:佐藤 依存:[T1]
+[T3] API設計      中  進行中   03/06-03/12 (7日) 担当:田中 依存:[T1]
+[T4] API実装      高  未着手   03/10-03/20 (11日) 担当:佐藤 依存:[T2,T3]
+[T5] フロント実装 中  未着手   03/13-03/22 (10日) 担当:山田 依存:[T3]
+[T6] テスト       高  未着手   03/21-03/28 (8日) 担当:山田 依存:[T4,T5]
+
+--- 開始可能チェック ---
+T3: 開始可能（依存タスク全て完了）
+T4: 開始不可（依存タスク未完了あり）
+
+--- ガントチャート（3/1〜3/28）---
+T1 要件定義     |#####......................|
+T2 DB設計       |..#####...................|
+T3 API設計      |.....#######..............|
+T4 API実装      |.........###########.....|
+T5 フロント実装 |............##########...|
+T6 テスト       |....................########|
+
+--- クリティカルパス ---
+T1 → T3 → T4 → T6 (合計: 31日)
+
+--- 進捗レポート ---
+全体進捗: 33.3% (2/6 完了)
+  高優先度: 25.0% (1/4)
+  中優先度: 0.0% (0/2)
+  低優先度: — (該当なし)</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>クリティカルパス計算は各タスクの「最早終了日」を依存関係を辿って再帰的に計算します。メモ化（HashMap）で同じタスクの再計算を避けると効率的です。ガントチャートは <code>ChronoUnit.DAYS.between()</code> でプロジェクト開始日からのオフセットを計算し、<code>'.'</code> と <code>'#'</code> で描画します。<code>StringBuilder</code> で1文字ずつ組み立てるのが確実です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+enum Priority {
+    HIGH("高"), MEDIUM("中"), LOW("低");
+
+    private final String label;
+    Priority(String label) { this.label = label; }
+    public String getLabel() { return label; }
+}
+
+enum Status {
+    TODO("未着手"), IN_PROGRESS("進行中"), DONE("完了");
+
+    private final String label;
+    Status(String label) { this.label = label; }
+    public String getLabel() { return label; }
+}
+
+class TaskMember {
+    private String id;
+    private String name;
+
+    public TaskMember(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public String getId() { return id; }
+    public String getName() { return name; }
+}
+
+class Task {
+    private String id;
+    private String title;
+    private Priority priority;
+    private Status status;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private TaskMember assignee;
+    private List&lt;String&gt; dependsOn;
+
+    public Task(String id, String title, Priority priority, Status status,
+                LocalDate startDate, LocalDate endDate, List&lt;String&gt; dependsOn) {
+        this.id = id;
+        this.title = title;
+        this.priority = priority;
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.dependsOn = dependsOn != null ? dependsOn : new ArrayList&lt;&gt;();
+    }
+
+    public String getId() { return id; }
+    public String getTitle() { return title; }
+    public Priority getPriority() { return priority; }
+    public Status getStatus() { return status; }
+    public LocalDate getStartDate() { return startDate; }
+    public LocalDate getEndDate() { return endDate; }
+    public TaskMember getAssignee() { return assignee; }
+    public List&lt;String&gt; getDependsOn() { return dependsOn; }
+    public void setAssignee(TaskMember assignee) { this.assignee = assignee; }
+
+    public long getDurationDays() {
+        return ChronoUnit.DAYS.between(startDate, endDate) + 1;
+    }
+}
+
+class ProjectManager {
+    private Map&lt;String, Task&gt; tasks = new HashMap&lt;&gt;();
+    private Map&lt;String, TaskMember&gt; members = new HashMap&lt;&gt;();
+    private List&lt;String&gt; taskOrder = new ArrayList&lt;&gt;();
+
+    public void addTask(Task task) {
+        tasks.put(task.getId(), task);
+        taskOrder.add(task.getId());
+    }
+
+    public void addMember(TaskMember member) {
+        members.put(member.getId(), member);
+    }
+
+    public void assignTask(String taskId, String memberId) {
+        Task task = tasks.get(taskId);
+        TaskMember member = members.get(memberId);
+        if (task != null &amp;&amp; member != null) {
+            task.setAssignee(member);
+        }
+    }
+
+    public boolean canStart(String taskId) {
+        Task task = tasks.get(taskId);
+        if (task == null) return false;
+        for (String depId : task.getDependsOn()) {
+            Task dep = tasks.get(depId);
+            if (dep == null || dep.getStatus() != Status.DONE) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void printTaskList() {
+        for (String id : taskOrder) {
+            Task t = tasks.get(id);
+            String assigneeName = t.getAssignee() != null ? t.getAssignee().getName() : "未割当";
+            String deps = t.getDependsOn().isEmpty() ? "" : " 依存:" + t.getDependsOn();
+            System.out.printf("[%s] %-10s %-3s %-6s %02d/%02d-%02d/%02d (%d日) 担当:%s%s%n",
+                t.getId(), t.getTitle(),
+                t.getPriority().getLabel(), t.getStatus().getLabel(),
+                t.getStartDate().getMonthValue(), t.getStartDate().getDayOfMonth(),
+                t.getEndDate().getMonthValue(), t.getEndDate().getDayOfMonth(),
+                t.getDurationDays(), assigneeName, deps);
+        }
+    }
+
+    public void printGanttChart() {
+        LocalDate projectStart = null;
+        LocalDate projectEnd = null;
+        for (Task t : tasks.values()) {
+            if (projectStart == null || t.getStartDate().isBefore(projectStart)) {
+                projectStart = t.getStartDate();
+            }
+            if (projectEnd == null || t.getEndDate().isAfter(projectEnd)) {
+                projectEnd = t.getEndDate();
+            }
+        }
+
+        int totalDays = (int) ChronoUnit.DAYS.between(projectStart, projectEnd) + 1;
+
+        for (String id : taskOrder) {
+            Task t = tasks.get(id);
+            int offset = (int) ChronoUnit.DAYS.between(projectStart, t.getStartDate());
+            int duration = (int) t.getDurationDays();
+
+            StringBuilder bar = new StringBuilder();
+            bar.append("|");
+            for (int d = 0; d &lt; totalDays; d++) {
+                if (d &gt;= offset &amp;&amp; d &lt; offset + duration) {
+                    bar.append("#");
+                } else {
+                    bar.append(".");
+                }
+            }
+            bar.append("|");
+            System.out.printf("%s %-10s %s%n", t.getId(), t.getTitle(), bar);
+        }
+    }
+
+    public void criticalPath() {
+        Map&lt;String, Long&gt; memo = new HashMap&lt;&gt;();
+        Map&lt;String, List&lt;String&gt;&gt; pathMemo = new HashMap&lt;&gt;();
+
+        for (String id : taskOrder) {
+            calcLongestPath(id, memo, pathMemo);
+        }
+
+        String longestEnd = null;
+        long maxDuration = 0;
+        for (String id : taskOrder) {
+            if (memo.get(id) &gt; maxDuration) {
+                maxDuration = memo.get(id);
+                longestEnd = id;
+            }
+        }
+
+        List&lt;String&gt; path = pathMemo.get(longestEnd);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i &lt; path.size(); i++) {
+            if (i &gt; 0) sb.append(" → ");
+            sb.append(path.get(i));
+        }
+        System.out.printf("%s (合計: %d日)%n", sb, maxDuration);
+    }
+
+    private long calcLongestPath(String taskId, Map&lt;String, Long&gt; memo,
+                                  Map&lt;String, List&lt;String&gt;&gt; pathMemo) {
+        if (memo.containsKey(taskId)) {
+            return memo.get(taskId);
+        }
+
+        Task task = tasks.get(taskId);
+        long taskDuration = task.getDurationDays();
+
+        if (task.getDependsOn().isEmpty()) {
+            memo.put(taskId, taskDuration);
+            List&lt;String&gt; path = new ArrayList&lt;&gt;();
+            path.add(taskId);
+            pathMemo.put(taskId, path);
+            return taskDuration;
+        }
+
+        long maxDepDuration = 0;
+        String maxDepId = null;
+        for (String depId : task.getDependsOn()) {
+            long depDuration = calcLongestPath(depId, memo, pathMemo);
+            if (depDuration &gt; maxDepDuration) {
+                maxDepDuration = depDuration;
+                maxDepId = depId;
+            }
+        }
+
+        long total = maxDepDuration + taskDuration;
+        memo.put(taskId, total);
+
+        List&lt;String&gt; path = new ArrayList&lt;&gt;(pathMemo.get(maxDepId));
+        path.add(taskId);
+        pathMemo.put(taskId, path);
+
+        return total;
+    }
+
+    public void progressReport() {
+        int totalTasks = tasks.size();
+        int doneTasks = 0;
+        Map&lt;Priority, int[]&gt; priorityStats = new HashMap&lt;&gt;();
+        for (Priority p : Priority.values()) {
+            priorityStats.put(p, new int[]{0, 0});
+        }
+
+        for (Task t : tasks.values()) {
+            priorityStats.get(t.getPriority())[0]++;
+            if (t.getStatus() == Status.DONE) {
+                doneTasks++;
+                priorityStats.get(t.getPriority())[1]++;
+            }
+        }
+
+        System.out.printf("全体進捗: %.1f%% (%d/%d 完了)%n",
+            (double) doneTasks / totalTasks * 100, doneTasks, totalTasks);
+
+        for (Priority p : Priority.values()) {
+            int[] stats = priorityStats.get(p);
+            if (stats[0] == 0) {
+                System.out.printf("  %s優先度: — (該当なし)%n", p.getLabel());
+            } else {
+                System.out.printf("  %s優先度: %.1f%% (%d/%d)%n",
+                    p.getLabel(), (double) stats[1] / stats[0] * 100,
+                    stats[1], stats[0]);
+            }
+        }
+    }
+}
+
+public class ProjectApp {
+    public static void main(String[] args) {
+        ProjectManager pm = new ProjectManager();
+
+        pm.addMember(new TaskMember("M1", "田中"));
+        pm.addMember(new TaskMember("M2", "佐藤"));
+        pm.addMember(new TaskMember("M3", "山田"));
+
+        pm.addTask(new Task("T1", "要件定義", Priority.HIGH, Status.DONE,
+            LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 5), null));
+        pm.addTask(new Task("T2", "DB設計", Priority.HIGH, Status.DONE,
+            LocalDate.of(2026, 3, 3), LocalDate.of(2026, 3, 7), List.of("T1")));
+        pm.addTask(new Task("T3", "API設計", Priority.MEDIUM, Status.IN_PROGRESS,
+            LocalDate.of(2026, 3, 6), LocalDate.of(2026, 3, 12), List.of("T1")));
+        pm.addTask(new Task("T4", "API実装", Priority.HIGH, Status.TODO,
+            LocalDate.of(2026, 3, 10), LocalDate.of(2026, 3, 20), List.of("T2", "T3")));
+        pm.addTask(new Task("T5", "フロント実装", Priority.MEDIUM, Status.TODO,
+            LocalDate.of(2026, 3, 13), LocalDate.of(2026, 3, 22), List.of("T3")));
+        pm.addTask(new Task("T6", "テスト", Priority.HIGH, Status.TODO,
+            LocalDate.of(2026, 3, 21), LocalDate.of(2026, 3, 28), List.of("T4", "T5")));
+
+        pm.assignTask("T1", "M1");
+        pm.assignTask("T2", "M2");
+        pm.assignTask("T3", "M1");
+        pm.assignTask("T4", "M2");
+        pm.assignTask("T5", "M3");
+        pm.assignTask("T6", "M3");
+
+        System.out.println("=== プロジェクト管理ツール ===\n");
+
+        System.out.println("--- タスク一覧 ---");
+        pm.printTaskList();
+
+        System.out.println("\n--- 開始可能チェック ---");
+        System.out.printf("T3: %s%n", pm.canStart("T3")
+            ? "開始可能（依存タスク全て完了）" : "開始不可（依存タスク未完了あり）");
+        System.out.printf("T4: %s%n", pm.canStart("T4")
+            ? "開始可能（依存タスク全て完了）" : "開始不可（依存タスク未完了あり）");
+
+        System.out.println("\n--- ガントチャート（3/1〜3/28）---");
+        pm.printGanttChart();
+
+        System.out.println("\n--- クリティカルパス ---");
+        pm.criticalPath();
+
+        System.out.println("\n--- 進捗レポート ---");
+        pm.progressReport();
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>クリティカルパス計算ではメモ化（<code>HashMap</code>）を使った再帰で各タスクの最長経路を求めます。動的計画法（DP）の基本パターンです。</li>
+              <li><code>List.of("T1", "T2")</code> で不変リストを簡潔に作成。コンストラクタ内で <code>new ArrayList&lt;&gt;()</code> にコピーすることで外部からの変更を防いでいます。</li>
+              <li><code>int[]</code> 配列を <code>HashMap</code> の値にすることで、1つのキーに対して複数のカウンタ（全体数・完了数）を管理しています。</li>
+              <li><code>ChronoUnit.DAYS.between()</code> でガントチャートのオフセットと幅を計算。<code>StringBuilder</code> で1文字ずつバーを組み立てます。</li>
+              <li>依存関係のチェック（<code>canStart</code>）では、全ての依存先タスクが <code>Status.DONE</code> であることを確認します。enumの <code>==</code> 比較はJavaSilver頻出です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-nav">
+      <a href="level-a.html">
+        <span class="material-icons">arrow_back</span>
+        Level A — 設計実装
+      </a>
+      <a href="index.html">
+        コース一覧
+        <span class="material-icons">arrow_forward</span>
+      </a>
+    </div>
+
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

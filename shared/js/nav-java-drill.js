@@ -10,8 +10,11 @@ const navData = {
         text: "Javaドリル"
     },
     chapters: [
-        { href: "level-d.html", num: "D", text: "Level D — 読める" },
-        { href: "level-c.html", num: "C", text: "Level C — 書ける" }
+        { href: "level-d.html", num: "D", text: "Level D — 基礎実装" },
+        { href: "level-c.html", num: "C", text: "Level C — 仕様実装" },
+        { href: "level-b.html", num: "B", text: "Level B — 複合実装" },
+        { href: "level-a.html", num: "A", text: "Level A — 設計実装" },
+        { href: "level-s.html", num: "S", text: "Level S — 総合実装" }
     ],
     categories: [
         { href: "../../index.html", text: "ダッシュボード" },
