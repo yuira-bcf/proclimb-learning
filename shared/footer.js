@@ -42,6 +42,12 @@ const footerData = {
                 { href: "business/ga4/index.html", text: "GA4入門" },
                 { href: "business/marketing/index.html", text: "マーケティング入門" }
             ]
+        },
+        {
+            title: "応用トレーニング",
+            links: [
+                { href: "exercises/java-drill/index.html", text: "Java実力養成ドリル" }
+            ]
         }
     ],
     legal: [
