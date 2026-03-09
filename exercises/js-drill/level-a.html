@@ -52,6 +52,11 @@
     .hint-content { background: #fff8e1; padding: 16px 18px; border-radius: 0 0 10px 10px; font-size: 0.85rem; line-height: 1.7; color: #5d4037; }
     .hint-content code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
 
+    .drill-base { margin-top: 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 20px; }
+    .drill-base h4 { display: flex; align-items: center; gap: 6px; font-size: 0.88rem; font-weight: 700; color: #0369a1; margin-bottom: 12px; }
+    .drill-base h4 .material-icons { font-size: 1.1rem; color: #0369a1; }
+    .drill-base .drill-code { margin: 0; }
+
     .drill-answer { margin-top: 8px; }
     .drill-answer summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: var(--primary); padding: 10px 14px; background: var(--primary-light); border-radius: 10px; list-style: none; user-select: none; }
     .drill-answer summary::-webkit-details-marker { display: none; }
@@ -137,6 +142,27 @@ console.log(newState.user.address.city); // '大阪'
 console.log(state.user.address.city);    // '東京'（元は不変）
 console.log(newState.settings === state.settings); // true（変更なしは共有）</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function updateIn(obj, path, updater) {
+  const keys = path.split('.');
+
+  // TODO: keys を使い、再帰またはループでネストをたどる
+  // TODO: 各階層でスプレッド構文のシャローコピーを作る
+  // TODO: 最深部で updater(currentValue) を呼び、新しい値を返す
+}
+
+// --- テスト ---
+const state = {
+  user: { name: '田中', address: { city: '東京', zip: '100-0001' } },
+  settings: { theme: 'dark' }
+};
+
+const newState = updateIn(state, 'user.address.city', () =&gt; '大阪');
+console.log(newState.user.address.city);            // '大阪'
+console.log(state.user.address.city);               // '東京'
+console.log(newState.settings === state.settings);   // true</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -210,6 +236,54 @@ const result2 = userSchema.validate({
 });
 console.log(result2.errors);
 // ['name: 1文字以上', 'age: 0以上', 'email: パターン不一致', 'role: admin,user,guest のいずれか']</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function string() {
+  const rules = [];
+  const self = {
+    minLength(n) { /* TODO: ルール追加, return self */ },
+    maxLength(n) { /* TODO: ルール追加, return self */ },
+    matches(regex) { /* TODO: ルール追加, return self */ },
+    _validate(value) { /* TODO: 全ルールを実行し、失敗メッセージの配列を返す */ }
+  };
+  return self;
+}
+
+function number() {
+  const rules = [];
+  const self = {
+    min(n) { /* TODO */ },
+    max(n) { /* TODO */ },
+    _validate(value) { /* TODO */ }
+  };
+  return self;
+}
+
+function oneOf(options) {
+  return {
+    _validate(value) { /* TODO: options に含まれるかチェック */ }
+  };
+}
+
+function schema(definition) {
+  return {
+    validate(data) {
+      // TODO: definition の各フィールドで _validate を呼び、エラーを集約
+      // return { valid: boolean, errors: string[] }
+    }
+  };
+}
+
+// --- テスト ---
+const userSchema = schema({
+  name: string().minLength(1),
+  age: number().min(0).max(150),
+  email: string().matches(/@/),
+  role: oneOf(['admin', 'user', 'guest'])
+});
+console.log(userSchema.validate({ name: '田中', age: 25, email: 'tanaka@example.com', role: 'admin' }));
+console.log(userSchema.validate({ name: '', age: -1, email: 'invalid', role: 'superadmin' }));</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -317,6 +391,40 @@ container.register('userService', (c) => ({
 const userService = container.resolve('userService');
 userService.getUser(1); // "[LOG] Fetching user 1"</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createContainer() {
+  const factories = new Map();
+  const instances = new Map();
+
+  const container = {
+    register(name, factory) {
+      // TODO: ファクトリ関数を Map に登録
+    },
+    resolve(name) {
+      // TODO: キャッシュ済みならそれを返す
+      // TODO: ファクトリを実行（container 自身を引数に渡す）
+      // TODO: 結果をキャッシュして返す
+    }
+  };
+
+  return container;
+}
+
+// --- テスト ---
+const container = createContainer();
+container.register('logger', () =&gt; ({
+  log: (msg) =&gt; console.log(`[LOG] ${msg}`)
+}));
+container.register('userService', (c) =&gt; ({
+  getUser: (id) =&gt; {
+    c.resolve('logger').log(`Fetching user ${id}`);
+    return { id, name: 'User ' + id };
+  }
+}));
+const userService = container.resolve('userService');
+userService.getUser(1);</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -382,6 +490,46 @@ const [doubled, setDoubled] = createSignal(0);
 
 // エフェクトの登録
 createEffect(() => {
+  setDoubled(count() * 2);
+});
+
+console.log(count());   // 0
+console.log(doubled()); // 0
+setCount(5);
+console.log(count());   // 5
+console.log(doubled()); // 10</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>let currentEffect = null;
+
+function createSignal(initialValue) {
+  let value = initialValue;
+  const subscribers = new Set();
+
+  const getter = () =&gt; {
+    // TODO: currentEffect があれば subscribers に追加
+    return value;
+  };
+
+  const setter = (newValue) =&gt; {
+    // TODO: value を更新
+    // TODO: 全 subscribers を実行
+  };
+
+  return [getter, setter];
+}
+
+function createEffect(fn) {
+  // TODO: currentEffect を設定して fn() を実行
+  // TODO: 実行後に currentEffect をリセット
+}
+
+// --- テスト ---
+const [count, setCount] = createSignal(0);
+const [doubled, setDoubled] = createSignal(0);
+
+createEffect(() =&gt; {
   setDoubled(count() * 2);
 });
 
@@ -477,6 +625,47 @@ const result = query(data)
 
 // [{ name: '佐藤', age: 35 }, { name: '田中', age: 30 }, { name: '高橋', age: 28 }]</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function query(data) {
+  const operations = [];
+
+  const builder = {
+    where(predicate) {
+      // TODO: filter 操作を operations に追加
+      return builder;
+    },
+    orderBy(key, direction = 'asc') {
+      // TODO: sort 操作を operations に追加
+      return builder;
+    },
+    select(...keys) {
+      // TODO: map 操作（指定キーだけ抽出）を operations に追加
+      return builder;
+    },
+    execute() {
+      // TODO: operations を順番に適用して結果を返す
+    }
+  };
+
+  return builder;
+}
+
+// --- テスト ---
+const data = [
+  { name: '田中', age: 30, dept: '開発' },
+  { name: '鈴木', age: 25, dept: '営業' },
+  { name: '佐藤', age: 35, dept: '開発' },
+  { name: '高橋', age: 28, dept: '開発' }
+];
+
+const result = query(data)
+  .where(p =&gt; p.dept === '開発')
+  .orderBy('age', 'desc')
+  .select('name', 'age')
+  .execute();
+console.log(result);</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -561,6 +750,31 @@ console.log(diff(old, updated));
 //   { type: 'update', path: 'address.city', oldValue: '東京', value: '大阪' },
 //   { type: 'add', path: 'email', value: 'a@b.com' }
 // ]</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function diff(oldObj, newObj, prefix = '') {
+  const changes = [];
+  const allKeys = new Set([...Object.keys(oldObj), ...Object.keys(newObj)]);
+
+  for (const key of allKeys) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    const oldVal = oldObj[key];
+    const newVal = newObj[key];
+
+    // TODO: key が oldObj にない → type: 'add'
+    // TODO: key が newObj にない → type: 'remove'
+    // TODO: 両方オブジェクト → 再帰呼び出し diff(oldVal, newVal, path)
+    // TODO: 値が異なる → type: 'update'
+  }
+
+  return changes;
+}
+
+// --- テスト ---
+const old = { name: '田中', age: 30, address: { city: '東京' } };
+const updated = { name: '田中', age: 31, address: { city: '大阪' }, email: 'a@b.com' };
+console.log(diff(old, updated));</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -651,6 +865,34 @@ function mount(vnode, container) → void<br>
 
 mount(app, document.getElementById('root'));</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function h(tag, props, ...children) {
+  // TODO: { tag, props, children } オブジェクトを返す
+}
+
+function render(vnode) {
+  // TODO: 文字列/数値 → createTextNode
+  // TODO: オブジェクト → createElement(tag)
+  // TODO: props を setAttribute / addEventListener で設定
+  // TODO: children を再帰的に render して appendChild
+}
+
+function mount(vnode, container) {
+  // TODO: render(vnode) の結果を container に追加
+}
+
+// --- テスト ---
+const app = h('div', { class: 'app' },
+  h('h1', null, 'Hello Virtual DOM'),
+  h('ul', null,
+    h('li', null, 'Item 1'),
+    h('li', null, 'Item 2')
+  )
+);
+
+// mount(app, document.getElementById('root'));</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -734,6 +976,39 @@ router.navigate('/user/42');
             <li><code>:param</code> 形式の動的ルートパラメータに対応</li>
             <li>ブラウザの戻る/進むボタン（<code>popstate</code> イベント）に対応</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createRouter(containerId = 'app') {
+  const routes = [];
+
+  function pathToRegex(path) {
+    const paramNames = [];
+    // TODO: path 内の :param を正規表現キャプチャに変換
+    // TODO: paramNames に名前を蓄積
+    // return { regex, paramNames }
+  }
+
+  function matchRoute(path) {
+    // TODO: routes を走査し、path にマッチするルートを探す
+    // TODO: マッチしたらパラメータを抽出して返す
+  }
+
+  function render(path) {
+    // TODO: matchRoute でルート検索 → handler 実行 → container に反映
+  }
+
+  // TODO: popstate イベントで render を呼び出す
+
+  return {
+    addRoute(path, handler) {
+      // TODO: pathToRegex で変換して routes に追加
+    },
+    navigate(path) {
+      // TODO: history.pushState + render
+    }
+  };
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -850,6 +1125,47 @@ bus.emit('user:logout', { name: '田中' });
 bus.emit('app:init'); // 初期化完了
 bus.emit('app:init'); // （2回目は発火しない）</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createEventBus() {
+  const listeners = new Map();
+
+  function matchPattern(pattern, eventName) {
+    // TODO: 完全一致 or ワイルドカード(user:*)のプレフィクス一致
+  }
+
+  const bus = {
+    on(event, fn) {
+      // TODO: listeners に fn を追加
+      // TODO: アンサブスクライブ関数を返す
+    },
+    once(event, fn) {
+      // TODO: ラッパー関数を作り、1回実行後に off する
+    },
+    off(event, fn) {
+      // TODO: listeners から fn を削除
+    },
+    emit(event, ...args) {
+      // TODO: 全パターンを走査し、マッチしたリスナーを実行
+    }
+  };
+
+  return bus;
+}
+
+// --- テスト ---
+const bus = createEventBus();
+bus.on('user:login', (data) =&gt; console.log('ログイン:', data.name));
+bus.on('user:*', (data, eventName) =&gt; {
+  console.log(`[user系イベント] ${eventName}:`, data);
+});
+bus.once('app:init', () =&gt; console.log('初期化完了'));
+
+bus.emit('user:login', { name: '田中' });
+bus.emit('user:logout', { name: '田中' });
+bus.emit('app:init');
+bus.emit('app:init');</code></pre>
+        </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
           <pre>ログイン: 田中
@@ -959,6 +1275,44 @@ gesture.on('dragend', (e) => {
 });
 
 // マウスドラッグまたはタッチ操作で動作</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createGestureRecognizer(element) {
+  const handlers = { dragstart: [], dragmove: [], dragend: [] };
+  let dragging = false;
+  let startX, startY, startTime;
+
+  function getPos(e) {
+    // TODO: マウス/タッチ両対応で { x, y } を返す
+  }
+
+  function emit(event, data) {
+    handlers[event]?.forEach(fn =&gt; fn(data));
+  }
+
+  function onStart(e) {
+    // TODO: dragging = true, 開始座標・時刻を記録, emit('dragstart')
+  }
+
+  function onMove(e) {
+    // TODO: dragging 中なら dx, dy を計算して emit('dragmove')
+  }
+
+  function onEnd(e) {
+    // TODO: distance, duration を計算して emit('dragend')
+  }
+
+  // TODO: element に mousedown/touchstart を登録
+  // TODO: document に mousemove/touchmove/mouseup/touchend を登録
+
+  return {
+    on(event, fn) { handlers[event]?.push(fn); },
+    destroy() {
+      // TODO: 全イベントリスナーを解除
+    }
+  };
+}</code></pre>
         </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される動作</div>
@@ -1105,6 +1459,55 @@ function createTaskQueue(options) → { add(task, opts), start(), pause(), on(ev
 - イベント: 'taskComplete', 'taskError', 'drain'
           </div>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createTaskQueue({ concurrency = 1 } = {}) {
+  const queue = [];
+  const events = {};
+  let running = 0;
+  let paused = true;
+  let drainResolve = null;
+
+  function emit(event, ...args) {
+    (events[event] || []).forEach(fn =&gt; fn(...args));
+  }
+
+  function runNext() {
+    // TODO: paused なら何もしない
+    // TODO: running &lt; concurrency かつ queue に残りがある間ループ
+    //   - queue.shift() でタスク取得 → running++
+    //   - task().then → emit('taskComplete')
+    //   - .catch → emit('taskError')
+    //   - .finally → running--, キュー空&amp;running===0 なら emit('drain'), runNext()
+  }
+
+  return {
+    add(task, { priority = 0 } = {}) {
+      // TODO: queue に追加 → 優先度で降順ソート
+    },
+    start() {
+      // TODO: paused = false → runNext() → drain 待ち Promise を返す
+    },
+    pause() { paused = true; },
+    on(event, fn) { (events[event] ||= []).push(fn); }
+  };
+}
+
+// ヘルパー関数
+function delay(ms, value) {
+  return new Promise(resolve =&gt; setTimeout(() =&gt; resolve(value), ms));
+}
+
+// --- テスト ---
+const queue = createTaskQueue({ concurrency: 2 });
+queue.add(() =&gt; delay(300, 'Low'), { priority: 1 });
+queue.add(() =&gt; delay(100, 'High'), { priority: 10 });
+queue.add(() =&gt; delay(200, 'Medium'), { priority: 5 });
+queue.add(() =&gt; delay(150, 'Critical'), { priority: 100 });
+queue.on('taskComplete', (result) =&gt; console.log('完了:', result));
+queue.on('drain', () =&gt; console.log('全タスク完了'));
+// await queue.start();</code></pre>
+        </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
           <pre>完了: Critical
@@ -1228,6 +1631,36 @@ function asyncMemoize(fn, options) → async function<br>
 - 同じキーの同時リクエストは Promise を共有（重複排除）
           </div>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function asyncMemoize(fn, { ttl = Infinity, maxSize = Infinity } = {}) {
+  const cache = new Map();   // key → { value, expiry }
+  const pending = new Map(); // key → Promise（実行中）
+
+  function evictOldest() {
+    // TODO: cache.size &gt;= maxSize なら最古のエントリを削除
+  }
+
+  return async function (...args) {
+    const key = JSON.stringify(args);
+
+    // TODO: cache ヒット判定（有効期限内ならキャッシュ値を返す）
+    // TODO: pending に同一キーがあれば、その Promise を返す（重複排除）
+    // TODO: fn(...args) を実行 → 結果を cache に保存 → pending から削除
+  };
+}
+
+// --- テスト ---
+async function mockFetch(userId) {
+  console.log(`API呼び出し: ${userId}`);
+  return { id: userId, name: 'User ' + userId };
+}
+
+const cachedFetch = asyncMemoize(mockFetch, { ttl: 5000, maxSize: 100 });
+// await cachedFetch(1);  // API呼び出し: 1
+// await cachedFetch(1);  // キャッシュヒット
+// await cachedFetch(2);  // API呼び出し: 2</code></pre>
+        </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
           <pre>API呼び出し: 1
@@ -1349,6 +1782,60 @@ try {
   console.log(action); // { fallback: 'キャッシュデータ' }
 }</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// --- カスタムエラー階層 ---
+class AppError extends Error {
+  constructor(message, { code = 'UNKNOWN', statusCode = 500, isOperational = true } = {}) {
+    super(message);
+    this.name = this.constructor.name;
+    // TODO: code, statusCode, isOperational を設定
+  }
+}
+
+class ValidationError extends AppError {
+  constructor(message, { fields = [] } = {}) {
+    // TODO: super() に code:'VALIDATION_ERROR', statusCode:400 を渡す
+    // TODO: this.fields を設定
+  }
+}
+
+class NetworkError extends AppError {
+  constructor(message, { url = '', statusCode = 0 } = {}) {
+    // TODO: super() に code:'NETWORK_ERROR' を渡す
+    // TODO: this.url を設定
+  }
+}
+
+class AuthError extends AppError {
+  constructor(message, { reason = 'unknown' } = {}) {
+    // TODO: super() に code:'AUTH_ERROR', statusCode:401 を渡す
+    // TODO: this.reason を設定
+  }
+}
+
+// --- リカバリーシステム ---
+function createRecoverySystem() {
+  const handlers = new Map();
+
+  return {
+    register(ErrorClass, handler) {
+      // TODO: ErrorClass をキーにハンドラを登録
+    },
+    async handle(error) {
+      // TODO: instanceof で型判定し、マッチしたハンドラを実行
+      // TODO: 未登録なら throw error
+    }
+  };
+}
+
+// --- テスト ---
+const recovery = createRecoverySystem();
+recovery.register(NetworkError, async (err) =&gt; {
+  console.log(`ネットワークエラー回復中: ${err.url}`);
+  return { fallback: 'キャッシュデータ' };
+});</code></pre>
+        </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
           <pre>ネットワークエラー回復中: /api/data
@@ -1463,6 +1950,41 @@ function createCircuitBreaker(fn, options) → async function<br>
 // 3回連続失敗 → Open状態（即座にエラー、実際のAPI呼び出しなし）
 // 5秒後 → HalfOpen（1回試行して成功ならClosed、失敗ならOpen）</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createCircuitBreaker(fn, options = {}) {
+  const { failureThreshold = 5, resetTimeout = 30000 } = options;
+  let state = 'closed';     // 'closed' | 'open' | 'half-open'
+  let failureCount = 0;
+  let nextAttempt = 0;       // Open→HalfOpen の遷移タイムスタンプ
+
+  return async function (...args) {
+    // TODO: state === 'open' の場合
+    //   - Date.now() &lt; nextAttempt → Error('Circuit breaker is OPEN') をスロー
+    //   - それ以外 → state = 'half-open'
+
+    try {
+      const result = await fn(...args);
+      // TODO: 成功 → failureCount リセット, state = 'closed'
+      return result;
+    } catch (error) {
+      // TODO: failureCount++
+      // TODO: threshold 超過 or half-open → state = 'open', nextAttempt 設定
+      throw error;
+    }
+  };
+}
+
+// --- テスト ---
+let callCount = 0;
+const safeFetch = createCircuitBreaker(
+  async () =&gt; {
+    callCount++;
+    throw new Error('サーバーダウン');
+  },
+  { failureThreshold: 3, resetTimeout: 5000 }
+);</code></pre>
+        </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される動作</div>
           <pre>Closed: API呼び出し実行
@@ -1574,6 +2096,52 @@ const repo = container.create('userRepo', 42);
 repo.fetch(); // Fetching user 42
 
 await container.dispose(); // 全サービスのdisposeを呼び出し</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createAdvancedContainer() {
+  const registrations = new Map();
+  const singletons = new Map();
+  const disposables = [];
+
+  const container = {
+    singleton(name, factory) {
+      // TODO: lifecycle: 'singleton' で登録
+    },
+    transient(name, factory) {
+      // TODO: lifecycle: 'transient' で登録
+    },
+    factory(name, factory) {
+      // TODO: lifecycle: 'factory' で登録
+    },
+    resolve(name) {
+      // TODO: singleton → キャッシュ確認、なければ生成&amp;キャッシュ
+      // TODO: transient → 毎回新規生成
+      // TODO: dispose メソッドを持つインスタンスは disposables に追加
+    },
+    create(name, ...args) {
+      // TODO: factory に追加引数を渡して生成
+    },
+    async dispose() {
+      // TODO: disposables を逆順でループし、各 dispose() を呼ぶ
+      // TODO: singletons と disposables をクリア
+    }
+  };
+
+  return container;
+}
+
+// --- テスト ---
+const container = createAdvancedContainer();
+container.singleton('config', () =&gt; ({ apiUrl: 'https://api.example.com' }));
+container.transient('logger', (c) =&gt; ({
+  log: (msg) =&gt; console.log(`[${Date.now()}] ${msg}`),
+  dispose: () =&gt; console.log('logger disposed')
+}));
+container.factory('userRepo', (c, userId) =&gt; ({
+  config: c.resolve('config'), userId,
+  fetch: () =&gt; console.log(`Fetching user ${userId}`)
+}));</code></pre>
         </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
@@ -1708,6 +2276,57 @@ notifier.notify({ level: 'error', message: 'DB接続失敗', stack: '...' });
 
 notifier.notify({ level: 'info', message: 'サーバー起動' });
 // [Console] サーバー起動:</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createNotifier() {
+  const channels = new Map();
+  const rules = [];
+
+  return {
+    addChannel(name, strategy) {
+      // TODO: channels に strategy を登録
+    },
+    addRule(name, rule) {
+      // TODO: rules 配列に { name, match, channels, transform } を追加
+    },
+    notify(event) {
+      // TODO: 全 rules を走査
+      //   - rule.match(event) が true のルールだけ処理
+      //   - rule.transform(event) でメッセージを変換
+      //   - rule.channels の各チャネルの send(message) を呼び出す
+    },
+    removeRule(name) {
+      // TODO: name に一致するルールを削除
+    },
+    removeChannel(name) {
+      // TODO: channels から削除
+    }
+  };
+}
+
+// --- テスト ---
+const notifier = createNotifier();
+notifier.addChannel('console', {
+  send: (msg) =&gt; console.log(`[Console] ${msg.title}: ${msg.body}`)
+});
+notifier.addChannel('slack', {
+  send: (msg) =&gt; console.log(`[Slack] #${msg.channel}: ${msg.title}`)
+});
+notifier.addRule('error', {
+  match: (event) =&gt; event.level === 'error',
+  channels: ['console', 'slack'],
+  transform: (event) =&gt; ({
+    title: `ERROR: ${event.message}`, body: event.stack || '', channel: 'alerts'
+  })
+});
+notifier.addRule('info', {
+  match: (event) =&gt; event.level === 'info',
+  channels: ['console'],
+  transform: (event) =&gt; ({ title: event.message, body: '' })
+});
+notifier.notify({ level: 'error', message: 'DB接続失敗', stack: '...' });
+notifier.notify({ level: 'info', message: 'サーバー起動' });</code></pre>
         </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>

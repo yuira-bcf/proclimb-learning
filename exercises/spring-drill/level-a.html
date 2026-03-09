@@ -37,6 +37,10 @@
     .drill-hint[open] summary { border-radius: 10px 10px 0 0; }
     .hint-content { background: #fff8e1; padding: 16px 18px; border-radius: 0 0 10px 10px; font-size: 0.85rem; line-height: 1.7; color: #5d4037; }
     .hint-content code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
+    .drill-base { margin-top: 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 20px; }
+    .drill-base h4 { display: flex; align-items: center; gap: 6px; font-size: 0.88rem; font-weight: 700; color: #0369a1; margin-bottom: 12px; }
+    .drill-base h4 .material-icons { font-size: 1.1rem; color: #0369a1; }
+    .drill-base .drill-code { margin: 0; }
     .drill-answer { margin-top: 8px; }
     .drill-answer summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: var(--primary); padding: 10px 14px; background: var(--primary-light); border-radius: 10px; list-style: none; user-select: none; }
     .drill-answer summary::-webkit-details-marker { display: none; }
@@ -106,6 +110,28 @@
             <li>全ストラテジーをMapで管理し、リクエストの <code>discountType</code> に応じて切り替え</li>
             <li>GET /api/price?amount=5000&amp;discountType=percent</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// DiscountStrategy.java
+public interface DiscountStrategy {
+    int apply(int price);
+    String getType();
+}
+
+// NoneDiscount.java
+@Component
+public class NoneDiscount implements DiscountStrategy {
+    // TODO: apply() と getType() を実装
+}
+
+// PriceController.java
+@RestController
+@RequestMapping("/api")
+public class PriceController {
+    // TODO: 全DiscountStrategyをMapで管理し、
+    //       GET /api/price?amount=5000&amp;discountType=percent で割引計算
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -198,6 +224,26 @@ public class PriceService {
             <li>例外発生時: "[ERROR] クラス名.メソッド名: 例外メッセージ" を出力</li>
           </ul>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// ServiceLoggingAspect.java
+@Aspect
+@Component
+public class ServiceLoggingAspect {
+
+    private static final Logger log =
+        LoggerFactory.getLogger(ServiceLoggingAspect.class);
+
+    // TODO: @Around アドバイスを実装
+    //   対象: @Serviceが付いたクラスの全publicメソッド
+    //   ログ: [START] クラス名.メソッド名
+    //         [END]   クラス名.メソッド名 ({X}ms)
+    //         [ERROR] クラス名.メソッド名: 例外メッセージ
+}
+
+// build.gradle に追加（またはpom.xml）
+// implementation 'org.springframework.boot:spring-boot-starter-aop'</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -279,6 +325,41 @@ public class ServiceLoggingAspect {
             <li><code>cancel</code>: キャンセルURL（status=PENDINGの場合のみ）</li>
           </ul>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// Order.java (Entity)
+public class Order {
+    private Long id;
+    private String customerName;
+    private String status; // "PENDING", "SHIPPED", "DELIVERED"
+    // getter/setter 省略
+}
+
+// OrderResponse.java
+public class OrderResponse {
+    private Long id;
+    private String customerName;
+    private String status;
+    private Map&lt;String, String&gt; links = new LinkedHashMap&lt;&gt;();
+
+    // TODO: Order → OrderResponse 変換メソッドを作成
+    //       self, items リンクを常に追加
+    //       cancel リンクは status=PENDING の場合のみ
+}
+
+// OrderController.java
+@RestController
+@RequestMapping("/api/orders")
+public class OrderController {
+    private final OrderService orderService;
+
+    @GetMapping("/{id}")
+    public OrderResponse getOrder(@PathVariable Long id,
+            HttpServletRequest request) {
+        // TODO: baseUrl を構築し、OrderResponse を返却
+    }
+}</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -357,6 +438,32 @@ public OrderResponse getOrder(@PathVariable Long id,
             <li>v2: <code>GET /api/v2/users/{id}</code> → <code>{ "id": 1, "firstName": "Taro", "lastName": "Yamada", "email": "..." }</code></li>
             <li>v1とv2のControllerは別クラスだが、Serviceは共通で使う</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// User.java (Entity)
+public class User {
+    private Long id;
+    private String firstName;
+    private String lastName;
+    private String email;
+
+    public String getName() {
+        return firstName + " " + lastName;
+    }
+}
+
+// UserV1Response.java
+public record UserV1Response(Long id, String name) {}
+
+// UserV2Response.java
+public record UserV2Response(
+    Long id, String firstName, String lastName, String email) {}
+
+// TODO: UserV1Controller と UserV2Controller を作成
+//   v1: GET /api/v1/users/{id} → UserV1Response
+//   v2: GET /api/v2/users/{id} → UserV2Response
+//   共通の UserService を使用すること</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -443,6 +550,41 @@ public class UserV2Controller {
             <li>更新成功時は version を +1 する</li>
           </ul>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// Product.java (Entity)
+public class Product {
+    private Long id;
+    private String name;
+    private int price;
+    private int version; // 楽観的ロック用
+    // getter/setter 省略
+}
+
+// ProductMapper.java
+@Mapper
+public interface ProductMapper {
+    Product findById(Long id);
+
+    // TODO: version付きUPDATEを実装
+    //   SET name=#{name}, price=#{price}, version=version+1
+    //   WHERE id=#{id} AND version=#{version}
+    //   戻り値: int (影響行数)
+}
+
+// ProductService.java
+@Service
+public class ProductService {
+    private final ProductMapper productMapper;
+
+    @Transactional
+    public Product update(Long id, ProductForm form) {
+        Product product = productMapper.findById(id);
+        // TODO: 楽観的ロック付き更新を実装
+        //   影響行数0 → OptimisticLockException(409)をスロー
+    }
+}</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -518,6 +660,40 @@ public class OptimisticLockException extends RuntimeException {
             <li>MyBatis XMLマッパーでGROUP BYクエリを記述</li>
             <li>売上ゼロの月も含める（12行固定）</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// MonthlySalesReport.java
+public class MonthlySalesReport {
+    private int month;
+    private long totalSales;
+    private int orderCount;
+    private long avgOrderAmount;
+    // getter/setter 省略
+}
+
+// ReportMapper.java
+@Mapper
+public interface ReportMapper {
+    // TODO: 月別売上集計XMLマッパーを作成
+    //   generate_series(1,12) で12ヶ月分生成
+    //   LEFT JOIN orders, order_items
+    //   売上ゼロの月も含める（COALESCE使用）
+    List&lt;MonthlySalesReport&gt; monthlySales(@Param("year") int year);
+}
+
+// ReportController.java
+@RestController
+@RequestMapping("/api/reports")
+public class ReportController {
+    private final ReportMapper reportMapper;
+
+    @GetMapping("/monthly-sales")
+    public List&lt;MonthlySalesReport&gt; monthlySales(
+            @RequestParam int year) {
+        // TODO: 実装
+    }
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -597,6 +773,34 @@ public class MonthlySalesReport {
             <li>Validator内で <code>UserMapper.findByEmail()</code> を呼び出し、既存レコードがあればバリデーション失敗</li>
             <li>新規作成時のみチェック（更新時は自身のレコードを除外）</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// UserForm.java
+@UniqueEmail  // TODO: このアノテーションを作成
+public class UserForm {
+    private Long id; // 更新時のみセット（新規はnull）
+    @NotBlank
+    private String name;
+    @NotBlank @Email
+    private String email;
+    // getter/setter 省略
+}
+
+// UserMapper.java
+@Mapper
+public interface UserMapper {
+    User findByEmail(String email);
+}
+
+// TODO: @UniqueEmail アノテーション定義
+//   @Target(ElementType.TYPE)
+//   @Constraint(validatedBy = UniqueEmailValidator.class)
+
+// TODO: UniqueEmailValidator 実装
+//   UserMapper を DI で注入
+//   新規: 同一メールが存在すればNG
+//   更新: 自身のレコード(id一致)は除外</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -678,6 +882,28 @@ public class UniqueEmailValidator
             <li>AOP（@Around）で@Validの前にサニタイズ処理を実行</li>
             <li><code>&lt;script&gt;alert('xss')&lt;/script&gt;</code> → <code>alert('xss')</code> に変換</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// CommentForm.java
+public class CommentForm {
+    @Sanitize  // TODO: このアノテーションを作成
+    @NotBlank
+    private String content;
+
+    @Sanitize
+    private String authorName;
+    // getter/setter 省略
+}
+
+// TODO: @Sanitize アノテーション定義
+//   @Target(ElementType.FIELD)
+//   @Retention(RetentionPolicy.RUNTIME)
+
+// TODO: SanitizeAspect 実装
+//   @Before で POST/PUT メソッドの引数をインターセプト
+//   @Sanitize 付きの String フィールドから HTMLタグを除去
+//   例: "&lt;script&gt;alert('xss')&lt;/script&gt;" → "alert('xss')"</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -769,6 +995,39 @@ public class CommentForm {
             <li><code>ConflictException</code>: 409, errorCode="RESOURCE_CONFLICT", 競合フィールド名を含む</li>
             <li>全例外を1つの <code>@ExceptionHandler(AppException.class)</code> でProblemDetailに変換</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// AppException.java — 基底例外クラス
+public abstract class AppException extends RuntimeException {
+    private final String errorCode;
+    private final HttpStatus httpStatus;
+    private final String typeUri;
+    private final Map&lt;String, Object&gt; properties = new LinkedHashMap&lt;&gt;();
+
+    protected AppException(String message, String errorCode,
+            HttpStatus httpStatus, String typeUri) {
+        super(message);
+        this.errorCode = errorCode;
+        this.httpStatus = httpStatus;
+        this.typeUri = typeUri;
+    }
+
+    protected void addProperty(String key, Object value) {
+        properties.put(key, value);
+    }
+    // getter 省略
+}
+
+// TODO: EntityNotFoundException (404) を作成
+//   errorCode="ENTITY_NOT_FOUND", エンティティ名とIDを追加プロパティに
+
+// TODO: BusinessRuleViolationException (422) を作成
+
+// TODO: ConflictException (409) を作成
+
+// TODO: GlobalExceptionHandler で
+//   @ExceptionHandler(AppException.class) → ProblemDetail に変換</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -894,6 +1153,36 @@ throw new EntityNotFoundException("Order", 42);
             <li>ProblemDetailの <code>retryable</code> プロパティでリトライ可否を通知</li>
           </ul>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// RetryableException.java
+public class RetryableException extends AppException {
+    private final int retryAfterSeconds;
+
+    public RetryableException(String message, int retryAfterSeconds) {
+        super(message, "SERVICE_UNAVAILABLE",
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "/problems/service-unavailable");
+        this.retryAfterSeconds = retryAfterSeconds;
+        // TODO: retryable, retryAfterSeconds をプロパティに追加
+    }
+}
+
+// ExternalApiClient.java
+@Service
+public class ExternalApiClient {
+    private final RestClient restClient;
+
+    public PaymentResult processPayment(PaymentRequest req) {
+        // TODO: 外部API呼び出しを実装
+        //   ResourceAccessException → RetryableException(503, 30秒)
+        //   HttpClientErrorException → NonRetryableException(400)
+    }
+}
+
+// TODO: GlobalExceptionHandler に RetryableException 用ハンドラ追加
+//   Retry-After ヘッダーを設定</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -1010,6 +1299,46 @@ public ResponseEntity&lt;ProblemDetail&gt; handleRetryable(
             <li><code>POST /api/auth/login</code>: ユーザー名+パスワードでログイン、JWTを返却</li>
             <li>トークン期限切れ時は401 + 明確なエラーメッセージ</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// JwtTokenProvider.java
+@Component
+public class JwtTokenProvider {
+    @Value("${jwt.secret}") private String secret;
+    private static final long EXPIRATION_MS = 3600000; // 1時間
+
+    // TODO: generateToken(username, roles) を実装
+    //   Jwts.builder() でトークン生成
+
+    // TODO: parseToken(token) を実装
+    //   Jwts.parser() でトークン検証・パース
+}
+
+// JwtAuthenticationFilter.java
+@Component
+public class JwtAuthenticationFilter
+        extends OncePerRequestFilter {
+    private final JwtTokenProvider tokenProvider;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
+        // TODO: Authorization ヘッダーから Bearer トークンを抽出
+        //   有効 → SecurityContextHolder に認証情報を設定
+        //   期限切れ → 401 + エラーメッセージ
+        chain.doFilter(request, response);
+    }
+}
+
+// AuthController.java
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+    // TODO: POST /api/auth/login を実装
+    //   username + password → JWT を返却
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -1144,6 +1473,38 @@ public class AuthController {
             <li>カスタム <code>PermissionEvaluator</code> で所有者チェックロジックを共通化</li>
           </ul>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// SecurityConfig.java
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity  // メソッドレベル認可を有効化
+public class SecurityConfig { /* フィルタチェーン設定 */ }
+
+// ArticleService.java
+@Service
+public class ArticleService {
+    private final ArticleMapper articleMapper;
+
+    public boolean isOwner(Long articleId, String username) {
+        // TODO: 記事の作成者とusernameが一致するか判定
+    }
+
+    // TODO: @PreAuthorize で「作成者本人 or ADMIN」のみ許可
+    @Transactional
+    public ArticleResponse update(Long id, ArticleForm form) {
+        // TODO: 実装
+    }
+
+    // TODO: @PreAuthorize で ADMIN のみ許可
+    @Transactional
+    public void delete(Long id) {
+        // TODO: 実装
+    }
+}
+
+// TODO: CustomPermissionEvaluator を実装（汎用的な権限チェック）</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -1270,6 +1631,33 @@ public ArticleResponse update(Long id, ArticleForm form) {
             <li><code>POST /api/coupons/{code}/apply?amount=5000</code> — クーポン適用（期限切れ → 400, 使用済み → 400, 正常 → 割引後金額）</li>
             <li>先にテスト5ケース（作成成功、バリデーション失敗、適用成功、期限切れ、使用済み）を書いてから実装</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// === STEP1: まずこのテストを書く ===
+@WebMvcTest(CouponController.class)
+class CouponControllerTest {
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @MockBean private CouponService couponService;
+
+    // TODO: テスト5件を先に書く
+    //   1. クーポン作成: 正常系 → 201
+    //   2. クーポン作成: バリデーション失敗 → 400
+    //   3. クーポン適用: 正常 → 200 (割引後金額)
+    //   4. クーポン適用: 期限切れ → 400
+    //   5. クーポン適用: 使用済み → 400
+}
+
+// === STEP2: テストが通る実装を書く ===
+// CouponForm.java
+public class CouponForm {
+    @NotBlank private String code;
+    @Min(1) @Max(100) private int discount;
+    @Future private LocalDate expiresAt;
+}
+
+// CouponController.java, CouponService.java を実装</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -1417,6 +1805,37 @@ public class CouponService {
             <li>カスタム <code>@WithAdmin</code> アノテーションで重複を排除</li>
           </ul>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// === カスタムアノテーション ===
+// TODO: @WithAdmin を作成（@WithMockUser のメタアノテーション）
+// TODO: @WithUser を作成
+
+// AdminControllerTest.java
+@WebMvcTest(AdminController.class)
+class AdminControllerTest {
+    @Autowired private MockMvc mockMvc;
+    @MockBean private AdminService adminService;
+
+    // TODO: 以下のテストを実装
+    //   1. 認証なし → 401
+    //   2. USER権限 → 403
+    //   3. ADMIN権限 → 200
+    //   4. 他人のプロフィール更新 → 403
+}
+
+// AdminController.java
+@RestController
+@RequestMapping("/api/admin")
+public class AdminController {
+    private final AdminService adminService;
+
+    @GetMapping("/dashboard")
+    public DashboardResponse getDashboard() {
+        return adminService.getDashboard();
+    }
+}</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -1531,6 +1950,36 @@ class AdminControllerTest {
             <li><strong>presentation層</strong>: UserController、DTO変換</li>
             <li>依存方向: presentation → usecase → domain ← infrastructure</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// === domain層 ===
+// domain/model/User.java
+public class User {
+    private Long id;
+    private String name;
+    private Email email;     // TODO: Value Object として作成
+    private Password password; // TODO: Value Object として作成
+    private LocalDateTime createdAt;
+}
+
+// domain/repository/UserRepository.java
+public interface UserRepository {
+    Optional&lt;User&gt; findById(Long id);
+    Optional&lt;User&gt; findByEmail(Email email);
+    void save(User user);
+}
+
+// === usecase層 ===
+// TODO: RegisterUserUseCase を実装
+//   UserRepository インタフェースに依存（実装に依存しない）
+
+// === infrastructure層 ===
+// TODO: UserRepositoryImpl を実装（MyBatisMapper経由）
+
+// === presentation層 ===
+// TODO: UserController + DTO変換を実装
+//   依存方向: presentation → usecase → domain ← infrastructure</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -1670,6 +2119,47 @@ public class UserController {
             <li><strong>認可</strong>: 作成者のみ更新・公開可能、ADMIN は全操作可能</li>
             <li><strong>テスト</strong>: Service層ユニットテスト5件 + Controller層MockMvcテスト5件</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// Article.java (Entity)
+public class Article {
+    private Long id;
+    private String title;
+    private String content;
+    private String authorId;
+    private String status; // DRAFT, PUBLISHED, ARCHIVED
+    private List&lt;String&gt; tags;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+
+// ArticleMapper.java
+@Mapper
+public interface ArticleMapper {
+    Article findById(Long id);
+    List&lt;Article&gt; search(@Param("tag") String tag,
+        @Param("status") String status,
+        @Param("limit") int limit, @Param("offset") int offset);
+    int insert(Article article);
+    int update(Article article);
+    int updateStatus(@Param("id") Long id,
+        @Param("status") String status);
+    int deleteById(Long id);
+}
+
+// TODO: ArticleService を実装
+//   状態遷移ルール: DRAFT→PUBLISHED (OK), ARCHIVED→PUBLISHED (NG)
+//   認可: 作成者のみ更新・公開可能
+
+// TODO: ArticleController を実装
+//   POST /api/articles (201)
+//   GET /api/articles/{id} (200)
+//   GET /api/articles?tag=Java&amp;status=PUBLISHED (200)
+//   PUT /api/articles/{id} (200)
+//   PATCH /api/articles/{id}/publish (200)
+
+// TODO: テスト（Service 5件 + Controller 5件）を先に書く</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>

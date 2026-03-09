@@ -37,6 +37,10 @@
     .drill-hint[open] summary { border-radius: 10px 10px 0 0; }
     .hint-content { background: #fff8e1; padding: 16px 18px; border-radius: 0 0 10px 10px; font-size: 0.85rem; line-height: 1.7; color: #5d4037; }
     .hint-content code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
+    .drill-base { margin-top: 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 20px; }
+    .drill-base h4 { display: flex; align-items: center; gap: 6px; font-size: 0.88rem; font-weight: 700; color: #0369a1; margin-bottom: 12px; }
+    .drill-base h4 .material-icons { font-size: 1.1rem; color: #0369a1; }
+    .drill-base .drill-code { margin: 0; }
     .drill-answer { margin-top: 8px; }
     .drill-answer summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: var(--primary); padding: 10px 14px; background: var(--primary-light); border-radius: 10px; list-style: none; user-select: none; }
     .drill-answer summary::-webkit-details-marker { display: none; }
@@ -106,6 +110,44 @@
             <li><code>SmtpMailSender</code>: @Profile("prod") — "SMTP送信: {to}" を出力（実際の送信は模擬）</li>
             <li>コントローラからMailSenderを呼び出してテストできるエンドポイント</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// MailSender.java
+public interface MailSender {
+    void send(String to, String subject, String body);
+}
+
+// ConsoleMailSender.java
+// TODO: @Service と @Profile("dev") を付与してください
+public class ConsoleMailSender implements MailSender {
+    @Override
+    public void send(String to, String subject, String body) {
+        // TODO: コンソールに [DEV] To: / Subject: / Body: を出力
+    }
+}
+
+// SmtpMailSender.java
+// TODO: @Service と @Profile("prod") を付与してください
+public class SmtpMailSender implements MailSender {
+    @Override
+    public void send(String to, String subject, String body) {
+        // TODO: "SMTP送信: {to}" を出力（模擬）
+    }
+}
+
+// MailController.java
+@RestController
+@RequestMapping("/api/mail")
+public class MailController {
+    // TODO: MailSender をコンストラクタインジェクションで注入
+
+    @PostMapping("/test")
+    public ResponseEntity&lt;String&gt; sendTest() {
+        // TODO: mailSender.send() を呼び出して "送信完了" を返却
+        return null;
+    }
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -195,6 +237,46 @@ public class MailController {
             <li><code>S3StorageService</code>: S3にアップロード（模擬、Bean名: "s3Storage"）</li>
             <li>コントローラで <code>@Qualifier("localStorage")</code> を使って選択</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// StorageService.java
+public interface StorageService {
+    String store(String filename, byte[] data);
+}
+
+// LocalStorageService.java
+// TODO: @Service にBean名 "localStorage" を指定してください
+public class LocalStorageService implements StorageService {
+    @Override
+    public String store(String filename, byte[] data) {
+        // TODO: ローカル保存処理を実装し、"/uploads/" + filename を返却
+        return null;
+    }
+}
+
+// S3StorageService.java
+// TODO: @Service にBean名 "s3Storage" を指定してください
+public class S3StorageService implements StorageService {
+    @Override
+    public String store(String filename, byte[] data) {
+        // TODO: S3アップロード処理（模擬）を実装し、URLを返却
+        return null;
+    }
+}
+
+// FileController.java
+@RestController
+@RequestMapping("/api/files")
+public class FileController {
+    // TODO: @Qualifier("localStorage") を使って StorageService を注入
+
+    @PostMapping("/upload")
+    public ResponseEntity&lt;String&gt; upload(@RequestParam String filename) {
+        // TODO: storageService.store() を呼び出して結果を返却
+        return null;
+    }
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -294,6 +376,48 @@ public class FileController {
             <li>MyBatis XMLマッパーで動的SQLを記述</li>
           </ul>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>&lt;!-- ProductMapper.xml --&gt;
+&lt;select id="search" resultType="Product"&gt;
+  SELECT * FROM products
+  &lt;where&gt;
+    &lt;!-- TODO: keyword が空でなければ AND name LIKE ... --&gt;
+    &lt;!-- TODO: category が空でなければ AND category = ... --&gt;
+  &lt;/where&gt;
+  &lt;!-- TODO: ORDER BY ${sort} ${order} --&gt;
+  &lt;!-- TODO: LIMIT #{size} OFFSET #{offset} --&gt;
+&lt;/select&gt;
+
+// ProductMapper.java
+@Mapper
+public interface ProductMapper {
+    List&lt;Product&gt; search(@Param("keyword") String keyword,
+        @Param("category") String category,
+        @Param("sort") String sort, @Param("order") String order,
+        @Param("size") int size, @Param("offset") int offset);
+    long countSearch(@Param("keyword") String keyword,
+        @Param("category") String category);
+}
+
+// ProductService.java
+@Service
+public class ProductService {
+    private static final Set&lt;String&gt; ALLOWED_SORT =
+        Set.of("id", "name", "price", "created_at");
+    private final ProductMapper productMapper;
+
+    public PageResponse&lt;Product&gt; search(String keyword,
+            String category, String sort, String order,
+            int page, int size) {
+        // TODO: sort がホワイトリストに含まれなければ "id" に補正
+        // TODO: order が "desc" でなければ "asc" に補正
+        // TODO: offset を計算し、productMapper.search() を呼び出し
+        // TODO: countSearch() で総件数を取得し PageResponse を返却
+        return null;
+    }
+}</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -372,6 +496,50 @@ public PageResponse&lt;Product&gt; search(String keyword,
             <li>レスポンスはUserResponse DTO（passwordを含めない）</li>
             <li>エラーレスポンスは統一フォーマット</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// UserCreateRequest.java
+public class UserCreateRequest {
+    // TODO: @NotBlank @Size(min = 2, max = 50) を付与
+    private String name;
+    // TODO: @NotBlank @Email を付与
+    private String email;
+    // TODO: @NotBlank @Size(min = 8) を付与
+    private String password;
+    // getter/setter 省略
+}
+
+// UserService.java
+@Service
+public class UserService {
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserResponse create(UserCreateRequest req) {
+        // TODO: userMapper.findByEmail() で重複チェック
+        //       重複時は DuplicateResourceException(409) をスロー
+        // TODO: User エンティティを作成
+        //       パスワードは passwordEncoder.encode() でハッシュ化
+        // TODO: userMapper.insert() で保存
+        // TODO: UserResponse.from(user) で DTO に変換して返却
+        return null;
+    }
+}
+
+// UserController.java
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    private final UserService userService;
+
+    @PostMapping
+    public ResponseEntity&lt;UserResponse&gt; create(
+            @Valid @RequestBody UserCreateRequest req) {
+        // TODO: userService.create() を呼び出し、201 Created で返却
+        return null;
+    }
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -465,6 +633,43 @@ public ResponseEntity&lt;UserResponse&gt; create(
             <li>@Transactionalで全操作をアトミックにする</li>
           </ul>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// OrderRequest.java
+public class OrderRequest {
+    private String customerName;
+    private List&lt;OrderItemRequest&gt; items;
+    // getter/setter 省略
+}
+
+public class OrderItemRequest {
+    private Long productId;
+    private int quantity;
+    // getter/setter 省略
+}
+
+// OrderService.java
+@Service
+public class OrderService {
+    private final OrderMapper orderMapper;
+    private final OrderItemMapper orderItemMapper;
+    private final ProductMapper productMapper;
+
+    // TODO: @Transactional を付与
+    public Order placeOrder(OrderRequest req) {
+        // TODO: 各アイテムについて在庫チェック
+        //   productMapper.findById() で商品を取得
+        //   stock &lt; quantity なら InsufficientStockException をスロー
+        //   productMapper.decreaseStock() で在庫を減算
+
+        // TODO: Order を作成して orderMapper.insert()
+
+        // TODO: 各アイテムの OrderItem を作成して orderItemMapper.insert()
+
+        return null;
+    }
+}</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -548,6 +753,37 @@ public class OrderService {
             <li>@Transactionalでアトミックに処理</li>
           </ul>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>&lt;!-- ProductMapper.xml --&gt;
+&lt;insert id="batchInsert"&gt;
+  INSERT INTO products (name, price, category)
+  VALUES
+  &lt;!-- TODO: &lt;foreach&gt; で list の各要素を展開 --&gt;
+  &lt;!--   collection="list" item="p" separator="," --&gt;
+  &lt;!--   (#{p.name}, #{p.price}, #{p.category}) --&gt;
+&lt;/insert&gt;
+
+// ProductMapper.java
+@Mapper
+public interface ProductMapper {
+    void batchInsert(@Param("list") List&lt;Product&gt; products);
+}
+
+// ProductService.java
+@Service
+public class ProductService {
+    private final ProductMapper productMapper;
+
+    // TODO: @Transactional を付与
+    public int batchImport(List&lt;ProductForm&gt; forms) {
+        // TODO: forms を Product エンティティのリストに変換
+        // TODO: productMapper.batchInsert() を呼び出し
+        // TODO: 登録件数を返却
+        return 0;
+    }
+}</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -624,6 +860,42 @@ public int batchImport(List&lt;ProductForm&gt; forms) {
             <li><code>PhoneNumberValidator</code>: ConstraintValidatorを実装</li>
             <li>ContactForm の phone フィールドに適用</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// PhoneNumber.java
+@Target({ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+// TODO: @Constraint(validatedBy = ???) を付与
+public @interface PhoneNumber {
+    String message() default "電話番号の形式が正しくありません";
+    Class&lt;?&gt;[] groups() default {};
+    Class&lt;? extends Payload&gt;[] payload() default {};
+}
+
+// PhoneNumberValidator.java
+public class PhoneNumberValidator
+        implements ConstraintValidator&lt;PhoneNumber, String&gt; {
+    private static final Pattern PATTERN =
+        Pattern.compile("^0[0-9]{9,10}$");
+
+    @Override
+    public boolean isValid(String value,
+            ConstraintValidatorContext context) {
+        // TODO: null/空文字は true を返す（@NotBlank の責務）
+        // TODO: 正規表現でマッチ判定して結果を返す
+        return false;
+    }
+}
+
+// ContactForm.java
+public class ContactForm {
+    @NotBlank
+    private String name;
+
+    // TODO: @PhoneNumber を付与
+    private String phone;
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -702,6 +974,40 @@ public class ContactForm {
             <li>startDate &lt; endDate を検証（同日は不可）</li>
             <li>SearchForm の startDate/endDate に適用</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// DateRange.java
+// TODO: @Target(ElementType.TYPE) を指定（クラスレベル）
+@Retention(RetentionPolicy.RUNTIME)
+// TODO: @Constraint(validatedBy = ???) を付与
+public @interface DateRange {
+    String message() default
+        "開始日は終了日より前の日付を指定してください";
+    Class&lt;?&gt;[] groups() default {};
+    Class&lt;? extends Payload&gt;[] payload() default {};
+}
+
+// DateRangeValidator.java
+public class DateRangeValidator
+        implements ConstraintValidator&lt;DateRange, SearchForm&gt; {
+    @Override
+    public boolean isValid(SearchForm form,
+            ConstraintValidatorContext context) {
+        // TODO: startDate または endDate が null なら true を返す
+        // TODO: startDate.isBefore(endDate) で検証
+        return false;
+    }
+}
+
+// SearchForm.java
+// TODO: @DateRange を付与
+public class SearchForm {
+    @NotNull private LocalDate startDate;
+    @NotNull private LocalDate endDate;
+    private String keyword;
+    // getter/setter 省略
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -786,6 +1092,48 @@ public class SearchForm {
             <li><code>DuplicateResourceException</code> → 409</li>
             <li><code>Exception</code>（その他）→ 500</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// ErrorResponse.java
+public class ErrorResponse {
+    private LocalDateTime timestamp;
+    private int status;
+    private String error;
+    private String message;
+    private String path;
+    private List&lt;FieldError&gt; errors;
+
+    public ErrorResponse(int status, String error,
+            String message, String path) {
+        this.timestamp = LocalDateTime.now();
+        this.status = status;
+        this.error = error;
+        this.message = message;
+        this.path = path;
+    }
+
+    public record FieldError(String field, String message) {}
+    // getter/setter 省略
+}
+
+// GlobalExceptionHandler.java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    // TODO: @ExceptionHandler(ResourceNotFoundException.class)
+    //       404 Not Found を返すメソッドを実装
+
+    // TODO: @ExceptionHandler(MethodArgumentNotValidException.class)
+    //       400 Bad Request + フィールドエラー一覧を返すメソッドを実装
+    //       ex.getBindingResult().getFieldErrors() でエラー一覧を取得
+
+    // TODO: @ExceptionHandler(DuplicateResourceException.class)
+    //       409 Conflict を返すメソッドを実装
+
+    // TODO: @ExceptionHandler(Exception.class)
+    //       500 Internal Server Error を返すメソッドを実装
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -903,6 +1251,63 @@ public class GlobalExceptionHandler {
             <li><code>@ExceptionHandler</code> で <code>ProblemDetail</code> オブジェクトを生成して返却</li>
           </ul>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// BusinessException.java
+public abstract class BusinessException extends RuntimeException {
+    private final HttpStatus status;
+    private final String typeUri;
+
+    protected BusinessException(String message,
+            HttpStatus status, String typeUri) {
+        super(message);
+        this.status = status;
+        this.typeUri = typeUri;
+    }
+    public HttpStatus getStatus() { return status; }
+    public String getTypeUri() { return typeUri; }
+}
+
+// OrderNotFoundException.java
+public class OrderNotFoundException extends BusinessException {
+    public OrderNotFoundException(Long orderId) {
+        // TODO: super() で message, HttpStatus.NOT_FOUND,
+        //       "/problems/order-not-found" を渡す
+    }
+}
+
+// InsufficientStockException.java
+public class InsufficientStockException extends BusinessException {
+    private final String productName;
+    private final int requested;
+    private final int available;
+
+    public InsufficientStockException(String productName,
+            int requested, int available) {
+        // TODO: super() で message, HttpStatus.UNPROCESSABLE_ENTITY,
+        //       "/problems/insufficient-stock" を渡す
+        this.productName = productName;
+        this.requested = requested;
+        this.available = available;
+    }
+    // getter 省略
+}
+
+// GlobalExceptionHandler.java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(BusinessException.class)
+    public ProblemDetail handleBusiness(BusinessException ex) {
+        // TODO: ProblemDetail.forStatusAndDetail() で生成
+        // TODO: setType(URI.create(ex.getTypeUri()))
+        // TODO: setTitle(ex.getStatus().getReasonPhrase())
+        // TODO: InsufficientStockException の場合は
+        //       setProperty() で productName, requested, available を追加
+        return null;
+    }
+}</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -1010,6 +1415,38 @@ public class GlobalExceptionHandler {
             <li>CSRF無効化（REST API用）、セッションレス設定</li>
           </ul>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// SecurityConfig.java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http)
+            throws Exception {
+        http
+            // TODO: csrf を無効化（REST API用）
+            // TODO: sessionManagement で STATELESS に設定
+            .authorizeHttpRequests(auth -&gt; auth
+                // TODO: /api/public/** を permitAll
+                // TODO: /api/admin/** を ROLE_ADMIN のみ
+                // TODO: /api/users/** を USER または ADMIN
+                .anyRequest().authenticated())
+            // TODO: httpBasic 認証を有効化
+            ;
+        return http.build();
+    }
+
+    @Bean
+    public InMemoryUserDetailsManager userDetailsService() {
+        // TODO: "user" ユーザー（ROLE_USER）を作成
+        // TODO: "admin" ユーザー（ROLE_ADMIN）を作成
+        // TODO: InMemoryUserDetailsManager に登録して返却
+        return null;
+    }
+}</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -1096,6 +1533,53 @@ public class SecurityConfig {
             <li>CORS: <code>http://localhost:3000</code> からのリクエストを許可</li>
             <li>許可メソッド: GET, POST, PUT, DELETE</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// ProfileController.java
+@RestController
+@RequestMapping("/api/users")
+public class ProfileController {
+    private final UserService userService;
+
+    @PutMapping("/{id}/profile")
+    public ResponseEntity&lt;UserResponse&gt; updateProfile(
+            @PathVariable Long id,
+            @Valid @RequestBody ProfileForm form,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        // TODO: userDetails.getUsername() で現在のユーザーを取得
+        // TODO: currentUser.getId() と id を比較
+        //       不一致なら ForbiddenException をスロー
+        // TODO: userService.updateProfile() を呼び出し
+        return null;
+    }
+}
+
+// SecurityConfig.java（CORS設定を追加）
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http)
+        throws Exception {
+    http
+        // TODO: .cors() に corsConfigurationSource() を設定
+        .csrf(csrf -&gt; csrf.disable())
+        .authorizeHttpRequests(auth -&gt; auth
+            .anyRequest().authenticated())
+        .httpBasic(Customizer.withDefaults());
+    return http.build();
+}
+
+@Bean
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    // TODO: allowedOrigins に "http://localhost:3000" を設定
+    // TODO: allowedMethods に GET, POST, PUT, DELETE を設定
+    // TODO: allowedHeaders に "*" を設定
+    // TODO: allowCredentials を true に設定
+    UrlBasedCorsConfigurationSource source =
+        new UrlBasedCorsConfigurationSource();
+    // TODO: /api/** パターンに config を登録
+    return source;
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -1201,6 +1685,56 @@ public CorsConfigurationSource corsConfigurationSource() {
             <li><code>@MockBean ProductService</code> でService層をモック化</li>
             <li>レスポンスボディのJSON項目を <code>jsonPath</code> で検証</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// ProductControllerTest.java
+@WebMvcTest(ProductController.class)
+class ProductControllerTest {
+
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @MockBean private ProductService productService;
+
+    @Test
+    @DisplayName("GET /api/products/{id} - 正常系: 200")
+    void findById_returns200() throws Exception {
+        // TODO: when(productService.findById(1L))
+        //       .thenReturn(new ProductResponse(1L, "Java本", 3000))
+
+        // TODO: mockMvc.perform(get("/api/products/1"))
+        //       .andExpect(status().isOk())
+        //       .andExpect(jsonPath("$.id").value(1))
+        //       .andExpect(jsonPath("$.name").value("Java本"))
+    }
+
+    @Test
+    @DisplayName("GET /api/products/{id} - 404: リソース未発見")
+    void findById_returns404() throws Exception {
+        // TODO: when(...).thenThrow(
+        //       new ResourceNotFoundException(...))
+
+        // TODO: mockMvc.perform(...).andExpect(status().isNotFound())
+    }
+
+    @Test
+    @DisplayName("POST /api/products - 正常系: 201")
+    void create_returns201() throws Exception {
+        // TODO: ProductForm を作成し、モックの戻り値を設定
+        // TODO: mockMvc.perform(post(...)
+        //       .contentType(MediaType.APPLICATION_JSON)
+        //       .content(objectMapper.writeValueAsString(form)))
+        //       .andExpect(status().isCreated())
+    }
+
+    @Test
+    @DisplayName("POST /api/products - 400: バリデーションエラー")
+    void create_returns400_whenInvalid() throws Exception {
+        // TODO: 不正な ProductForm（空文字, 負の値）を送信
+        // TODO: status().isBadRequest() を検証
+        // TODO: jsonPath("$.errors").isArray() を検証
+    }
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -1312,6 +1846,52 @@ class ProductControllerTest {
             <li><code>@Transactional</code> でテストごとにロールバック</li>
             <li><code>@Sql</code> でテストデータを初期投入</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// application-test.yml
+// spring:
+//   datasource:
+//     url: jdbc:h2:mem:testdb
+//     driver-class-name: org.h2.Driver
+
+// ProductIntegrationTest.java
+// TODO: @SpringBootTest を付与
+// TODO: @AutoConfigureMockMvc を付与
+// TODO: @ActiveProfiles("test") を付与
+// TODO: @Transactional を付与（テスト後に自動ロールバック）
+// TODO: @Sql("/testdata/products.sql") を付与
+class ProductIntegrationTest {
+
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+
+    @Test
+    @DisplayName("商品登録→取得のフロー")
+    void createAndFind() throws Exception {
+        // TODO: POST /api/products で商品を登録
+        //       status().isCreated() を検証
+        //       レスポンスから id を取得
+
+        // TODO: GET /api/products/{id} で取得
+        //       jsonPath で name, price を検証
+    }
+
+    @Test
+    @DisplayName("初期データの存在確認")
+    void sqlDataLoaded() throws Exception {
+        // TODO: @Sql で投入したデータを GET で確認
+    }
+
+    @Test
+    @DisplayName("削除後は404")
+    void deleteAndVerify() throws Exception {
+        // TODO: DELETE /api/products/1 で削除
+        //       status().isNoContent() を検証
+
+        // TODO: GET /api/products/1 で 404 を確認
+    }
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -1429,6 +2009,76 @@ class ProductIntegrationTest {
             <li><strong>DELETE /api/books/{id}</strong> — 削除</li>
             <li>レスポンスはBookResponse DTO、リスト取得はPageResponseでラップ</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// BookForm.java (リクエストDTO)
+public class BookForm {
+    // TODO: @NotBlank を付与
+    private String title;
+    // TODO: @NotBlank を付与
+    private String author;
+    // TODO: @Pattern(regexp = "^\\d{13}$") を付与
+    private String isbn;
+    // TODO: @Positive を付与
+    private int price;
+    private LocalDate publishedDate;
+    private Integer version;
+    // getter/setter 省略
+}
+
+// BookResponse.java (レスポンスDTO)
+public record BookResponse(
+    Long id, String title, String author,
+    String isbn, int price, LocalDate publishedDate,
+    int version) {
+    public static BookResponse from(Book b) {
+        // TODO: Book エンティティから BookResponse を生成
+        return null;
+    }
+}
+
+// BookService.java
+@Service
+public class BookService {
+    private final BookMapper bookMapper;
+
+    @Transactional
+    public BookResponse create(BookForm form) {
+        // TODO: ISBN重複チェック（bookMapper.findByIsbn()）
+        // TODO: Book エンティティを作成して bookMapper.insert()
+        // TODO: BookResponse.from() で変換して返却
+        return null;
+    }
+
+    @Transactional
+    public BookResponse update(Long id, BookForm form) {
+        // TODO: bookMapper.findById() で既存データを取得（なければ 404）
+        // TODO: フィールドを更新して bookMapper.updateWithVersion() を実行
+        // TODO: 更新件数 0 なら OptimisticLockException をスロー
+        return null;
+    }
+
+    public PageResponse&lt;BookResponse&gt; search(
+            String keyword, String sort, int page, int size) {
+        // TODO: offset 計算、bookMapper.search() でデータ取得
+        // TODO: countSearch() で総件数を取得し PageResponse を返却
+        return null;
+    }
+}
+
+// BookController.java
+@RestController
+@RequestMapping("/api/books")
+public class BookController {
+    private final BookService bookService;
+
+    // TODO: POST /api/books — create (201)
+    // TODO: GET /api/books/{id} — findById (200)
+    // TODO: GET /api/books — search (200, ページネーション対応)
+    // TODO: PUT /api/books/{id} — update (200)
+    // TODO: DELETE /api/books/{id} — delete (204)
+}</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -1583,6 +2233,59 @@ public class BookController {
             <li><strong>業務ルール</strong>: DONE→TODO への状態戻しは不可(422)、担当者の存在チェック(404)</li>
             <li><strong>エラーレスポンス</strong>: ErrorResponse形式で400/404/409/422/500を統一</li>
           </ul>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>// TaskForm.java
+public class TaskForm {
+    // TODO: @NotBlank @Size(min = 2, max = 100) を付与
+    private String title;
+    // TODO: @Size(max = 1000) を付与
+    private String description;
+    // TODO: @Pattern(regexp = "TODO|IN_PROGRESS|DONE") を付与
+    private String status;
+    // TODO: @Pattern(regexp = "LOW|MEDIUM|HIGH") を付与
+    private String priority;
+    // TODO: @FutureOrPresent を付与
+    private LocalDate dueDate;
+    private Long assigneeId;
+    // getter/setter 省略
+}
+
+// TaskService.java
+@Service
+public class TaskService {
+    private final TaskMapper taskMapper;
+    private final UserMapper userMapper;
+
+    // TODO: 状態遷移マップを定義
+    // "TODO" -&gt; {"IN_PROGRESS"}
+    // "IN_PROGRESS" -&gt; {"TODO", "DONE"}
+    // "DONE" -&gt; {"IN_PROGRESS"}
+    private static final Map&lt;String, Set&lt;String&gt;&gt; TRANSITIONS = null;
+
+    @Transactional
+    public TaskResponse create(TaskForm form) {
+        // TODO: assigneeId が指定されていれば userMapper で存在チェック
+        //       見つからなければ ResourceNotFoundException をスロー
+        // TODO: Task エンティティを作成（status初期値: "TODO"）
+        // TODO: taskMapper.insert() で保存
+        return null;
+    }
+
+    @Transactional
+    public TaskResponse updateStatus(Long id, String newStatus) {
+        // TODO: taskMapper.findById() で既存タスクを取得（なければ 404）
+        // TODO: TRANSITIONS マップで遷移の可否を判定
+        //       不可なら BusinessRuleException(422) をスロー
+        // TODO: taskMapper.updateStatus() でステータスを更新
+        return null;
+    }
+}
+
+// GlobalExceptionHandler.java（抜粋）
+// TODO: @ExceptionHandler(BusinessRuleException.class)
+//       422 Unprocessable Entity を返すメソッドを追加</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>

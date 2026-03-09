@@ -52,6 +52,11 @@
     .hint-content { background: #fff8e1; padding: 16px 18px; border-radius: 0 0 10px 10px; font-size: 0.85rem; line-height: 1.7; color: #5d4037; }
     .hint-content code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
 
+    .drill-base { margin-top: 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 20px; }
+    .drill-base h4 { display: flex; align-items: center; gap: 6px; font-size: 0.88rem; font-weight: 700; color: #0369a1; margin-bottom: 12px; }
+    .drill-base h4 .material-icons { font-size: 1.1rem; color: #0369a1; }
+    .drill-base .drill-code { margin: 0; }
+
     .drill-answer { margin-top: 8px; }
     .drill-answer summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: var(--primary); padding: 10px 14px; background: var(--primary-light); border-radius: 10px; list-style: none; user-select: none; }
     .drill-answer summary::-webkit-details-marker { display: none; }
@@ -138,6 +143,26 @@ console.log(config);
 console.log(errors);
 // ['port: expected number but got string']</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>const defaults = { port: 3000, host: 'localhost', debug: false };
+const overrides = { port: '8080', debug: true, host: '0.0.0.0' };
+const schema = { port: 'number', host: 'string', debug: 'boolean' };
+
+function mergeConfig(defaults, overrides, schema) {
+  // TODO: defaults をスプレッド構文でコピーして config を作成
+  // TODO: errors 配列を用意
+  // TODO: Object.entries(overrides) でループ
+  //   - schema に存在しないキーはスキップ
+  //   - typeof で型チェックし、不一致なら errors に追加してスキップ
+  //   - 型が一致すれば config に上書き
+  // TODO: { config, errors } を返す
+}
+
+const { config, errors } = mergeConfig(defaults, overrides, schema);
+console.log(config);
+console.log(errors);</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -207,6 +232,23 @@ console.log(render(tmpl, data));
 console.log(render('{{missing}}は未定義', {}));
 // "は未定義"</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function render(template, data) {
+  // TODO: template 内の {{key}} を data[key] の値で置換する
+  // TODO: data に存在しないキーは空文字に置換
+  // ヒント: String.prototype.replace と正規表現を使う
+}
+
+// テストケース
+const tmpl = '{{greeting}}, {{name}}! あなたは{{age}}歳です。';
+const data = { greeting: 'こんにちは', name: '田中', age: 25 };
+console.log(render(tmpl, data));
+// 期待: "こんにちは, 田中! あなたは25歳です。"
+
+console.log(render('{{missing}}は未定義', {}));
+// 期待: "は未定義"</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -271,6 +313,23 @@ const toString = x => `結果: ${x}`;
 const transform = pipe(double, addTen, toString);
 console.log(transform(5));  // "結果: 20"  (5*2=10, 10+10=20, "結果: 20")
 console.log(transform(3));  // "結果: 16"  (3*2=6, 6+10=16, "結果: 16")</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function pipe(...fns) {
+  // TODO: 引数で受け取った関数を左から右へ順番に適用する
+  //       「新しい関数」を返す（高階関数）
+  // TODO: reduce を使って前の関数の戻り値を次の関数に渡す
+}
+
+// テスト用の関数
+const double = x =&gt; x * 2;
+const addTen = x =&gt; x + 10;
+const toString = x =&gt; `結果: ${x}`;
+
+const transform = pipe(double, addTen, toString);
+console.log(transform(5));  // 期待: "結果: 20"
+console.log(transform(3));  // 期待: "結果: 16"</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -340,6 +399,45 @@ const ctx = { input: 21 };
 app.run(ctx);
 console.log(ctx.log);    // ['開始', '処理中', '終了']
 console.log(ctx.result); // 42</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createApp() {
+  const middlewares = [];
+
+  return {
+    use(fn) {
+      // TODO: ミドルウェア関数を配列に登録
+    },
+    run(context) {
+      // TODO: 登録済みミドルウェアを順番に実行
+      // TODO: next() が呼ばれたら次のミドルウェアに進む
+      // ヒント: インデックスで現在位置を管理し、
+      //         next 関数内で次のミドルウェアを呼び出す
+    }
+  };
+}
+
+// テスト
+const app = createApp();
+
+app.use((ctx, next) =&gt; {
+  ctx.log = [];
+  ctx.log.push('開始');
+  next();
+  ctx.log.push('終了');
+});
+
+app.use((ctx, next) =&gt; {
+  ctx.log.push('処理中');
+  ctx.result = ctx.input * 2;
+  next();
+});
+
+const ctx = { input: 21 };
+app.run(ctx);
+console.log(ctx.log);    // 期待: ['開始', '処理中', '終了']
+console.log(ctx.result); // 期待: 42</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -424,6 +522,26 @@ function summarizeSales(sales, category) → { total, avgPrice, items }<br>
 - items: 該当アイテム数
           </div>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>const sales = [
+  { product: 'りんご', category: 'fruit', price: 150, qty: 10 },
+  { product: 'にんじん', category: 'vegetable', price: 100, qty: 20 },
+  { product: 'バナナ', category: 'fruit', price: 120, qty: 15 },
+  { product: 'キャベツ', category: 'vegetable', price: 200, qty: 5 },
+  { product: 'みかん', category: 'fruit', price: 80, qty: 30 }
+];
+
+function summarizeSales(sales, category) {
+  // TODO: filter でカテゴリに一致するデータを抽出
+  // TODO: reduce で売上合計（price * qty の合計）を算出
+  // TODO: 平均単価を計算（小数第2位まで丸める）
+  // TODO: { total, avgPrice, items } を返す
+}
+
+console.log(summarizeSales(sales, 'fruit'));
+// 期待: { total: 5700, avgPrice: 116.67, items: 3 }</code></pre>
+        </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
           <div class="hint-content">
@@ -486,6 +604,26 @@ function reactive(obj, onChange) → Proxy<br>
 state.count = 1;  // "count: 0 → 1"
 state.name = 'Bob'; // "name: Alice → Bob"
 console.log(state.count); // 1</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function reactive(obj, onChange) {
+  // TODO: new Proxy(obj, handler) を返す
+  // TODO: set トラップでプロパティ変更を検知
+  //   - 変更前の値を保存
+  //   - target にプロパティを設定
+  //   - onChange(key, newValue, oldValue) を呼び出す
+  //   - true を返す（strict mode 対応）
+}
+
+// テスト
+const state = reactive({ count: 0, name: 'Alice' }, (key, newVal, oldVal) =&gt; {
+  console.log(`${key}: ${oldVal} → ${newVal}`);
+});
+
+state.count = 1;    // 期待: "count: 0 → 1"
+state.name = 'Bob'; // 期待: "name: Alice → Bob"
+console.log(state.count); // 期待: 1</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -557,6 +695,39 @@ console.log(state.count); // 1</code></pre>
 ];
 
 // createSortableTable(containerId, data) で初期化</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>const data = [
+  { name: '田中', age: 30, score: 85 },
+  { name: '鈴木', age: 25, score: 92 },
+  { name: '佐藤', age: 35, score: 78 },
+  { name: '高橋', age: 28, score: 95 }
+];
+
+function createSortableTable(containerId, data) {
+  const container = document.getElementById(containerId);
+  const headers = Object.keys(data[0]);
+  let sortKey = null;
+  let ascending = true;
+
+  function renderTable() {
+    // TODO: container の中身をクリア
+    // TODO: table, thead, tbody を createElement で作成
+    // TODO: headers からヘッダー行を生成（ソート方向の矢印も表示）
+    // TODO: data からデータ行を生成
+    // TODO: thead にイベント委譲で click を登録
+    //   - クリックされた th の data-key でソートキーを判定
+    //   - 同じキーなら昇降順を切り替え
+    //   - data.sort() で並べ替え（数値型と文字列型を区別）
+    //   - renderTable() で再描画
+    // TODO: table を container に追加
+  }
+
+  renderTable();
+}
+
+// createSortableTable('myTable', data);</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -666,6 +837,44 @@ function createModal(options) → { open(), close() }<br>
 - 背景オーバーレイクリックで閉じる<br>
 - Escape キーで閉じる
           </div>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createModal({ title, content, onConfirm, onCancel }) {
+  // TODO: overlay 要素を作成（position:fixed, inset:0, 半透明背景）
+  // TODO: modal 要素を作成（白背景, 角丸, 中央配置）
+  // TODO: タイトル(h2), 本文(p), ボタン群を作成
+  // TODO: 確認ボタン・キャンセルボタンを作成
+
+  function close() {
+    // TODO: overlay を非表示にする
+    // TODO: keydown イベントリスナーを削除
+  }
+
+  function handleKey(e) {
+    // TODO: Escape キーで close() + onCancel を呼ぶ
+  }
+
+  // TODO: overlay クリック時（モーダル外）で閉じる
+  // TODO: 各ボタンにイベントリスナーを登録
+  // TODO: overlay を document.body に追加
+
+  return {
+    open() {
+      // TODO: overlay を表示し、keydown リスナーを登録
+    },
+    close
+  };
+}
+
+// テスト
+const modal = createModal({
+  title: '確認',
+  content: '本当に削除しますか？',
+  onConfirm: () =&gt; console.log('削除実行'),
+  onCancel: () =&gt; console.log('キャンセル')
+});
+// modal.open();</code></pre>
         </div>
         <details class="drill-hint">
           <summary><span class="material-icons">lightbulb</span>ヒント</summary>
@@ -791,6 +1000,38 @@ document.getElementById('myCounter').addEventListener('counter:change', (e) => {
 // +ボタンクリック → "値が変わりました: 4"
 // -ボタンクリック → "値が変わりました: 2"</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createCounter(containerId, options = {}) {
+  const { min = -Infinity, max = Infinity, step = 1 } = options;
+  const container = document.getElementById(containerId);
+  let value = min === -Infinity ? 0 : min;
+
+  function render() {
+    // TODO: container の中身に -ボタン, 値表示, +ボタン を生成
+    // ヒント: data-action="decrement" / "increment" 属性をボタンに設定
+  }
+
+  // TODO: container にイベント委譲で click を登録
+  //   - e.target.dataset.action でボタン種別を判定
+  //   - increment: Math.min(value + step, max)
+  //   - decrement: Math.max(value - step, min)
+  //   - 値が変わったら render() して CustomEvent を発火
+  //   - new CustomEvent('counter:change', { detail: { value }, bubbles: true })
+
+  render();
+
+  return {
+    getValue() { return value; },
+    reset() {
+      // TODO: value を初期値に戻して再描画
+    }
+  };
+}
+
+// テスト
+// const counter = createCounter('myCounter', { min: 0, max: 10, step: 2 });</code></pre>
+        </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される動作</div>
           <pre>+クリック → 値が変わりました: 2
@@ -897,6 +1138,41 @@ shortcuts.register('Ctrl+Shift+Z', () => {
 
 // Ctrl+S → "保存しました"（ブラウザの保存ダイアログは出ない）
 // Ctrl+Shift+Z → "やり直し"</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createShortcutManager() {
+  const shortcuts = new Map();
+
+  function parseCombo(combo) {
+    // TODO: 'Ctrl+Shift+Z' のような文字列をパースして
+    //       { ctrl, shift, alt, key } オブジェクトを返す
+  }
+
+  function handleKeydown(e) {
+    // TODO: 登録済みショートカットとキーイベントを照合
+    //   - e.ctrlKey, e.shiftKey, e.altKey, e.key を確認
+    //   - 一致したら e.preventDefault() してハンドラを実行
+  }
+
+  // TODO: document に keydown イベントリスナーを登録
+
+  return {
+    register(combo, handler) {
+      // TODO: Map にショートカットを登録
+    },
+    unregister(combo) {
+      // TODO: Map からショートカットを削除
+    },
+    destroy() {
+      // TODO: Map をクリアし、イベントリスナーを削除
+    }
+  };
+}
+
+// テスト
+// const shortcuts = createShortcutManager();
+// shortcuts.register('Ctrl+S', () =&gt; console.log('保存しました'));</code></pre>
         </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される動作</div>
@@ -1017,6 +1293,47 @@ await userLoader.load();
 // [loading]
 // [success] { id: 1, name: 'Leanne Graham', ... }</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function createLoader(fetchFn) {
+  let state = { status: 'idle', data: null, error: null };
+  const listeners = [];
+
+  function setState(newState) {
+    // TODO: state をスプレッド構文で更新
+    // TODO: 全 listeners に新しい state を通知
+  }
+
+  return {
+    async load() {
+      // TODO: status を 'loading' に変更
+      // TODO: try/catch で fetchFn() を実行
+      //   - 成功: status を 'success'、data をセット
+      //   - 失敗: status を 'error'、error をセット
+    },
+    getState() {
+      return { ...state };
+    },
+    onStateChange(fn) {
+      listeners.push(fn);
+      // TODO: アンサブスクライブ関数を返す
+    }
+  };
+}
+
+// テスト
+const userLoader = createLoader(async () =&gt; {
+  const res = await fetch('https://jsonplaceholder.typicode.com/users/1');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+});
+
+userLoader.onStateChange((state) =&gt; {
+  console.log(`[${state.status}]`, state.data ?? state.error?.message ?? '');
+});
+
+// await userLoader.load();</code></pre>
+        </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
           <pre>[loading]
@@ -1112,6 +1429,33 @@ async function fetchAll(urls) → { results, errors, summary }<br>
 const { results, errors, summary } = await fetchAll(urls);
 console.log(summary); // { total: 3, succeeded: 2, failed: 1 }
 console.log(errors);  // [{ url: '...999999', error: 'HTTP 404' }]</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>async function fetchAll(urls) {
+  // TODO: urls.map で各URLの fetch を Promise 化
+  //   - レスポンスが ok でなければ Error を throw
+  //   - ok なら { url, data } を返す
+
+  // TODO: Promise.allSettled(promises) で全結果を取得
+
+  // TODO: settled を forEach で走査
+  //   - status === 'fulfilled' → results に data を追加
+  //   - status === 'rejected' → errors に { url, error } を追加
+
+  // TODO: { results, errors, summary } を返す
+}
+
+// テスト
+const urls = [
+  'https://jsonplaceholder.typicode.com/posts/1',
+  'https://jsonplaceholder.typicode.com/posts/999999',
+  'https://jsonplaceholder.typicode.com/users/1'
+];
+
+// const { results, errors, summary } = await fetchAll(urls);
+// console.log(summary);
+// console.log(errors);</code></pre>
         </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
@@ -1214,6 +1558,34 @@ const r3 = await trySafeAsync(
 );
 console.log(r3); // { ok: false, value: [], error: TypeError }</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>function trySafe(fn, fallback = undefined) {
+  // TODO: try/catch で fn() を実行
+  //   - 成功: { ok: true, value: 戻り値, error: null }
+  //   - 失敗: { ok: false, value: fallback, error: エラー }
+}
+
+async function trySafeAsync(fn, fallback = undefined) {
+  // TODO: try/catch で await fn() を実行
+  //   - 成功: { ok: true, value: 戻り値, error: null }
+  //   - 失敗: { ok: false, value: fallback, error: エラー }
+}
+
+// テスト（同期版）
+const r1 = trySafe(() =&gt; JSON.parse('{"a":1}'));
+console.log(r1); // 期待: { ok: true, value: { a: 1 }, error: null }
+
+const r2 = trySafe(() =&gt; JSON.parse('invalid'), {});
+console.log(r2); // 期待: { ok: false, value: {}, error: SyntaxError }
+
+// テスト（非同期版）
+// const r3 = await trySafeAsync(
+//   () =&gt; fetch('https://invalid.url').then(r =&gt; r.json()),
+//   []
+// );
+// console.log(r3);</code></pre>
+        </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
           <pre>{ ok: true, value: { a: 1 }, error: null }
@@ -1304,6 +1676,36 @@ const result = await withRetry(unstableFn, {
 // リトライ 2: 失敗 #2 (200ms後)
 console.log(result); // 'success'</code></pre>
         </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>async function withRetry(fn, options = {}) {
+  const { maxRetries = 3, baseDelay = 1000, onRetry } = options;
+
+  // TODO: for ループで最大試行回数 + 1 回まわす
+  //   - try: await fn() を実行、成功したら return
+  //   - catch: 最後の試行ならエラーを throw
+  //     - 待機時間を計算: baseDelay * 2^attempt（指数バックオフ）
+  //     - onRetry コールバックを呼ぶ
+  //     - await new Promise(r =&gt; setTimeout(r, delay)) で待機
+}
+
+// テスト
+let callCount = 0;
+const unstableFn = async () =&gt; {
+  callCount++;
+  if (callCount &lt; 3) throw new Error(`失敗 #${callCount}`);
+  return 'success';
+};
+
+// const result = await withRetry(unstableFn, {
+//   maxRetries: 3,
+//   baseDelay: 100,
+//   onRetry: (attempt, err, delay) =&gt; {
+//     console.log(`リトライ ${attempt}: ${err.message} (${delay}ms後)`);
+//   }
+// });
+// console.log(result);</code></pre>
+        </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
           <pre>リトライ 1: 失敗 #1 (100ms後)
@@ -1388,6 +1790,52 @@ timer.on('complete', () => console.log('完了!'));
 
 timer.start();
 // 残り 4秒 → 残り 3秒 → ... → 残り 0秒 → 完了!</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>class EventEmitter {
+  constructor() {
+    this._listeners = {};
+  }
+  on(event, fn) {
+    // TODO: イベント名に対してリスナーを配列で管理・登録
+    // return this でメソッドチェーン対応
+  }
+  emit(event, ...args) {
+    // TODO: 登録済みリスナーを全て呼び出す
+  }
+}
+
+class CountdownTimer extends EventEmitter {
+  constructor(seconds) {
+    super();
+    this._initial = seconds;
+    this._remaining = seconds;
+    this._intervalId = null;
+  }
+
+  start() {
+    // TODO: 二重起動を防止
+    // TODO: setInterval で毎秒 remaining を減らし 'tick' を emit
+    // TODO: 0 になったら pause() して 'complete' を emit
+  }
+
+  pause() {
+    // TODO: clearInterval でタイマー停止
+    // TODO: 'pause' イベントを emit
+  }
+
+  reset() {
+    // TODO: pause して remaining を初期値に戻す
+    // TODO: 'reset' イベントを emit
+  }
+}
+
+// テスト
+// const timer = new CountdownTimer(5);
+// timer.on('tick', (remaining) =&gt; console.log(`残り ${remaining}秒`));
+// timer.on('complete', () =&gt; console.log('完了!'));
+// timer.start();</code></pre>
         </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
@@ -1511,6 +1959,49 @@ logger.info('サーバー起動');
 // [App] INFO: サーバー起動 { timestamp: '...', formatted: '...' }
 logger.debug('詳細ログ');
 // （levelがinfoなので出力されない）</code></pre>
+        </div>
+        <div class="drill-base">
+          <h4><span class="material-icons">code</span>ベースコード</h4>
+<pre class="drill-code"><code>class Logger {
+  static LEVELS = { debug: 0, info: 1, warn: 2, error: 3 };
+
+  constructor({ prefix = '', level = 'debug' } = {}) {
+    this._prefix = prefix;
+    this._level = Logger.LEVELS[level] ?? 0;
+    this._plugins = [];
+  }
+
+  use(plugin) {
+    // TODO: プラグインを配列に登録
+    // return this でメソッドチェーン対応
+  }
+
+  _log(level, message) {
+    // TODO: ログレベルが現在の設定より低ければ出力しない
+    // TODO: entry オブジェクト { level, message, prefix } を作成
+    // TODO: _plugins を reduce で順番に適用（transform メソッド呼出し）
+    // TODO: console.log でフォーマット出力
+  }
+
+  debug(msg) { this._log('debug', msg); }
+  info(msg)  { this._log('info', msg); }
+  warn(msg)  { this._log('warn', msg); }
+  error(msg) { this._log('error', msg); }
+}
+
+// テスト
+const logger = new Logger({ prefix: 'App', level: 'info' });
+
+logger.use({
+  transform(entry) {
+    return { ...entry, timestamp: new Date().toISOString() };
+  }
+});
+
+logger.info('サーバー起動');
+// 期待: [App] INFO: サーバー起動
+logger.debug('詳細ログ');
+// 期待: 出力されない（level制限）</code></pre>
         </div>
         <div class="expected-output">
           <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
