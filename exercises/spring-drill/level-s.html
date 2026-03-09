@@ -1,0 +1,2166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Level S — 総合実装 | SpringBoot実力養成ドリル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root { --primary: #34C759; --primary-dark: #248A3D; --primary-light: #E8F8ED; --primary-lighter: #C8F0D4; }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+    .drill-item { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .drill-header { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #f0f0f0; background: #fafbfc; }
+    .drill-badge { background: var(--primary); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; padding: 8px 14px; border-radius: 10px; white-space: nowrap; }
+    .drill-meta { flex: 1; }
+    .drill-theme { font-size: 0.72rem; color: var(--primary); font-weight: 600; letter-spacing: 0.03em; margin-bottom: 2px; display: block; }
+    .drill-title { font-size: 1.05rem; font-weight: 700; color: #1d1d1f; }
+    .drill-body { padding: 24px; }
+    .drill-point { display: flex; align-items: flex-start; gap: 12px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+    .drill-point > .material-icons { color: #f9a825; font-size: 1.4rem; margin-top: 2px; }
+    .drill-point strong { display: block; font-size: 0.82rem; color: #f57f17; margin-bottom: 4px; }
+    .drill-point p { font-size: 0.85rem; color: #5d4037; line-height: 1.6; margin: 0; }
+    .drill-task { margin-bottom: 20px; }
+    .drill-task h4 { display: flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: 700; color: #1d1d1f; margin-bottom: 12px; }
+    .drill-task h4 .material-icons { color: var(--primary); font-size: 1.2rem; }
+    .drill-task p, .drill-task ul, .drill-task ol { font-size: 0.88rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .drill-task ul, .drill-task ol { padding-left: 1.5em; }
+    .drill-task li { margin-bottom: 4px; }
+    .drill-code { background: #1e293b; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; padding: 20px; border-radius: 10px; overflow-x: auto; margin: 12px 0; }
+    .drill-code code { font-family: inherit; }
+    .drill-hint { margin-bottom: 8px; }
+    .drill-hint summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: #f57c00; padding: 10px 14px; background: #fff3e0; border-radius: 10px; list-style: none; user-select: none; }
+    .drill-hint summary::-webkit-details-marker { display: none; }
+    .drill-hint summary .material-icons { font-size: 1.1rem; }
+    .drill-hint[open] summary { border-radius: 10px 10px 0 0; }
+    .hint-content { background: #fff8e1; padding: 16px 18px; border-radius: 0 0 10px 10px; font-size: 0.85rem; line-height: 1.7; color: #5d4037; }
+    .hint-content code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
+    .drill-answer { margin-top: 8px; }
+    .drill-answer summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: var(--primary); padding: 10px 14px; background: var(--primary-light); border-radius: 10px; list-style: none; user-select: none; }
+    .drill-answer summary::-webkit-details-marker { display: none; }
+    .drill-answer summary .material-icons { color: var(--primary); font-size: 1.1rem; }
+    .drill-answer[open] summary { border-radius: 10px 10px 0 0; }
+    .answer-content { background: #f8fbff; padding: 20px; border-radius: 0 0 10px 10px; border: 1px solid var(--primary-light); border-top: none; }
+    .answer-content p { font-size: 0.85rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .answer-content h5 { font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin: 16px 0 8px; }
+    .answer-content ul { font-size: 0.85rem; line-height: 1.8; color: #333; padding-left: 1.5em; margin-bottom: 10px; }
+    .theme-separator { display: flex; align-items: center; gap: 12px; margin: 36px 0 20px; padding: 12px 20px; background: var(--primary-light); border-radius: 12px; border-left: 4px solid var(--primary); }
+    .theme-separator .material-icons { color: var(--primary); font-size: 1.3rem; }
+    .theme-separator h2 { font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
+    .theme-separator span.theme-count { font-size: 0.75rem; color: #666; font-weight: 400; margin-left: auto; }
+    .placeholder-box { background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 16px; padding: 40px 24px; text-align: center; margin: 36px 0; }
+    .placeholder-box .material-icons { font-size: 3rem; color: #cbd5e1; margin-bottom: 12px; }
+    .placeholder-box h3 { font-size: 1.1rem; font-weight: 700; color: #94a3b8; margin-bottom: 8px; }
+    .placeholder-box p { font-size: 0.88rem; color: #94a3b8; }
+    @media (max-width: 480px) {
+      .drill-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+      .drill-body { padding: 16px; }
+      .drill-code { font-size: 0.75rem; padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-spring-drill.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">eco</span> Drill</div>
+      <div class="chapter-number">S</div>
+      <h1 class="chapter-title">Level S — 総合実装</h1>
+      <p style="color:#fff; margin-top:8px;">全テーマ横断の総合プロジェクト実装｜16課題・8テーマ</p>
+    </header>
+
+    <!-- ===== T1: Spring Boot基礎・DI ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">settings</span>
+      <h2>T1 Spring Boot基礎・DI</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-01 -->
+    <div class="drill-item" id="s-01">
+      <div class="drill-header">
+        <div class="drill-badge">S-01</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 Spring Boot基礎・DI</span>
+          <h3 class="drill-title">マルチモジュール構成のDI設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>大規模アプリケーションではapi/domain/infrastructureのマルチモジュール構成にします。各モジュール間の依存方向を制御し、ドメイン層が外部技術に依存しないようにします。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、クリーンアーキテクチャに基づくマルチモジュール構成を設計してください。</p>
+          <ul>
+            <li><strong>domain モジュール</strong>: エンティティ、リポジトリインタフェース、ドメインサービス</li>
+            <li><strong>infrastructure モジュール</strong>: MyBatisマッパー（リポジトリ実装）、外部API連携</li>
+            <li><strong>api モジュール</strong>: コントローラ、DTO、バリデーション</li>
+            <li>ユーザー管理ドメインで3モジュール間のDI設定を実装</li>
+            <li>domain → infrastructure への依存を禁止（DIP: 依存性逆転原則）</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>domainモジュールに <code>UserRepository</code> インタフェースを定義し、infrastructureモジュールで <code>UserRepositoryImpl</code> として MyBatis マッパーをラップします。apiモジュールはdomain経由でデータにアクセスします。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// === domain モジュール ===
+// domain/model/User.java
+public class User {
+    private Long id;
+    private String name;
+    private String email;
+}
+
+// domain/repository/UserRepository.java
+public interface UserRepository {
+    User findById(Long id);
+    List&lt;User&gt; findAll();
+    void save(User user);
+}
+
+// domain/service/UserDomainService.java
+@Service
+public class UserDomainService {
+    private final UserRepository userRepository;
+    public UserDomainService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+    public User getUser(Long id) {
+        User user = userRepository.findById(id);
+        if (user == null) throw new UserNotFoundException(id);
+        return user;
+    }
+}
+
+// === infrastructure モジュール ===
+// infra/mapper/UserMapper.java
+@Mapper
+public interface UserMapper {
+    @Select("SELECT * FROM users WHERE id = #{id}")
+    User findById(Long id);
+    @Select("SELECT * FROM users")
+    List&lt;User&gt; findAll();
+    @Insert("INSERT INTO users (name, email) VALUES (#{name}, #{email})")
+    void insert(User user);
+}
+
+// infra/repository/UserRepositoryImpl.java
+@Repository
+public class UserRepositoryImpl implements UserRepository {
+    private final UserMapper userMapper;
+    public UserRepositoryImpl(UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
+    public User findById(Long id) { return userMapper.findById(id); }
+    public List&lt;User&gt; findAll() { return userMapper.findAll(); }
+    public void save(User user) { userMapper.insert(user); }
+}
+
+// === api モジュール ===
+// api/controller/UserController.java
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    private final UserDomainService userDomainService;
+    public UserController(UserDomainService userDomainService) {
+        this.userDomainService = userDomainService;
+    }
+    @GetMapping("/{id}")
+    public UserResponse getUser(@PathVariable Long id) {
+        return UserResponse.from(userDomainService.getUser(id));
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>依存性逆転原則（DIP）により、domainモジュールがinfrastructureに依存しない設計になっています。</li>
+              <li>Repositoryインタフェースをdomain側に置くことで、DBをMyBatisからJPA等に変更してもdomain層に影響しません。</li>
+              <li>この構成はヘキサゴナルアーキテクチャ（ポートとアダプター）の実践例です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-02 -->
+    <div class="drill-item" id="s-02">
+      <div class="drill-header">
+        <div class="drill-badge">S-02</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 Spring Boot基礎・DI</span>
+          <h3 class="drill-title">イベント駆動アーキテクチャの基礎実装</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>SpringのApplicationEventPublisherを使ったイベント駆動設計は、サービス間の疎結合を実現します。ユーザー登録後のメール送信やログ記録などの副次処理に有効です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、イベント駆動のユーザー登録フローを実装してください。</p>
+          <ul>
+            <li>ユーザー登録成功時に <code>UserRegisteredEvent</code> を発行</li>
+            <li><code>WelcomeEmailListener</code>: ウェルカムメール送信（非同期）</li>
+            <li><code>AuditLogListener</code>: 監査ログ記録</li>
+            <li><code>@Async</code> + <code>@EventListener</code> で非同期処理</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>ApplicationEventPublisher</code> をServiceに注入し、<code>publisher.publishEvent(new UserRegisteredEvent(user))</code> でイベントを発行します。<code>@EnableAsync</code> を設定クラスに付けて非同期処理を有効化します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// UserRegisteredEvent.java
+public class UserRegisteredEvent {
+    private final User user;
+    public UserRegisteredEvent(User user) { this.user = user; }
+    public User getUser() { return user; }
+}
+
+// UserService.java
+@Service
+public class UserService {
+    private final UserMapper userMapper;
+    private final ApplicationEventPublisher publisher;
+
+    @Transactional
+    public User register(UserForm form) {
+        User user = new User(form.getName(), form.getEmail());
+        userMapper.insert(user);
+        publisher.publishEvent(new UserRegisteredEvent(user));
+        return user;
+    }
+}
+
+// WelcomeEmailListener.java
+@Component
+public class WelcomeEmailListener {
+    @Async
+    @EventListener
+    public void handle(UserRegisteredEvent event) {
+        // ウェルカムメール送信
+        System.out.println("Welcome email to: "
+            + event.getUser().getEmail());
+    }
+}
+
+// AuditLogListener.java
+@Component
+public class AuditLogListener {
+    @EventListener
+    public void handle(UserRegisteredEvent event) {
+        // 監査ログ記録
+        System.out.println("Audit: User registered - "
+            + event.getUser().getName());
+    }
+}
+
+// AsyncConfig.java
+@Configuration
+@EnableAsync
+public class AsyncConfig {}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>イベント駆動設計により、UserServiceはメール送信やログ記録の存在を知る必要がありません（疎結合）。</li>
+              <li><code>@Async</code> を付けると別スレッドで実行されるため、メイン処理をブロックしません。</li>
+              <li>新しいリスナーを追加してもUserServiceの変更は不要です（Open-Closed Principle）。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T2: RESTコントローラ ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">api</span>
+      <h2>T2 RESTコントローラ</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-03 -->
+    <div class="drill-item" id="s-03">
+      <div class="drill-header">
+        <div class="drill-badge">S-03</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 RESTコントローラ</span>
+          <h3 class="drill-title">ECサイト注文APIの総合実装</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>ECサイトの注文APIは、在庫確認→注文作成→決済→通知の一連のフローを含む総合的な実装です。トランザクション管理、例外処理、DTO変換を統合的に扱います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、ECサイトの注文APIを総合実装してください。</p>
+          <ul>
+            <li>POST /api/orders — 注文作成（在庫確認+減算+注文INSERT+明細INSERT）</li>
+            <li>GET /api/orders/{id} — 注文詳細取得（明細含む、HATEOAS対応）</li>
+            <li>PATCH /api/orders/{id}/cancel — 注文キャンセル（在庫復元、PENDING以外はエラー）</li>
+            <li>バリデーション、例外処理、DTO変換、トランザクション管理を全て含む</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>OrderServiceに <code>@Transactional</code> を付け、在庫チェック→減算→注文作成→明細作成を1トランザクションで行います。キャンセル時は在庫を復元し、ステータスをCANCELLEDに更新します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// OrderService.java (要約)
+@Service
+public class OrderService {
+    private final OrderMapper orderMapper;
+    private final OrderItemMapper orderItemMapper;
+    private final ProductMapper productMapper;
+    private final ApplicationEventPublisher publisher;
+
+    @Transactional
+    public OrderResponse placeOrder(OrderRequest req) {
+        // 1. 在庫確認&amp;減算
+        for (var item : req.getItems()) {
+            Product p = productMapper.findById(item.getProductId());
+            if (p == null) throw new ResourceNotFoundException(
+                "Product not found: " + item.getProductId());
+            if (p.getStock() &lt; item.getQuantity())
+                throw new InsufficientStockException(
+                    p.getName(), item.getQuantity(), p.getStock());
+            productMapper.decreaseStock(
+                item.getProductId(), item.getQuantity());
+        }
+        // 2. 注文作成
+        Order order = new Order();
+        order.setCustomerName(req.getCustomerName());
+        order.setStatus("PENDING");
+        order.setOrderDate(LocalDateTime.now());
+        orderMapper.insert(order);
+        // 3. 明細作成
+        for (var item : req.getItems()) {
+            OrderItem oi = new OrderItem();
+            oi.setOrderId(order.getId());
+            oi.setProductId(item.getProductId());
+            oi.setQuantity(item.getQuantity());
+            orderItemMapper.insert(oi);
+        }
+        publisher.publishEvent(new OrderCreatedEvent(order));
+        return OrderResponse.from(order);
+    }
+
+    @Transactional
+    public void cancelOrder(Long id) {
+        Order order = orderMapper.findById(id);
+        if (order == null) throw new ResourceNotFoundException(
+            "Order not found");
+        if (!"PENDING".equals(order.getStatus()))
+            throw new BusinessRuleException(
+                "PENDING以外の注文はキャンセルできません");
+        // 在庫復元
+        List&lt;OrderItem&gt; items = orderItemMapper.findByOrderId(id);
+        for (var item : items) {
+            productMapper.increaseStock(
+                item.getProductId(), item.getQuantity());
+        }
+        orderMapper.updateStatus(id, "CANCELLED");
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>注文処理は「在庫確認→減算→注文作成→明細作成」の順で、どこかで失敗すると全てロールバックされます。</li>
+              <li>キャンセル処理では在庫の復元を忘れがちです。「逆操作」を意識するのが実務のポイントです。</li>
+              <li>イベント発行により、注文完了メール送信等の副次処理をServiceから分離できます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-04 -->
+    <div class="drill-item" id="s-04">
+      <div class="drill-header">
+        <div class="drill-badge">S-04</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 RESTコントローラ</span>
+          <h3 class="drill-title">ファイルアップロード+メタデータ管理API</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>ファイルアップロードではMultipartFileでバイナリを受け取り、ファイルシステムやクラウドストレージに保存します。メタデータ（ファイル名、サイズ、種類）をDBで管理するのが一般的です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、ファイル管理APIを実装してください。</p>
+          <ul>
+            <li>POST /api/files — ファイルアップロード（MultipartFile）</li>
+            <li>GET /api/files/{id} — メタデータ取得</li>
+            <li>GET /api/files/{id}/download — ファイルダウンロード</li>
+            <li>ファイル種類制限: jpg, png, pdf のみ（バリデーション）</li>
+            <li>ファイルサイズ制限: 5MB以下</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>@RequestParam("file") MultipartFile file</code> で受け取ります。<code>file.getOriginalFilename()</code> と <code>file.getSize()</code> でメタデータを取得し、<code>file.transferTo(path)</code> で保存します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// FileController.java
+@RestController
+@RequestMapping("/api/files")
+public class FileController {
+    private final FileService fileService;
+
+    @PostMapping
+    public ResponseEntity&lt;FileResponse&gt; upload(
+            @RequestParam("file") MultipartFile file) {
+        FileResponse response = fileService.upload(file);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(response);
+    }
+
+    @GetMapping("/{id}/download")
+    public ResponseEntity&lt;Resource&gt; download(@PathVariable Long id) {
+        FileDownload dl = fileService.getDownload(id);
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(dl.getContentType()))
+            .header(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"" + dl.getFilename() + "\"")
+            .body(dl.getResource());
+    }
+}
+
+// FileService.java
+@Service
+public class FileService {
+    private static final Set&lt;String&gt; ALLOWED = Set.of(
+        "image/jpeg", "image/png", "application/pdf");
+    private static final long MAX_SIZE = 5 * 1024 * 1024;
+
+    @Transactional
+    public FileResponse upload(MultipartFile file) {
+        if (!ALLOWED.contains(file.getContentType()))
+            throw new BadRequestException("許可されていないファイル形式です");
+        if (file.getSize() &gt; MAX_SIZE)
+            throw new BadRequestException("ファイルサイズは5MB以下にしてください");
+
+        String storedName = UUID.randomUUID() + "_"
+            + file.getOriginalFilename();
+        Path path = Path.of("uploads", storedName);
+        try { file.transferTo(path); }
+        catch (IOException e) {
+            throw new RuntimeException("ファイル保存に失敗しました", e);
+        }
+        FileMeta meta = new FileMeta();
+        meta.setOriginalName(file.getOriginalFilename());
+        meta.setStoredName(storedName);
+        meta.setContentType(file.getContentType());
+        meta.setSize(file.getSize());
+        fileMapper.insert(meta);
+        return FileResponse.from(meta);
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>UUIDをファイル名のプレフィックスにすることで、同名ファイルの衝突を防ぎます。</li>
+              <li>ファイル種類の検証は拡張子ではなくContent-Type（MIME type）で行うのが安全です。</li>
+              <li>ダウンロード時の <code>Content-Disposition</code> ヘッダーで、ブラウザに保存ダイアログを表示させます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T3: データベース・MyBatis ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">storage</span>
+      <h2>T3 データベース・MyBatis</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-05 -->
+    <div class="drill-item" id="s-05">
+      <div class="drill-header">
+        <div class="drill-badge">S-05</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 データベース・MyBatis</span>
+          <h3 class="drill-title">複雑なDB操作を含むワークフローエンジン</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>承認ワークフロー（申請→上長承認→完了）は業務システムで頻出です。状態遷移の管理、履歴テーブルへの記録、権限チェックを統合的に実装します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、経費精算のワークフローAPIを実装してください。</p>
+          <ul>
+            <li>状態遷移: DRAFT → SUBMITTED → APPROVED / REJECTED</li>
+            <li>expense_requests テーブル + expense_histories テーブル</li>
+            <li>状態遷移のたびに history に操作ログを記録</li>
+            <li>不正な状態遷移はエラー（例: DRAFT→APPROVEDは不可）</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>状態遷移の許可マップ <code>Map&lt;String, Set&lt;String&gt;&gt;</code> を定義し、現在のステータスから遷移可能なステータスかをチェックします。<code>@Transactional</code> でステータス更新と履歴記録を1トランザクションにします。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// ExpenseService.java
+@Service
+public class ExpenseService {
+    private static final Map&lt;String, Set&lt;String&gt;&gt; TRANSITIONS = Map.of(
+        "DRAFT", Set.of("SUBMITTED"),
+        "SUBMITTED", Set.of("APPROVED", "REJECTED")
+    );
+
+    @Transactional
+    public ExpenseRequest transition(Long id, String newStatus,
+            String operatorName) {
+        ExpenseRequest req = expenseMapper.findById(id);
+        if (req == null) throw new ResourceNotFoundException(
+            "Expense not found");
+
+        Set&lt;String&gt; allowed = TRANSITIONS.getOrDefault(
+            req.getStatus(), Set.of());
+        if (!allowed.contains(newStatus)) {
+            throw new BusinessRuleException(
+                req.getStatus() + " → " + newStatus + " は不正な遷移です");
+        }
+
+        expenseMapper.updateStatus(id, newStatus);
+        ExpenseHistory history = new ExpenseHistory();
+        history.setExpenseId(id);
+        history.setFromStatus(req.getStatus());
+        history.setToStatus(newStatus);
+        history.setOperator(operatorName);
+        history.setOperatedAt(LocalDateTime.now());
+        historyMapper.insert(history);
+
+        return expenseMapper.findById(id);
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>状態遷移マップで許可される遷移を宣言的に管理することで、不正遷移の防止とルール変更が容易になります。</li>
+              <li>履歴テーブルに「誰が」「いつ」「何を」操作したかを記録するのは監査要件の基本です。</li>
+              <li>トランザクションでステータス更新と履歴記録をアトミックにし、データの整合性を保証します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-06 -->
+    <div class="drill-item" id="s-06">
+      <div class="drill-header">
+        <div class="drill-badge">S-06</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 データベース・MyBatis</span>
+          <h3 class="drill-title">マスタデータ+キャッシュ戦略の実装</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>都道府県やカテゴリなどの変更頻度が低いマスタデータは、@CacheableでキャッシュすることでDBアクセスを大幅に削減できます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、マスタデータのキャッシュ機能を実装してください。</p>
+          <ul>
+            <li>カテゴリマスタを <code>@Cacheable</code> でキャッシュ</li>
+            <li>カテゴリ更新時に <code>@CacheEvict</code> でキャッシュをクリア</li>
+            <li>GET /api/categories — 全カテゴリ取得（キャッシュ対応）</li>
+            <li>PUT /api/categories/{id} — カテゴリ更新（キャッシュクリア）</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>@EnableCaching</code> を設定クラスに付け、Service メソッドに <code>@Cacheable("categories")</code> を付けます。更新メソッドには <code>@CacheEvict(value = "categories", allEntries = true)</code> を付けます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// CacheConfig.java
+@Configuration
+@EnableCaching
+public class CacheConfig {}
+
+// CategoryService.java
+@Service
+public class CategoryService {
+    private final CategoryMapper categoryMapper;
+
+    @Cacheable("categories")
+    public List&lt;Category&gt; findAll() {
+        return categoryMapper.findAll();
+    }
+
+    @CacheEvict(value = "categories", allEntries = true)
+    @Transactional
+    public Category update(Long id, CategoryForm form) {
+        Category cat = categoryMapper.findById(id);
+        if (cat == null) throw new ResourceNotFoundException(
+            "Category not found");
+        cat.setName(form.getName());
+        categoryMapper.update(cat);
+        return cat;
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@Cacheable</code> は初回のみDBアクセスし、以降はキャッシュから返します。マスタデータのような変更頻度が低いデータに最適です。</li>
+              <li><code>@CacheEvict(allEntries = true)</code> でキャッシュを全クリアします。部分的なクリアは <code>key</code> 属性で制御します。</li>
+              <li>本番環境ではRedisを外部キャッシュとして使い、複数インスタンス間でキャッシュを共有するのが一般的です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T4: バリデーション ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">verified</span>
+      <h2>T4 バリデーション</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-07 -->
+    <div class="drill-item" id="s-07">
+      <div class="drill-header">
+        <div class="drill-badge">S-07</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 バリデーション</span>
+          <h3 class="drill-title">マルチステップフォームバリデーション</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>会員登録やアンケートなどの複数ステップに分かれたフォームでは、各ステップごとに必要なバリデーションのみを実行する必要があります。グループバリデーションと組み合わせて実装します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、3ステップの会員登録フォームバリデーションを実装してください。</p>
+          <ul>
+            <li>Step1（基本情報）: name(必須), email(必須、Email形式)</li>
+            <li>Step2（パスワード）: password(必須、8文字以上), confirmPassword(一致確認)</li>
+            <li>Step3（プロフィール）: age(1-120), bio(最大1000文字)</li>
+            <li>各ステップのエンドポイントを分け、ステップごとにバリデーションを実行</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>各ステップのマーカーインタフェース <code>Step1</code>, <code>Step2</code>, <code>Step3</code> を定義し、フォームクラスの各フィールドに <code>groups</code> 属性で紐付けます。コントローラでは <code>@Validated(Step1.class)</code> のように指定します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// バリデーショングループ
+public interface Step1 {}
+public interface Step2 {}
+public interface Step3 {}
+
+// RegistrationForm.java
+@PasswordMatch(groups = Step2.class)
+public class RegistrationForm {
+    @NotBlank(groups = Step1.class) private String name;
+    @NotBlank(groups = Step1.class) @Email(groups = Step1.class)
+    private String email;
+    @NotBlank(groups = Step2.class) @Size(min = 8, groups = Step2.class)
+    private String password;
+    @NotBlank(groups = Step2.class) private String confirmPassword;
+    @Min(value = 1, groups = Step3.class)
+    @Max(value = 120, groups = Step3.class)
+    private Integer age;
+    @Size(max = 1000, groups = Step3.class) private String bio;
+}
+
+// RegistrationController.java
+@PostMapping("/step1")
+public ResponseEntity&lt;String&gt; step1(
+        @Validated(Step1.class) @RequestBody RegistrationForm form) {
+    return ResponseEntity.ok("Step1 OK");
+}
+
+@PostMapping("/step2")
+public ResponseEntity&lt;String&gt; step2(
+        @Validated(Step2.class) @RequestBody RegistrationForm form) {
+    return ResponseEntity.ok("Step2 OK");
+}
+
+@PostMapping("/step3")
+public ResponseEntity&lt;String&gt; step3(
+        @Validated({Step1.class, Step2.class, Step3.class})
+        @RequestBody RegistrationForm form) {
+    userService.register(form);
+    return ResponseEntity.status(HttpStatus.CREATED).body("登録完了");
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>最終ステップでは全グループを指定することで、全フィールドの総合バリデーションを実行します。</li>
+              <li><code>@PasswordMatch</code> はStep2グループに属するクラスレベルのカスタムバリデーションです。</li>
+              <li>SPAフロントエンドでは各ステップのAPIを叩いてバリデーション結果を取得し、リアルタイムにエラーを表示します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-08 -->
+    <div class="drill-item" id="s-08">
+      <div class="drill-header">
+        <div class="drill-badge">S-08</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 バリデーション</span>
+          <h3 class="drill-title">バリデーション+例外+テストの統合実装</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>バリデーションエラーのレスポンスが正しいフォーマットで返るか、ビジネスロジック例外が適切なステータスコードになるかは、テストで保証すべき重要な品質です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の全てを統合的に実装してください。</p>
+          <ul>
+            <li>商品登録API: バリデーション（name必須、price &gt; 0）+ 重複チェック</li>
+            <li>統一エラーレスポンス: バリデーションエラー(400)、重複(409)、システムエラー(500)</li>
+            <li>MockMvcテスト: 正常系(201)、バリデーションエラー(400)、重複エラー(409)の3ケース</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>テストではname空のJSON送信で400を確認し、<code>when(service.create(any())).thenThrow(new DuplicateResourceException(...))</code> で409を確認します。<code>jsonPath("$.errors")</code> でエラーフォーマットも検証しましょう。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// ProductControllerTest.java
+@WebMvcTest(ProductController.class)
+class ProductControllerTest {
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @MockBean private ProductService productService;
+
+    @Test
+    void create_returns201() throws Exception {
+        ProductForm form = new ProductForm("Java本", 3000);
+        when(productService.create(any())).thenReturn(
+            new ProductResponse(1L, "Java本", 3000));
+        mockMvc.perform(post("/api/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(form)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.name").value("Java本"));
+    }
+
+    @Test
+    void create_returns400_whenNameBlank() throws Exception {
+        ProductForm form = new ProductForm("", 3000);
+        mockMvc.perform(post("/api/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(form)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.errors").exists());
+    }
+
+    @Test
+    void create_returns409_whenDuplicate() throws Exception {
+        ProductForm form = new ProductForm("既存商品", 3000);
+        when(productService.create(any()))
+            .thenThrow(new DuplicateResourceException("既に存在します"));
+        mockMvc.perform(post("/api/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(form)))
+            .andExpect(status().isConflict());
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>正常系・バリデーションエラー・ビジネスエラーの3パターンはCRUD APIテストの最低限のカバレッジです。</li>
+              <li><code>jsonPath("$.errors").exists()</code> でエラーレスポンスのフォーマットが正しいことも検証しています。</li>
+              <li>テストが通ることで「バリデーション→例外ハンドラ→レスポンス生成」のパイプラインが正しく動作することが保証されます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T5: 例外ハンドリング ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">bug_report</span>
+      <h2>T5 例外ハンドリング</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-09 -->
+    <div class="drill-item" id="s-09">
+      <div class="drill-header">
+        <div class="drill-badge">S-09</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 例外ハンドリング</span>
+          <h3 class="drill-title">REST APIエラーハンドリングミドルウェア</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>プロダクションレベルのAPIでは、例外ハンドリング・ログ記録・エラーレスポンス生成・トレースIDの付与を一貫して行うミドルウェアが必要です。障害調査のためのログ設計も含めた総合的なエラーハンドリング基盤を実装します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、本番運用レベルのエラーハンドリング基盤を実装してください。</p>
+          <ul>
+            <li>全リクエストにUUID形式の <code>traceId</code> を発行し、MDC（Mapped Diagnostic Context）に設定</li>
+            <li>エラーレスポンスに traceId を含める（障害調査で「このtraceIdのログを見せて」と依頼できる）</li>
+            <li>例外種類ごとにログレベルを分ける: 4xx→WARN、5xx→ERROR（スタックトレース付き）</li>
+            <li>本番ではシステムエラーの詳細メッセージを隠蔽し、開発環境では詳細を表示する</li>
+            <li>ProblemDetail形式 + traceId + errorCode の統一レスポンス</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>OncePerRequestFilter</code> でリクエスト開始時に <code>MDC.put("traceId", UUID.randomUUID().toString())</code> を設定し、レスポンスヘッダーにもtraceIdを付与します。<code>@Profile</code> で環境ごとのエラー詳細表示を切り替えます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// TraceIdFilter.java
+@Component
+public class TraceIdFilter extends OncePerRequestFilter {
+    @Override
+    protected void doFilterInternal(HttpServletRequest req,
+            HttpServletResponse res, FilterChain chain)
+            throws ServletException, IOException {
+        String traceId = UUID.randomUUID().toString();
+        MDC.put("traceId", traceId);
+        res.setHeader("X-Trace-Id", traceId);
+        try {
+            chain.doFilter(req, res);
+        } finally {
+            MDC.clear();
+        }
+    }
+}
+
+// GlobalExceptionHandler.java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    private static final Logger log =
+        LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @Value("${app.error.show-detail:false}")
+    private boolean showDetail;
+
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity&lt;ProblemDetail&gt; handleApp(
+            AppException ex) {
+        log.warn("[{}] {}: {}", MDC.get("traceId"),
+            ex.getErrorCode(), ex.getMessage());
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+            ex.getHttpStatus(), ex.getMessage());
+        pd.setType(URI.create(ex.getTypeUri()));
+        pd.setProperty("errorCode", ex.getErrorCode());
+        pd.setProperty("traceId", MDC.get("traceId"));
+        ex.getProperties().forEach(pd::setProperty);
+        return ResponseEntity.status(ex.getHttpStatus()).body(pd);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity&lt;ProblemDetail&gt; handleValidation(
+            MethodArgumentNotValidException ex) {
+        log.warn("[{}] Validation failed: {} errors",
+            MDC.get("traceId"),
+            ex.getBindingResult().getErrorCount());
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST, "入力値に誤りがあります");
+        pd.setType(URI.create("/problems/validation-error"));
+        pd.setProperty("traceId", MDC.get("traceId"));
+        pd.setProperty("errorCode", "VALIDATION_ERROR");
+        pd.setProperty("errors",
+            ex.getBindingResult().getFieldErrors().stream()
+                .map(e -&gt; Map.of("field", e.getField(),
+                    "message", e.getDefaultMessage()))
+                .toList());
+        return ResponseEntity.badRequest().body(pd);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity&lt;ProblemDetail&gt; handleUnexpected(
+            Exception ex) {
+        log.error("[{}] Unexpected error",
+            MDC.get("traceId"), ex);
+        String detail = showDetail
+            ? ex.getMessage()
+            : "予期しないエラーが発生しました。traceId: "
+                + MDC.get("traceId") + " をサポートにお伝えください";
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+            HttpStatus.INTERNAL_SERVER_ERROR, detail);
+        pd.setType(URI.create("/problems/internal-error"));
+        pd.setProperty("traceId", MDC.get("traceId"));
+        pd.setProperty("errorCode", "INTERNAL_ERROR");
+        return ResponseEntity.status(500).body(pd);
+    }
+}
+
+// application.yml
+// 開発環境: app.error.show-detail: true
+// 本番環境: app.error.show-detail: false
+
+// logback-spring.xml (パターン)
+// %d{HH:mm:ss} [%X{traceId}] %-5level %logger - %msg%n</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>MDC</code>（Mapped Diagnostic Context）はスレッドローカルなログコンテキストで、traceIdをログの全行に自動付与できます。障害調査時にtraceIdでログをgrepできます。</li>
+              <li>4xx系はクライアント起因のため <code>WARN</code> レベル、5xx系はサーバー起因のため <code>ERROR</code> レベル（スタックトレース付き）でログを記録します。</li>
+              <li>本番環境ではシステムエラーの詳細（スタックトレース等）をクライアントに返さないことで、内部構造の漏洩を防ぎます。</li>
+              <li><code>X-Trace-Id</code> レスポンスヘッダーにより、ブラウザの開発者ツールからもtraceIdを確認できます。</li>
+              <li>このパターンはマイクロサービス間のリクエスト追跡（分散トレーシング）の基礎でもあります。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-10 -->
+    <div class="drill-item" id="s-10">
+      <div class="drill-header">
+        <div class="drill-badge">S-10</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 例外ハンドリング</span>
+          <h3 class="drill-title">外部API連携のサーキットブレーカーパターン</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>外部API障害時にリクエストを遮断し、システム全体の連鎖障害を防ぐサーキットブレーカーパターンは、マイクロサービスの耐障害性に必須です。Closed→Open→Half-Openの状態遷移で自動復旧を実現します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、簡易サーキットブレーカーを実装してください。</p>
+          <ul>
+            <li>状態遷移: CLOSED（正常）→ OPEN（連続N回失敗）→ HALF_OPEN（一定時間後に試行）→ CLOSED/OPEN</li>
+            <li>失敗閾値: 連続3回失敗でOPEN</li>
+            <li>OPEN状態のタイムアウト: 30秒後にHALF_OPENに遷移</li>
+            <li>OPEN状態でのリクエストは即座に503を返す（フォールバックレスポンス）</li>
+            <li>外部決済APIの呼び出しに適用</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>AtomicInteger</code> で失敗カウントを管理し、<code>AtomicReference&lt;State&gt;</code> で状態を管理します。OPEN遷移時にタイムスタンプを記録し、30秒経過したらHALF_OPENに遷移させます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// CircuitBreaker.java
+@Component
+public class CircuitBreaker {
+    private enum State { CLOSED, OPEN, HALF_OPEN }
+
+    private final AtomicReference&lt;State&gt; state =
+        new AtomicReference&lt;&gt;(State.CLOSED);
+    private final AtomicInteger failureCount =
+        new AtomicInteger(0);
+    private volatile long lastFailureTime = 0;
+
+    private static final int FAILURE_THRESHOLD = 3;
+    private static final long TIMEOUT_MS = 30000;
+    private static final Logger log =
+        LoggerFactory.getLogger(CircuitBreaker.class);
+
+    public &lt;T&gt; T execute(Supplier&lt;T&gt; action,
+            Supplier&lt;T&gt; fallback) {
+        if (state.get() == State.OPEN) {
+            if (System.currentTimeMillis() - lastFailureTime
+                    &gt; TIMEOUT_MS) {
+                state.set(State.HALF_OPEN);
+                log.info("Circuit: OPEN → HALF_OPEN");
+            } else {
+                log.warn("Circuit OPEN: returning fallback");
+                return fallback.get();
+            }
+        }
+        try {
+            T result = action.get();
+            if (state.get() == State.HALF_OPEN) {
+                state.set(State.CLOSED);
+                failureCount.set(0);
+                log.info("Circuit: HALF_OPEN → CLOSED");
+            }
+            failureCount.set(0);
+            return result;
+        } catch (Exception ex) {
+            int count = failureCount.incrementAndGet();
+            lastFailureTime = System.currentTimeMillis();
+            if (count &gt;= FAILURE_THRESHOLD) {
+                state.set(State.OPEN);
+                log.error("Circuit: → OPEN ({}回連続失敗)",
+                    count);
+            }
+            if (state.get() == State.HALF_OPEN) {
+                state.set(State.OPEN);
+                log.warn("Circuit: HALF_OPEN → OPEN (再失敗)");
+            }
+            return fallback.get();
+        }
+    }
+}
+
+// PaymentService.java
+@Service
+public class PaymentService {
+    private final RestClient restClient;
+    private final CircuitBreaker circuitBreaker;
+
+    public PaymentResult processPayment(PaymentRequest req) {
+        return circuitBreaker.execute(
+            // 正常処理
+            () -&gt; restClient.post()
+                .uri("/api/payments")
+                .body(req)
+                .retrieve()
+                .body(PaymentResult.class),
+            // フォールバック
+            () -&gt; {
+                throw new RetryableException(
+                    "決済サービスが一時的に利用できません", 30);
+            }
+        );
+    }
+}
+
+// PaymentController.java
+@PostMapping("/api/orders/{id}/pay")
+public ResponseEntity&lt;PaymentResult&gt; pay(
+        @PathVariable Long id) {
+    try {
+        PaymentResult result = paymentService.processPayment(
+            new PaymentRequest(id));
+        return ResponseEntity.ok(result);
+    } catch (RetryableException ex) {
+        // GlobalExceptionHandlerでProblemDetail + Retry-After
+        throw ex;
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>サーキットブレーカーは「高速失敗」によりタイムアウト待ちのリソース消費を防ぎ、外部サービス障害の連鎖を遮断します。</li>
+              <li>HALF_OPEN状態でのテストリクエストにより、外部サービスが復旧したかを自動的に検知し、正常状態に戻ります。</li>
+              <li>フォールバックで <code>RetryableException</code> を投げることで、クライアントに「後で再試行」を伝えるREST APIとして一貫性があります。</li>
+              <li>本番ではResilience4jライブラリを使うのが一般的ですが、自作で概念を理解することが重要です。</li>
+              <li><code>AtomicReference</code> と <code>AtomicInteger</code> でスレッドセーフな状態管理を実現しています。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T6: セキュリティ基礎 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">security</span>
+      <h2>T6 セキュリティ基礎</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-11 -->
+    <div class="drill-item" id="s-11">
+      <div class="drill-header">
+        <div class="drill-badge">S-11</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セキュリティ基礎</span>
+          <h3 class="drill-title">OAuth2リソースサーバーの実装</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>OAuth2リソースサーバーはJWTアクセストークンを受け取り、トークンの署名検証・クレーム解析・権限マッピングを行います。認証プロバイダ（Auth0, Keycloak等）との連携パターンを理解します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、OAuth2リソースサーバーを実装してください。</p>
+          <ul>
+            <li>Spring Security OAuth2 Resource Serverを使用</li>
+            <li>JWTのissuer検証、audience検証、有効期限検証</li>
+            <li>JWTのスコープ（scope claim）をSpring SecurityのGrantedAuthorityにマッピング</li>
+            <li><code>read:products</code> スコープ → GET /api/products を許可</li>
+            <li><code>write:products</code> スコープ → POST/PUT/DELETE /api/products を許可</li>
+            <li>認証エラー時のカスタムレスポンス（ProblemDetail形式）</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>spring.security.oauth2.resourceserver.jwt.issuer-uri</code> でissuerを設定します。<code>JwtAuthenticationConverter</code> でJWTのclaimをAuthorityに変換します。<code>BearerTokenAuthenticationEntryPoint</code> をカスタムして認証エラーレスポンスを制御します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// application.yml
+// spring:
+//   security:
+//     oauth2:
+//       resourceserver:
+//         jwt:
+//           issuer-uri: https://auth.example.com/
+//           audiences: my-api
+
+// SecurityConfig.java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http)
+            throws Exception {
+        http
+            .csrf(csrf -&gt; csrf.disable())
+            .authorizeHttpRequests(auth -&gt; auth
+                .requestMatchers(HttpMethod.GET, "/api/products/**")
+                    .hasAuthority("SCOPE_read:products")
+                .requestMatchers(HttpMethod.POST, "/api/products/**")
+                    .hasAuthority("SCOPE_write:products")
+                .requestMatchers(HttpMethod.PUT, "/api/products/**")
+                    .hasAuthority("SCOPE_write:products")
+                .requestMatchers(HttpMethod.DELETE, "/api/products/**")
+                    .hasAuthority("SCOPE_write:products")
+                .anyRequest().authenticated())
+            .oauth2ResourceServer(oauth2 -&gt; oauth2
+                .jwt(jwt -&gt; jwt
+                    .jwtAuthenticationConverter(
+                        jwtAuthenticationConverter()))
+                .authenticationEntryPoint(
+                    customAuthenticationEntryPoint()));
+        return http.build();
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter converter =
+            new JwtGrantedAuthoritiesConverter();
+        converter.setAuthoritiesClaimName("scope");
+        converter.setAuthorityPrefix("SCOPE_");
+
+        JwtAuthenticationConverter jwtConverter =
+            new JwtAuthenticationConverter();
+        jwtConverter.setJwtGrantedAuthoritiesConverter(converter);
+        return jwtConverter;
+    }
+
+    @Bean
+    public AuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return (request, response, authException) -&gt; {
+            response.setStatus(401);
+            response.setContentType("application/problem+json");
+            ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED,
+                "有効なアクセストークンが必要です");
+            pd.setType(URI.create("/problems/unauthorized"));
+            pd.setProperty("errorCode", "UNAUTHORIZED");
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
+            response.getWriter().write(
+                mapper.writeValueAsString(pd));
+        };
+    }
+}
+
+// JwtAudienceValidator.java（カスタムバリデーター）
+@Component
+public class JwtAudienceValidator implements OAuth2TokenValidator&lt;Jwt&gt; {
+    @Value("${spring.security.oauth2.resourceserver.jwt.audiences}")
+    private String audience;
+
+    @Override
+    public OAuth2TokenValidatorResult validate(Jwt jwt) {
+        if (jwt.getAudience().contains(audience)) {
+            return OAuth2TokenValidatorResult.success();
+        }
+        return OAuth2TokenValidatorResult.failure(
+            new OAuth2Error("invalid_audience",
+                "Required audience not found", null));
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>OAuth2リソースサーバーはトークンの発行は行わず、受け取ったJWTの検証と権限抽出のみを担当します。認証プロバイダとの責務分離が重要です。</li>
+              <li><code>SCOPE_</code> プレフィックスはSpring Securityの慣習で、JWTのscope claimを <code>hasAuthority("SCOPE_read:products")</code> で参照します。</li>
+              <li>audience検証は「このトークンが自分のAPI向けに発行されたものか」を確認するもので、他のAPI向けトークンの不正利用を防ぎます。</li>
+              <li>認証エラー時にProblemDetail形式で返すことで、API全体のエラーレスポンスフォーマットが統一されます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-12 -->
+    <div class="drill-item" id="s-12">
+      <div class="drill-header">
+        <div class="drill-badge">S-12</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セキュリティ基礎</span>
+          <h3 class="drill-title">セキュリティ統合: 認証+認可+監査ログ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>本番環境のセキュリティは認証・認可だけでなく、「誰が」「いつ」「何をしたか」の監査ログ、レート制限、入力サニタイズを統合的に実装する必要があります。セキュリティは多層防御が原則です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、セキュリティ統合基盤を実装してください。</p>
+          <ul>
+            <li>JWT認証 + ロールベース認可（ADMIN, MANAGER, USER）</li>
+            <li>AOP監査ログ: 全APIアクセスを audit_logs テーブルに記録（ユーザー名、操作、リソース、タイムスタンプ）</li>
+            <li>IPベースレート制限: 同一IPから1分間に60リクエスト超で429 Too Many Requests</li>
+            <li>セキュリティヘッダー付与: X-Content-Type-Options, X-Frame-Options, Content-Security-Policy</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>監査ログはAOP <code>@Around</code> で全Controllerメソッドをインターセプトし、<code>SecurityContextHolder</code> からユーザー名を取得します。レート制限は <code>ConcurrentHashMap&lt;String, AtomicInteger&gt;</code> でIPごとのカウントを管理し、<code>@Scheduled</code> で1分ごとにリセットします。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// AuditLogAspect.java
+@Aspect
+@Component
+public class AuditLogAspect {
+    private final AuditLogMapper auditLogMapper;
+    private static final Logger log =
+        LoggerFactory.getLogger(AuditLogAspect.class);
+
+    @Around("within(@org.springframework.web.bind.annotation"
+        + ".RestController *)")
+    public Object audit(ProceedingJoinPoint pjp) throws Throwable {
+        String username = Optional.ofNullable(
+                SecurityContextHolder.getContext().getAuthentication())
+            .map(Authentication::getName)
+            .orElse("anonymous");
+        String method = pjp.getSignature().getName();
+        String className = pjp.getTarget().getClass().getSimpleName();
+
+        Object result = pjp.proceed();
+
+        AuditLog entry = new AuditLog();
+        entry.setUsername(username);
+        entry.setAction(method);
+        entry.setResource(className);
+        entry.setTimestamp(LocalDateTime.now());
+        entry.setTraceId(MDC.get("traceId"));
+        auditLogMapper.insert(entry);
+        log.info("[AUDIT] {} {} {}", username, method, className);
+        return result;
+    }
+}
+
+// RateLimitFilter.java
+@Component
+public class RateLimitFilter extends OncePerRequestFilter {
+    private final ConcurrentHashMap&lt;String, AtomicInteger&gt;
+        requestCounts = new ConcurrentHashMap&lt;&gt;();
+    private static final int MAX_REQUESTS = 60;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest req,
+            HttpServletResponse res, FilterChain chain)
+            throws ServletException, IOException {
+        String ip = req.getRemoteAddr();
+        AtomicInteger count = requestCounts
+            .computeIfAbsent(ip, k -&gt; new AtomicInteger(0));
+        if (count.incrementAndGet() &gt; MAX_REQUESTS) {
+            res.setStatus(429);
+            res.setContentType("application/problem+json");
+            res.getWriter().write("{\"type\":\"/problems/rate-limit\","
+                + "\"status\":429,"
+                + "\"detail\":\"リクエスト数の上限を超えました\"}");
+            return;
+        }
+        res.setHeader("X-RateLimit-Remaining",
+            String.valueOf(MAX_REQUESTS - count.get()));
+        chain.doFilter(req, res);
+    }
+
+    @Scheduled(fixedRate = 60000)
+    public void resetCounts() { requestCounts.clear(); }
+}
+
+// SecurityConfig.java（セキュリティヘッダー）
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http)
+        throws Exception {
+    http
+        .headers(headers -&gt; headers
+            .contentTypeOptions(Customizer.withDefaults())
+            .frameOptions(frame -&gt; frame.deny())
+            .contentSecurityPolicy(csp -&gt; csp
+                .policyDirectives(
+                    "default-src 'self'; script-src 'self'")))
+        .csrf(csrf -&gt; csrf.disable())
+        .sessionManagement(sm -&gt; sm.sessionCreationPolicy(
+            SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -&gt; auth
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            .requestMatchers("/api/manage/**")
+                .hasAnyRole("ADMIN", "MANAGER")
+            .requestMatchers("/api/**").authenticated())
+        .oauth2ResourceServer(oauth2 -&gt; oauth2
+            .jwt(Customizer.withDefaults()));
+    return http.build();
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>監査ログは「いつ・誰が・何をしたか」を記録するもので、コンプライアンス要件や不正アクセス調査で必須です。AOPで横断的に実装することで各Controllerに個別のログコードが不要になります。</li>
+              <li>レート制限はDoS攻撃やAPI乱用を防ぎます。<code>X-RateLimit-Remaining</code> ヘッダーでクライアントに残りリクエスト数を通知するのがAPI設計のベストプラクティスです。</li>
+              <li>セキュリティヘッダー（CSP, X-Frame-Options等）はクリックジャッキングやXSSなどのブラウザベース攻撃を防ぐ多層防御の一部です。</li>
+              <li>traceIdを監査ログにも記録することで、エラーログと監査ログを横断的に追跡できます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T7: テスト・MockMvc ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">science</span>
+      <h2>T7 テスト・MockMvc</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-13 -->
+    <div class="drill-item" id="s-13">
+      <div class="drill-header">
+        <div class="drill-badge">S-13</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 テスト・MockMvc</span>
+          <h3 class="drill-title">包括的テストスイートの設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>テストピラミッド（ユニットテスト多数→統合テスト中→E2Eテスト少数）に基づくテスト戦略を設計し、各レイヤーのテストを効果的に組み合わせることで、高い信頼性とメンテナンス性を両立します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、商品管理APIの包括的テストスイートを実装してください。</p>
+          <ul>
+            <li><strong>Layer1 ユニットテスト</strong>: ProductService の create/update/delete（@Mock + @InjectMocks、5ケース）</li>
+            <li><strong>Layer2 Webレイヤーテスト</strong>: ProductController の全エンドポイント（@WebMvcTest + @MockBean、6ケース）</li>
+            <li><strong>Layer3 統合テスト</strong>: API→DB の全フロー（@SpringBootTest + H2、3ケース）</li>
+            <li><strong>テストユーティリティ</strong>: テストデータビルダー（ProductFixture）を共通化</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>テストデータビルダーは <code>ProductFixture.aProduct().withName("テスト").withPrice(1000).build()</code> のようにBuilderパターンで作ると可読性が上がります。統合テストは <code>@Sql</code> で初期データを投入します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// === テストデータビルダー ===
+// ProductFixture.java
+public class ProductFixture {
+    private String name = "デフォルト商品";
+    private int price = 1000;
+    private String category = "BOOK";
+
+    public static ProductFixture aProduct() {
+        return new ProductFixture();
+    }
+    public ProductFixture withName(String name) {
+        this.name = name; return this;
+    }
+    public ProductFixture withPrice(int price) {
+        this.price = price; return this;
+    }
+    public Product buildEntity() {
+        return new Product(null, name, price, category);
+    }
+    public ProductForm buildForm() {
+        return new ProductForm(name, price, category);
+    }
+    public ProductResponse buildResponse(Long id) {
+        return new ProductResponse(id, name, price, category);
+    }
+}
+
+// === Layer1: ユニットテスト ===
+@ExtendWith(MockitoExtension.class)
+class ProductServiceTest {
+    @Mock private ProductMapper productMapper;
+    @InjectMocks private ProductService productService;
+
+    @Test void create_success() {
+        ProductForm form = ProductFixture.aProduct()
+            .withName("Spring本").buildForm();
+        when(productMapper.findByName("Spring本"))
+            .thenReturn(null);
+        when(productMapper.insert(any())).thenAnswer(inv -&gt; {
+            Product p = inv.getArgument(0);
+            p.setId(1L); return 1;
+        });
+        ProductResponse res = productService.create(form);
+        assertEquals("Spring本", res.name());
+        verify(productMapper).insert(any());
+    }
+
+    @Test void create_duplicate_throws() {
+        when(productMapper.findByName("既存"))
+            .thenReturn(new Product());
+        assertThrows(DuplicateResourceException.class,
+            () -&gt; productService.create(
+                ProductFixture.aProduct()
+                    .withName("既存").buildForm()));
+    }
+    // ... 他3ケース省略
+}
+
+// === Layer2: Webレイヤーテスト ===
+@WebMvcTest(ProductController.class)
+class ProductControllerTest {
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @MockBean private ProductService productService;
+
+    @Test void getAll_returns200() throws Exception {
+        when(productService.findAll())
+            .thenReturn(List.of(ProductFixture.aProduct()
+                .buildResponse(1L)));
+        mockMvc.perform(get("/api/products"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].name")
+                .value("デフォルト商品"));
+    }
+    // ... 他5ケース省略
+}
+
+// === Layer3: 統合テスト ===
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Transactional
+class ProductIntegrationTest {
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+
+    @Test void fullCrudFlow() throws Exception {
+        // Create
+        ProductForm form = ProductFixture.aProduct()
+            .withName("統合テスト商品").buildForm();
+        String json = mockMvc.perform(post("/api/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(form)))
+            .andExpect(status().isCreated())
+            .andReturn().getResponse().getContentAsString();
+        Long id = objectMapper.readTree(json).get("id").asLong();
+
+        // Read
+        mockMvc.perform(get("/api/products/" + id))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("統合テスト商品"));
+
+        // Delete
+        mockMvc.perform(delete("/api/products/" + id))
+            .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/products/" + id))
+            .andExpect(status().isNotFound());
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>テストピラミッドに従い、ユニットテスト（高速・多数）→Webレイヤーテスト（中速・中数）→統合テスト（低速・少数）の比率で設計しています。</li>
+              <li><code>ProductFixture</code> ビルダーでテストデータの生成を共通化することで、テストコードの可読性とメンテナンス性が大幅に向上します。</li>
+              <li>ユニットテストはSpringコンテナなしで実行されるため数ミリ秒で完了します。CIでの高速フィードバックに最適です。</li>
+              <li>統合テストはCRUDの全フローを1テストで検証し、レイヤー間の結合が正しく動作することを保証します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-14 -->
+    <div class="drill-item" id="s-14">
+      <div class="drill-header">
+        <div class="drill-badge">S-14</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 テスト・MockMvc</span>
+          <h3 class="drill-title">テスト駆動の異常系・境界値テスト</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>プロダクションの品質はバグの発見力で決まります。正常系だけでなく、境界値、異常な入力、並行処理のエッジケースをテストすることで、本番障害を未然に防ぎます。@ParameterizedTestで効率的にカバーします。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従い、異常系・境界値テストを実装してください。</p>
+          <ul>
+            <li><code>@ParameterizedTest</code> + <code>@CsvSource</code> でバリデーション境界値テスト（name: 1文字/2文字/50文字/51文字）</li>
+            <li>不正なJSON形式でのリクエスト → 400テスト</li>
+            <li>存在しないエンドポイント → 404テスト</li>
+            <li>同一商品名の並行登録テスト（楽観的ロックの競合テスト）</li>
+            <li>大量データ（1000件）のページネーションテスト</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>@ParameterizedTest @CsvSource({"a,400", "ab,201", ...})</code> で入力値と期待ステータスを表形式で定義します。並行テストは <code>ExecutorService</code> で複数スレッドを同時実行し、1つだけ成功することを検証します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// ProductValidationTest.java
+@WebMvcTest(ProductController.class)
+class ProductValidationTest {
+    @Autowired private MockMvc mockMvc;
+    @MockBean private ProductService productService;
+
+    @ParameterizedTest(name = "name=\"{0}\" → {1}")
+    @CsvSource({
+        "'',     400",   // 空文字 → バリデーションエラー
+        "'a',    400",   // 1文字 → 最小文字数不足
+        "'ab',   201",   // 2文字 → 境界値OK
+        "'Java入門 Spring Boot ハンズオン 実践ガイド ver2.0 最新版2026',  201",
+        // 50文字 → 境界値OK（省略形で表現）
+    })
+    void create_nameValidation(String name,
+            int expectedStatus) throws Exception {
+        if (expectedStatus == 201) {
+            when(productService.create(any()))
+                .thenReturn(new ProductResponse(1L, name, 1000, "BOOK"));
+        }
+        String json = "{\"name\":\"" + name
+            + "\",\"price\":1000,\"category\":\"BOOK\"}";
+        mockMvc.perform(post("/api/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+            .andExpect(status().is(expectedStatus));
+    }
+
+    @Test
+    @DisplayName("不正JSON → 400 Bad Request")
+    void create_malformedJson_returns400() throws Exception {
+        mockMvc.perform(post("/api/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{invalid json}"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("存在しないエンドポイント → 404")
+    void notFound_returns404() throws Exception {
+        mockMvc.perform(get("/api/nonexistent"))
+            .andExpect(status().isNotFound());
+    }
+}
+
+// ConcurrencyTest.java
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+class ConcurrencyTest {
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+
+    @Test
+    @DisplayName("並行登録: 同一名は1つだけ成功")
+    void concurrentCreate_onlyOneSucceeds() throws Exception {
+        ProductForm form = new ProductForm("並行テスト商品", 1000, "BOOK");
+        String json = objectMapper.writeValueAsString(form);
+
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+        List&lt;Future&lt;Integer&gt;&gt; futures = new ArrayList&lt;&gt;();
+
+        for (int i = 0; i &lt; 5; i++) {
+            futures.add(executor.submit(() -&gt;
+                mockMvc.perform(post("/api/products")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json))
+                .andReturn().getResponse().getStatus()
+            ));
+        }
+        executor.shutdown();
+        executor.awaitTermination(10, TimeUnit.SECONDS);
+
+        long successCount = futures.stream()
+            .map(f -&gt; { try { return f.get(); }
+                catch (Exception e) { return 500; } })
+            .filter(s -&gt; s == 201)
+            .count();
+        assertEquals(1, successCount,
+            "同一商品名の登録は1つだけ成功すべき");
+    }
+
+    @Test
+    @DisplayName("大量データのページネーション")
+    void pagination_withLargeData() throws Exception {
+        // @Sqlで1000件のテストデータを投入済みと仮定
+        mockMvc.perform(get("/api/products")
+                .param("page", "0").param("size", "10"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content.length()").value(10))
+            .andExpect(jsonPath("$.totalElements").value(1000))
+            .andExpect(jsonPath("$.totalPages").value(100));
+
+        // 最終ページ
+        mockMvc.perform(get("/api/products")
+                .param("page", "99").param("size", "10"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content.length()").value(10));
+
+        // 範囲外ページ
+        mockMvc.perform(get("/api/products")
+                .param("page", "100").param("size", "10"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content.length()").value(0));
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@ParameterizedTest</code> + <code>@CsvSource</code> で境界値を網羅的にテストできます。1テストメソッドで多数のケースをカバーでき、テストコードの重複を排除できます。</li>
+              <li>並行テストでは <code>ExecutorService</code> で複数スレッドを同時実行し、排他制御（重複チェック+UNIQUE制約）が正しく機能することを検証します。</li>
+              <li>不正JSON入力テストは、クライアントの実装ミスや攻撃に対するAPIの耐性を確認する重要なテストケースです。</li>
+              <li>ページネーションの「最終ページ」「範囲外ページ」のテストは見落としがちですが、フロントエンドの不具合原因になりやすい箇所です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T8: 総合アプリケーション ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">apps</span>
+      <h2>T8 総合アプリケーション</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-15 -->
+    <div class="drill-item" id="s-15">
+      <div class="drill-header">
+        <div class="drill-badge">S-15</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合アプリケーション</span>
+          <h3 class="drill-title">TODO管理REST API 完全実装</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>全テーマ（DI、REST、DB、バリデーション、例外処理、セキュリティ、テスト）を統合した完全なREST APIを実装します。これが「Spring Bootで実務レベルのAPIを構築できる」の到達点です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の全要件を満たすTODO管理APIを実装してください。</p>
+          <ul>
+            <li><strong>エンティティ</strong>: Todo (id, title, description, status[OPEN/IN_PROGRESS/DONE], priority[1-5], dueDate, userId, createdAt, updatedAt)</li>
+            <li><strong>CRUD</strong>: 作成(201) / 取得(200) / 一覧(ステータス+優先度フィルタ+ページネーション) / 更新(200) / 削除(204)</li>
+            <li><strong>バリデーション</strong>: title(必須, 1-200文字), priority(1-5), dueDate(未来日), status遷移ルール</li>
+            <li><strong>認証・認可</strong>: JWT認証、自分のTodoのみ操作可能</li>
+            <li><strong>例外処理</strong>: ProblemDetail形式、traceId付き、統一エラーレスポンス</li>
+            <li><strong>テスト</strong>: Service層ユニットテスト3件 + MockMvcテスト3件</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>各層の責務を明確に: Controller(HTTP+バリデーション) → Service(ビジネスロジック+認可) → Mapper(SQL)。認可チェックは <code>SecurityContextHolder</code> から現在のユーザーIDを取得し、TodoのuserIdと照合します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// TodoForm.java
+public class TodoForm {
+    @NotBlank @Size(max = 200) private String title;
+    @Size(max = 2000) private String description;
+    @Min(1) @Max(5) private int priority;
+    @FutureOrPresent private LocalDate dueDate;
+}
+
+// TodoService.java
+@Service
+public class TodoService {
+    private final TodoMapper todoMapper;
+
+    private static final Map&lt;String, Set&lt;String&gt;&gt; TRANSITIONS = Map.of(
+        "OPEN", Set.of("IN_PROGRESS"),
+        "IN_PROGRESS", Set.of("OPEN", "DONE"),
+        "DONE", Set.of("IN_PROGRESS")
+    );
+
+    @Transactional
+    public TodoResponse create(TodoForm form, Long userId) {
+        Todo todo = new Todo();
+        todo.setTitle(form.getTitle());
+        todo.setDescription(form.getDescription());
+        todo.setStatus("OPEN");
+        todo.setPriority(form.getPriority());
+        todo.setDueDate(form.getDueDate());
+        todo.setUserId(userId);
+        todo.setCreatedAt(LocalDateTime.now());
+        todoMapper.insert(todo);
+        return TodoResponse.from(todo);
+    }
+
+    public TodoResponse findById(Long id, Long userId) {
+        Todo todo = todoMapper.findById(id);
+        if (todo == null) throw new EntityNotFoundException("Todo", id);
+        if (!todo.getUserId().equals(userId))
+            throw new ForbiddenException("自分のTodoのみ閲覧できます");
+        return TodoResponse.from(todo);
+    }
+
+    @Transactional
+    public TodoResponse updateStatus(Long id, String newStatus,
+            Long userId) {
+        Todo todo = todoMapper.findById(id);
+        if (todo == null) throw new EntityNotFoundException("Todo", id);
+        if (!todo.getUserId().equals(userId))
+            throw new ForbiddenException("自分のTodoのみ更新できます");
+        Set&lt;String&gt; allowed = TRANSITIONS.getOrDefault(
+            todo.getStatus(), Set.of());
+        if (!allowed.contains(newStatus))
+            throw new BusinessRuleViolationException(
+                "STATUS_TRANSITION",
+                todo.getStatus() + " → " + newStatus + " は不可");
+        todoMapper.updateStatus(id, newStatus);
+        return TodoResponse.from(todoMapper.findById(id));
+    }
+
+    public PageResponse&lt;TodoResponse&gt; search(Long userId,
+            String status, Integer priority,
+            int page, int size) {
+        int offset = page * size;
+        List&lt;TodoResponse&gt; content = todoMapper
+            .search(userId, status, priority, size, offset)
+            .stream().map(TodoResponse::from).toList();
+        long total = todoMapper.countSearch(
+            userId, status, priority);
+        return new PageResponse&lt;&gt;(content, page, size, total);
+    }
+}
+
+// TodoController.java
+@RestController
+@RequestMapping("/api/todos")
+public class TodoController {
+    private final TodoService todoService;
+
+    @PostMapping
+    public ResponseEntity&lt;TodoResponse&gt; create(
+            @Valid @RequestBody TodoForm form,
+            @AuthenticationPrincipal JwtUser user) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(todoService.create(form, user.getId()));
+    }
+
+    @GetMapping("/{id}")
+    public TodoResponse findById(@PathVariable Long id,
+            @AuthenticationPrincipal JwtUser user) {
+        return todoService.findById(id, user.getId());
+    }
+
+    @GetMapping
+    public PageResponse&lt;TodoResponse&gt; search(
+            @AuthenticationPrincipal JwtUser user,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer priority,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return todoService.search(
+            user.getId(), status, priority, page, size);
+    }
+
+    @PatchMapping("/{id}/status")
+    public TodoResponse updateStatus(@PathVariable Long id,
+            @RequestBody Map&lt;String, String&gt; body,
+            @AuthenticationPrincipal JwtUser user) {
+        return todoService.updateStatus(
+            id, body.get("status"), user.getId());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity&lt;Void&gt; delete(@PathVariable Long id,
+            @AuthenticationPrincipal JwtUser user) {
+        todoService.delete(id, user.getId());
+        return ResponseEntity.noContent().build();
+    }
+}
+
+// === テスト（抜粋） ===
+@ExtendWith(MockitoExtension.class)
+class TodoServiceTest {
+    @Mock private TodoMapper todoMapper;
+    @InjectMocks private TodoService todoService;
+
+    @Test void create_setsOpenStatus() {
+        when(todoMapper.insert(any())).thenAnswer(inv -&gt; {
+            Todo t = inv.getArgument(0); t.setId(1L); return 1;
+        });
+        TodoResponse res = todoService.create(
+            new TodoForm("タスク", null, 3, LocalDate.of(2026, 12, 31)),
+            100L);
+        assertEquals("OPEN", res.status());
+    }
+
+    @Test void findById_otherUser_throws() {
+        Todo todo = new Todo(); todo.setUserId(100L);
+        when(todoMapper.findById(1L)).thenReturn(todo);
+        assertThrows(ForbiddenException.class,
+            () -&gt; todoService.findById(1L, 999L));
+    }
+
+    @Test void updateStatus_invalidTransition_throws() {
+        Todo todo = new Todo();
+        todo.setUserId(100L); todo.setStatus("DONE");
+        when(todoMapper.findById(1L)).thenReturn(todo);
+        assertThrows(BusinessRuleViolationException.class,
+            () -&gt; todoService.updateStatus(1L, "OPEN", 100L));
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>全テーマ（DI, REST, MyBatis, バリデーション, 例外処理, 認証・認可, テスト）を1つのAPIに統合した総合課題です。各テーマが連携して動作することを体験できます。</li>
+              <li><code>@AuthenticationPrincipal</code> でJWTから抽出したユーザー情報を受け取り、Serviceに渡すことでコントローラは認証の詳細を知る必要がありません。</li>
+              <li>所有者チェック（userId照合）をServiceで一貫して行うことで、全エンドポイントで認可ロジックが統一されます。</li>
+              <li>テストでは「正常系」「認可エラー」「ビジネスルール違反」の3パターンを最低限カバーしています。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-16 -->
+    <div class="drill-item" id="s-16">
+      <div class="drill-header">
+        <div class="drill-badge">S-16</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合アプリケーション</span>
+          <h3 class="drill-title">ブログプラットフォームAPI 完全設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>複数ドメイン（ユーザー、記事、コメント、タグ）を横断する実務規模のAPIを、クリーンアーキテクチャに基づいて設計・実装します。ドメイン間の関連、アクセス制御、テスト戦略の全てを含む最終課題です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の全要件を満たすブログプラットフォームAPIを設計・実装してください。</p>
+          <ul>
+            <li><strong>ドメイン</strong>: User, Article(DRAFT/PUBLISHED/ARCHIVED), Comment, Tag（多対多）</li>
+            <li><strong>記事API</strong>: CRUD + 公開/アーカイブ + タグ検索 + ページネーション + 人気記事（コメント数順）</li>
+            <li><strong>コメントAPI</strong>: 作成/一覧/削除（記事のコメント、作成者orADMINのみ削除可能）</li>
+            <li><strong>認証・認可</strong>: JWT認証、ADMIN/AUTHOR/READERロール、記事作成者のみ更新可能</li>
+            <li><strong>例外処理</strong>: ProblemDetail + traceId + errorCode</li>
+            <li><strong>テスト</strong>: 各ドメインのService層テスト + 主要エンドポイントのMockMvcテスト</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>記事とタグの多対多関係は中間テーブル <code>article_tags</code> で管理します。人気記事はサブクエリ <code>SELECT article_id, COUNT(*) AS cnt FROM comments GROUP BY article_id ORDER BY cnt DESC</code> で取得します。ロール設計はArticle作成にAUTHOR以上、管理操作にADMINを要求します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// === ドメインモデル ===
+// Article.java
+public class Article {
+    private Long id;
+    private String title;
+    private String content;
+    private Long authorId;
+    private String status; // DRAFT, PUBLISHED, ARCHIVED
+    private List&lt;Tag&gt; tags;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+
+// === 記事Service ===
+@Service
+public class ArticleService {
+    private final ArticleMapper articleMapper;
+    private final TagMapper tagMapper;
+    private final ArticleTagMapper articleTagMapper;
+
+    @Transactional
+    public ArticleResponse create(ArticleForm form, Long authorId) {
+        Article article = new Article();
+        article.setTitle(form.getTitle());
+        article.setContent(form.getContent());
+        article.setAuthorId(authorId);
+        article.setStatus("DRAFT");
+        article.setCreatedAt(LocalDateTime.now());
+        articleMapper.insert(article);
+
+        // タグの関連付け
+        if (form.getTagIds() != null) {
+            for (Long tagId : form.getTagIds()) {
+                if (tagMapper.findById(tagId) == null)
+                    throw new EntityNotFoundException("Tag", tagId);
+                articleTagMapper.insert(article.getId(), tagId);
+            }
+        }
+        return toResponse(articleMapper.findByIdWithTags(
+            article.getId()));
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or "
+        + "@articleService.isAuthor(#id, authentication.name)")
+    @Transactional
+    public ArticleResponse publish(Long id) {
+        Article article = articleMapper.findById(id);
+        if (article == null)
+            throw new EntityNotFoundException("Article", id);
+        if (!"DRAFT".equals(article.getStatus()))
+            throw new BusinessRuleViolationException(
+                "PUBLISH_RULE",
+                "DRAFT状態の記事のみ公開できます");
+        articleMapper.updateStatus(id, "PUBLISHED");
+        article.setUpdatedAt(LocalDateTime.now());
+        return toResponse(articleMapper.findByIdWithTags(id));
+    }
+
+    public PageResponse&lt;ArticleResponse&gt; searchPublished(
+            String tag, String keyword, String sort,
+            int page, int size) {
+        int offset = page * size;
+        List&lt;Article&gt; articles = articleMapper
+            .searchPublished(tag, keyword, sort, size, offset);
+        long total = articleMapper.countSearchPublished(
+            tag, keyword);
+        return new PageResponse&lt;&gt;(
+            articles.stream().map(this::toResponse).toList(),
+            page, size, total);
+    }
+
+    public List&lt;ArticleResponse&gt; getPopular(int limit) {
+        return articleMapper.findPopularByCommentCount(limit)
+            .stream().map(this::toResponse).toList();
+    }
+}
+
+// === コメントService ===
+@Service
+public class CommentService {
+    private final CommentMapper commentMapper;
+    private final ArticleMapper articleMapper;
+
+    @Transactional
+    public CommentResponse create(Long articleId,
+            CommentForm form, Long userId) {
+        Article article = articleMapper.findById(articleId);
+        if (article == null)
+            throw new EntityNotFoundException("Article", articleId);
+        if (!"PUBLISHED".equals(article.getStatus()))
+            throw new BusinessRuleViolationException(
+                "COMMENT_RULE",
+                "公開済みの記事のみコメントできます");
+        Comment comment = new Comment();
+        comment.setArticleId(articleId);
+        comment.setUserId(userId);
+        comment.setContent(form.getContent());
+        comment.setCreatedAt(LocalDateTime.now());
+        commentMapper.insert(comment);
+        return CommentResponse.from(comment);
+    }
+
+    @Transactional
+    public void delete(Long commentId, Long userId, boolean isAdmin) {
+        Comment comment = commentMapper.findById(commentId);
+        if (comment == null)
+            throw new EntityNotFoundException("Comment", commentId);
+        if (!comment.getUserId().equals(userId) &amp;&amp; !isAdmin)
+            throw new ForbiddenException(
+                "コメント作成者またはADMINのみ削除できます");
+        commentMapper.deleteById(commentId);
+    }
+}
+
+// === MyBatis XML (人気記事) ===
+// &lt;select id="findPopularByCommentCount" resultMap="articleWithTags"&gt;
+//   SELECT a.*, COUNT(c.id) AS comment_count
+//   FROM articles a
+//   LEFT JOIN comments c ON a.id = c.article_id
+//   WHERE a.status = 'PUBLISHED'
+//   GROUP BY a.id
+//   ORDER BY comment_count DESC
+//   LIMIT #{limit}
+// &lt;/select&gt;
+
+// === コントローラ（抜粋） ===
+@RestController
+@RequestMapping("/api/articles")
+public class ArticleController {
+    @PostMapping
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
+    public ResponseEntity&lt;ArticleResponse&gt; create(
+            @Valid @RequestBody ArticleForm form,
+            @AuthenticationPrincipal JwtUser user) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(articleService.create(form, user.getId()));
+    }
+
+    @GetMapping("/popular")
+    public List&lt;ArticleResponse&gt; popular(
+            @RequestParam(defaultValue = "10") int limit) {
+        return articleService.getPopular(limit);
+    }
+}
+
+// === テスト（抜粋） ===
+@ExtendWith(MockitoExtension.class)
+class CommentServiceTest {
+    @Mock private CommentMapper commentMapper;
+    @Mock private ArticleMapper articleMapper;
+    @InjectMocks private CommentService commentService;
+
+    @Test void create_onDraftArticle_throws() {
+        Article draft = new Article();
+        draft.setStatus("DRAFT");
+        when(articleMapper.findById(1L)).thenReturn(draft);
+        assertThrows(BusinessRuleViolationException.class,
+            () -&gt; commentService.create(1L,
+                new CommentForm("コメント"), 100L));
+    }
+
+    @Test void delete_byNonOwnerNonAdmin_throws() {
+        Comment comment = new Comment();
+        comment.setUserId(100L);
+        when(commentMapper.findById(1L)).thenReturn(comment);
+        assertThrows(ForbiddenException.class,
+            () -&gt; commentService.delete(1L, 999L, false));
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>複数ドメイン（Article, Comment, Tag）を横断するAPIでは、ドメイン間のルール（「公開済み記事のみコメント可」等）をServiceで明示的にチェックする設計が重要です。</li>
+              <li>多対多関係（Article-Tag）は中間テーブルで管理し、MyBatisの <code>resultMap</code> + <code>collection</code> タグでJOIN結果をネストしたオブジェクトにマッピングします。</li>
+              <li>ロール設計（ADMIN/AUTHOR/READER）により、操作権限を段階的に制御します。記事作成はAUTHOR以上、管理操作はADMINのみ許可するのが一般的です。</li>
+              <li>この課題を完成させることで「Spring Bootで実務レベルの複数ドメインAPIを設計・実装・テストできる」スキルが身につきます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-navigation">
+      <a href="level-a.html" class="prev-page">
+        <span class="material-icons">arrow_back</span>
+        Level A — 設計実装
+      </a>
+      <a href="index.html" class="next-page">
+        コース一覧
+        <span class="material-icons">arrow_forward</span>
+      </a>
+    </div>
+
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

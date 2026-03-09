@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Level A — 設計実装 | HTML実力養成ドリル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #CCE4FF;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+
+    .drill-item { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .drill-header { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #f0f0f0; background: #fafbfc; }
+    .drill-badge { background: var(--primary); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; padding: 8px 14px; border-radius: 10px; white-space: nowrap; }
+    .drill-meta { flex: 1; }
+    .drill-theme { font-size: 0.72rem; color: var(--primary); font-weight: 600; letter-spacing: 0.03em; margin-bottom: 2px; display: block; }
+    .drill-title { font-size: 1.05rem; font-weight: 700; color: #1d1d1f; }
+    .drill-body { padding: 24px; }
+
+    .drill-silver { display: flex; align-items: flex-start; gap: 12px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+    .drill-silver > .material-icons { color: #f9a825; font-size: 1.4rem; margin-top: 2px; }
+    .drill-silver strong { display: block; font-size: 0.82rem; color: #f57f17; margin-bottom: 4px; }
+    .drill-silver p { font-size: 0.85rem; color: #5d4037; line-height: 1.6; margin: 0; }
+
+    .drill-task { margin-bottom: 20px; }
+    .drill-task h4 { display: flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: 700; color: #1d1d1f; margin-bottom: 12px; }
+    .drill-task h4 .material-icons { color: var(--primary); font-size: 1.2rem; }
+    .drill-task p, .drill-task ul, .drill-task ol { font-size: 0.88rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .drill-task ul, .drill-task ol { padding-left: 1.5em; }
+    .drill-task li { margin-bottom: 4px; }
+
+    .drill-code { background: #1e293b; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; padding: 20px; border-radius: 10px; overflow-x: auto; margin: 12px 0; }
+    .drill-code code { font-family: inherit; }
+
+    .expected-output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .expected-output .label { font-size: 0.75rem; font-weight: 700; color: #16a34a; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+    .expected-output pre { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; color: #166534; margin: 0; white-space: pre-wrap; }
+
+    .drill-hint { margin-bottom: 8px; }
+    .drill-hint summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: #f57c00; padding: 10px 14px; background: #fff3e0; border-radius: 10px; list-style: none; user-select: none; }
+    .drill-hint summary::-webkit-details-marker { display: none; }
+    .drill-hint summary .material-icons { font-size: 1.1rem; }
+    .drill-hint[open] summary { border-radius: 10px 10px 0 0; }
+    .hint-content { background: #fff8e1; padding: 16px 18px; border-radius: 0 0 10px 10px; font-size: 0.85rem; line-height: 1.7; color: #5d4037; }
+    .hint-content code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
+
+    .drill-answer { margin-top: 8px; }
+    .drill-answer summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: var(--primary); padding: 10px 14px; background: var(--primary-light); border-radius: 10px; list-style: none; user-select: none; }
+    .drill-answer summary::-webkit-details-marker { display: none; }
+    .drill-answer summary .material-icons { color: var(--primary); font-size: 1.1rem; }
+    .drill-answer[open] summary { border-radius: 10px 10px 0 0; }
+    .answer-content { background: #f8fbff; padding: 20px; border-radius: 0 0 10px 10px; border: 1px solid var(--primary-light); border-top: none; }
+    .answer-content p { font-size: 0.85rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .answer-content h5 { font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin: 16px 0 8px; }
+    .answer-content ul { font-size: 0.85rem; line-height: 1.8; color: #333; padding-left: 1.5em; margin-bottom: 10px; }
+
+    .theme-separator { display: flex; align-items: center; gap: 12px; margin: 36px 0 20px; padding: 12px 20px; background: var(--primary-light); border-radius: 12px; border-left: 4px solid var(--primary); }
+    .theme-separator .material-icons { color: var(--primary); font-size: 1.3rem; }
+    .theme-separator h2 { font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
+    .theme-separator span.theme-count { font-size: 0.75rem; color: #666; font-weight: 400; margin-left: auto; }
+
+    @media (max-width: 480px) {
+      .drill-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+      .drill-body { padding: 16px; }
+      .drill-code { font-size: 0.75rem; padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-html-drill.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">code</span> Drill</div>
+      <div class="chapter-number">A</div>
+      <h1 class="chapter-title">Level A — 設計実装</h1>
+      <p style="color:#fff; margin-top:8px;">アクセシビリティ、SEO、パフォーマンスを考慮した設計｜16課題・8テーマ</p>
+    </header>
+
+    <!-- ===== T1: HTML基本構造・文書型 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">description</span>
+      <h2>T1 HTML基本構造・文書型</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-01 -->
+    <div class="drill-item" id="a-01">
+      <div class="drill-header">
+        <div class="drill-badge">A-01</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 HTML基本構造・文書型</span>
+          <h3 class="drill-title">Core Web Vitals最適化テンプレート</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>Core Web Vitals（LCP, FID, CLS）を最適化するHTML設計が重要です。クリティカルCSSのインライン化、フォントの <code>font-display: swap</code>、画像の <code>fetchpriority</code> などの手法があります。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のパフォーマンス最適化要件を満たすHTMLテンプレートを設計してください。</p>
+          <ul>
+            <li>クリティカルCSS（ファーストビューに必要な最小CSS）を <code>&lt;style&gt;</code> でインライン化</li>
+            <li>非クリティカルCSSを <code>preload</code> + <code>onload</code> で非同期読み込み</li>
+            <li>LCP対象の画像に <code>fetchpriority="high"</code> を設定</li>
+            <li>フォールドビューの画像に <code>loading="lazy"</code> と <code>decoding="async"</code> を設定</li>
+            <li>全画像に <code>width</code> / <code>height</code> を設定しCLSを防止</li>
+            <li><code>&lt;link rel="dns-prefetch"&gt;</code> でサードパーティドメインを事前解決</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>fetchpriority="high"</code> はLCP要素（ヒーロー画像など）に使い、ブラウザにダウンロード優先度を伝えます。<code>decoding="async"</code> は画像のデコード処理をメインスレッドからオフロードします。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;パフォーマンス最適化ページ&lt;/title&gt;
+
+  &lt;link rel="dns-prefetch" href="https://cdn.example.com"&gt;
+  &lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+  &lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+
+  &lt;!-- クリティカルCSS（インライン） --&gt;
+  &lt;style&gt;
+    body { margin: 0; font-family: sans-serif; }
+    .hero { width: 100%; min-height: 60vh; }
+    .hero img { display: block; width: 100%; height: auto; }
+  &lt;/style&gt;
+
+  &lt;!-- 非クリティカルCSS（非同期読み込み） --&gt;
+  &lt;link rel="preload" href="style.css" as="style"
+    onload="this.onload=null;this.rel='stylesheet'"&gt;
+  &lt;noscript&gt;&lt;link rel="stylesheet" href="style.css"&gt;&lt;/noscript&gt;
+
+  &lt;link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&amp;display=swap" rel="stylesheet"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;header&gt;
+    &lt;nav&gt;
+      &lt;a href="/"&gt;ホーム&lt;/a&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+
+  &lt;main&gt;
+    &lt;section class="hero"&gt;
+      &lt;h1&gt;高速表示を実現するHTML設計&lt;/h1&gt;
+      &lt;!-- LCP対象: fetchpriorityでダウンロード優先 --&gt;
+      &lt;img src="hero.webp" alt="ヒーロー画像"
+        width="1200" height="600"
+        fetchpriority="high"&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;コンテンツ&lt;/h2&gt;
+      &lt;!-- 遅延読み込み + 非同期デコード --&gt;
+      &lt;img src="content1.webp" alt="コンテンツ画像1"
+        width="800" height="450"
+        loading="lazy" decoding="async"&gt;
+      &lt;img src="content2.webp" alt="コンテンツ画像2"
+        width="800" height="450"
+        loading="lazy" decoding="async"&gt;
+    &lt;/section&gt;
+  &lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>クリティカルCSSのインライン化により、外部CSSの読み込みを待たずにファーストビューを表示できます。</li>
+              <li><code>fetchpriority="high"</code> はLCP指標の改善に直結します。LCP対象以外の画像には使わないでください。</li>
+              <li><code>loading="lazy"</code> と <code>decoding="async"</code> の併用でスクロール下の画像のパフォーマンスを最適化します。</li>
+              <li>画像に <code>width</code> / <code>height</code> を明示することでCLS（レイアウトシフト）を防ぎます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-02 -->
+    <div class="drill-item" id="a-02">
+      <div class="drill-header">
+        <div class="drill-badge">A-02</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 HTML基本構造・文書型</span>
+          <h3 class="drill-title">PWA対応マニフェスト設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>PWA（Progressive Web App）は <code>&lt;link rel="manifest"&gt;</code> でマニフェストファイルを指定し、<code>meta</code> タグでテーマカラーやApple対応を設定します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でPWA対応のHTMLテンプレートを設計してください。</p>
+          <ul>
+            <li>Webアプリマニフェスト（<code>manifest.json</code>）へのリンク</li>
+            <li><code>meta name="theme-color"</code> の設定</li>
+            <li>Apple用メタタグ（<code>apple-mobile-web-app-capable</code>、<code>apple-touch-icon</code>）</li>
+            <li>ファビコン各サイズ（16x16, 32x32, 192x192, 512x512）の設定</li>
+            <li>Service Worker の登録スクリプト（<code>&lt;script&gt;</code> 内でインライン記述）</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>Service Worker の登録は <code>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }</code> で行います。<code>apple-mobile-web-app-capable</code> は <code>content="yes"</code> にします。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;My PWA App&lt;/title&gt;
+
+  &lt;!-- PWA マニフェスト --&gt;
+  &lt;link rel="manifest" href="/manifest.json"&gt;
+
+  &lt;!-- テーマカラー --&gt;
+  &lt;meta name="theme-color" content="#007AFF"&gt;
+
+  &lt;!-- Apple PWA 対応 --&gt;
+  &lt;meta name="apple-mobile-web-app-capable" content="yes"&gt;
+  &lt;meta name="apple-mobile-web-app-status-bar-style" content="default"&gt;
+  &lt;meta name="apple-mobile-web-app-title" content="My PWA"&gt;
+  &lt;link rel="apple-touch-icon" href="/icons/icon-192x192.png"&gt;
+
+  &lt;!-- ファビコン --&gt;
+  &lt;link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png"&gt;
+  &lt;link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png"&gt;
+  &lt;link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png"&gt;
+  &lt;link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png"&gt;
+
+  &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;header&gt;
+    &lt;h1&gt;My PWA App&lt;/h1&gt;
+  &lt;/header&gt;
+  &lt;main&gt;
+    &lt;p&gt;このアプリはPWAに対応しています。&lt;/p&gt;
+  &lt;/main&gt;
+
+  &lt;script&gt;
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('SW registered:', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('SW registration failed:', error);
+          });
+      });
+    }
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>manifest.json</code> にはアプリ名、アイコン、開始URL、表示モードなどを定義します。</li>
+              <li><code>theme-color</code> はブラウザのアドレスバーやタスクバーの色を設定します。</li>
+              <li>Apple デバイスは Web App Manifest を完全にサポートしていないため、独自のメタタグが必要です。</li>
+              <li>Service Worker は HTTPS 環境でのみ動作します（localhost は例外）。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T2: テキスト・リスト・リンク ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">text_fields</span>
+      <h2>T2 テキスト・リスト・リンク</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-03 -->
+    <div class="drill-item" id="a-03">
+      <div class="drill-header">
+        <div class="drill-badge">A-03</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 テキスト・リスト・リンク</span>
+          <h3 class="drill-title">WCAG 2.1準拠のテキストコンテンツ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>WCAG 2.1 では、テキストリンクは文脈から目的が分かること、省略語は正式名称を提供すること、見出し階層は論理的であることが求められます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のアクセシビリティ要件を満たすニュースサイトのコンテンツページを作成してください。</p>
+          <ul>
+            <li>リンクテキストは「こちら」「詳しくはこちら」ではなく、リンク先が分かる具体的な文言にする</li>
+            <li>略語は全て <code>&lt;abbr&gt;</code> で初出時に正式名称を提供</li>
+            <li>引用は出典を <code>&lt;cite&gt;</code> で明示し、<code>&lt;blockquote cite="URL"&gt;</code> でソースURLを設定</li>
+            <li>日時は全て <code>&lt;time datetime="..."&gt;</code> で機械可読にする</li>
+            <li>ページの読み上げ順序が論理的になるようマークアップする</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>リンクテキストの例: × 「こちらをクリック」→ ○ 「WCAG 2.1ガイドラインの全文を読む」。<code>&lt;blockquote cite="https://..."&gt;</code> の <code>cite</code> 属性はブラウザには表示されませんが、機械可読です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;article&gt;
+  &lt;header&gt;
+    &lt;h1&gt;Web&lt;abbr title="アクセシビリティ"&gt;a11y&lt;/abbr&gt;の最新動向&lt;/h1&gt;
+    &lt;p&gt;公開日: &lt;time datetime="2026-03-01"&gt;2026年3月1日&lt;/time&gt;&lt;/p&gt;
+  &lt;/header&gt;
+
+  &lt;section&gt;
+    &lt;h2&gt;&lt;abbr title="Web Content Accessibility Guidelines"&gt;WCAG&lt;/abbr&gt; 2.1の概要&lt;/h2&gt;
+    &lt;p&gt;WCAG 2.1はWebコンテンツのアクセシビリティガイドラインです。
+    &lt;abbr title="World Wide Web Consortium"&gt;W3C&lt;/abbr&gt;が
+    &lt;time datetime="2018-06-05"&gt;2018年6月5日&lt;/time&gt;に勧告しました。&lt;/p&gt;
+
+    &lt;blockquote cite="https://www.w3.org/TR/WCAG21/"&gt;
+      &lt;p&gt;Webコンテンツをよりアクセシブルにするための幅広い推奨事項を網羅しています。&lt;/p&gt;
+      &lt;footer&gt;
+        &lt;cite&gt;&lt;a href="https://www.w3.org/TR/WCAG21/" target="_blank" rel="noopener noreferrer"&gt;WCAG 2.1 — W3C勧告&lt;/a&gt;&lt;/cite&gt;
+      &lt;/footer&gt;
+    &lt;/blockquote&gt;
+  &lt;/section&gt;
+
+  &lt;section&gt;
+    &lt;h2&gt;関連リソース&lt;/h2&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="https://www.w3.org/TR/WCAG21/" target="_blank" rel="noopener noreferrer"&gt;WCAG 2.1ガイドラインの全文を読む&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="https://www.w3.org/WAI/" target="_blank" rel="noopener noreferrer"&gt;W3C WAIのアクセシビリティリソース一覧&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/section&gt;
+&lt;/article&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>「こちら」「ここをクリック」はスクリーンリーダーのリンク一覧でリンク先が不明になります。具体的なリンクテキストが必須です。</li>
+              <li><code>&lt;abbr&gt;</code> は初出時に <code>title</code> で正式名称を提供し、以降は省略可能です。</li>
+              <li><code>&lt;blockquote cite="URL"&gt;</code> の <code>cite</code> 属性は視覚的には表示されませんが、引用元を機械的に示します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-04 -->
+    <div class="drill-item" id="a-04">
+      <div class="drill-header">
+        <div class="drill-badge">A-04</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 テキスト・リスト・リンク</span>
+          <h3 class="drill-title">多機能ナビゲーション設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>大規模サイトのナビゲーションでは、スキップリンク、キーボード操作、ランドマーク、動的メニュー状態の ARIA 属性が必要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のアクセシビリティ要件を満たすナビゲーションシステムを設計してください。</p>
+          <ul>
+            <li>スキップリンク（「メインコンテンツへ」）を最初に配置</li>
+            <li>メガメニュー構造（カテゴリ > サブカテゴリ）に <code>aria-expanded</code>, <code>aria-haspopup</code> を設定</li>
+            <li>パンくずリスト（<code>aria-label</code> + 構造化データ対応）</li>
+            <li>現在位置を <code>aria-current="page"</code> で明示</li>
+            <li>モバイルメニューの開閉状態を <code>aria-expanded</code> で管理</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>スキップリンクは <code>&lt;a href="#main-content" class="skip-link"&gt;</code> で、CSSで視覚的に隠し、フォーカス時に表示します。<code>aria-haspopup="true"</code> はサブメニューを持つ項目に付けます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!-- スキップリンク --&gt;
+&lt;a href="#main-content" class="skip-link"&gt;メインコンテンツへスキップ&lt;/a&gt;
+
+&lt;header&gt;
+  &lt;!-- モバイルメニューボタン --&gt;
+  &lt;button aria-expanded="false" aria-controls="main-nav" aria-label="メニューを開く"&gt;
+    &lt;span aria-hidden="true"&gt;&amp;#9776;&lt;/span&gt;
+  &lt;/button&gt;
+
+  &lt;nav id="main-nav" aria-label="メインナビゲーション"&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="/" aria-current="page"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;
+        &lt;a href="/products" aria-haspopup="true" aria-expanded="false"&gt;製品&lt;/a&gt;
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href="/products/software"&gt;ソフトウェア&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/products/hardware"&gt;ハードウェア&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&lt;a href="/about"&gt;会社概要&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;
+
+&lt;!-- パンくずリスト --&gt;
+&lt;nav aria-label="パンくず"&gt;
+  &lt;ol&gt;
+    &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt; &lt;span aria-hidden="true"&gt;/&lt;/span&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/products"&gt;製品&lt;/a&gt; &lt;span aria-hidden="true"&gt;/&lt;/span&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/products/software" aria-current="page"&gt;ソフトウェア&lt;/a&gt;&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/nav&gt;
+
+&lt;main id="main-content"&gt;
+  &lt;h1&gt;ソフトウェア製品一覧&lt;/h1&gt;
+&lt;/main&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>スキップリンクはキーボードユーザーがナビを飛ばしてメインコンテンツに直接アクセスするための仕組みです。</li>
+              <li><code>aria-expanded</code> はメニューの開閉状態を伝え、JavaScriptでtrue/falseを切り替えます。</li>
+              <li><code>aria-controls</code> は操作対象の要素を <code>id</code> で関連付けます。</li>
+              <li><code>aria-haspopup="true"</code> はサブメニューの存在をスクリーンリーダーに伝えます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T3: テーブル ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">table_chart</span>
+      <h2>T3 テーブル</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-05 -->
+    <div class="drill-item" id="a-05">
+      <div class="drill-header">
+        <div class="drill-badge">A-05</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 テーブル</span>
+          <h3 class="drill-title">レスポンシブテーブル設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>テーブルのレスポンシブ対応は横スクロール方式と、<code>data-*</code> 属性を使ったカード表示方式があります。どちらもアクセシビリティを維持する必要があります。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で2種類のレスポンシブテーブルを設計してください。</p>
+          <ul>
+            <li>方式A: 横スクロール方式 — <code>&lt;div role="region" aria-label="..." tabindex="0"&gt;</code> で囲み、<code>overflow-x: auto</code> を適用</li>
+            <li>方式B: カード表示方式 — 各 <code>&lt;td&gt;</code> に <code>data-label</code> 属性で列名を設定し、CSSでモバイル時にカード表示に切り替え</li>
+            <li>両方式とも <code>&lt;caption&gt;</code> と <code>scope</code> 属性を維持</li>
+            <li>5列×4行以上のデータテーブルで実装</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>方式Aの <code>tabindex="0"</code> でキーボードユーザーもスクロール操作が可能になります。方式Bでは <code>data-label</code> の値をCSS <code>::before</code> の <code>content: attr(data-label)</code> で表示します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+            <p><strong>方式A: 横スクロール</strong></p>
+<pre class="drill-code"><code>&lt;div role="region" aria-label="社員一覧テーブル" tabindex="0" style="overflow-x: auto;"&gt;
+  &lt;table&gt;
+    &lt;caption&gt;社員一覧&lt;/caption&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th scope="col"&gt;ID&lt;/th&gt;
+        &lt;th scope="col"&gt;氏名&lt;/th&gt;
+        &lt;th scope="col"&gt;部署&lt;/th&gt;
+        &lt;th scope="col"&gt;役職&lt;/th&gt;
+        &lt;th scope="col"&gt;入社日&lt;/th&gt;
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;tr&gt;
+        &lt;td&gt;001&lt;/td&gt;&lt;td&gt;山田太郎&lt;/td&gt;&lt;td&gt;開発部&lt;/td&gt;&lt;td&gt;主任&lt;/td&gt;
+        &lt;td&gt;&lt;time datetime="2020-04-01"&gt;2020/04/01&lt;/time&gt;&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;!-- 他の行も同様 --&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+&lt;/div&gt;</code></pre>
+            <p><strong>方式B: カード表示</strong></p>
+<pre class="drill-code"><code>&lt;table class="responsive-card"&gt;
+  &lt;caption&gt;社員一覧&lt;/caption&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th scope="col"&gt;ID&lt;/th&gt;
+      &lt;th scope="col"&gt;氏名&lt;/th&gt;
+      &lt;th scope="col"&gt;部署&lt;/th&gt;
+      &lt;th scope="col"&gt;役職&lt;/th&gt;
+      &lt;th scope="col"&gt;入社日&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td data-label="ID"&gt;001&lt;/td&gt;
+      &lt;td data-label="氏名"&gt;山田太郎&lt;/td&gt;
+      &lt;td data-label="部署"&gt;開発部&lt;/td&gt;
+      &lt;td data-label="役職"&gt;主任&lt;/td&gt;
+      &lt;td data-label="入社日"&gt;2020/04/01&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;!-- 他の行も同様 --&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;!-- CSS: @media (max-width: 768px) で thead を非表示、
+  td::before { content: attr(data-label); } でラベル表示 --&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>方式Aはテーブル構造を維持するためアクセシビリティへの影響が少ないです。<code>role="region"</code> と <code>aria-label</code> でスクロール領域の意味を伝えます。</li>
+              <li>方式Bはモバイルで見やすいですが、CSSで <code>&lt;thead&gt;</code> を非表示にするためスクリーンリーダーとの互換性に注意が必要です。</li>
+              <li><code>data-*</code> 属性はカスタムデータを要素に付与するHTML5の仕組みで、CSSやJavaScriptからアクセスできます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-06 -->
+    <div class="drill-item" id="a-06">
+      <div class="drill-header">
+        <div class="drill-badge">A-06</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 テーブル</span>
+          <h3 class="drill-title">ソート・フィルター対応テーブル設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>インタラクティブなテーブルでは <code>aria-sort</code> でソート状態を伝え、<code>aria-live</code> で動的な変更をスクリーンリーダーに通知します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でインタラクティブなデータテーブルのHTMLを設計してください。</p>
+          <ul>
+            <li>ヘッダーをクリックでソート切替 — <code>&lt;th&gt;</code> 内に <code>&lt;button&gt;</code> を配置</li>
+            <li><code>aria-sort</code> でソート状態（ascending / descending / none）を設定</li>
+            <li>テーブル上にフィルター用入力欄を配置し、<code>aria-controls</code> でテーブルと関連付け</li>
+            <li>結果件数を <code>aria-live="polite"</code> でリアルタイム通知</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;th aria-sort="ascending"&gt;&lt;button&gt;氏名 ▲&lt;/button&gt;&lt;/th&gt;</code> でソートボタンを実装します。<code>aria-live="polite"</code> はページの読み込みを妨げずにスクリーンリーダーに通知します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;div&gt;
+  &lt;label for="table-filter"&gt;検索:&lt;/label&gt;
+  &lt;input type="text" id="table-filter" aria-controls="data-table" placeholder="名前で検索..."&gt;
+  &lt;p aria-live="polite" id="result-count"&gt;表示中: 4件&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;table id="data-table"&gt;
+  &lt;caption&gt;商品データ&lt;/caption&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th scope="col" aria-sort="ascending"&gt;
+        &lt;button&gt;商品名 &lt;span aria-hidden="true"&gt;&amp;#9650;&lt;/span&gt;&lt;/button&gt;
+      &lt;/th&gt;
+      &lt;th scope="col" aria-sort="none"&gt;
+        &lt;button&gt;価格 &lt;span aria-hidden="true"&gt;&amp;#9650;&amp;#9660;&lt;/span&gt;&lt;/button&gt;
+      &lt;/th&gt;
+      &lt;th scope="col" aria-sort="none"&gt;
+        &lt;button&gt;在庫 &lt;span aria-hidden="true"&gt;&amp;#9650;&amp;#9660;&lt;/span&gt;&lt;/button&gt;
+      &lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;&lt;td&gt;キーボード&lt;/td&gt;&lt;td&gt;8,500&lt;/td&gt;&lt;td&gt;12&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;マウス&lt;/td&gt;&lt;td&gt;3,200&lt;/td&gt;&lt;td&gt;25&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;モニター&lt;/td&gt;&lt;td&gt;35,000&lt;/td&gt;&lt;td&gt;3&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;ヘッドホン&lt;/td&gt;&lt;td&gt;12,000&lt;/td&gt;&lt;td&gt;8&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>aria-sort</code> の値は <code>ascending</code>（昇順）/ <code>descending</code>（降順）/ <code>none</code>（未ソート）です。</li>
+              <li>ソートボタンは <code>&lt;th&gt;</code> 内の <code>&lt;button&gt;</code> に配置し、キーボード操作を可能にします。</li>
+              <li><code>aria-controls</code> はフィルター入力と操作対象テーブルを関連付けます。</li>
+              <li><code>aria-live="polite"</code> は現在の読み上げが終わった後に変更を通知します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T4: フォーム・入力要素 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">input</span>
+      <h2>T4 フォーム・入力要素</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-07 -->
+    <div class="drill-item" id="a-07">
+      <div class="drill-header">
+        <div class="drill-badge">A-07</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フォーム・入力要素</span>
+          <h3 class="drill-title">WCAG準拠フォームバリデーション</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>アクセシブルなフォームバリデーションでは、エラーメッセージを <code>aria-describedby</code> で関連付け、<code>aria-invalid</code> でエラー状態を示し、エラーサマリーを <code>aria-live</code> で通知します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のアクセシビリティ要件を満たす注文フォームを設計してください。</p>
+          <ul>
+            <li>各入力欄にヘルプテキスト（<code>aria-describedby</code> で関連付け）</li>
+            <li>エラー時に <code>aria-invalid="true"</code> を設定</li>
+            <li>エラーメッセージを <code>role="alert"</code> で即座に通知</li>
+            <li>フォーム上部にエラーサマリー（エラー一覧＋該当フィールドへのリンク）</li>
+            <li>必須フィールドに <code>aria-required="true"</code> と視覚的な「*」マーク</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>aria-describedby</code> は複数の <code>id</code> をスペース区切りで指定可能です。ヘルプテキストとエラーメッセージの両方を関連付けるには <code>aria-describedby="help-name error-name"</code> とします。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;form action="/order" method="post" novalidate&gt;
+  &lt;!-- エラーサマリー --&gt;
+  &lt;div role="alert" id="error-summary" hidden&gt;
+    &lt;h2&gt;入力エラーがあります&lt;/h2&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="#name"&gt;氏名は必須です&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#email"&gt;有効なメールアドレスを入力してください&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+
+  &lt;div&gt;
+    &lt;label for="name"&gt;氏名 &lt;span aria-hidden="true"&gt;*&lt;/span&gt;&lt;/label&gt;
+    &lt;input type="text" id="name" name="name"
+      aria-required="true" required
+      aria-describedby="help-name error-name"
+      aria-invalid="false"&gt;
+    &lt;span id="help-name"&gt;姓と名をスペース区切りで入力&lt;/span&gt;
+    &lt;span id="error-name" role="alert" hidden&gt;氏名は必須です&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;div&gt;
+    &lt;label for="email"&gt;メール &lt;span aria-hidden="true"&gt;*&lt;/span&gt;&lt;/label&gt;
+    &lt;input type="email" id="email" name="email"
+      aria-required="true" required
+      aria-describedby="help-email error-email"
+      aria-invalid="false"&gt;
+    &lt;span id="help-email"&gt;確認メールを送信します&lt;/span&gt;
+    &lt;span id="error-email" role="alert" hidden&gt;有効なメールアドレスを入力してください&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;button type="submit"&gt;注文する&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>novalidate</code> でブラウザデフォルトのバリデーションを無効にし、カスタムバリデーションを使用します。</li>
+              <li><code>role="alert"</code> はエラーメッセージ表示時にスクリーンリーダーが即座に読み上げます。</li>
+              <li>エラーサマリーの各項目が該当フィールドへのリンクになっているのは、キーボードユーザーの利便性のためです。</li>
+              <li>「*」マークは <code>aria-hidden="true"</code> で隠し、<code>aria-required</code> で必須情報を伝えます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-08 -->
+    <div class="drill-item" id="a-08">
+      <div class="drill-header">
+        <div class="drill-badge">A-08</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フォーム・入力要素</span>
+          <h3 class="drill-title">アクセシブルなダイアログフォーム</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>HTML5の <code>&lt;dialog&gt;</code> 要素はモーダルダイアログのネイティブ実装を提供します。フォーカストラップ、ESCキーでの閉じ、<code>aria-labelledby</code> が標準でサポートされます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で <code>&lt;dialog&gt;</code> ベースのフォームを設計してください。</p>
+          <ul>
+            <li><code>&lt;dialog&gt;</code> 要素でモーダルフォームを実装</li>
+            <li><code>aria-labelledby</code> でダイアログタイトルと関連付け</li>
+            <li>閉じるボタンに <code>aria-label="ダイアログを閉じる"</code></li>
+            <li><code>&lt;form method="dialog"&gt;</code> でダイアログを閉じる送信ボタン</li>
+            <li>ダイアログ外のクリックで閉じる仕組み（<code>::backdrop</code> 疑似要素）</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;dialog&gt;</code> は <code>.showModal()</code> でモーダル表示、<code>.close()</code> で閉じます。<code>&lt;form method="dialog"&gt;</code> の送信ボタンは自動的にダイアログを閉じます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;button id="open-dialog"&gt;フィードバックを送る&lt;/button&gt;
+
+&lt;dialog id="feedback-dialog" aria-labelledby="dialog-title"&gt;
+  &lt;header&gt;
+    &lt;h2 id="dialog-title"&gt;フィードバック&lt;/h2&gt;
+    &lt;button aria-label="ダイアログを閉じる" id="close-dialog"&gt;&amp;times;&lt;/button&gt;
+  &lt;/header&gt;
+
+  &lt;form method="dialog"&gt;
+    &lt;div&gt;
+      &lt;label for="fb-name"&gt;お名前&lt;/label&gt;
+      &lt;input type="text" id="fb-name" name="name" required&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="fb-rating"&gt;評価&lt;/label&gt;
+      &lt;select id="fb-rating" name="rating"&gt;
+        &lt;option value="5"&gt;とても良い&lt;/option&gt;
+        &lt;option value="4"&gt;良い&lt;/option&gt;
+        &lt;option value="3"&gt;普通&lt;/option&gt;
+        &lt;option value="2"&gt;悪い&lt;/option&gt;
+        &lt;option value="1"&gt;とても悪い&lt;/option&gt;
+      &lt;/select&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="fb-comment"&gt;コメント&lt;/label&gt;
+      &lt;textarea id="fb-comment" name="comment" rows="3"&gt;&lt;/textarea&gt;
+    &lt;/div&gt;
+    &lt;button type="submit" value="submit"&gt;送信する&lt;/button&gt;
+    &lt;button type="submit" value="cancel"&gt;キャンセル&lt;/button&gt;
+  &lt;/form&gt;
+&lt;/dialog&gt;
+
+&lt;script&gt;
+  const dialog = document.getElementById('feedback-dialog');
+  document.getElementById('open-dialog').addEventListener('click', () =&gt; dialog.showModal());
+  document.getElementById('close-dialog').addEventListener('click', () =&gt; dialog.close());
+  dialog.addEventListener('click', (e) =&gt; {
+    if (e.target === dialog) dialog.close();
+  });
+&lt;/script&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;dialog&gt;</code> は HTML5 のネイティブモーダル要素で、フォーカストラップとESCキー閉じが標準で動作します。</li>
+              <li><code>method="dialog"</code> のフォーム送信はページ遷移せずにダイアログを閉じ、<code>returnValue</code> にボタンの <code>value</code> が設定されます。</li>
+              <li>背景クリックでの閉じは、<code>dialog</code> 自体のクリックイベントで実現できます（子要素はバブリングで除外）。</li>
+              <li><code>::backdrop</code> 疑似要素でオーバーレイのスタイルをカスタマイズできます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T5: メディア・埋め込み ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">image</span>
+      <h2>T5 メディア・埋め込み</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-09 -->
+    <div class="drill-item" id="a-09">
+      <div class="drill-header">
+        <div class="drill-badge">A-09</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 メディア・埋め込み</span>
+          <h3 class="drill-title">パフォーマンス最適化メディア設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>画像の <code>srcset</code> + <code>sizes</code> によるレスポンシブイメージ、<code>fetchpriority</code> による優先制御、<code>&lt;link rel="preload"&gt;</code> によるLCP最適化を設計レベルで使いこなします。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のパフォーマンス要件を満たすメディアリッチなページを設計してください。</p>
+          <ul>
+            <li>ヒーロー画像: <code>&lt;link rel="preload"&gt;</code> + <code>fetchpriority="high"</code> + <code>srcset</code> で3サイズ（480w/800w/1200w）+ <code>sizes</code> 属性</li>
+            <li>コンテンツ画像: <code>loading="lazy"</code> + <code>decoding="async"</code> + <code>srcset</code> でDPR対応（1x/2x/3x）</li>
+            <li>背景動画: <code>&lt;video autoplay muted loop playsinline&gt;</code> + <code>preload="none"</code> + <code>&lt;source&gt;</code> でAV1/WebM/MP4フォールバック</li>
+            <li><code>prefers-reduced-motion</code> 対応のメディアクエリで動画を静止画に切り替える <code>&lt;picture&gt;</code> 設計</li>
+            <li>全メディアに <code>width</code>/<code>height</code> を設定しCLS = 0を目指す</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>ヒーロー部に全幅画像（デバイス幅に応じた最適サイズが配信される）。その下にループ再生の背景動画セクション。コンテンツ内の画像はスクロールに応じて遅延読み込み。motion-reduced設定のユーザーには動画の代わりに静止画が表示。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>sizes="(max-width: 480px) 100vw, (max-width: 800px) 80vw, 1200px"</code> でビューポートに応じた表示サイズを指定します。<code>srcset</code> の <code>w</code> ディスクリプタはピクセル幅を指定します。<code>prefers-reduced-motion: reduce</code> は <code>&lt;source media="..."&gt;</code> で対応可能です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;パフォーマンス最適化メディアページ&lt;/title&gt;
+
+  &lt;!-- LCP対象画像のプリロード --&gt;
+  &lt;link rel="preload" as="image"
+    href="hero-1200.webp"
+    imagesrcset="hero-480.webp 480w, hero-800.webp 800w, hero-1200.webp 1200w"
+    imagesizes="(max-width: 480px) 100vw, (max-width: 800px) 80vw, 1200px"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;section class="hero"&gt;
+    &lt;img src="hero-1200.webp" alt="メインビジュアル"
+      srcset="hero-480.webp 480w, hero-800.webp 800w, hero-1200.webp 1200w"
+      sizes="(max-width: 480px) 100vw, (max-width: 800px) 80vw, 1200px"
+      width="1200" height="600"
+      fetchpriority="high"&gt;
+  &lt;/section&gt;
+
+  &lt;section class="video-bg"&gt;
+    &lt;!-- motion-reduced対応: 静止画フォールバック --&gt;
+    &lt;picture&gt;
+      &lt;source media="(prefers-reduced-motion: reduce)"
+        srcset="video-poster.webp" type="image/webp"&gt;
+      &lt;source media="(prefers-reduced-motion: reduce)"
+        srcset="video-poster.jpg"&gt;
+    &lt;/picture&gt;
+    &lt;video autoplay muted loop playsinline preload="none"
+      width="1280" height="720" poster="video-poster.jpg"&gt;
+      &lt;source src="bg-video.av1.mp4" type='video/mp4; codecs="av01.0.05M.08"'&gt;
+      &lt;source src="bg-video.webm" type="video/webm"&gt;
+      &lt;source src="bg-video.mp4" type="video/mp4"&gt;
+    &lt;/video&gt;
+  &lt;/section&gt;
+
+  &lt;section class="content"&gt;
+    &lt;h2&gt;コンテンツ&lt;/h2&gt;
+    &lt;img src="photo-1x.webp" alt="風景写真"
+      srcset="photo-1x.webp 1x, photo-2x.webp 2x, photo-3x.webp 3x"
+      width="600" height="400"
+      loading="lazy" decoding="async"&gt;
+
+    &lt;img src="diagram-1x.webp" alt="アーキテクチャ図"
+      srcset="diagram-1x.webp 1x, diagram-2x.webp 2x, diagram-3x.webp 3x"
+      width="800" height="450"
+      loading="lazy" decoding="async"&gt;
+  &lt;/section&gt;
+&lt;/body&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;link rel="preload"&gt;</code> の <code>imagesrcset</code> / <code>imagesizes</code> で、ブラウザがHTMLパース前に最適サイズを判断して事前ダウンロードします。</li>
+              <li><code>srcset</code> の <code>w</code> ディスクリプタはブラウザに画像の実際のピクセル幅を伝え、<code>sizes</code> と組み合わせて最適なソースを選択させます。</li>
+              <li><code>prefers-reduced-motion: reduce</code> に対応することで、モーション過敏なユーザーに配慮した設計になります。</li>
+              <li>AV1コーデックはWebMやH.264より高圧縮で、対応ブラウザではファイルサイズを大幅に削減できます。</li>
+              <li>全画像・動画に <code>width</code>/<code>height</code> を設定しアスペクト比を予約することで、CLS（レイアウトシフト）をゼロにします。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-10 -->
+    <div class="drill-item" id="a-10">
+      <div class="drill-header">
+        <div class="drill-badge">A-10</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 メディア・埋め込み</span>
+          <h3 class="drill-title">アクセシブルなインタラクティブメディアプレーヤー</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>カスタム動画プレーヤーでは WAI-ARIA でコントロールの状態を管理し、キーボード操作、字幕切替、音声解説の対応が求められます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のアクセシビリティ要件を満たすカスタム動画プレーヤーのHTMLを設計してください。</p>
+          <ul>
+            <li>動画要素に <code>&lt;track kind="captions"&gt;</code>（字幕）と <code>&lt;track kind="descriptions"&gt;</code>（音声解説）を設定</li>
+            <li>カスタムコントロール: 再生/一時停止ボタン（<code>aria-label</code> 切替）、音量スライダー（<code>aria-valuemin</code>/<code>aria-valuemax</code>/<code>aria-valuenow</code>）</li>
+            <li>プログレスバー: <code>role="slider"</code> + <code>aria-label="再生位置"</code> + キーボード操作対応（<code>tabindex="0"</code>）</li>
+            <li>字幕ON/OFFボタン: <code>aria-pressed</code> でトグル状態を管理</li>
+            <li>全画面ボタン: <code>aria-label="全画面表示"</code></li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>カスタムデザインの動画プレーヤー。下部にコントロールバー（再生ボタン、プログレスバー、音量スライダー、字幕ボタン、全画面ボタン）。全てキーボードで操作可能。スクリーンリーダーが各コントロールの状態を読み上げ。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>aria-pressed="true"</code>/<code>"false"</code> はトグルボタンの状態を表します。<code>role="slider"</code> にはキーボードの左右矢印キーで値を変更する想定で <code>aria-valuemin</code>, <code>aria-valuemax</code>, <code>aria-valuenow</code> を設定します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;div class="video-player" role="region" aria-label="動画プレーヤー"&gt;
+  &lt;video id="main-video" preload="metadata" poster="poster.jpg"
+    width="854" height="480"&gt;
+    &lt;source src="lecture.webm" type="video/webm"&gt;
+    &lt;source src="lecture.mp4" type="video/mp4"&gt;
+    &lt;track kind="captions" src="captions-ja.vtt" srclang="ja" label="日本語字幕" default&gt;
+    &lt;track kind="captions" src="captions-en.vtt" srclang="en" label="English captions"&gt;
+    &lt;track kind="descriptions" src="descriptions-ja.vtt" srclang="ja" label="音声解説"&gt;
+  &lt;/video&gt;
+
+  &lt;div class="controls" role="toolbar" aria-label="動画コントロール"&gt;
+    &lt;button id="play-btn" aria-label="再生" type="button"&gt;
+      &lt;span aria-hidden="true"&gt;&amp;#9654;&lt;/span&gt;
+    &lt;/button&gt;
+
+    &lt;div id="progress" role="slider" tabindex="0"
+      aria-label="再生位置"
+      aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+      aria-valuetext="0分0秒 / 45分0秒"&gt;
+      &lt;div class="progress-bar"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;span id="time-display" aria-live="off"&gt;00:00 / 45:00&lt;/span&gt;
+
+    &lt;div class="volume-control"&gt;
+      &lt;button id="mute-btn" aria-label="ミュート" type="button"&gt;
+        &lt;span aria-hidden="true"&gt;&amp;#128266;&lt;/span&gt;
+      &lt;/button&gt;
+      &lt;input type="range" id="volume" min="0" max="100" value="80"
+        aria-label="音量" step="5"&gt;
+    &lt;/div&gt;
+
+    &lt;button id="cc-btn" aria-label="字幕" aria-pressed="true" type="button"&gt;
+      &lt;span aria-hidden="true"&gt;CC&lt;/span&gt;
+    &lt;/button&gt;
+
+    &lt;button id="fullscreen-btn" aria-label="全画面表示" type="button"&gt;
+      &lt;span aria-hidden="true"&gt;&amp;#x26F6;&lt;/span&gt;
+    &lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;div id="transcript"&gt;
+    &lt;details&gt;
+      &lt;summary&gt;トランスクリプトを表示&lt;/summary&gt;
+      &lt;div class="transcript-content"&gt;
+        &lt;p&gt;&lt;time datetime="PT0S"&gt;[00:00]&lt;/time&gt; 本日の講義を始めます。&lt;/p&gt;
+        &lt;p&gt;&lt;time datetime="PT15S"&gt;[00:15]&lt;/time&gt; HTMLのメディア要素について解説します。&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/details&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>kind="captions"</code> は聴覚障害者向け（効果音も含む）、<code>kind="subtitles"</code> は翻訳字幕です。<code>kind="descriptions"</code> は視覚障害者向けの音声解説です。</li>
+              <li><code>role="slider"</code> のプログレスバーは <code>aria-valuetext</code> で「3分25秒 / 45分0秒」のように人間が読める形式を提供します。</li>
+              <li><code>aria-pressed</code> はトグルボタンの状態を伝えます。字幕ON/OFF、ミュートなどに使用します。</li>
+              <li><code>role="toolbar"</code> でコントロール群をグループ化し、スクリーンリーダーのナビゲーションを効率化します。</li>
+              <li>トランスクリプトは字幕を表示できない環境や、テキスト検索のために重要です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T6: セマンティクス・アクセシビリティ ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">accessibility</span>
+      <h2>T6 セマンティクス・アクセシビリティ</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-11 -->
+    <div class="drill-item" id="a-11">
+      <div class="drill-header">
+        <div class="drill-badge">A-11</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セマンティクス・アクセシビリティ</span>
+          <h3 class="drill-title">WAI-ARIAタブパネル実装</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>WAI-ARIA Authoring Practices に準拠したタブパネルは、<code>role="tablist"</code>/<code>role="tab"</code>/<code>role="tabpanel"</code> の3つのロールと、<code>aria-selected</code>、<code>aria-controls</code>、<code>aria-labelledby</code> の組み合わせで実装します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のWAI-ARIA仕様を満たすタブUIを設計してください。</p>
+          <ul>
+            <li>タブリスト: <code>role="tablist"</code>、各タブに <code>role="tab"</code></li>
+            <li>アクティブタブに <code>aria-selected="true"</code>、非アクティブに <code>aria-selected="false"</code></li>
+            <li>各タブに <code>aria-controls</code> でパネルの <code>id</code> を関連付け</li>
+            <li>各パネルに <code>role="tabpanel"</code> と <code>aria-labelledby</code> でタブの <code>id</code> を関連付け</li>
+            <li>非アクティブタブは <code>tabindex="-1"</code>、アクティブタブは <code>tabindex="0"</code></li>
+            <li>4つのタブ（概要/機能/料金/FAQ）で内容を切り替え</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>4つのタブが横並び。アクティブタブがハイライトされ、対応するパネルが表示。キーボードの左右矢印キーでタブを切り替え、Enter/Spaceでアクティベート。スクリーンリーダーは「タブ、概要、4個中1個目、選択中」と読み上げ。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>タブリスト内では左右矢印キーでフォーカス移動します。<code>tabindex="-1"</code> の要素はTab キーではフォーカスされませんが、JavaScriptの <code>.focus()</code> でフォーカス可能です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;div class="tabs"&gt;
+  &lt;div role="tablist" aria-label="サービス情報"&gt;
+    &lt;button role="tab" id="tab-overview"
+      aria-selected="true" aria-controls="panel-overview"
+      tabindex="0"&gt;概要&lt;/button&gt;
+    &lt;button role="tab" id="tab-features"
+      aria-selected="false" aria-controls="panel-features"
+      tabindex="-1"&gt;機能&lt;/button&gt;
+    &lt;button role="tab" id="tab-pricing"
+      aria-selected="false" aria-controls="panel-pricing"
+      tabindex="-1"&gt;料金&lt;/button&gt;
+    &lt;button role="tab" id="tab-faq"
+      aria-selected="false" aria-controls="panel-faq"
+      tabindex="-1"&gt;FAQ&lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;div role="tabpanel" id="panel-overview"
+    aria-labelledby="tab-overview" tabindex="0"&gt;
+    &lt;h2&gt;サービス概要&lt;/h2&gt;
+    &lt;p&gt;当サービスはWebアプリケーション開発プラットフォームです。初心者からプロまで幅広くご利用いただけます。&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;div role="tabpanel" id="panel-features"
+    aria-labelledby="tab-features" tabindex="0" hidden&gt;
+    &lt;h2&gt;主な機能&lt;/h2&gt;
+    &lt;ul&gt;
+      &lt;li&gt;リアルタイムコラボレーション&lt;/li&gt;
+      &lt;li&gt;自動デプロイ&lt;/li&gt;
+      &lt;li&gt;パフォーマンスモニタリング&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+
+  &lt;div role="tabpanel" id="panel-pricing"
+    aria-labelledby="tab-pricing" tabindex="0" hidden&gt;
+    &lt;h2&gt;料金プラン&lt;/h2&gt;
+    &lt;p&gt;Free: 0円/月 | Pro: 980円/月 | Enterprise: お問い合わせ&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;div role="tabpanel" id="panel-faq"
+    aria-labelledby="tab-faq" tabindex="0" hidden&gt;
+    &lt;h2&gt;よくある質問&lt;/h2&gt;
+    &lt;dl&gt;
+      &lt;dt&gt;無料プランに期限はありますか？&lt;/dt&gt;
+      &lt;dd&gt;いいえ、無料プランに期限はありません。&lt;/dd&gt;
+    &lt;/dl&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>role="tablist"</code> はタブのコンテナ、<code>role="tab"</code> は各タブ、<code>role="tabpanel"</code> はタブに対応するパネルです。</li>
+              <li><code>aria-selected="true"</code> はアクティブなタブを示し、スクリーンリーダーが「選択中」と読み上げます。</li>
+              <li><code>aria-controls</code> と <code>aria-labelledby</code> で双方向の関連付けを行い、タブとパネルの対応を明確にします。</li>
+              <li>非アクティブパネルに <code>hidden</code> 属性を使うことで、DOMに存在しながらも表示とアクセシビリティツリーから除外されます。</li>
+              <li>パネルにも <code>tabindex="0"</code> を設定し、パネル内容にキーボードフォーカスが移動できるようにします。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-12 -->
+    <div class="drill-item" id="a-12">
+      <div class="drill-header">
+        <div class="drill-badge">A-12</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セマンティクス・アクセシビリティ</span>
+          <h3 class="drill-title">WAI-ARIAライブリージョンとステータス通知</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>ライブリージョンは動的に変化するコンテンツをスクリーンリーダーに通知します。<code>aria-live</code>、<code>role="alert"</code>、<code>role="status"</code>、<code>aria-atomic</code> の使い分けが重要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のライブリージョンパターンを全て含むショッピングカートUIを設計してください。</p>
+          <ul>
+            <li>カート追加時の通知: <code>role="status"</code>（穏やかに通知）</li>
+            <li>エラー通知: <code>role="alert"</code>（即座に通知、在庫切れ等）</li>
+            <li>カート合計金額: <code>aria-live="polite"</code> + <code>aria-atomic="true"</code>（全体を再読み上げ）</li>
+            <li>商品数バッジ: <code>aria-live="polite"</code>（ヘッダーのカートアイコン横）</li>
+            <li>ローディング状態: <code>aria-busy="true"</code> で処理中を伝達</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>ショッピングカートUI。商品追加時にトースト通知「商品をカートに追加しました」が表示。在庫切れ時にアラート。ヘッダーのカートアイコン横に商品数バッジ。カート内の合計金額が動的に更新。処理中はローディング表示。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>role="alert"</code> は <code>aria-live="assertive"</code> + <code>aria-atomic="true"</code> と同等です。<code>role="status"</code> は <code>aria-live="polite"</code> + <code>aria-atomic="true"</code> と同等です。<code>aria-busy="true"</code> は変更中にスクリーンリーダーへの通知を一時的に抑制します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;header&gt;
+  &lt;nav aria-label="メインナビゲーション"&gt;
+    &lt;a href="/"&gt;ショップ&lt;/a&gt;
+    &lt;a href="/cart" aria-label="カート"&gt;
+      &amp;#128722;
+      &lt;span aria-live="polite" id="cart-badge"&gt;3点&lt;/span&gt;
+    &lt;/a&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;
+
+&lt;!-- ステータス通知（穏やかに通知） --&gt;
+&lt;div role="status" id="cart-status" class="toast"&gt;
+  「ワイヤレスイヤホン」をカートに追加しました
+&lt;/div&gt;
+
+&lt;!-- エラー通知（即座に通知） --&gt;
+&lt;div role="alert" id="cart-error" class="alert" hidden&gt;
+  申し訳ありません。この商品は在庫切れです。
+&lt;/div&gt;
+
+&lt;main&gt;
+  &lt;h1&gt;ショッピングカート&lt;/h1&gt;
+
+  &lt;div id="cart-items" aria-busy="false"&gt;
+    &lt;article class="cart-item"&gt;
+      &lt;h2&gt;ワイヤレスイヤホン&lt;/h2&gt;
+      &lt;p&gt;数量:
+        &lt;button aria-label="数量を減らす" type="button"&gt;-&lt;/button&gt;
+        &lt;span&gt;1&lt;/span&gt;
+        &lt;button aria-label="数量を増やす" type="button"&gt;+&lt;/button&gt;
+      &lt;/p&gt;
+      &lt;p&gt;&amp;yen;12,800&lt;/p&gt;
+      &lt;button aria-label="ワイヤレスイヤホンをカートから削除" type="button"&gt;削除&lt;/button&gt;
+    &lt;/article&gt;
+
+    &lt;article class="cart-item"&gt;
+      &lt;h2&gt;USBケーブル&lt;/h2&gt;
+      &lt;p&gt;数量:
+        &lt;button aria-label="数量を減らす" type="button"&gt;-&lt;/button&gt;
+        &lt;span&gt;2&lt;/span&gt;
+        &lt;button aria-label="数量を増やす" type="button"&gt;+&lt;/button&gt;
+      &lt;/p&gt;
+      &lt;p&gt;&amp;yen;1,980&lt;/p&gt;
+      &lt;button aria-label="USBケーブルをカートから削除" type="button"&gt;削除&lt;/button&gt;
+    &lt;/article&gt;
+  &lt;/div&gt;
+
+  &lt;div aria-live="polite" aria-atomic="true" id="cart-total"&gt;
+    合計: &amp;yen;16,760（税込）
+  &lt;/div&gt;
+
+  &lt;button type="button"&gt;購入手続きへ&lt;/button&gt;
+&lt;/main&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>role="status"</code> は操作成功時の穏やかな通知に適しています。現在の読み上げを中断しません。</li>
+              <li><code>role="alert"</code> は重要な通知（エラー、警告）に使い、即座にスクリーンリーダーが読み上げます。</li>
+              <li><code>aria-atomic="true"</code> を合計金額に設定すると、金額が変わった際に「合計: 16,760円（税込）」と全体を読み上げます（<code>false</code> だと変更部分のみ）。</li>
+              <li><code>aria-busy="true"</code> は非同期処理中にリージョン内の変更通知を抑制し、処理完了後に <code>false</code> に戻すと最終状態が通知されます。</li>
+              <li>削除ボタンの <code>aria-label</code> に商品名を含めることで、どの商品を削除するか明確になります。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T7: メタデータ・SEO・OGP ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">search</span>
+      <h2>T7 メタデータ・SEO・OGP</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-13 -->
+    <div class="drill-item" id="a-13">
+      <div class="drill-header">
+        <div class="drill-badge">A-13</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 メタデータ・SEO・OGP</span>
+          <h3 class="drill-title">SEO最適化ランディングページ設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>ランディングページのSEO最適化では、<code>canonical</code>、<code>hreflang</code>、構造化データ（JSON-LD）、Open Graph、適切な見出し構造を総合的に設計します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のSEO要件を全て満たすSaaSランディングページのHTMLを設計してください。</p>
+          <ul>
+            <li><code>&lt;head&gt;</code> にフルセットのメタ情報: charset, viewport, title, description, canonical, robots</li>
+            <li>多言語対応: <code>&lt;link rel="alternate" hreflang="..."&gt;</code> で日本語・英語版を指定</li>
+            <li>JSON-LD構造化データ: <code>Organization</code> スキーマ（会社名、ロゴ、SNSリンク）</li>
+            <li>JSON-LD構造化データ: <code>SoftwareApplication</code> スキーマ（アプリ名、OS、評価、価格）</li>
+            <li>OGP + Twitter Card のフルセット</li>
+            <li><code>preconnect</code> / <code>dns-prefetch</code> で外部ドメイン最適化</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>SaaSのLP。Google検索ではリッチスニペット（Organization情報 + アプリ評価）が表示。SNSシェアでOGP画像つきプレビュー。多言語切替リンクから英語版にアクセス可能。検索エンジンは正規URLと言語版の関係を正しく認識。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>hreflang="ja"</code> で日本語版、<code>hreflang="en"</code> で英語版、<code>hreflang="x-default"</code> でデフォルトを指定します。JSON-LDは複数の <code>&lt;script type="application/ld+json"&gt;</code> で別々に記述可能です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;TaskFlow — チーム向けプロジェクト管理ツール&lt;/title&gt;
+  &lt;meta name="description" content="TaskFlowはチームの生産性を3倍にするプロジェクト管理ツール。タスク管理、ガントチャート、リアルタイム共同編集を月額980円から。"&gt;
+  &lt;meta name="robots" content="index, follow"&gt;
+
+  &lt;link rel="canonical" href="https://taskflow.example.com/ja/"&gt;
+  &lt;link rel="alternate" hreflang="ja" href="https://taskflow.example.com/ja/"&gt;
+  &lt;link rel="alternate" hreflang="en" href="https://taskflow.example.com/en/"&gt;
+  &lt;link rel="alternate" hreflang="x-default" href="https://taskflow.example.com/"&gt;
+
+  &lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+  &lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+  &lt;link rel="dns-prefetch" href="https://cdn.taskflow.example.com"&gt;
+
+  &lt;!-- OGP --&gt;
+  &lt;meta property="og:type" content="website"&gt;
+  &lt;meta property="og:title" content="TaskFlow — チーム向けプロジェクト管理ツール"&gt;
+  &lt;meta property="og:description" content="チームの生産性を3倍にするプロジェクト管理ツール"&gt;
+  &lt;meta property="og:image" content="https://taskflow.example.com/images/og-image.jpg"&gt;
+  &lt;meta property="og:url" content="https://taskflow.example.com/ja/"&gt;
+  &lt;meta property="og:site_name" content="TaskFlow"&gt;
+  &lt;meta property="og:locale" content="ja_JP"&gt;
+
+  &lt;!-- Twitter Card --&gt;
+  &lt;meta name="twitter:card" content="summary_large_image"&gt;
+  &lt;meta name="twitter:site" content="@taskflow_app"&gt;
+  &lt;meta name="twitter:title" content="TaskFlow — プロジェクト管理ツール"&gt;
+  &lt;meta name="twitter:description" content="チームの生産性を3倍にするプロジェクト管理ツール"&gt;
+  &lt;meta name="twitter:image" content="https://taskflow.example.com/images/og-image.jpg"&gt;
+
+  &lt;!-- 構造化データ: Organization --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "TaskFlow Inc.",
+    "url": "https://taskflow.example.com",
+    "logo": "https://taskflow.example.com/images/logo.png",
+    "sameAs": [
+      "https://twitter.com/taskflow_app",
+      "https://github.com/taskflow"
+    ]
+  }
+  &lt;/script&gt;
+
+  &lt;!-- 構造化データ: SoftwareApplication --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "TaskFlow",
+    "operatingSystem": "Web",
+    "applicationCategory": "BusinessApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "980",
+      "priceCurrency": "JPY"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.7",
+      "reviewCount": "1240"
+    }
+  }
+  &lt;/script&gt;
+
+  &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;header&gt;
+    &lt;nav aria-label="メインナビゲーション"&gt;
+      &lt;a href="/"&gt;&lt;img src="logo.svg" alt="TaskFlow ホーム" width="120" height="32"&gt;&lt;/a&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="#features"&gt;機能&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="#pricing"&gt;料金&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/en/"&gt;English&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+
+  &lt;main&gt;
+    &lt;section class="hero"&gt;
+      &lt;h1&gt;チームの生産性を&lt;strong&gt;3倍&lt;/strong&gt;にする&lt;/h1&gt;
+      &lt;p&gt;タスク管理、ガントチャート、リアルタイム共同編集を一つのツールで。&lt;/p&gt;
+      &lt;a href="/signup"&gt;無料で始める&lt;/a&gt;
+    &lt;/section&gt;
+
+    &lt;section id="features"&gt;
+      &lt;h2&gt;主な機能&lt;/h2&gt;
+      &lt;p&gt;プロジェクト管理に必要な全てが揃っています。&lt;/p&gt;
+    &lt;/section&gt;
+
+    &lt;section id="pricing"&gt;
+      &lt;h2&gt;料金プラン&lt;/h2&gt;
+      &lt;p&gt;月額980円から。14日間の無料トライアル付き。&lt;/p&gt;
+    &lt;/section&gt;
+  &lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>hreflang</code> は同一コンテンツの言語別バージョンを検索エンジンに伝え、適切な言語版を検索結果に表示させます。</li>
+              <li><code>x-default</code> は言語にマッチしない場合のデフォルトURLを指定します。</li>
+              <li>JSON-LDの <code>Organization</code> と <code>SoftwareApplication</code> を分離することで、それぞれ独立したリッチスニペットが生成されます。</li>
+              <li><code>og:locale</code> でOGPの言語を指定し、SNSプラットフォームに適切な言語でプレビューを表示させます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-14 -->
+    <div class="drill-item" id="a-14">
+      <div class="drill-header">
+        <div class="drill-badge">A-14</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 メタデータ・SEO・OGP</span>
+          <h3 class="drill-title">構造化データ（JSON-LD）設計パターン集</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>Schema.orgのJSON-LDはページの種類に応じて使い分けます。<code>Article</code>、<code>BreadcrumbList</code>、<code>FAQPage</code>、<code>HowTo</code> など、適切なスキーマを選択することがリッチスニペット表示の鍵です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の4つの構造化データパターンを1つのページに実装してください。</p>
+          <ul>
+            <li><code>Article</code>: 記事タイトル、著者、公開日、更新日、画像</li>
+            <li><code>BreadcrumbList</code>: ホーム > カテゴリ > 記事タイトル の3階層</li>
+            <li><code>FAQPage</code>: 3つの質問と回答</li>
+            <li><code>HowTo</code>: 3ステップの手順（各ステップに名前・テキスト・画像）</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>ブログ記事ページ。Google検索ではパンくずリスト、FAQ（アコーディオン形式）、手順（ステップ表示）のリッチスニペットが表示される可能性がある。記事情報は著者名・公開日付きで表示。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>BreadcrumbList</code> は <code>itemListElement</code> 配列で <code>ListItem</code> を並べます。<code>FAQPage</code> は <code>mainEntity</code> 配列に <code>Question</code> 型を並べます。<code>HowTo</code> は <code>step</code> 配列に <code>HowToStep</code> を並べます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;Git入門ガイド | TechBlog&lt;/title&gt;
+
+  &lt;!-- Article --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Git入門ガイド — 基本コマンドから実践まで",
+    "author": { "@type": "Person", "name": "田中一郎" },
+    "datePublished": "2026-02-01",
+    "dateModified": "2026-03-05",
+    "image": "https://techblog.example.com/images/git-guide.jpg"
+  }
+  &lt;/script&gt;
+
+  &lt;!-- BreadcrumbList --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://techblog.example.com/" },
+      { "@type": "ListItem", "position": 2, "name": "開発ツール", "item": "https://techblog.example.com/category/devtools/" },
+      { "@type": "ListItem", "position": 3, "name": "Git入門ガイド" }
+    ]
+  }
+  &lt;/script&gt;
+
+  &lt;!-- FAQPage --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "GitとGitHubの違いは？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Gitはバージョン管理システム、GitHubはGitリポジトリのホスティングサービスです。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Gitのインストール方法は？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Windowsはgit-scm.comからインストーラーをダウンロード、macOSはbrew install gitで導入できます。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "初心者はGUIとCLIどちらを使うべき？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "基本的なCLI操作を覚えてからGUIツールを併用するのがおすすめです。"
+        }
+      }
+    ]
+  }
+  &lt;/script&gt;
+
+  &lt;!-- HowTo --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Gitリポジトリの初期設定",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Gitの初期化",
+        "text": "プロジェクトディレクトリで git init を実行します。",
+        "image": "https://techblog.example.com/images/step1-init.png"
+      },
+      {
+        "@type": "HowToStep",
+        "name": "ファイルのステージング",
+        "text": "git add . で全ファイルをステージングエリアに追加します。",
+        "image": "https://techblog.example.com/images/step2-add.png"
+      },
+      {
+        "@type": "HowToStep",
+        "name": "最初のコミット",
+        "text": "git commit -m 'Initial commit' で最初のコミットを作成します。",
+        "image": "https://techblog.example.com/images/step3-commit.png"
+      }
+    ]
+  }
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;nav aria-label="パンくず"&gt;
+    &lt;ol&gt;
+      &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="/category/devtools/"&gt;開発ツール&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;span aria-current="page"&gt;Git入門ガイド&lt;/span&gt;&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/nav&gt;
+
+  &lt;main&gt;
+    &lt;article&gt;
+      &lt;h1&gt;Git入門ガイド — 基本コマンドから実践まで&lt;/h1&gt;
+      &lt;p&gt;著者: 田中一郎 | 公開: &lt;time datetime="2026-02-01"&gt;2026年2月1日&lt;/time&gt; | 更新: &lt;time datetime="2026-03-05"&gt;2026年3月5日&lt;/time&gt;&lt;/p&gt;
+
+      &lt;section&gt;
+        &lt;h2&gt;Gitリポジトリの初期設定&lt;/h2&gt;
+        &lt;ol&gt;
+          &lt;li&gt;&lt;strong&gt;Gitの初期化:&lt;/strong&gt; git init を実行&lt;/li&gt;
+          &lt;li&gt;&lt;strong&gt;ステージング:&lt;/strong&gt; git add . で追加&lt;/li&gt;
+          &lt;li&gt;&lt;strong&gt;コミット:&lt;/strong&gt; git commit -m 'Initial commit'&lt;/li&gt;
+        &lt;/ol&gt;
+      &lt;/section&gt;
+
+      &lt;section&gt;
+        &lt;h2&gt;よくある質問&lt;/h2&gt;
+        &lt;details&gt;
+          &lt;summary&gt;GitとGitHubの違いは？&lt;/summary&gt;
+          &lt;p&gt;Gitはバージョン管理システム、GitHubはGitリポジトリのホスティングサービスです。&lt;/p&gt;
+        &lt;/details&gt;
+        &lt;details&gt;
+          &lt;summary&gt;Gitのインストール方法は？&lt;/summary&gt;
+          &lt;p&gt;Windowsはgit-scm.comからインストーラーをダウンロード、macOSはbrew install gitで導入できます。&lt;/p&gt;
+        &lt;/details&gt;
+        &lt;details&gt;
+          &lt;summary&gt;初心者はGUIとCLIどちらを使うべき？&lt;/summary&gt;
+          &lt;p&gt;基本的なCLI操作を覚えてからGUIツールを併用するのがおすすめです。&lt;/p&gt;
+        &lt;/details&gt;
+      &lt;/section&gt;
+    &lt;/article&gt;
+  &lt;/main&gt;
+&lt;/body&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>BreadcrumbList</code> の最後の項目（現在ページ）は <code>item</code> プロパティを省略できます。</li>
+              <li><code>FAQPage</code> はHTML本文の質問・回答と一致させる必要があります。不一致はペナルティの対象です。</li>
+              <li><code>HowTo</code> の各ステップに <code>image</code> を含めると、検索結果に画像付きのステップ表示が可能になります。</li>
+              <li>1ページに複数の構造化データを配置する場合、別々の <code>&lt;script&gt;</code> タグで記述するのが推奨されます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T8: 総合マークアップ ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">integration_instructions</span>
+      <h2>T8 総合マークアップ</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-15 -->
+    <div class="drill-item" id="a-15">
+      <div class="drill-header">
+        <div class="drill-badge">A-15</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合マークアップ</span>
+          <h3 class="drill-title">アクセシブルなダッシュボードレイアウト</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>ダッシュボードUIでは、複数のウィジェット、データテーブル、フォームコントロール、ライブデータを統合し、WAI-ARIAで全体のアクセシビリティを確保する設計力が求められます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で管理ダッシュボードのHTMLを設計してください。</p>
+          <ul>
+            <li>サイドバーナビ: <code>&lt;nav aria-label="ダッシュボードメニュー"&gt;</code>、現在ページに <code>aria-current</code></li>
+            <li>統計カード×4: 売上/ユーザー数/注文数/コンバージョン率、各カードに <code>aria-label</code></li>
+            <li>データテーブル: ソート可能ヘッダー（<code>aria-sort</code>）、結果件数（<code>aria-live</code>）</li>
+            <li>通知パネル: <code>role="log"</code> で新着通知をリアルタイム表示</li>
+            <li>グラフ領域: <code>role="img"</code> + <code>aria-label</code> でグラフの代替テキスト</li>
+            <li>全体を <code>&lt;main&gt;</code> + <code>&lt;aside&gt;</code> のレイアウト構造で構築</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>左にサイドバーメニュー、右にメインエリア。上部に4つの統計カード（数値+増減率）。中央にデータテーブル（ソート・フィルター付き）と売上グラフ。右パネルに新着通知リスト。全要素がキーボードとスクリーンリーダーで操作可能。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>role="log"</code> は <code>aria-live="polite"</code> と同等で、新しいエントリが追加された時にスクリーンリーダーに通知されます。グラフは <code>role="img"</code> で画像として扱い、<code>aria-label</code> でデータの傾向を説明します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;body&gt;
+  &lt;a href="#main-content" class="skip-link"&gt;メインコンテンツへ&lt;/a&gt;
+
+  &lt;div class="dashboard-layout"&gt;
+    &lt;aside&gt;
+      &lt;nav aria-label="ダッシュボードメニュー"&gt;
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href="/dashboard" aria-current="page"&gt;ダッシュボード&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/orders"&gt;注文管理&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/products"&gt;商品管理&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/users"&gt;ユーザー管理&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/settings"&gt;設定&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/nav&gt;
+    &lt;/aside&gt;
+
+    &lt;main id="main-content"&gt;
+      &lt;h1&gt;ダッシュボード&lt;/h1&gt;
+
+      &lt;section aria-label="統計サマリー"&gt;
+        &lt;div class="stat-grid"&gt;
+          &lt;div class="stat-card" aria-label="月間売上 1,250,000円 前月比12%増"&gt;
+            &lt;h2&gt;月間売上&lt;/h2&gt;
+            &lt;p class="stat-value"&gt;&amp;yen;1,250,000&lt;/p&gt;
+            &lt;p class="stat-change"&gt;+12%&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;div class="stat-card" aria-label="アクティブユーザー 3,420人 前月比8%増"&gt;
+            &lt;h2&gt;ユーザー数&lt;/h2&gt;
+            &lt;p class="stat-value"&gt;3,420&lt;/p&gt;
+            &lt;p class="stat-change"&gt;+8%&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;div class="stat-card" aria-label="月間注文数 890件 前月比5%増"&gt;
+            &lt;h2&gt;注文数&lt;/h2&gt;
+            &lt;p class="stat-value"&gt;890&lt;/p&gt;
+            &lt;p class="stat-change"&gt;+5%&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;div class="stat-card" aria-label="コンバージョン率 3.2% 前月比0.4ポイント増"&gt;
+            &lt;h2&gt;CVR&lt;/h2&gt;
+            &lt;p class="stat-value"&gt;3.2%&lt;/p&gt;
+            &lt;p class="stat-change"&gt;+0.4pt&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+
+      &lt;section aria-label="売上グラフ"&gt;
+        &lt;h2&gt;売上推移&lt;/h2&gt;
+        &lt;div role="img" aria-label="過去6ヶ月の売上推移グラフ。10月80万円から3月125万円まで右肩上がりで推移。1月に一時的な落ち込みあり。"&gt;
+          &lt;canvas id="sales-chart" width="600" height="300"&gt;&lt;/canvas&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+
+      &lt;section aria-label="最近の注文"&gt;
+        &lt;h2&gt;最近の注文&lt;/h2&gt;
+        &lt;p aria-live="polite" id="order-count"&gt;表示中: 10件 / 全890件&lt;/p&gt;
+        &lt;table&gt;
+          &lt;caption class="visually-hidden"&gt;注文一覧&lt;/caption&gt;
+          &lt;thead&gt;
+            &lt;tr&gt;
+              &lt;th scope="col"&gt;注文ID&lt;/th&gt;
+              &lt;th scope="col" aria-sort="descending"&gt;
+                &lt;button&gt;日時 &lt;span aria-hidden="true"&gt;&amp;#9660;&lt;/span&gt;&lt;/button&gt;
+              &lt;/th&gt;
+              &lt;th scope="col" aria-sort="none"&gt;
+                &lt;button&gt;金額 &lt;span aria-hidden="true"&gt;&amp;#9650;&amp;#9660;&lt;/span&gt;&lt;/button&gt;
+              &lt;/th&gt;
+              &lt;th scope="col"&gt;ステータス&lt;/th&gt;
+            &lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody&gt;
+            &lt;tr&gt;
+              &lt;td&gt;#10234&lt;/td&gt;
+              &lt;td&gt;&lt;time datetime="2026-03-09T14:30"&gt;3/9 14:30&lt;/time&gt;&lt;/td&gt;
+              &lt;td&gt;&amp;yen;4,500&lt;/td&gt;
+              &lt;td&gt;発送済み&lt;/td&gt;
+            &lt;/tr&gt;
+            &lt;tr&gt;
+              &lt;td&gt;#10233&lt;/td&gt;
+              &lt;td&gt;&lt;time datetime="2026-03-09T12:15"&gt;3/9 12:15&lt;/time&gt;&lt;/td&gt;
+              &lt;td&gt;&amp;yen;12,800&lt;/td&gt;
+              &lt;td&gt;処理中&lt;/td&gt;
+            &lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/section&gt;
+    &lt;/main&gt;
+
+    &lt;aside aria-label="通知パネル"&gt;
+      &lt;h2&gt;通知&lt;/h2&gt;
+      &lt;div role="log" aria-label="新着通知"&gt;
+        &lt;article&gt;
+          &lt;p&gt;&lt;strong&gt;新規注文&lt;/strong&gt; #10234 が入りました&lt;/p&gt;
+          &lt;time datetime="2026-03-09T14:30"&gt;5分前&lt;/time&gt;
+        &lt;/article&gt;
+        &lt;article&gt;
+          &lt;p&gt;&lt;strong&gt;在庫アラート&lt;/strong&gt; 商品Aの在庫が残り3個です&lt;/p&gt;
+          &lt;time datetime="2026-03-09T14:00"&gt;35分前&lt;/time&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/aside&gt;
+  &lt;/div&gt;
+&lt;/body&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>統計カードの <code>aria-label</code> にはデータの数値と増減を含め、スクリーンリーダーで一度に把握できるようにします。</li>
+              <li><code>role="img"</code> はグラフ（Canvas/SVG）を画像として扱い、<code>aria-label</code> でデータの傾向を説明します。</li>
+              <li><code>role="log"</code> は新しいエントリが追加された時に自動で通知されるライブリージョンです。チャットや通知に適しています。</li>
+              <li>ソートボタンは <code>&lt;th&gt;</code> 内に <code>&lt;button&gt;</code> を配置し、キーボード操作を可能にしています。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-16 -->
+    <div class="drill-item" id="a-16">
+      <div class="drill-header">
+        <div class="drill-badge">A-16</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合マークアップ</span>
+          <h3 class="drill-title">ECサイト商品詳細ページの完全設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>ECサイト商品詳細ページは、SEO（構造化データ）、アクセシビリティ（ARIA）、パフォーマンス（lazy loading）、UX（フォーム/メディア）の全てを高いレベルで統合する必要があります。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でECサイト商品詳細ページを完全設計してください。</p>
+          <ul>
+            <li>JSON-LD: <code>Product</code> スキーマ（名前、説明、画像、価格、在庫状態、レビュー評価）</li>
+            <li>画像ギャラリー: メイン画像 + サムネイル5枚、<code>&lt;picture&gt;</code> でWebP対応、<code>loading="lazy"</code></li>
+            <li>商品情報: 価格（<code>&lt;data value="..."&gt;</code>）、サイズ/色のセレクター、数量入力、カートボタン</li>
+            <li>レビューセクション: 平均評価、個別レビュー（<code>&lt;article&gt;</code>）、レビュー投稿フォーム</li>
+            <li>関連商品: カルーセル風のカード一覧（<code>aria-roledescription="carousel"</code>）</li>
+            <li>OGP + Twitter Card + canonical の完全なメタ情報</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>商品詳細ページ。左に画像ギャラリー（メイン+サムネイル）、右に商品情報（価格、サイズ/色選択、数量、カートボタン）。下にレビューセクション（平均評価+個別レビュー+投稿フォーム）、関連商品カルーセル。Google検索では商品リッチスニペット表示。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;data value="12800"&gt;&amp;yen;12,800&lt;/data&gt;</code> は人間向けとマシン向けの両方の値を提供します。カルーセルは <code>aria-roledescription="carousel"</code> + <code>aria-label</code> で定義し、各スライドに <code>role="group"</code> を設定します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;ワイヤレスヘッドホン AX-100 | TechShop&lt;/title&gt;
+  &lt;meta name="description" content="高音質ワイヤレスヘッドホン AX-100。ノイズキャンセリング搭載、30時間連続再生。送料無料、翌日配送対応。"&gt;
+  &lt;link rel="canonical" href="https://techshop.example.com/products/ax-100"&gt;
+
+  &lt;meta property="og:type" content="product"&gt;
+  &lt;meta property="og:title" content="ワイヤレスヘッドホン AX-100"&gt;
+  &lt;meta property="og:description" content="高音質ワイヤレスヘッドホン。ノイキャン搭載、30時間再生。"&gt;
+  &lt;meta property="og:image" content="https://techshop.example.com/images/ax-100-main.jpg"&gt;
+  &lt;meta property="og:url" content="https://techshop.example.com/products/ax-100"&gt;
+  &lt;meta name="twitter:card" content="summary_large_image"&gt;
+
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "ワイヤレスヘッドホン AX-100",
+    "description": "高音質ワイヤレスヘッドホン。ノイズキャンセリング搭載、30時間連続再生。",
+    "image": "https://techshop.example.com/images/ax-100-main.jpg",
+    "offers": {
+      "@type": "Offer",
+      "price": "12800",
+      "priceCurrency": "JPY",
+      "availability": "https://schema.org/InStock"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.3",
+      "reviewCount": "56"
+    }
+  }
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;nav aria-label="パンくず"&gt;
+    &lt;ol&gt;
+      &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="/headphones"&gt;ヘッドホン&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;span aria-current="page"&gt;AX-100&lt;/span&gt;&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/nav&gt;
+
+  &lt;main&gt;
+    &lt;article&gt;
+      &lt;div class="product-detail"&gt;
+        &lt;!-- 画像ギャラリー --&gt;
+        &lt;section aria-label="商品画像"&gt;
+          &lt;figure&gt;
+            &lt;picture&gt;
+              &lt;source srcset="images/ax-100-main.webp" type="image/webp"&gt;
+              &lt;img src="images/ax-100-main.jpg" alt="AX-100 ブラック 正面" id="main-img"
+                width="600" height="600" fetchpriority="high"&gt;
+            &lt;/picture&gt;
+          &lt;/figure&gt;
+          &lt;div class="thumbnails" role="list" aria-label="商品画像一覧"&gt;
+            &lt;button role="listitem" aria-pressed="true" aria-label="正面画像を表示"&gt;
+              &lt;img src="images/ax-100-thumb1.jpg" alt="" width="80" height="80"&gt;
+            &lt;/button&gt;
+            &lt;button role="listitem" aria-pressed="false" aria-label="側面画像を表示"&gt;
+              &lt;img src="images/ax-100-thumb2.jpg" alt="" width="80" height="80" loading="lazy"&gt;
+            &lt;/button&gt;
+            &lt;button role="listitem" aria-pressed="false" aria-label="装着画像を表示"&gt;
+              &lt;img src="images/ax-100-thumb3.jpg" alt="" width="80" height="80" loading="lazy"&gt;
+            &lt;/button&gt;
+            &lt;button role="listitem" aria-pressed="false" aria-label="付属品画像を表示"&gt;
+              &lt;img src="images/ax-100-thumb4.jpg" alt="" width="80" height="80" loading="lazy"&gt;
+            &lt;/button&gt;
+            &lt;button role="listitem" aria-pressed="false" aria-label="パッケージ画像を表示"&gt;
+              &lt;img src="images/ax-100-thumb5.jpg" alt="" width="80" height="80" loading="lazy"&gt;
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;!-- 商品情報 --&gt;
+        &lt;section aria-label="商品情報"&gt;
+          &lt;h1&gt;ワイヤレスヘッドホン AX-100&lt;/h1&gt;
+          &lt;p class="price"&gt;&lt;data value="12800"&gt;&amp;yen;12,800&lt;/data&gt; &lt;small&gt;(税込)&lt;/small&gt;&lt;/p&gt;
+          &lt;p aria-label="56件のレビューで5段階中4.3の評価"&gt;
+            &lt;span aria-hidden="true"&gt;&amp;#9733;&amp;#9733;&amp;#9733;&amp;#9733;&amp;#9734;&lt;/span&gt; 4.3 (56件)
+          &lt;/p&gt;
+
+          &lt;form action="/cart/add" method="post"&gt;
+            &lt;input type="hidden" name="product-id" value="ax-100"&gt;
+            &lt;div&gt;
+              &lt;label for="color"&gt;カラー&lt;/label&gt;
+              &lt;select id="color" name="color"&gt;
+                &lt;option value="black"&gt;ブラック&lt;/option&gt;
+                &lt;option value="white"&gt;ホワイト&lt;/option&gt;
+                &lt;option value="navy"&gt;ネイビー&lt;/option&gt;
+              &lt;/select&gt;
+            &lt;/div&gt;
+            &lt;div&gt;
+              &lt;label for="quantity"&gt;数量&lt;/label&gt;
+              &lt;input type="number" id="quantity" name="quantity" min="1" max="10" value="1"&gt;
+            &lt;/div&gt;
+            &lt;button type="submit"&gt;カートに追加&lt;/button&gt;
+          &lt;/form&gt;
+        &lt;/section&gt;
+      &lt;/div&gt;
+
+      &lt;!-- レビューセクション --&gt;
+      &lt;section id="reviews" aria-label="カスタマーレビュー"&gt;
+        &lt;h2&gt;カスタマーレビュー&lt;/h2&gt;
+        &lt;article class="review"&gt;
+          &lt;header&gt;
+            &lt;p aria-label="5段階中5の評価"&gt;&lt;span aria-hidden="true"&gt;&amp;#9733;&amp;#9733;&amp;#9733;&amp;#9733;&amp;#9733;&lt;/span&gt;&lt;/p&gt;
+            &lt;h3&gt;音質が素晴らしい&lt;/h3&gt;
+            &lt;p&gt;購入者A — &lt;time datetime="2026-02-20"&gt;2026年2月20日&lt;/time&gt;&lt;/p&gt;
+          &lt;/header&gt;
+          &lt;p&gt;ノイズキャンセリングの性能が高く、音楽に集中できます。バッテリーも長持ちで満足です。&lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;h3&gt;レビューを投稿&lt;/h3&gt;
+        &lt;form action="/reviews/ax-100" method="post"&gt;
+          &lt;div&gt;
+            &lt;label for="rev-rating"&gt;評価&lt;/label&gt;
+            &lt;select id="rev-rating" name="rating" required&gt;
+              &lt;option value="5"&gt;5 — とても良い&lt;/option&gt;
+              &lt;option value="4"&gt;4 — 良い&lt;/option&gt;
+              &lt;option value="3"&gt;3 — 普通&lt;/option&gt;
+              &lt;option value="2"&gt;2 — 悪い&lt;/option&gt;
+              &lt;option value="1"&gt;1 — とても悪い&lt;/option&gt;
+            &lt;/select&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label for="rev-title"&gt;タイトル&lt;/label&gt;
+            &lt;input type="text" id="rev-title" name="title" required&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label for="rev-body"&gt;本文&lt;/label&gt;
+            &lt;textarea id="rev-body" name="body" rows="4" required&gt;&lt;/textarea&gt;
+          &lt;/div&gt;
+          &lt;button type="submit"&gt;投稿する&lt;/button&gt;
+        &lt;/form&gt;
+      &lt;/section&gt;
+    &lt;/article&gt;
+
+    &lt;!-- 関連商品カルーセル --&gt;
+    &lt;section aria-roledescription="carousel" aria-label="関連商品"&gt;
+      &lt;h2&gt;関連商品&lt;/h2&gt;
+      &lt;div class="carousel-track"&gt;
+        &lt;div role="group" aria-roledescription="slide" aria-label="1 / 3"&gt;
+          &lt;article&gt;
+            &lt;img src="images/bx-200.jpg" alt="BX-200 ヘッドホン" width="200" height="200" loading="lazy"&gt;
+            &lt;h3&gt;&lt;a href="/products/bx-200"&gt;BX-200&lt;/a&gt;&lt;/h3&gt;
+            &lt;p&gt;&amp;yen;8,500&lt;/p&gt;
+          &lt;/article&gt;
+        &lt;/div&gt;
+        &lt;div role="group" aria-roledescription="slide" aria-label="2 / 3"&gt;
+          &lt;article&gt;
+            &lt;img src="images/cx-300.jpg" alt="CX-300 イヤホン" width="200" height="200" loading="lazy"&gt;
+            &lt;h3&gt;&lt;a href="/products/cx-300"&gt;CX-300&lt;/a&gt;&lt;/h3&gt;
+            &lt;p&gt;&amp;yen;5,980&lt;/p&gt;
+          &lt;/article&gt;
+        &lt;/div&gt;
+        &lt;div role="group" aria-roledescription="slide" aria-label="3 / 3"&gt;
+          &lt;article&gt;
+            &lt;img src="images/dx-50.jpg" alt="DX-50 スピーカー" width="200" height="200" loading="lazy"&gt;
+            &lt;h3&gt;&lt;a href="/products/dx-50"&gt;DX-50&lt;/a&gt;&lt;/h3&gt;
+            &lt;p&gt;&amp;yen;15,000&lt;/p&gt;
+          &lt;/article&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+  &lt;/main&gt;
+&lt;/body&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;data value="12800"&gt;</code> は機械可読な価格と人間向けのフォーマットを両方提供します。構造化データとの整合性に役立ちます。</li>
+              <li>サムネイルボタンの <code>aria-pressed</code> で選択状態を管理し、画像切り替え操作をアクセシブルにしています。</li>
+              <li><code>aria-roledescription="carousel"</code> はスクリーンリーダーにカルーセルUIであることを伝え、各スライドは <code>role="group"</code> でグループ化します。</li>
+              <li><code>Product</code> 構造化データの <code>availability</code> はSchema.orgのURLで指定し（<code>InStock</code>, <code>OutOfStock</code> 等）、検索結果に在庫状態が表示されます。</li>
+              <li>レビューフォームと構造化データの <code>aggregateRating</code> は連動させ、実際のレビュー数と一致させます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-navigation">
+      <a href="level-b.html" class="prev-page">
+        <span class="material-icons">arrow_back</span>
+        Level B — 複合実装
+      </a>
+      <a href="level-s.html" class="next-page">
+        Level S — 総合実装
+        <span class="material-icons">arrow_forward</span>
+      </a>
+    </div>
+
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

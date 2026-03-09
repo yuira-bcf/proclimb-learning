@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Level A — 設計実装 | CSS実力養成ドリル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #CCE4FF;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+
+    .drill-item { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .drill-header { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #f0f0f0; background: #fafbfc; }
+    .drill-badge { background: var(--primary); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; padding: 8px 14px; border-radius: 10px; white-space: nowrap; }
+    .drill-meta { flex: 1; }
+    .drill-theme { font-size: 0.72rem; color: var(--primary); font-weight: 600; letter-spacing: 0.03em; margin-bottom: 2px; display: block; }
+    .drill-title { font-size: 1.05rem; font-weight: 700; color: #1d1d1f; }
+    .drill-body { padding: 24px; }
+    .drill-point { display: flex; align-items: flex-start; gap: 12px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+    .drill-point > .material-icons { color: #f9a825; font-size: 1.4rem; margin-top: 2px; }
+    .drill-point strong { display: block; font-size: 0.82rem; color: #f57f17; margin-bottom: 4px; }
+    .drill-point p { font-size: 0.85rem; color: #5d4037; line-height: 1.6; margin: 0; }
+    .drill-task { margin-bottom: 20px; }
+    .drill-task h4 { display: flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: 700; color: #1d1d1f; margin-bottom: 12px; }
+    .drill-task h4 .material-icons { color: var(--primary); font-size: 1.2rem; }
+    .drill-task p, .drill-task ul, .drill-task ol { font-size: 0.88rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .drill-task ul, .drill-task ol { padding-left: 1.5em; }
+    .drill-task li { margin-bottom: 4px; }
+    .drill-code { background: #1e293b; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; padding: 20px; border-radius: 10px; overflow-x: auto; margin: 12px 0; }
+    .drill-code code { font-family: inherit; }
+    .drill-hint { margin-bottom: 8px; }
+    .drill-hint summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: #f57c00; padding: 10px 14px; background: #fff3e0; border-radius: 10px; list-style: none; user-select: none; }
+    .drill-hint summary::-webkit-details-marker { display: none; }
+    .drill-hint summary .material-icons { font-size: 1.1rem; }
+    .drill-hint[open] summary { border-radius: 10px 10px 0 0; }
+    .hint-content { background: #fff8e1; padding: 16px 18px; border-radius: 0 0 10px 10px; font-size: 0.85rem; line-height: 1.7; color: #5d4037; }
+    .hint-content code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
+    .drill-answer { margin-top: 8px; }
+    .drill-answer summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: var(--primary); padding: 10px 14px; background: var(--primary-light); border-radius: 10px; list-style: none; user-select: none; }
+    .drill-answer summary::-webkit-details-marker { display: none; }
+    .drill-answer summary .material-icons { color: var(--primary); font-size: 1.1rem; }
+    .drill-answer[open] summary { border-radius: 10px 10px 0 0; }
+    .answer-content { background: #f8fbff; padding: 20px; border-radius: 0 0 10px 10px; border: 1px solid var(--primary-light); border-top: none; }
+    .answer-content p { font-size: 0.85rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .answer-content h5 { font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin: 16px 0 8px; }
+    .answer-content ul { font-size: 0.85rem; line-height: 1.8; color: #333; padding-left: 1.5em; margin-bottom: 10px; }
+    .theme-separator { display: flex; align-items: center; gap: 12px; margin: 36px 0 20px; padding: 12px 20px; background: var(--primary-light); border-radius: 12px; border-left: 4px solid var(--primary); }
+    .theme-separator .material-icons { color: var(--primary); font-size: 1.3rem; }
+    .theme-separator h2 { font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
+    .theme-separator span.theme-count { font-size: 0.75rem; color: #666; font-weight: 400; margin-left: auto; }
+    .spec-box { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 12px 0; }
+    .spec-box h5 { font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .spec-box ul { font-size: 0.85rem; line-height: 1.8; color: #475569; padding-left: 1.5em; }
+    .placeholder-notice { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 40px 24px; text-align: center; margin: 36px 0; }
+    .placeholder-notice .material-icons { font-size: 2.5rem; color: #94a3b8; margin-bottom: 12px; }
+    .placeholder-notice h3 { font-size: 1.1rem; font-weight: 700; color: #64748b; margin-bottom: 8px; }
+    .placeholder-notice p { font-size: 0.88rem; color: #94a3b8; }
+    @media (max-width: 480px) {
+      .drill-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+      .drill-body { padding: 16px; }
+      .drill-code { font-size: 0.75rem; padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-css-drill.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">palette</span> Drill</div>
+      <div class="chapter-number">A</div>
+      <h1 class="chapter-title">Level A — 設計実装</h1>
+      <p style="color:#fff; margin-top:8px;">設計判断を含む高度なCSS実装課題｜16課題・8テーマ</p>
+    </header>
+
+    <!-- ===== T1: セレクタ・詳細度・カスケード ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">filter_list</span>
+      <h2>T1 セレクタ・詳細度・カスケード</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-01 -->
+    <div class="drill-item" id="a-01">
+      <div class="drill-header">
+        <div class="drill-badge">A-01</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 セレクタ・詳細度・カスケード</span>
+          <h3 class="drill-title">CSS Layers (@layer) による詳細度管理</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p><code>@layer</code> はカスケードレイヤーを定義し、スタイルの優先順位をセレクタの詳細度とは独立に制御できます。リセット → ベース → コンポーネント → ユーティリティの順に層を定義するのが一般的です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、<code>@layer</code> を使ったCSS設計を実装してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>4つのレイヤーを定義: <code>reset</code>, <code>base</code>, <code>components</code>, <code>utilities</code></li>
+              <li><code>reset</code> レイヤー: box-sizing, margin/padding リセット</li>
+              <li><code>base</code> レイヤー: body のフォント・色、見出しのスタイル</li>
+              <li><code>components</code> レイヤー: .btn, .card のコンポーネントスタイル</li>
+              <li><code>utilities</code> レイヤー: .text-center, .mt-4 等のユーティリティクラス</li>
+              <li>後のレイヤーが先のレイヤーより優先されること</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>@layer reset, base, components, utilities;</code> で宣言順を先に定義すると、後に書かれたレイヤーが優先されます。各レイヤー内では通常の詳細度ルールが適用されます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>/* レイヤーの優先順位を宣言（後が高優先） */
+@layer reset, base, components, utilities;
+
+@layer reset {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  img { display: block; max-width: 100%; }
+}
+
+@layer base {
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    color: #1d1d1f;
+    line-height: 1.6;
+  }
+  h1, h2, h3 {
+    line-height: 1.3;
+    font-weight: 700;
+  }
+  a { color: #007AFF; text-decoration: none; }
+}
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary { background: #007AFF; color: white; }
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+}
+
+@layer utilities {
+  .text-center { text-align: center; }
+  .mt-4 { margin-top: 16px; }
+  .hidden { display: none; }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@layer</code> はカスケードの新しい制御メカニズムで、セレクタの詳細度よりもレイヤーの順序が優先されます。</li>
+              <li>utilities レイヤーが最後なので、<code>.text-center</code>（詳細度 0-1-0）は components の <code>.card</code>（同じ詳細度）より優先されます。</li>
+              <li>Tailwind CSS のようなユーティリティファーストのフレームワークでは、この <code>@layer</code> パターンが内部的に使われています。</li>
+              <li>レイヤーに属さないスタイルは、全てのレイヤーよりも高い優先度を持ちます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-02 -->
+    <div class="drill-item" id="a-02">
+      <div class="drill-header">
+        <div class="drill-badge">A-02</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 セレクタ・詳細度・カスケード</span>
+          <h3 class="drill-title">詳細度の競合解消リファクタリング</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p>既存の CSS で <code>!important</code> や過度に高い詳細度のセレクタが使われている場合、段階的にリファクタリングして保守性を回復する設計判断が必要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の「問題のあるCSS」をリファクタリングして、詳細度を低く保ちつつ同じ見た目を維持してください。</p>
+<pre class="drill-code"><code>/* 問題のあるCSS: 詳細度が高く、!important が乱用されている */
+body div.container div.content #main-area .article-list li.item a.link {
+  color: #007AFF !important;
+  font-weight: bold !important;
+}
+
+body div.container div.content #main-area .article-list li.item a.link:hover {
+  color: #0056B3 !important;
+  text-decoration: underline !important;
+}
+
+#sidebar .widget-area .widget h3.widget-title {
+  font-size: 1.1rem !important;
+  color: #333 !important;
+  border-bottom: 2px solid #007AFF !important;
+}</code></pre>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>全ての <code>!important</code> を除去する</li>
+              <li>セレクタの詳細度を最大 0-2-0 以下に抑える</li>
+              <li>見た目は元のCSSと完全に同じにする</li>
+              <li>BEM または適切な命名規則でクラス名を再設計する</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>HTML のクラス名を変更して、CSSセレクタを短くします。<code>.article-link</code> のようにコンポーネントに紐づく単一クラスを使えば、詳細度は 0-1-0 で済みます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>/* リファクタリング後: 詳細度 0-1-0 〜 0-2-0 */
+.article-link {
+  color: #007AFF;
+  font-weight: bold;
+}
+
+.article-link:hover {
+  color: #0056B3;
+  text-decoration: underline;
+}
+
+.widget-title {
+  font-size: 1.1rem;
+  color: #333;
+  border-bottom: 2px solid #007AFF;
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>元のセレクタ <code>body div.container ... a.link</code> の詳細度は 1-5-4 で、極めて高い値です。上書きに <code>!important</code> が必要になる悪循環を生みます。</li>
+              <li>BEM やシンプルなクラス命名に変更することで、詳細度を 0-1-0 に抑え、<code>!important</code> を不要にできます。</li>
+              <li>リファクタリングのステップ: (1) HTML のクラス名を変更、(2) 新しいセレクタでスタイル定義、(3) 旧スタイルを段階的に削除。</li>
+              <li>大規模プロジェクトでは <code>@layer</code> を導入して、既存スタイルを低優先レイヤーに閉じ込める戦略も有効です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T2: ボックスモデル・マージン ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">check_box_outline_blank</span>
+      <h2>T2 ボックスモデル・マージン</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-03 -->
+    <div class="drill-item" id="a-03">
+      <div class="drill-header">
+        <div class="drill-badge">A-03</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 ボックスモデル・マージン</span>
+          <h3 class="drill-title">コンテナクエリ (@container) の実装</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p><code>@container</code> はビューポートではなく、親コンテナの幅に応じてスタイルを切り替えます。コンポーネント単位のレスポンシブ対応が可能になります。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、コンテナクエリを使ったレスポンシブカードを実装してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>親要素に <code>container-type: inline-size</code> を指定</li>
+              <li>コンテナ幅 400px 未満: カードは縦レイアウト（画像上、テキスト下）</li>
+              <li>コンテナ幅 400px 以上: カードは横レイアウト（画像左、テキスト右）</li>
+              <li>コンテナ幅 700px 以上: フォントサイズを大きくし、padding を増やす</li>
+              <li>同じカードコンポーネントが異なる幅のコンテナに配置されても正しく表示されること</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>container-type: inline-size</code> を親要素に設定し、<code>@container (min-width: 400px) { ... }</code> でスタイルを切り替えます。メディアクエリと構文が似ています。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>.card-wrapper {
+  container-type: inline-size;
+}
+
+/* デフォルト: 縦レイアウト */
+.responsive-card {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.responsive-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.responsive-card .card-content {
+  padding: 16px;
+}
+
+/* 400px以上: 横レイアウト */
+@container (min-width: 400px) {
+  .responsive-card {
+    flex-direction: row;
+  }
+  .responsive-card img {
+    width: 200px;
+    height: auto;
+  }
+}
+
+/* 700px以上: 大きなレイアウト */
+@container (min-width: 700px) {
+  .responsive-card img {
+    width: 300px;
+  }
+  .responsive-card .card-content {
+    padding: 24px;
+    font-size: 1.05rem;
+  }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@container</code> はメディアクエリと異なり、ビューポートではなく親コンテナの幅に反応します。</li>
+              <li>サイドバーに配置されたカードは狭い幅で、メインエリアのカードは広い幅でレスポンシブに切り替わります。</li>
+              <li><code>container-type: inline-size</code> は inline 方向（通常は水平）のサイズをクエリ可能にします。</li>
+              <li>コンテナクエリにより、コンポーネントが配置場所に依存しない自律的なレスポンシブ対応が可能になります。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-04 -->
+    <div class="drill-item" id="a-04">
+      <div class="drill-header">
+        <div class="drill-badge">A-04</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 ボックスモデル・マージン</span>
+          <h3 class="drill-title">スクロールスナップギャラリーの設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p><code>scroll-snap-type</code> と <code>scroll-snap-align</code> でスムーズなスクロールスナップを実現できます。カルーセルUIをJavaScriptなしで作成可能です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、横スクロールスナップギャラリーを実装してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>コンテナ: <code>overflow-x: auto</code>、<code>scroll-snap-type: x mandatory</code></li>
+              <li>各スライド: <code>scroll-snap-align: start</code>、<code>min-width: 80%</code></li>
+              <li>スクロールバーのカスタム: <code>::-webkit-scrollbar</code> で薄いスタイルに</li>
+              <li><code>scroll-padding</code> でスナップ位置にオフセットを追加</li>
+              <li>CSS <code>scroll-behavior: smooth</code> で滑らかスクロール</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>mandatory</code> はスクロール完了時に必ずスナップポイントに吸着します。<code>proximity</code> は近い場合のみ吸着します。<code>scroll-padding-left: 24px</code> でスナップ位置にマージンを追加できます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>.snap-gallery {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 24px;
+  scroll-behavior: smooth;
+  padding: 16px 24px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snap-gallery::-webkit-scrollbar {
+  height: 6px;
+}
+
+.snap-gallery::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.snap-gallery::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.snap-slide {
+  scroll-snap-align: start;
+  min-width: 80%;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.snap-slide img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>scroll-snap-type: x mandatory</code> で水平スクロール時にスナップポイントへの吸着が強制されます。</li>
+              <li><code>flex-shrink: 0</code> を各スライドに指定しないと、Flexbox によって縮小されスナップが機能しません。</li>
+              <li><code>scroll-padding</code> でスナップ位置を調整でき、端にパディングを持たせたデザインに対応できます。</li>
+              <li>このパターンは App Store のカルーセルやストーリーズUIに使われています。JavaScript なしで動作する点が利点です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T3: Flexbox ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">view_column</span>
+      <h2>T3 Flexbox</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-05 -->
+    <div class="drill-item" id="a-05">
+      <div class="drill-header">
+        <div class="drill-badge">A-05</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 Flexbox</span>
+          <h3 class="drill-title">レスポンシブダッシュボードシェルの設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p>ダッシュボードのシェル（外枠）は固定サイドバー + 可変メインエリアの構成です。サイドバーの開閉、レスポンシブ対応、スクロール管理を含む総合的な設計力が試されます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、ダッシュボードシェルを設計・実装してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>全体: <code>height: 100vh</code>、<code>overflow: hidden</code>（ページ全体のスクロール防止）</li>
+              <li>サイドバー: 固定幅 <code>260px</code>、<code>overflow-y: auto</code>（独立スクロール）</li>
+              <li>メインエリア: <code>flex: 1</code>、<code>overflow-y: auto</code>（独立スクロール）</li>
+              <li>サイドバー縮小モード: 幅 <code>64px</code>、アイコンのみ表示（CSS のクラス切り替えで対応）</li>
+              <li>モバイル: サイドバーをオーバーレイ表示（<code>position: fixed</code> + backdrop）</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>サイドバーに <code>transition: width 0.3s</code> を指定し、<code>.sidebar--collapsed</code> クラスで幅を切り替えます。メインエリアは <code>flex: 1</code> なので自動的に残りの幅を埋めます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>.dashboard {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 260px;
+  background: #1e293b;
+  color: #e2e8f0;
+  overflow-y: auto;
+  transition: width 0.3s ease;
+  flex-shrink: 0;
+}
+
+.sidebar--collapsed {
+  width: 64px;
+}
+
+.sidebar--collapsed .nav-label {
+  display: none;
+}
+
+.main-area {
+  flex: 1;
+  overflow-y: auto;
+  background: #f1f5f9;
+}
+
+.main-header {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 10;
+}
+
+/* モバイルオーバーレイ */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar--open {
+    transform: translateX(0);
+  }
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 99;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .sidebar--open ~ .sidebar-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>height: 100vh; overflow: hidden</code> でページ全体のスクロールを防ぎ、各エリアが独立してスクロールします。</li>
+              <li><code>flex-shrink: 0</code> はサイドバーが Flexbox によって縮小されることを防ぎます。</li>
+              <li>モバイルでは <code>transform: translateX(-100%)</code> でサイドバーを画面外に移動し、クラス追加で表示します。</li>
+              <li><code>position: sticky</code> のメインヘッダーは <code>overflow-y: auto</code> を持つ親コンテナ内で機能します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-06 -->
+    <div class="drill-item" id="a-06">
+      <div class="drill-header">
+        <div class="drill-badge">A-06</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 Flexbox</span>
+          <h3 class="drill-title">マルチステップフォームの設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p>マルチステップフォームでは、ステッパー + フォームコンテンツ + ナビゲーションボタンの3層構造をCSS で設計します。<code>overflow: hidden</code> とスライドアニメーションで画面遷移を表現します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、マルチステップフォームのCSSを設計してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>上部: ステッパー（B-06 参照）で現在のステップを表示</li>
+              <li>中央: フォームコンテンツ（<code>overflow: hidden</code> + <code>transform: translateX</code> でスライド）</li>
+              <li>下部: 「戻る」「次へ」ボタン（Flexbox で <code>justify-content: space-between</code>）</li>
+              <li>各ステップは <code>min-width: 100%</code> + <code>flex-shrink: 0</code> でフルワイド</li>
+              <li>フォームフィールドの一貫したスタイルシステムを設計</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>ステップのスライドは親を <code>display: flex; overflow: hidden;</code> にし、内部コンテナの <code>transform: translateX(calc(-100% * N))</code> で N ステップ分移動します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>.wizard {
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.wizard-steps {
+  padding: 24px 24px 0;
+}
+
+.wizard-content {
+  overflow: hidden;
+}
+
+.wizard-slides {
+  display: flex;
+  transition: transform 0.4s ease;
+}
+
+/* JS で transform を切り替え */
+.wizard-slides[data-step="0"] { transform: translateX(0); }
+.wizard-slides[data-step="1"] { transform: translateX(-100%); }
+.wizard-slides[data-step="2"] { transform: translateX(-200%); }
+
+.wizard-slide {
+  min-width: 100%;
+  flex-shrink: 0;
+  padding: 24px;
+}
+
+.wizard-nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 24px 24px;
+}
+
+.wizard-nav .btn-back {
+  background: none;
+  border: 1px solid #d1d5db;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.wizard-nav .btn-next {
+  background: #007AFF;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* フォームフィールド共通 */
+.field {
+  margin-bottom: 16px;
+}
+
+.field label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>スライド式のステップ遷移は <code>flex</code> + <code>transform</code> で実現します。JavaScriptは <code>data-step</code> 属性の切り替えのみで済みます。</li>
+              <li><code>flex-shrink: 0</code> + <code>min-width: 100%</code> で各スライドがコンテナ幅を維持します。</li>
+              <li><code>transition: transform 0.4s ease</code> でスライドアニメーションを滑らかにします。</li>
+              <li>フォームフィールドの共通スタイルを <code>.field</code> クラスで統一し、一貫性のあるUIを実現しています。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T4: Grid ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">grid_view</span>
+      <h2>T4 Grid</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-07 -->
+    <div class="drill-item" id="a-07">
+      <div class="drill-header">
+        <div class="drill-badge">A-07</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 Grid</span>
+          <h3 class="drill-title">Subgrid によるカード高さ揃えの設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p><code>subgrid</code> は親の Grid ラインを子要素に引き継ぐ機能です。カードの内部要素（タイトル、テキスト、ボタン）の高さを隣のカードと揃えることができます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、subgrid を使ったカード高さ揃えを実装してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>親グリッド: 3列、各行に <code>grid-template-rows: subgrid</code> で行ラインを共有</li>
+              <li>各カードは4行（画像 / タイトル / テキスト / ボタン）</li>
+              <li>カード内の各要素が横のカードと行が揃うこと</li>
+              <li>テキスト量が異なるカードでもレイアウトが崩れない</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>各カードに <code>display: grid; grid-row: span 4; grid-template-rows: subgrid;</code> を指定すると、親グリッドの行ラインに合わせて内部要素が配置されます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.subgrid-card {
+  display: grid;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.subgrid-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.subgrid-card .card-title {
+  padding: 16px 16px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.subgrid-card .card-text {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.subgrid-card .card-action {
+  padding: 0 16px 16px;
+  align-self: end;
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>subgrid</code> は子要素が親グリッドの行ラインを共有するため、隣接するカード間で各行の高さが自動的に揃います。</li>
+              <li><code>grid-row: span 4</code> でカードが4行分のスペースを確保し、<code>subgrid</code> で4行を親と共有します。</li>
+              <li>テキスト量が異なるカードでも、最も多いテキストのカードに合わせて全カードの行が揃います。</li>
+              <li><code>subgrid</code> は Firefox が先行サポートし、2023年以降 Chrome/Safari でもサポートされています。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-08 -->
+    <div class="drill-item" id="a-08">
+      <div class="drill-header">
+        <div class="drill-badge">A-08</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 Grid</span>
+          <h3 class="drill-title">CSS Grid でのフォームレイアウト設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p>Grid はフォームレイアウトにも強力です。ラベルと入力欄の2列構成、フルワイドフィールド、条件付きフィールドの表示切替を Grid で管理できます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、Grid ベースのフォームレイアウトを設計してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>2列レイアウト: ラベル（<code>160px</code>）+ 入力欄（<code>1fr</code>）</li>
+              <li>フルワイドフィールド（textarea 等）: <code>grid-column: 1 / -1</code></li>
+              <li>2カラム入力欄（姓 + 名）: ネストした Grid で2列に</li>
+              <li>モバイル: 1列レイアウトに変更（ラベルが上、入力欄が下）</li>
+              <li>セクション区切り: <code>grid-column: 1 / -1</code> + ボーダー上部</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>grid-template-columns: 160px 1fr</code> で基本の2列を定義し、<code>grid-column: 1 / -1</code> で全幅フィールドを配置します。モバイルでは <code>grid-template-columns: 1fr</code> に変更します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>.form-grid {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px 24px;
+  align-items: start;
+}
+
+.form-grid label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding-top: 10px;
+  color: #374151;
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+/* フルワイド */
+.form-full {
+  grid-column: 1 / -1;
+}
+
+/* 2カラム入力 */
+.form-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* セクション区切り */
+.form-divider {
+  grid-column: 1 / -1;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+  margin-top: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .form-grid label {
+    padding-top: 0;
+  }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>Grid のフォームレイアウトはラベルと入力欄の位置関係を明確に制御でき、コードの見通しが良くなります。</li>
+              <li><code>align-items: start</code> でラベルがテキストエリアの高さに引き伸ばされるのを防ぎます。</li>
+              <li><code>grid-column: 1 / -1</code> はフォーム内のセクション区切りやフルワイドフィールドに便利です。</li>
+              <li>モバイルでは <code>grid-template-columns: 1fr</code> に変更するだけで、ラベルが入力欄の上に自動配置されます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T5: レスポンシブデザイン ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">devices</span>
+      <h2>T5 レスポンシブデザイン</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-09 -->
+    <div class="drill-item" id="a-09">
+      <div class="drill-header">
+        <div class="drill-badge">A-09</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 レスポンシブデザイン</span>
+          <h3 class="drill-title">デザインシステムのレスポンシブトークン設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p>デザインシステムのトークン（スペーシング、フォントサイズ、角丸など）をビューポート幅に応じて流体的に変化させる設計です。メディアクエリの段差をなくし、全画面サイズで最適な見た目を提供します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、レスポンシブ対応のデザイントークンシステムを設計・実装してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>流体スペーシングスケール: <code>--space-xs</code>〜<code>--space-3xl</code> を <code>clamp()</code> で定義</li>
+              <li>流体タイプスケール: <code>--text-sm</code>〜<code>--text-display</code> を <code>clamp()</code> で定義</li>
+              <li>コンテナクエリトークン: <code>@container</code> でコンポーネント単位の切替も対応</li>
+              <li>コンテンツ幅: <code>--content-width: min(90%, 1200px)</code></li>
+              <li>セクション余白: <code>--section-gap: clamp(48px, 8vw, 120px)</code></li>
+              <li>カード/ボタン/見出しなど各コンポーネントがトークンを参照して自動調整</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>スペーシングスケールは 4px 基準の倍数で設計します。例: <code>--space-md: clamp(16px, 1.5vw + 8px, 24px)</code>。全トークンの min/max を一覧表にして管理すると見通しが良くなります。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>:root {
+  /* 流体スペーシング（4px基準） */
+  --space-xs:  clamp(4px,  0.25vw + 2px,  8px);
+  --space-sm:  clamp(8px,  0.5vw  + 4px,  12px);
+  --space-md:  clamp(16px, 1.5vw  + 8px,  24px);
+  --space-lg:  clamp(24px, 2vw    + 12px, 36px);
+  --space-xl:  clamp(32px, 3vw    + 16px, 56px);
+  --space-2xl: clamp(48px, 5vw    + 20px, 80px);
+  --space-3xl: clamp(64px, 8vw    + 24px, 120px);
+
+  /* 流体タイプスケール */
+  --text-sm:      clamp(0.78rem, 0.74rem + 0.2vw,  0.875rem);
+  --text-base:    clamp(0.95rem, 0.9rem  + 0.25vw, 1.1rem);
+  --text-lg:      clamp(1.15rem, 1.05rem + 0.5vw,  1.4rem);
+  --text-xl:      clamp(1.4rem,  1.2rem  + 0.8vw,  1.875rem);
+  --text-2xl:     clamp(1.75rem, 1.4rem  + 1.5vw,  2.5rem);
+  --text-display: clamp(2.5rem,  1.8rem  + 3vw,    4.5rem);
+
+  /* コンテンツ幅 */
+  --content-width: min(90%, 1200px);
+  --content-narrow: min(85%, 720px);
+
+  /* セクション間余白 */
+  --section-gap: clamp(48px, 8vw, 120px);
+}
+
+/* ユーティリティ */
+.container       { width: var(--content-width); margin-inline: auto; }
+.container--narrow { width: var(--content-narrow); margin-inline: auto; }
+
+section          { padding-block: var(--section-gap); }
+
+h1 { font-size: var(--text-display); line-height: 1.1; }
+h2 { font-size: var(--text-2xl);     line-height: 1.2; }
+h3 { font-size: var(--text-xl);      line-height: 1.25; }
+
+/* コンテナクエリ対応コンポーネント */
+.card-wrapper { container-type: inline-size; }
+
+.token-card {
+  padding: var(--space-md);
+  border-radius: clamp(8px, 1vw, 16px);
+}
+
+@container (min-width: 500px) {
+  .token-card {
+    padding: var(--space-lg);
+    display: flex;
+    gap: var(--space-md);
+  }
+}
+
+.btn {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-sm);
+  border-radius: clamp(6px, 0.5vw, 10px);
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>全トークンを <code>clamp()</code> で定義することにより、メディアクエリの段差がない滑らかなレスポンシブを実現します。320px〜1400px の全画面幅で最適化されます。</li>
+              <li>コンテンツ幅の <code>min(90%, 1200px)</code> は <code>width: 90%; max-width: 1200px;</code> と等価ですが、CSS変数に直接格納できる利点があります。</li>
+              <li><code>@container</code> を組み合わせると、ビューポート単位のトークンとコンテナ単位のレイアウト切替が共存する、高度なレスポンシブ設計になります。</li>
+              <li>この手法は Tailwind CSS v4 のスペーシング設計や、Radix Themes のトークンシステムと同じアプローチです。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-10 -->
+    <div class="drill-item" id="a-10">
+      <div class="drill-header">
+        <div class="drill-badge">A-10</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 レスポンシブデザイン</span>
+          <h3 class="drill-title">アクセシブルフォーカススタイルの設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p><code>:focus-visible</code> はキーボードフォーカス時のみスタイルを適用し、マウスクリック時は非表示にします。WCAG 2.1 のフォーカスインジケーター要件を満たしつつ、美しいUIを維持する設計です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、アクセシブルなフォーカススタイルシステムを設計してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li><code>:focus-visible</code> で全インタラクティブ要素にフォーカスリングを表示</li>
+              <li>フォーカスリング: <code>outline: 2px solid #007AFF; outline-offset: 2px;</code></li>
+              <li><code>:focus:not(:focus-visible)</code> で <code>outline: none</code>（マウスクリック時非表示）</li>
+              <li>ボタン: フォーカス時にリングとスケール微増 <code>scale(1.02)</code></li>
+              <li>入力欄: フォーカス時に <code>border-color</code> 変更 + <code>box-shadow</code> グロー</li>
+              <li>カードリンク: フォーカス時にカード全体が浮き上がる効果</li>
+              <li>スキップリンク: <code>position: absolute</code>、フォーカス時のみ表示</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>スキップリンクは <code>transform: translateY(-100%)</code> で非表示にし、<code>:focus</code> 時に <code>translateY(0)</code> にします。<code>outline-offset</code> で輪郭線をボタンの外側に配置すると見やすくなります。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>/* ===== グローバルフォーカスリセット ===== */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid #007AFF;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ===== ボタン ===== */
+.a11y-btn:focus-visible {
+  outline: 2px solid #007AFF;
+  outline-offset: 3px;
+  transform: scale(1.02);
+  transition: transform 0.15s ease;
+}
+
+/* ===== 入力欄 ===== */
+.a11y-input:focus-visible {
+  outline: none;
+  border-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0,122,255,0.2);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* ===== カードリンク ===== */
+.a11y-card:focus-visible {
+  outline: 2px solid #007AFF;
+  outline-offset: 4px;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* ===== スキップリンク ===== */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #007AFF;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  transform: translateY(-200%);
+  transition: transform 0.2s ease;
+  z-index: 9999;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* ===== ダークモード対応 ===== */
+[data-theme="dark"] :focus-visible {
+  outline-color: #60a5fa;
+}
+
+[data-theme="dark"] .a11y-input:focus-visible {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96,165,250,0.25);
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>:focus-visible</code> はキーボード操作時のみフォーカスリングを表示し、マウス/タッチ操作時は非表示にします。WCAG 2.1 AA 基準を満たすために推奨されるアプローチです。</li>
+              <li><code>outline-offset</code> を正の値にすると、フォーカスリングが要素の外側に表示され、ボタンやカードのデザインを損ないません。</li>
+              <li>スキップリンクは視覚障害のあるユーザーがナビゲーションを飛ばしてメインコンテンツに移動するための重要なアクセシビリティ機能です。</li>
+              <li>ダークモードでフォーカス色を変更し、暗い背景でもフォーカスリングが視認できるようにすることが重要です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T6: トランジション・アニメーション ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">animation</span>
+      <h2>T6 トランジション・アニメーション</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-11 -->
+    <div class="drill-item" id="a-11">
+      <div class="drill-header">
+        <div class="drill-badge">A-11</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 トランジション・アニメーション</span>
+          <h3 class="drill-title">パフォーマンス最適化アニメーション設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p>高パフォーマンスなアニメーションは <code>transform</code> と <code>opacity</code> のみを使います。<code>will-change</code> でGPU合成レイヤーを事前に作成し、<code>contain</code> プロパティでレイアウト影響を封じ込めます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の「パフォーマンスの悪いCSS」を最適化してください。</p>
+<pre class="drill-code"><code>/* パフォーマンスが悪い例 */
+.bad-animation {
+  transition: all 0.3s;     /* 全プロパティ対象 */
+}
+.bad-animation:hover {
+  width: 200px;             /* レイアウト再計算 */
+  height: 150px;            /* レイアウト再計算 */
+  left: 50px;               /* レイアウト再計算 */
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3); /* ペイント */
+  border-radius: 50%;       /* ペイント */
+}</code></pre>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li><code>width/height/left</code> の変更を <code>transform: scale()</code> + <code>translate()</code> に置換</li>
+              <li><code>transition: all</code> → 明示的なプロパティ指定に変更</li>
+              <li><code>will-change</code> でアニメーション対象を事前宣言（ホバー時ではなく親に設定）</li>
+              <li><code>contain: layout style paint</code> でリフロー範囲を封じ込め</li>
+              <li><code>prefers-reduced-motion</code> でアニメーション無効化対応</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>ブラウザのレンダリングパイプラインは「Layout → Paint → Composite」の順です。<code>transform</code> と <code>opacity</code> は Composite のみで処理されるため、最も高パフォーマンスです。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>/* ===== 最適化後 ===== */
+.optimized-card {
+  will-change: transform, opacity;
+  contain: layout style paint;
+  transition: transform 0.3s ease, opacity 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+.optimized-card:hover {
+  transform: scale(1.05) translateX(20px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+/* アニメーションが不要になったら will-change を解除 */
+.card-container:not(:hover) .optimized-card {
+  will-change: auto;
+}
+
+/* ===== 高パフォーマンスフェードイン ===== */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== スケルトンローディング ===== */
+.skeleton {
+  background: linear-gradient(90deg,
+    #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease infinite;
+  border-radius: 8px;
+  contain: strict;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== アクセシビリティ対応 ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>transform</code> と <code>opacity</code> はGPU合成レイヤーで処理されるため、Layout と Paint のステップをスキップし、60fps を維持できます。</li>
+              <li><code>will-change</code> はアニメーション前にGPUレイヤーを事前作成しますが、常時適用するとメモリを消費するため、必要な時だけ有効にします。</li>
+              <li><code>contain: layout style paint</code> は要素の変更がドキュメント全体に影響しないことをブラウザに伝え、最適化を促進します。</li>
+              <li><code>prefers-reduced-motion: reduce</code> は前庭障害などの理由でアニメーションを避けたいユーザーへの配慮で、アクセシビリティの重要な要素です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-12 -->
+    <div class="drill-item" id="a-12">
+      <div class="drill-header">
+        <div class="drill-badge">A-12</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 トランジション・アニメーション</span>
+          <h3 class="drill-title">スクロール連動アニメーションの設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p>CSS <code>animation-timeline: scroll()</code> を使うと、JavaScript なしでスクロール位置に連動したアニメーションを実装できます。プログレスバー、パララックス効果、フェードインなどに応用できます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、CSS のみのスクロール連動アニメーションを設計してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>スクロールプログレスバー: ページ上部に固定、スクロール量に応じて幅が <code>0→100%</code></li>
+              <li><code>animation-timeline: scroll()</code> + <code>@keyframes</code> でプログレス制御</li>
+              <li>セクションフェードイン: <code>animation-timeline: view()</code> で要素がビューポートに入ったらフェード</li>
+              <li>パララックス効果: 背景画像のスクロール速度を本文の半分に</li>
+              <li>フォールバック: <code>@supports</code> で非対応ブラウザ向けの代替スタイルを用意</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>animation-timeline: scroll()</code> はページ全体のスクロールに連動します。<code>animation-timeline: view()</code> は要素がビューポートに入る/出るタイミングに連動します。<code>animation-range</code> で開始・終了位置を調整できます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>/* ===== スクロールプログレスバー ===== */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #007AFF;
+  transform-origin: left;
+  z-index: 9999;
+  animation: progressBar linear;
+  animation-timeline: scroll();
+}
+
+@keyframes progressBar {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* ===== セクションフェードイン ===== */
+.scroll-reveal {
+  animation: fadeSlideIn linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 100%;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== パララックス背景 ===== */
+.parallax-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.parallax-bg {
+  position: absolute;
+  inset: -20% 0;
+  background-image: url("...");
+  background-size: cover;
+  background-position: center;
+  animation: parallaxShift linear;
+  animation-timeline: scroll(nearest);
+}
+
+@keyframes parallaxShift {
+  from { transform: translateY(-10%); }
+  to   { transform: translateY(10%); }
+}
+
+/* ===== フォールバック ===== */
+@supports not (animation-timeline: scroll()) {
+  .scroll-progress {
+    display: none;
+  }
+  .scroll-reveal {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .parallax-bg {
+    animation: none;
+    background-attachment: fixed;
+  }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>animation-timeline: scroll()</code> はスクロール位置を 0〜100% のタイムラインとしてアニメーションに連動させる CSS の新機能です。</li>
+              <li><code>animation-timeline: view()</code> は要素がビューポートに入る/出るタイミングに連動し、<code>animation-range</code> で開始・終了位置を細かく制御できます。</li>
+              <li>プログレスバーの <code>transform: scaleX()</code> は <code>width</code> の変更より高パフォーマンスです（Layout をトリガーしないため）。</li>
+              <li><code>@supports</code> でフォールバックを用意することで、非対応ブラウザでもコンテンツが正しく表示されるプログレッシブエンハンスメントを実現します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T7: CSS変数・calc・関数 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">functions</span>
+      <h2>T7 CSS変数・calc・関数</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-13 -->
+    <div class="drill-item" id="a-13">
+      <div class="drill-header">
+        <div class="drill-badge">A-13</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 CSS変数・calc・関数</span>
+          <h3 class="drill-title">CSS変数によるコンポーネントAPI設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p>CSS変数をコンポーネントの「API」として公開し、利用側が <code>style</code> 属性や親クラスで変数を上書きすることで、コンポーネントの外観をカスタマイズ可能にする設計パターンです。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、CSS変数をAPIとしたカスタマイズ可能なコンポーネントセットを設計してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>Button コンポーネント: <code>--btn-bg</code>, <code>--btn-color</code>, <code>--btn-radius</code>, <code>--btn-size</code> を公開</li>
+              <li>Card コンポーネント: <code>--card-padding</code>, <code>--card-radius</code>, <code>--card-shadow</code> を公開</li>
+              <li>Alert コンポーネント: <code>--alert-bg</code>, <code>--alert-border</code>, <code>--alert-color</code> を公開</li>
+              <li>利用例: <code>&lt;button class="api-btn" style="--btn-bg: #16a34a;"&gt;</code> でカラー変更</li>
+              <li>各変数にデフォルト値を <code>var(--btn-bg, #007AFF)</code> で設定</li>
+              <li>親コンテキストによる一括変更: <code>.dark-section { --btn-bg: #3b82f6; }</code></li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>CSS変数の <code>var(--prop, fallback)</code> でデフォルト値を定義します。コンポーネント内部では全てのハードコーディング値を変数に置き換え、外部からの上書きを受け入れる構造にします。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>/* ===== Button API ===== */
+.api-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--btn-py, 10px) var(--btn-px, 20px);
+  background: var(--btn-bg, #007AFF);
+  color: var(--btn-color, white);
+  border: var(--btn-border, none);
+  border-radius: var(--btn-radius, 8px);
+  font-size: var(--btn-size, 0.88rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.api-btn:hover {
+  filter: brightness(0.9);
+}
+
+/* ===== Card API ===== */
+.api-card {
+  background: var(--card-bg, white);
+  padding: var(--card-padding, 24px);
+  border-radius: var(--card-radius, 12px);
+  border: var(--card-border, 1px solid #e5e7eb);
+  box-shadow: var(--card-shadow, 0 2px 8px rgba(0,0,0,0.04));
+}
+
+/* ===== Alert API ===== */
+.api-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: var(--alert-padding, 16px);
+  background: var(--alert-bg, #E5F1FF);
+  border: 1px solid var(--alert-border, #007AFF);
+  border-radius: var(--alert-radius, 10px);
+  color: var(--alert-color, #0056B3);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+/* ===== 利用例: プリセットバリエーション ===== */
+.api-alert--success {
+  --alert-bg: #f0fdf4;
+  --alert-border: #16a34a;
+  --alert-color: #166534;
+}
+
+.api-alert--error {
+  --alert-bg: #fef2f2;
+  --alert-border: #dc2626;
+  --alert-color: #991b1b;
+}
+
+/* ===== 親コンテキストによる一括変更 ===== */
+.dark-section {
+  --btn-bg: #3b82f6;
+  --btn-color: #ffffff;
+  --card-bg: #1e293b;
+  --card-border: 1px solid #334155;
+  --card-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>CSS変数の「フォールバック値」がデフォルト値の役割を果たします。変数が未定義の場合にフォールバック値が使用されます。</li>
+              <li>HTML の <code>style</code> 属性で変数を上書きできるため、JavaScript フレームワークとの連携が容易です（React の <code>style</code> prop など）。</li>
+              <li>親要素で変数を定義すると、子孫の全コンポーネントに伝搬します。ダークセクションやテーマ領域の設計に有効です。</li>
+              <li>このパターンは Open Props、shadcn/ui、Radix UI Themes などのモダンUIライブラリで広く採用されています。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-14 -->
+    <div class="drill-item" id="a-14">
+      <div class="drill-header">
+        <div class="drill-badge">A-14</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 CSS変数・calc・関数</span>
+          <h3 class="drill-title">env() と calc() によるセーフエリア対応レイアウト</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p><code>env(safe-area-inset-*)</code> はノッチ付きデバイスやDynamic Islandのセーフエリアを取得します。<code>calc()</code> と組み合わせて、コンテンツがデバイスのUI要素に隠れないレイアウトを設計します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、セーフエリア対応のモバイルレイアウトを設計してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>viewport metaタグ: <code>viewport-fit=cover</code> を追加</li>
+              <li>ヘッダー: <code>padding-top: calc(12px + env(safe-area-inset-top))</code></li>
+              <li>フッターナビ: <code>padding-bottom: calc(8px + env(safe-area-inset-bottom))</code></li>
+              <li>左右のコンテンツ: <code>padding-left/right</code> に <code>env(safe-area-inset-left/right)</code></li>
+              <li>固定ボトムバー: <code>height: calc(56px + env(safe-area-inset-bottom))</code></li>
+              <li>フォールバック: <code>env()</code> の第2引数でデフォルト値を設定</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>env(safe-area-inset-bottom, 0px)</code> で未対応ブラウザでは <code>0px</code> が使われます。iPhone のホームインジケーター領域は約 34px です。<code>viewport-fit=cover</code> がないと <code>env()</code> は常に 0 を返します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>/* viewport meta:
+   &lt;meta name="viewport"
+     content="width=device-width, initial-scale=1.0,
+              viewport-fit=cover"&gt; */
+
+/* ===== ヘッダー ===== */
+.safe-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  padding-left: calc(16px + env(safe-area-inset-left, 0px));
+  padding-right: calc(16px + env(safe-area-inset-right, 0px));
+  padding-bottom: 12px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+/* ===== メインコンテンツ ===== */
+.safe-content {
+  padding-top: calc(56px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(16px + env(safe-area-inset-left, 0px));
+  padding-right: calc(16px + env(safe-area-inset-right, 0px));
+}
+
+/* ===== ボトムナビ ===== */
+.safe-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  z-index: 100;
+}
+
+/* ===== FAB（フローティングアクションボタン） ===== */
+.fab {
+  position: fixed;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  right: calc(24px + env(safe-area-inset-right, 0px));
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #007AFF;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,122,255,0.4);
+  z-index: 99;
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>viewport-fit=cover</code> がないと <code>env(safe-area-inset-*)</code> は常に 0 を返すため、meta タグの設定が必須です。</li>
+              <li>iPhone のノッチ/Dynamic Island 領域（上部）とホームインジケーター領域（下部）にコンテンツが隠れるのを防ぎます。</li>
+              <li><code>calc()</code> と <code>env()</code> を組み合わせることで、デザイン上の余白とセーフエリアの余白を加算できます。</li>
+              <li><code>env()</code> の第2引数はフォールバック値で、セーフエリアが不要なデバイス（PCブラウザ等）では 0px が適用されます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T8: 実践レイアウト ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">dashboard</span>
+      <h2>T8 実践レイアウト</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-15 -->
+    <div class="drill-item" id="a-15">
+      <div class="drill-header">
+        <div class="drill-badge">A-15</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 実践レイアウト</span>
+          <h3 class="drill-title">プログレッシブエンハンスメントのCSS設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p>プログレッシブエンハンスメントは、基本機能を全ブラウザで保証しつつ、モダンブラウザでは高度なCSSを段階的に追加する設計戦略です。<code>@supports</code> でフィーチャーディテクションを行います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、プログレッシブエンハンスメントに基づくCSSを設計してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>ベースレイアウト: Flexbox（全ブラウザ対応）</li>
+              <li><code>@supports (display: grid)</code>: Grid レイアウトに昇格</li>
+              <li><code>@supports (container-type: inline-size)</code>: コンテナクエリで微調整</li>
+              <li><code>@supports (animation-timeline: scroll())</code>: スクロールアニメーション追加</li>
+              <li><code>@supports (color: oklch(0 0 0))</code>: OKLCH カラースペースに昇格</li>
+              <li>各段階でフォールバックが正しく機能し、見た目が崩れないこと</li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>@supports</code> 内のスタイルは対応ブラウザのみに適用されます。ベースをシンプルに保ち、各 <code>@supports</code> で段階的に機能を追加する「レイヤーケーキ」アプローチを取ります。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>/* ===== Layer 0: ベース（全ブラウザ） ===== */
+.pe-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.pe-card {
+  flex: 1 1 300px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.pe-accent { color: #007AFF; }
+
+/* ===== Layer 1: Grid 昇格 ===== */
+@supports (display: grid) {
+  .pe-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+  .pe-card {
+    flex: unset;
+  }
+}
+
+/* ===== Layer 2: コンテナクエリ ===== */
+@supports (container-type: inline-size) {
+  .pe-card-wrapper {
+    container-type: inline-size;
+  }
+  @container (min-width: 400px) {
+    .pe-card {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+  }
+}
+
+/* ===== Layer 3: スクロールアニメーション ===== */
+@supports (animation-timeline: scroll()) {
+  .pe-card {
+    animation: peReveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 100%;
+  }
+  @keyframes peReveal {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* ===== Layer 4: OKLCH カラー ===== */
+@supports (color: oklch(0 0 0)) {
+  .pe-accent {
+    color: oklch(0.55 0.2 250);
+  }
+  .pe-card:hover {
+    border-color: oklch(0.55 0.2 250 / 0.5);
+  }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>プログレッシブエンハンスメントは「基本を全員に、先進機能を対応ブラウザに」という戦略で、グレースフルデグラデーションの逆アプローチです。</li>
+              <li>各 <code>@supports</code> ブロックは独立しており、特定の機能が対応している場合のみ適用されます。非対応ブラウザではベースのスタイルが維持されます。</li>
+              <li>OKLCH は人間の知覚に基づいたカラースペースで、HEX や HSL より均一な明度変化を実現します。フォールバックに HEX 値を用意しておきます。</li>
+              <li>この設計により、古いブラウザでも機能し、最新ブラウザでは最高の UX を提供する堅牢な CSS が実現します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-16 -->
+    <div class="drill-item" id="a-16">
+      <div class="drill-header">
+        <div class="drill-badge">A-16</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 実践レイアウト</span>
+          <h3 class="drill-title">印刷スタイルシートの設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>CSSポイント</strong>
+            <p><code>@media print</code> でナビゲーションやフッターを非表示にし、フォントサイズ、色、レイアウトを印刷に最適化します。<code>@page</code> ルールでマージンやヘッダー/フッターを制御できます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様に従って、Webページの印刷スタイルシートを設計してください。</p>
+          <div class="spec-box">
+            <h5><span class="material-icons" style="font-size:1rem;">description</span>仕様</h5>
+            <ul>
+              <li>非表示にする要素: ナビバー、フッター、サイドバー、ボタン、フォーム</li>
+              <li>リンクのURL表示: <code>a[href]::after { content: " (" attr(href) ")"; }</code></li>
+              <li>背景色・影を削除: <code>background: white; box-shadow: none;</code></li>
+              <li>フォントサイズ: <code>pt</code> 単位に変更（本文 <code>11pt</code>、見出し <code>16pt</code>）</li>
+              <li>ページ分割制御: <code>break-inside: avoid</code>（カード、テーブル行）</li>
+              <li><code>@page</code>: マージン <code>2cm</code>、サイズ <code>A4</code></li>
+            </ul>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>break-inside: avoid</code> でカードやテーブル行がページの途中で分割されるのを防ぎます。<code>orphans</code> と <code>widows</code> で段落の最初/最後の行が孤立するのを防げます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@media print {
+  /* ===== ページ設定 ===== */
+  @page {
+    size: A4;
+    margin: 2cm;
+  }
+
+  /* ===== 非表示要素 ===== */
+  nav, footer, .sidebar,
+  button, .btn, form,
+  .no-print {
+    display: none !important;
+  }
+
+  /* ===== リセット ===== */
+  body {
+    background: white;
+    color: black;
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* ===== タイポグラフィ ===== */
+  h1 { font-size: 20pt; }
+  h2 { font-size: 16pt; }
+  h3 { font-size: 13pt; }
+
+  /* ===== リンクURL表示 ===== */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #666;
+    word-break: break-all;
+  }
+
+  a[href^="#"]::after,
+  a[href^="javascript"]::after {
+    content: "";
+  }
+
+  /* ===== レイアウト調整 ===== */
+  .container {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+  }
+
+  /* ===== ページ分割制御 ===== */
+  h1, h2, h3 {
+    break-after: avoid;
+  }
+
+  .card, tr, .timeline-item {
+    break-inside: avoid;
+  }
+
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  img {
+    max-width: 100%;
+    break-inside: avoid;
+  }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@media print</code> はブラウザの印刷プレビューとPDF出力時に適用されるスタイルです。<code>Ctrl+P</code> で確認できます。</li>
+              <li><code>a[href^="http"]::after</code> で外部リンクのURLを括弧付きで表示し、紙面でもリンク先がわかるようにします。内部リンク（<code>#</code>始まり）は除外します。</li>
+              <li><code>break-inside: avoid</code> はカードやテーブル行がページ境界で分割されるのを防ぎ、<code>break-after: avoid</code> は見出しの直後で改ページされるのを防ぎます。</li>
+              <li><code>orphans: 3; widows: 3;</code> は段落の最初/最後の3行未満がページ境界で孤立することを防ぐタイポグラフィ設定です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-navigation">
+      <a href="level-b.html" class="prev-page">
+        <span class="material-icons">arrow_back</span>
+        Level B — 複合実装
+      </a>
+      <a href="level-s.html" class="next-page">
+        Level S — 総合実装
+        <span class="material-icons">arrow_forward</span>
+      </a>
+    </div>
+
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

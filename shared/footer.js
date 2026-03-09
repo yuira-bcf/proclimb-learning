@@ -46,7 +46,11 @@ const footerData = {
         {
             title: "応用トレーニング",
             links: [
-                { href: "exercises/java-drill/index.html", text: "Java実力養成ドリル" }
+                { href: "exercises/java-drill/index.html", text: "Java実力養成ドリル" },
+                { href: "exercises/html-drill/index.html", text: "HTML実力養成ドリル" },
+                { href: "exercises/css-drill/index.html", text: "CSS実力養成ドリル" },
+                { href: "exercises/js-drill/index.html", text: "JavaScript実力養成ドリル" },
+                { href: "exercises/spring-drill/index.html", text: "SpringBoot実力養成ドリル" }
             ]
         }
     ],

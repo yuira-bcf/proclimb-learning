@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Level A — 設計実装 | JavaScript実力養成ドリル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #CCE4FF;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+
+    .drill-item { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .drill-header { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #f0f0f0; background: #fafbfc; }
+    .drill-badge { background: var(--primary); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; padding: 8px 14px; border-radius: 10px; white-space: nowrap; }
+    .drill-meta { flex: 1; }
+    .drill-theme { font-size: 0.72rem; color: var(--primary); font-weight: 600; letter-spacing: 0.03em; margin-bottom: 2px; display: block; }
+    .drill-title { font-size: 1.05rem; font-weight: 700; color: #1d1d1f; }
+    .drill-body { padding: 24px; }
+
+    .drill-point { display: flex; align-items: flex-start; gap: 12px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+    .drill-point > .material-icons { color: #f9a825; font-size: 1.4rem; margin-top: 2px; }
+    .drill-point strong { display: block; font-size: 0.82rem; color: #f57f17; margin-bottom: 4px; }
+    .drill-point p { font-size: 0.85rem; color: #5d4037; line-height: 1.6; margin: 0; }
+
+    .drill-task { margin-bottom: 20px; }
+    .drill-task h4 { display: flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: 700; color: #1d1d1f; margin-bottom: 12px; }
+    .drill-task h4 .material-icons { color: var(--primary); font-size: 1.2rem; }
+    .drill-task p, .drill-task ul, .drill-task ol { font-size: 0.88rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .drill-task ul, .drill-task ol { padding-left: 1.5em; }
+    .drill-task li { margin-bottom: 4px; }
+
+    .drill-code { background: #1e293b; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; padding: 20px; border-radius: 10px; overflow-x: auto; margin: 12px 0; }
+    .drill-code code { font-family: inherit; }
+
+    .expected-output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .expected-output .label { font-size: 0.75rem; font-weight: 700; color: #16a34a; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+    .expected-output pre { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; color: #166534; margin: 0; white-space: pre-wrap; }
+
+    .drill-hint { margin-bottom: 8px; }
+    .drill-hint summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: #f57c00; padding: 10px 14px; background: #fff3e0; border-radius: 10px; list-style: none; user-select: none; }
+    .drill-hint summary::-webkit-details-marker { display: none; }
+    .drill-hint summary .material-icons { font-size: 1.1rem; }
+    .drill-hint[open] summary { border-radius: 10px 10px 0 0; }
+    .hint-content { background: #fff8e1; padding: 16px 18px; border-radius: 0 0 10px 10px; font-size: 0.85rem; line-height: 1.7; color: #5d4037; }
+    .hint-content code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
+
+    .drill-answer { margin-top: 8px; }
+    .drill-answer summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: var(--primary); padding: 10px 14px; background: var(--primary-light); border-radius: 10px; list-style: none; user-select: none; }
+    .drill-answer summary::-webkit-details-marker { display: none; }
+    .drill-answer summary .material-icons { color: var(--primary); font-size: 1.1rem; }
+    .drill-answer[open] summary { border-radius: 10px 10px 0 0; }
+    .answer-content { background: #f8fbff; padding: 20px; border-radius: 0 0 10px 10px; border: 1px solid var(--primary-light); border-top: none; }
+    .answer-content p { font-size: 0.85rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .answer-content h5 { font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin: 16px 0 8px; }
+    .answer-content ul { font-size: 0.85rem; line-height: 1.8; color: #333; padding-left: 1.5em; margin-bottom: 10px; }
+
+    .signature-block { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #334155; line-height: 1.6; }
+
+    .theme-separator { display: flex; align-items: center; gap: 12px; margin: 36px 0 20px; padding: 12px 20px; background: var(--primary-light); border-radius: 12px; border-left: 4px solid var(--primary); }
+    .theme-separator .material-icons { color: var(--primary); font-size: 1.3rem; }
+    .theme-separator h2 { font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
+    .theme-separator span.theme-count { font-size: 0.75rem; color: #666; font-weight: 400; margin-left: auto; }
+
+    .placeholder-notice { background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 16px; padding: 40px 24px; text-align: center; margin: 36px 0; }
+    .placeholder-notice .material-icons { font-size: 2.5rem; color: #adb5bd; margin-bottom: 12px; }
+    .placeholder-notice h3 { font-size: 1.1rem; font-weight: 700; color: #495057; margin-bottom: 8px; }
+    .placeholder-notice p { font-size: 0.88rem; color: #868e96; line-height: 1.6; }
+
+    @media (max-width: 480px) {
+      .drill-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+      .drill-body { padding: 16px; }
+      .drill-code { font-size: 0.75rem; padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-js-drill.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">javascript</span> Drill</div>
+      <div class="chapter-number">A</div>
+      <h1 class="chapter-title">Level A — 設計実装</h1>
+      <p style="color:#fff; margin-top:8px;">設計判断を含む高度な実装課題｜16課題・8テーマ</p>
+    </header>
+
+    <!-- ===== T1: 変数・データ型・演算子 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">data_object</span>
+      <h2>T1 変数・データ型・演算子</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-01 -->
+    <div class="drill-item" id="a-01">
+      <div class="drill-header">
+        <div class="drill-badge">A-01</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 変数・データ型・演算子</span>
+          <h3 class="drill-title">イミュータブルな状態管理ヘルパーを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>ReduxやuseReducerで求められるイミュータブルな状態更新パターンを、ヘルパー関数として設計します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>ネストしたオブジェクトをイミュータブルに更新する <code>updateIn</code> 関数を設計・実装してください。</p>
+          <div class="signature-block">
+function updateIn(obj, path, updater) → object<br>
+- obj: 更新対象のオブジェクト（元のオブジェクトは変更しない）<br>
+- path: ドット区切りのパス文字列（例: 'user.address.city'）<br>
+- updater: 現在値を受け取り、新しい値を返す関数<br>
+- パス上のオブジェクトをすべてシャローコピーしながら更新
+          </div>
+<pre class="drill-code"><code>const state = {
+  user: { name: '田中', address: { city: '東京', zip: '100-0001' } },
+  settings: { theme: 'dark' }
+};
+
+const newState = updateIn(state, 'user.address.city', () => '大阪');
+console.log(newState.user.address.city); // '大阪'
+console.log(state.user.address.city);    // '東京'（元は不変）
+console.log(newState.settings === state.settings); // true（変更なしは共有）</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>パスを <code>split('.')</code> で配列にし、再帰またはループでスプレッド構文を使いながらコピーを作ります。変更が必要な部分だけコピーし、それ以外は参照を共有します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function updateIn(obj, path, updater) {
+  const keys = path.split('.');
+
+  function helper(current, index) {
+    if (index === keys.length) {
+      return updater(current);
+    }
+    const key = keys[index];
+    return {
+      ...current,
+      [key]: helper(current[key], index + 1)
+    };
+  }
+
+  return helper(obj, 0);
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>再帰の各ステップでスプレッド構文のシャローコピーを作り、変更するキーだけを上書きします。</li>
+              <li>変更パス上にないプロパティ（<code>settings</code>）は元の参照がそのまま共有されるため、メモリ効率が良いです。</li>
+              <li>Immer ライブラリはこの概念をProxy で自動化し、ミュータブルな書き方でイミュータブル更新を実現しています。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-02 -->
+    <div class="drill-item" id="a-02">
+      <div class="drill-header">
+        <div class="drill-badge">A-02</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 変数・データ型・演算子</span>
+          <h3 class="drill-title">スキーマバリデーターを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>Zodのようなスキーマバリデーションの仕組みを自前で設計することで、型安全なデータ処理の理解を深めます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使えるスキーマバリデーターを設計・実装してください。</p>
+<pre class="drill-code"><code>const userSchema = schema({
+  name: string().minLength(1),
+  age: number().min(0).max(150),
+  email: string().matches(/@/),
+  role: oneOf(['admin', 'user', 'guest'])
+});
+
+const result1 = userSchema.validate({
+  name: '田中', age: 25, email: 'tanaka@example.com', role: 'admin'
+});
+console.log(result1); // { valid: true, errors: [] }
+
+const result2 = userSchema.validate({
+  name: '', age: -1, email: 'invalid', role: 'superadmin'
+});
+console.log(result2.errors);
+// ['name: 1文字以上', 'age: 0以上', 'email: パターン不一致', 'role: admin,user,guest のいずれか']</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>各バリデーター（<code>string()</code>, <code>number()</code>等）はルール配列を保持するオブジェクトを返し、メソッドチェーンで <code>return this</code> します。<code>schema()</code> は各フィールドのバリデーターを実行してエラーを集約します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function string() {
+  const rules = [{ check: v => typeof v === 'string', msg: '文字列ではありません' }];
+  const self = {
+    minLength(n) { rules.push({ check: v => v.length >= n, msg: `${n}文字以上` }); return self; },
+    maxLength(n) { rules.push({ check: v => v.length <= n, msg: `${n}文字以下` }); return self; },
+    matches(regex) { rules.push({ check: v => regex.test(v), msg: 'パターン不一致' }); return self; },
+    _validate(value) { return rules.filter(r => !r.check(value)).map(r => r.msg); }
+  };
+  return self;
+}
+
+function number() {
+  const rules = [{ check: v => typeof v === 'number', msg: '数値ではありません' }];
+  const self = {
+    min(n) { rules.push({ check: v => v >= n, msg: `${n}以上` }); return self; },
+    max(n) { rules.push({ check: v => v <= n, msg: `${n}以下` }); return self; },
+    _validate(value) { return rules.filter(r => !r.check(value)).map(r => r.msg); }
+  };
+  return self;
+}
+
+function oneOf(options) {
+  return {
+    _validate(value) {
+      return options.includes(value) ? [] : [`${options.join(',')} のいずれか`];
+    }
+  };
+}
+
+function schema(definition) {
+  return {
+    validate(data) {
+      const errors = [];
+      for (const [key, validator] of Object.entries(definition)) {
+        const fieldErrors = validator._validate(data[key]);
+        fieldErrors.forEach(msg => errors.push(`${key}: ${msg}`));
+      }
+      return { valid: errors.length === 0, errors };
+    }
+  };
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>各バリデーター関数はクロージャで <code>rules</code> 配列を保持し、メソッドチェーンでルールを追加します。</li>
+              <li><code>_validate</code> メソッドで全ルールを実行し、失敗したルールのメッセージを返します。</li>
+              <li>Zodライブラリの基本構造と同じ設計原理です。実務ではZodを使いますが、内部の仕組みを理解しておくとデバッグに役立ちます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T2: 関数・スコープ・クロージャ ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">functions</span>
+      <h2>T2 関数・スコープ・クロージャ</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-03 -->
+    <div class="drill-item" id="a-03">
+      <div class="drill-header">
+        <div class="drill-badge">A-03</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 関数・スコープ・クロージャ</span>
+          <h3 class="drill-title">依存性注入コンテナを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>DI（依存性注入）はテスタビリティと疎結合を実現する設計パターンです。クロージャとMapを使って簡易DIコンテナを実装します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使えるDIコンテナを設計・実装してください。</p>
+<pre class="drill-code"><code>const container = createContainer();
+
+// サービスの登録
+container.register('logger', () => ({
+  log: (msg) => console.log(`[LOG] ${msg}`)
+}));
+
+container.register('userService', (c) => ({
+  getUser: (id) => {
+    c.resolve('logger').log(`Fetching user ${id}`);
+    return { id, name: 'User ' + id };
+  }
+}));
+
+// 解決
+const userService = container.resolve('userService');
+userService.getUser(1); // "[LOG] Fetching user 1"</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>Map</code> でファクトリ関数を保持し、<code>resolve</code> 時にファクトリを実行します。ファクトリにコンテナ自身を渡すことで他のサービスを解決できます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function createContainer() {
+  const factories = new Map();
+  const instances = new Map();
+
+  const container = {
+    register(name, factory) {
+      factories.set(name, factory);
+    },
+    resolve(name) {
+      if (instances.has(name)) return instances.get(name);
+      const factory = factories.get(name);
+      if (!factory) throw new Error(`Service not found: ${name}`);
+      const instance = factory(container);
+      instances.set(name, instance);
+      return instance;
+    }
+  };
+
+  return container;
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>instances</code> マップでシングルトンキャッシュを実現しています。同じサービスを何度 <code>resolve</code> しても同一インスタンスが返されます。</li>
+              <li>ファクトリ関数にコンテナを渡すことで、サービス間の依存関係を解決できます。</li>
+              <li>NestJS、Angular、InversifyJS などのフレームワークが採用しているDIパターンの簡易版です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-04 -->
+    <div class="drill-item" id="a-04">
+      <div class="drill-header">
+        <div class="drill-badge">A-04</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 関数・スコープ・クロージャ</span>
+          <h3 class="drill-title">リアクティブシグナルを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>SolidJS や Preact のシグナル（Signal）パターンは、クロージャで状態と購読者を管理する軽量なリアクティブシステムです。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使えるシグナルシステムを実装してください。</p>
+<pre class="drill-code"><code>const [count, setCount] = createSignal(0);
+const [doubled, setDoubled] = createSignal(0);
+
+// エフェクトの登録
+createEffect(() => {
+  setDoubled(count() * 2);
+});
+
+console.log(count());   // 0
+console.log(doubled()); // 0
+setCount(5);
+console.log(count());   // 5
+console.log(doubled()); // 10</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>createSignal</code> はゲッター関数とセッター関数のタプルを返します。グローバルな <code>currentEffect</code> 変数を使って、ゲッター呼び出し時に依存関係を自動追跡します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>let currentEffect = null;
+
+function createSignal(initialValue) {
+  let value = initialValue;
+  const subscribers = new Set();
+
+  const getter = () => {
+    if (currentEffect) subscribers.add(currentEffect);
+    return value;
+  };
+
+  const setter = (newValue) => {
+    value = newValue;
+    subscribers.forEach(fn => fn());
+  };
+
+  return [getter, setter];
+}
+
+function createEffect(fn) {
+  currentEffect = fn;
+  fn();
+  currentEffect = null;
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>createEffect</code> 実行中にゲッターが呼ばれると、そのエフェクト関数が購読者として登録されます（自動依存追跡）。</li>
+              <li>セッターが呼ばれると全購読者が再実行され、リアクティブに値が伝播します。</li>
+              <li>SolidJS の <code>createSignal</code> / <code>createEffect</code> の基本原理そのものです。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T3: 配列メソッド・オブジェクト ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">view_array</span>
+      <h2>T3 配列メソッド・オブジェクト</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-05 -->
+    <div class="drill-item" id="a-05">
+      <div class="drill-header">
+        <div class="drill-badge">A-05</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 配列メソッド・オブジェクト</span>
+          <h3 class="drill-title">LINQ風クエリビルダーを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>遅延評価とメソッドチェーンを組み合わせたクエリビルダーパターンは、ORMやデータ処理ライブラリの基本設計です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使えるクエリビルダーを実装してください。操作は <code>execute()</code> を呼ぶまで実行されない（遅延評価）ようにしてください。</p>
+<pre class="drill-code"><code>const data = [
+  { name: '田中', age: 30, dept: '開発' },
+  { name: '鈴木', age: 25, dept: '営業' },
+  { name: '佐藤', age: 35, dept: '開発' },
+  { name: '高橋', age: 28, dept: '開発' }
+];
+
+const result = query(data)
+  .where(p => p.dept === '開発')
+  .orderBy('age', 'desc')
+  .select('name', 'age')
+  .execute();
+
+// [{ name: '佐藤', age: 35 }, { name: '田中', age: 30 }, { name: '高橋', age: 28 }]</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>操作を関数の配列として蓄積し、<code>execute()</code> で順番に適用します。各メソッドは操作を追加して <code>return this</code> します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function query(data) {
+  const operations = [];
+
+  const builder = {
+    where(predicate) {
+      operations.push(d => d.filter(predicate));
+      return builder;
+    },
+    orderBy(key, direction = 'asc') {
+      operations.push(d => [...d].sort((a, b) => {
+        const cmp = a[key] > b[key] ? 1 : a[key] < b[key] ? -1 : 0;
+        return direction === 'desc' ? -cmp : cmp;
+      }));
+      return builder;
+    },
+    select(...keys) {
+      operations.push(d => d.map(item => {
+        const result = {};
+        keys.forEach(k => { result[k] = item[k]; });
+        return result;
+      }));
+      return builder;
+    },
+    execute() {
+      return operations.reduce((result, op) => op(result), [...data]);
+    }
+  };
+
+  return builder;
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>遅延評価パターンにより、操作の組み立てと実行を分離しています。最適化やデバッグが容易になります。</li>
+              <li><code>execute()</code> で <code>reduce</code> を使い、蓄積した操作関数を順番に適用しています。</li>
+              <li>Knex.js、Prisma、TypeORM などのクエリビルダーの基本設計原理です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-06 -->
+    <div class="drill-item" id="a-06">
+      <div class="drill-header">
+        <div class="drill-badge">A-06</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 配列メソッド・オブジェクト</span>
+          <h3 class="drill-title">差分検出アルゴリズムを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>仮想DOMやGitの差分検出の基礎となるオブジェクト比較アルゴリズムを実装することで、差分更新の仕組みを理解します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>2つのオブジェクトを比較し、差分を検出する <code>diff</code> 関数を実装してください。</p>
+          <div class="signature-block">
+function diff(oldObj, newObj) → array of changes<br>
+- 各変更は { type: 'add'|'remove'|'update', path, value?, oldValue? }<br>
+- ネストしたオブジェクトも再帰的に比較
+          </div>
+<pre class="drill-code"><code>const old = { name: '田中', age: 30, address: { city: '東京' } };
+const updated = { name: '田中', age: 31, address: { city: '大阪' }, email: 'a@b.com' };
+
+console.log(diff(old, updated));
+// [
+//   { type: 'update', path: 'age', oldValue: 30, value: 31 },
+//   { type: 'update', path: 'address.city', oldValue: '東京', value: '大阪' },
+//   { type: 'add', path: 'email', value: 'a@b.com' }
+// ]</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>再帰関数で両方のキーを走査します。oldObj にしかないキーは <code>remove</code>、newObj にしかないキーは <code>add</code>、両方にあるが値が違うものは <code>update</code> またはネスト比較します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function diff(oldObj, newObj, prefix = '') {
+  const changes = [];
+  const allKeys = new Set([...Object.keys(oldObj), ...Object.keys(newObj)]);
+
+  for (const key of allKeys) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    const oldVal = oldObj[key];
+    const newVal = newObj[key];
+
+    if (!(key in oldObj)) {
+      changes.push({ type: 'add', path, value: newVal });
+    } else if (!(key in newObj)) {
+      changes.push({ type: 'remove', path, oldValue: oldVal });
+    } else if (typeof oldVal === 'object' && typeof newVal === 'object'
+               && oldVal !== null && newVal !== null
+               && !Array.isArray(oldVal) && !Array.isArray(newVal)) {
+      changes.push(...diff(oldVal, newVal, path));
+    } else if (oldVal !== newVal) {
+      changes.push({ type: 'update', path, oldValue: oldVal, value: newVal });
+    }
+  }
+
+  return changes;
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>Set</code> で両オブジェクトのキーをマージし、各キーの状態を判定しています。</li>
+              <li>オブジェクト同士の場合は再帰呼び出しでネストを走査し、パスを <code>prefix.key</code> で構築しています。</li>
+              <li>React の仮想DOM差分やImmerの変更検出の基本原理です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T4: DOM操作 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">account_tree</span>
+      <h2>T4 DOM操作</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-07 -->
+    <div class="drill-item" id="a-07">
+      <div class="drill-header">
+        <div class="drill-badge">A-07</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 DOM操作</span>
+          <h3 class="drill-title">仮想DOMの簡易実装</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>Reactの仮想DOMの基本原理を理解するために、JSX風のオブジェクトからDOM要素を生成し、差分更新を行う仕組みを実装します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の3つの関数を実装してください。</p>
+          <div class="signature-block">
+function h(tag, props, ...children) → vnode<br>
+- 仮想DOMノードを作成（{ tag, props, children }）<br><br>
+function render(vnode) → HTMLElement<br>
+- vnodeからDOM要素を生成<br><br>
+function mount(vnode, container) → void<br>
+- containerにレンダリング結果を追加
+          </div>
+<pre class="drill-code"><code>const app = h('div', { class: 'app' },
+  h('h1', null, 'Hello Virtual DOM'),
+  h('ul', null,
+    h('li', null, 'Item 1'),
+    h('li', null, 'Item 2')
+  )
+);
+
+mount(app, document.getElementById('root'));</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>h()</code> はオブジェクトを返すだけ。<code>render()</code> は <code>createElement</code> と再帰で子要素を処理します。文字列の子要素は <code>createTextNode</code> で扱います。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function h(tag, props, ...children) {
+  return { tag, props: props || {}, children: children.flat() };
+}
+
+function render(vnode) {
+  if (typeof vnode === 'string' || typeof vnode === 'number') {
+    return document.createTextNode(String(vnode));
+  }
+
+  const el = document.createElement(vnode.tag);
+
+  for (const [key, value] of Object.entries(vnode.props)) {
+    if (key.startsWith('on')) {
+      el.addEventListener(key.slice(2).toLowerCase(), value);
+    } else {
+      el.setAttribute(key, value);
+    }
+  }
+
+  vnode.children.forEach(child => {
+    el.appendChild(render(child));
+  });
+
+  return el;
+}
+
+function mount(vnode, container) {
+  container.appendChild(render(vnode));
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>h()</code> は React の <code>createElement</code>（JSXのコンパイル先）に相当します。</li>
+              <li><code>render()</code> は再帰的にvnodeツリーを走査し、DOM要素を構築しています。</li>
+              <li>イベントハンドラは <code>on</code> プレフィクスで判定し、<code>addEventListener</code> で登録しています。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-08 -->
+    <div class="drill-item" id="a-08">
+      <div class="drill-header">
+        <div class="drill-badge">A-08</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 DOM操作</span>
+          <h3 class="drill-title">SPAルーターを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>History API を使ったSPAルーティングの仕組みを理解することで、React RouterやNext.jsのルーティングの基礎を学びます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使えるSPAルーターを実装してください。</p>
+<pre class="drill-code"><code>const router = createRouter();
+
+router.addRoute('/', () => '&lt;h1&gt;Home&lt;/h1&gt;');
+router.addRoute('/about', () => '&lt;h1&gt;About&lt;/h1&gt;');
+router.addRoute('/user/:id', (params) => `&lt;h1&gt;User ${params.id}&lt;/h1&gt;`);
+
+// ナビゲーション
+router.navigate('/user/42');
+// → #app に "&lt;h1&gt;User 42&lt;/h1&gt;" を表示</code></pre>
+          <ul>
+            <li><code>history.pushState</code> でURLを変更（ページリロードなし）</li>
+            <li><code>:param</code> 形式の動的ルートパラメータに対応</li>
+            <li>ブラウザの戻る/進むボタン（<code>popstate</code> イベント）に対応</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>ルートパターン <code>/user/:id</code> を正規表現 <code>/^\/user\/([^/]+)$/</code> に変換し、マッチ時にキャプチャグループからパラメータを抽出します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function createRouter(containerId = 'app') {
+  const routes = [];
+
+  function pathToRegex(path) {
+    const paramNames = [];
+    const pattern = path.replace(/:(\w+)/g, (_, name) => {
+      paramNames.push(name);
+      return '([^/]+)';
+    });
+    return { regex: new RegExp(`^${pattern}$`), paramNames };
+  }
+
+  function matchRoute(path) {
+    for (const route of routes) {
+      const match = path.match(route.regex);
+      if (match) {
+        const params = {};
+        route.paramNames.forEach((name, i) => { params[name] = match[i + 1]; });
+        return { handler: route.handler, params };
+      }
+    }
+    return null;
+  }
+
+  function render(path) {
+    const matched = matchRoute(path);
+    const container = document.getElementById(containerId);
+    if (matched && container) {
+      container.innerHTML = matched.handler(matched.params);
+    }
+  }
+
+  window.addEventListener('popstate', () => render(location.pathname));
+
+  return {
+    addRoute(path, handler) {
+      const { regex, paramNames } = pathToRegex(path);
+      routes.push({ regex, paramNames, handler });
+    },
+    navigate(path) {
+      history.pushState(null, '', path);
+      render(path);
+    }
+  };
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>:param</code> を正規表現のキャプチャグループに変換し、URLマッチングとパラメータ抽出を同時に行っています。</li>
+              <li><code>history.pushState</code> でブラウザのURLを変更し、<code>popstate</code> イベントで戻る/進む操作を検知します。</li>
+              <li>React Router、Vue Router、Next.js のファイルベースルーティングの基本原理です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T5: イベント処理 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">touch_app</span>
+      <h2>T5 イベント処理</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-09 -->
+    <div class="drill-item" id="a-09">
+      <div class="drill-header">
+        <div class="drill-badge">A-09</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 イベント処理</span>
+          <h3 class="drill-title">Pub/Sub イベントバスを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>Publish/Subscribeパターンはコンポーネント間通信の基盤設計です。ワイルドカードマッチ、once購読、名前空間を設計判断として扱います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使える高機能イベントバスを設計・実装してください。</p>
+<pre class="drill-code"><code>const bus = createEventBus();
+
+// 通常購読
+bus.on('user:login', (data) => console.log('ログイン:', data.name));
+
+// ワイルドカード購読（user: で始まるすべてのイベントを受信）
+bus.on('user:*', (data, eventName) => {
+  console.log(`[user系イベント] ${eventName}:`, data);
+});
+
+// once購読（1回だけ）
+bus.once('app:init', () => console.log('初期化完了'));
+
+bus.emit('user:login', { name: '田中' });
+// ログイン: 田中
+// [user系イベント] user:login: { name: '田中' }
+
+bus.emit('user:logout', { name: '田中' });
+// [user系イベント] user:logout: { name: '田中' }
+
+bus.emit('app:init'); // 初期化完了
+bus.emit('app:init'); // （2回目は発火しない）</code></pre>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
+          <pre>ログイン: 田中
+[user系イベント] user:login: { name: '田中' }
+[user系イベント] user:logout: { name: '田中' }
+初期化完了</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>リスナーを <code>Map</code> で管理し、<code>emit</code> 時にワイルドカードパターン（<code>user:*</code>）もマッチ判定します。<code>once</code> はラッパー関数を作り、呼び出し後に自身を <code>off</code> します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function createEventBus() {
+  const listeners = new Map();
+
+  function matchPattern(pattern, eventName) {
+    if (pattern === eventName) return true;
+    if (pattern.endsWith(':*')) {
+      const prefix = pattern.slice(0, -1);
+      return eventName.startsWith(prefix);
+    }
+    return false;
+  }
+
+  const bus = {
+    on(event, fn) {
+      if (!listeners.has(event)) listeners.set(event, []);
+      listeners.get(event).push(fn);
+      return () => bus.off(event, fn);
+    },
+
+    once(event, fn) {
+      const wrapper = (...args) => {
+        bus.off(event, wrapper);
+        fn(...args);
+      };
+      return bus.on(event, wrapper);
+    },
+
+    off(event, fn) {
+      const fns = listeners.get(event);
+      if (!fns) return;
+      const idx = fns.indexOf(fn);
+      if (idx > -1) fns.splice(idx, 1);
+    },
+
+    emit(event, ...args) {
+      for (const [pattern, fns] of listeners) {
+        if (matchPattern(pattern, event)) {
+          fns.forEach(fn => fn(...args, event));
+        }
+      }
+    }
+  };
+
+  return bus;
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>ワイルドカード <code>:*</code> はプレフィクス一致で判定し、名前空間ベースのイベント階層を実現しています。</li>
+              <li><code>once</code> はラッパー関数を作り、初回呼び出し時に自身を登録解除する高階関数パターンです。</li>
+              <li><code>on</code> がアンサブスクライブ関数を返すのは、メモリリーク防止の定番設計です。</li>
+              <li>mitt、EventEmitter3、RxJS Subject の基本設計原理です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-10 -->
+    <div class="drill-item" id="a-10">
+      <div class="drill-header">
+        <div class="drill-badge">A-10</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 イベント処理</span>
+          <h3 class="drill-title">ドラッグジェスチャー認識システムを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>マウス/タッチイベントの抽象化、座標計算、イベントストリームの変換を組み合わせた高度なイベント処理設計です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使えるドラッグジェスチャー認識システムを設計・実装してください。</p>
+          <div class="signature-block">
+function createGestureRecognizer(element) → { on(event, handler), destroy() }<br>
+- 'dragstart': ドラッグ開始時 ({ x, y })<br>
+- 'dragmove': ドラッグ中 ({ x, y, dx, dy, startX, startY })<br>
+- 'dragend': ドラッグ終了 ({ x, y, dx, dy, distance, duration })<br>
+- マウスとタッチの両方に対応
+          </div>
+<pre class="drill-code"><code>const gesture = createGestureRecognizer(document.getElementById('canvas'));
+
+gesture.on('dragstart', (e) => console.log('開始:', e.x, e.y));
+gesture.on('dragmove', (e) => console.log('移動:', e.dx, e.dy));
+gesture.on('dragend', (e) => {
+  console.log(`完了: 距離${Math.round(e.distance)}px, ${e.duration}ms`);
+});
+
+// マウスドラッグまたはタッチ操作で動作</code></pre>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">terminal</span>期待される動作</div>
+          <pre>開始: 100 200
+移動: 5 3
+移動: 12 8
+完了: 距離150px, 340ms</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>mousedown</code> / <code>touchstart</code> で開始座標と時刻を記録し、<code>mousemove</code> / <code>touchmove</code> で差分を計算します。<code>mouseup</code> / <code>touchend</code> で距離と所要時間を算出します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function createGestureRecognizer(element) {
+  const handlers = { dragstart: [], dragmove: [], dragend: [] };
+  let dragging = false;
+  let startX, startY, startTime;
+
+  function getPos(e) {
+    const touch = e.touches?.[0] || e.changedTouches?.[0];
+    return touch ? { x: touch.clientX, y: touch.clientY }
+                 : { x: e.clientX, y: e.clientY };
+  }
+
+  function emit(event, data) {
+    handlers[event]?.forEach(fn => fn(data));
+  }
+
+  function onStart(e) {
+    dragging = true;
+    const pos = getPos(e);
+    startX = pos.x;
+    startY = pos.y;
+    startTime = Date.now();
+    emit('dragstart', { x: pos.x, y: pos.y });
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    emit('dragmove', {
+      x: pos.x, y: pos.y,
+      dx: pos.x - startX, dy: pos.y - startY,
+      startX, startY
+    });
+  }
+
+  function onEnd(e) {
+    if (!dragging) return;
+    dragging = false;
+    const pos = getPos(e);
+    const dx = pos.x - startX;
+    const dy = pos.y - startY;
+    emit('dragend', {
+      x: pos.x, y: pos.y, dx, dy,
+      distance: Math.sqrt(dx * dx + dy * dy),
+      duration: Date.now() - startTime
+    });
+  }
+
+  element.addEventListener('mousedown', onStart);
+  element.addEventListener('touchstart', onStart, { passive: false });
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('mouseup', onEnd);
+  document.addEventListener('touchend', onEnd);
+
+  return {
+    on(event, fn) { handlers[event]?.push(fn); },
+    destroy() {
+      element.removeEventListener('mousedown', onStart);
+      element.removeEventListener('touchstart', onStart);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('mouseup', onEnd);
+      document.removeEventListener('touchend', onEnd);
+    }
+  };
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>マウスとタッチを <code>getPos</code> で統一し、同じロジックで両方のデバイスに対応しています。</li>
+              <li><code>mousemove</code> / <code>mouseup</code> は <code>document</code> に登録することで、要素外へのドラッグにも対応しています。</li>
+              <li><code>{ passive: false }</code> でタッチイベントの <code>preventDefault</code> を有効化しています。</li>
+              <li>@use-gesture（React）、Hammer.js の基本設計原理です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T6: 非同期処理・Promise ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">schedule</span>
+      <h2>T6 非同期処理・Promise</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-11 -->
+    <div class="drill-item" id="a-11">
+      <div class="drill-header">
+        <div class="drill-badge">A-11</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 非同期処理・Promise</span>
+          <h3 class="drill-title">Promise ベースのタスクキューを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>Promise チェーン、キューデータ構造、優先度制御を組み合わせた、実務レベルの非同期タスク管理システムを設計します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使える優先度付きタスクキューを設計・実装してください。</p>
+<pre class="drill-code"><code>const queue = createTaskQueue({ concurrency: 2 });
+
+// 優先度: 数値が大きいほど先に実行
+queue.add(() => delay(300, 'Low'), { priority: 1 });
+queue.add(() => delay(100, 'High'), { priority: 10 });
+queue.add(() => delay(200, 'Medium'), { priority: 5 });
+queue.add(() => delay(150, 'Critical'), { priority: 100 });
+
+queue.on('taskComplete', (result) => console.log('完了:', result));
+queue.on('drain', () => console.log('全タスク完了'));
+
+await queue.start();
+// Critical と High が先に実行（高優先度順）
+// 完了: Critical → 完了: High → 完了: Medium → 完了: Low → 全タスク完了</code></pre>
+          <div class="signature-block">
+function createTaskQueue(options) → { add(task, opts), start(), pause(), on(event, fn) }<br>
+- concurrency: 最大同時実行数<br>
+- add(task, { priority }): 優先度付きタスク追加<br>
+- start(): キュー処理開始<br>
+- pause(): 新規タスク実行を一時停止<br>
+- イベント: 'taskComplete', 'taskError', 'drain'
+          </div>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
+          <pre>完了: Critical
+完了: High
+完了: Medium
+完了: Low
+全タスク完了</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>キューを優先度で降順ソートし、<code>shift()</code> で最高優先度のタスクを取り出します。タスク完了時に次のタスクを自動起動し、キューが空になったら <code>drain</code> イベントを発火します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function createTaskQueue({ concurrency = 1 } = {}) {
+  const queue = [];
+  const events = {};
+  let running = 0;
+  let paused = true;
+  let drainResolve = null;
+
+  function emit(event, ...args) {
+    (events[event] || []).forEach(fn => fn(...args));
+  }
+
+  function runNext() {
+    if (paused) return;
+    while (running < concurrency && queue.length > 0) {
+      const { task } = queue.shift();
+      running++;
+      task()
+        .then(result => { emit('taskComplete', result); })
+        .catch(error => { emit('taskError', error); })
+        .finally(() => {
+          running--;
+          if (queue.length === 0 && running === 0) {
+            emit('drain');
+            drainResolve?.();
+          }
+          runNext();
+        });
+    }
+  }
+
+  return {
+    add(task, { priority = 0 } = {}) {
+      queue.push({ task, priority });
+      queue.sort((a, b) => b.priority - a.priority);
+      if (!paused) runNext();
+    },
+    start() {
+      paused = false;
+      runNext();
+      if (queue.length === 0 && running === 0) return Promise.resolve();
+      return new Promise(resolve => { drainResolve = resolve; });
+    },
+    pause() {
+      paused = true;
+    },
+    on(event, fn) {
+      (events[event] ||= []).push(fn);
+    }
+  };
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>優先度で降順ソートし、<code>shift()</code> で常に最高優先度のタスクを取り出しています。</li>
+              <li><code>finally</code> ブロックで成功・失敗に関わらず次のタスクを起動し、全完了時に <code>drain</code> を通知しています。</li>
+              <li><code>start()</code> が返す Promise で全タスク完了を await できる設計です。</li>
+              <li>BullMQ、p-queue などのジョブキューライブラリの基本アーキテクチャです。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-12 -->
+    <div class="drill-item" id="a-12">
+      <div class="drill-header">
+        <div class="drill-badge">A-12</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 非同期処理・Promise</span>
+          <h3 class="drill-title">キャッシュ付き非同期メモ化を設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>TTL（Time To Live）付きキャッシュ、Promise の重複排除（deduplication）、LRU 的なキャッシュ管理を設計します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使えるキャッシュ付き非同期メモ化関数を設計・実装してください。</p>
+<pre class="drill-code"><code>const cachedFetch = asyncMemoize(
+  async (userId) => {
+    console.log(`API呼び出し: ${userId}`);
+    const res = await fetch(`/api/users/${userId}`);
+    return res.json();
+  },
+  { ttl: 5000, maxSize: 100 }
+);
+
+await cachedFetch(1); // API呼び出し: 1（キャッシュなし）
+await cachedFetch(1); // （キャッシュヒット、API呼び出しなし）
+await cachedFetch(2); // API呼び出し: 2（キャッシュなし）
+
+// 同時に同じキーをリクエストしても1回しかAPI呼び出ししない
+const [a, b] = await Promise.all([cachedFetch(3), cachedFetch(3)]);
+// API呼び出し: 3（1回のみ）</code></pre>
+          <div class="signature-block">
+function asyncMemoize(fn, options) → async function<br>
+- fn: キャッシュ対象の非同期関数<br>
+- options.ttl: キャッシュ有効期限（ms）<br>
+- options.maxSize: キャッシュ最大サイズ（超過時は古いものから削除）<br>
+- 同じキーの同時リクエストは Promise を共有（重複排除）
+          </div>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
+          <pre>API呼び出し: 1
+API呼び出し: 2
+API呼び出し: 3</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>キャッシュに <code>{ value, expiry, promise }</code> を保存します。実行中の Promise も保存することで、同じキーの同時リクエストが同じ Promise を待つようにします（deduplication）。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function asyncMemoize(fn, { ttl = Infinity, maxSize = Infinity } = {}) {
+  const cache = new Map();
+  const pending = new Map();
+
+  function evictOldest() {
+    if (cache.size >= maxSize) {
+      const oldest = cache.keys().next().value;
+      cache.delete(oldest);
+    }
+  }
+
+  return async function (...args) {
+    const key = JSON.stringify(args);
+
+    // キャッシュヒット判定
+    if (cache.has(key)) {
+      const entry = cache.get(key);
+      if (Date.now() < entry.expiry) {
+        return entry.value;
+      }
+      cache.delete(key);
+    }
+
+    // 同一キーの実行中 Promise を共有（重複排除）
+    if (pending.has(key)) {
+      return pending.get(key);
+    }
+
+    const promise = fn(...args)
+      .then(value => {
+        evictOldest();
+        cache.set(key, { value, expiry: Date.now() + ttl });
+        return value;
+      })
+      .finally(() => {
+        pending.delete(key);
+      });
+
+    pending.set(key, promise);
+    return promise;
+  };
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>pending</code> マップで実行中の Promise を管理し、同じキーの同時リクエストを1つの Promise にまとめています（deduplication）。</li>
+              <li><code>Map</code> は挿入順を保持するため、<code>keys().next().value</code> で最も古いエントリを取得して LRU 的な削除ができます。</li>
+              <li>TTL で期限切れのキャッシュを自動無効化し、<code>maxSize</code> でメモリ使用量を制限しています。</li>
+              <li>SWR、React Query、DataLoader の基本設計原理です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T7: エラー処理 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">bug_report</span>
+      <h2>T7 エラー処理</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-13 -->
+    <div class="drill-item" id="a-13">
+      <div class="drill-header">
+        <div class="drill-badge">A-13</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 エラー処理</span>
+          <h3 class="drill-title">型付きエラー階層とリカバリーシステムを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>カスタムエラークラスの継承階層、エラー種別ごとのリカバリー戦略、フォールバックチェーンを設計します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使えるエラー階層とリカバリーシステムを設計・実装してください。</p>
+<pre class="drill-code"><code>// カスタムエラー階層
+class AppError extends Error { /* code, statusCode, isOperational */ }
+class ValidationError extends AppError { /* fields */ }
+class NetworkError extends AppError { /* url, statusCode */ }
+class AuthError extends AppError { /* reason */ }
+
+// リカバリーシステム
+const recovery = createRecoverySystem();
+
+recovery.register(NetworkError, async (err) => {
+  console.log(`ネットワークエラー回復中: ${err.url}`);
+  return { fallback: 'キャッシュデータ' };
+});
+recovery.register(AuthError, async (err) => {
+  console.log('トークン再取得中...');
+  return { retry: true };
+});
+
+try {
+  throw new NetworkError('接続失敗', { url: '/api/data', statusCode: 503 });
+} catch (err) {
+  const action = await recovery.handle(err);
+  console.log(action); // { fallback: 'キャッシュデータ' }
+}</code></pre>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
+          <pre>ネットワークエラー回復中: /api/data
+{ fallback: "キャッシュデータ" }</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>class AppError extends Error</code> で基底エラーを作り、<code>instanceof</code> で型判定します。リカバリーシステムは <code>Map&lt;ErrorClass, handler&gt;</code> でエラー型ごとのハンドラを管理します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>class AppError extends Error {
+  constructor(message, { code = 'UNKNOWN', statusCode = 500, isOperational = true } = {}) {
+    super(message);
+    this.name = this.constructor.name;
+    this.code = code;
+    this.statusCode = statusCode;
+    this.isOperational = isOperational;
+  }
+}
+
+class ValidationError extends AppError {
+  constructor(message, { fields = [] } = {}) {
+    super(message, { code: 'VALIDATION_ERROR', statusCode: 400 });
+    this.fields = fields;
+  }
+}
+
+class NetworkError extends AppError {
+  constructor(message, { url = '', statusCode = 0 } = {}) {
+    super(message, { code: 'NETWORK_ERROR', statusCode });
+    this.url = url;
+  }
+}
+
+class AuthError extends AppError {
+  constructor(message, { reason = 'unknown' } = {}) {
+    super(message, { code: 'AUTH_ERROR', statusCode: 401 });
+    this.reason = reason;
+  }
+}
+
+function createRecoverySystem() {
+  const handlers = new Map();
+
+  return {
+    register(ErrorClass, handler) {
+      handlers.set(ErrorClass, handler);
+    },
+
+    async handle(error) {
+      for (const [ErrorClass, handler] of handlers) {
+        if (error instanceof ErrorClass) {
+          return handler(error);
+        }
+      }
+      throw error; // ハンドラ未登録なら再throw
+    }
+  };
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>this.name = this.constructor.name</code> でスタックトレースに正しいクラス名が表示されます。</li>
+              <li><code>isOperational</code> フラグで、回復可能な業務エラーとプログラムバグを区別しています。</li>
+              <li><code>instanceof</code> はプロトタイプチェーンを辿るため、<code>NetworkError</code> は <code>AppError</code> にもマッチします。登録順が重要です。</li>
+              <li>Express のエラーハンドリングミドルウェアや NestJS の ExceptionFilter と同じ設計です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-14 -->
+    <div class="drill-item" id="a-14">
+      <div class="drill-header">
+        <div class="drill-badge">A-14</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 エラー処理</span>
+          <h3 class="drill-title">Circuit Breaker パターンを設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>サーキットブレーカーはマイクロサービスのレジリエンスパターンです。障害の連鎖を防ぐために、エラー率に応じて呼び出しを遮断します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使えるサーキットブレーカーを設計・実装してください。</p>
+          <div class="signature-block">
+function createCircuitBreaker(fn, options) → async function<br>
+- fn: 保護対象の非同期関数<br>
+- options.failureThreshold: 連続失敗でOpenに遷移する回数（デフォルト5）<br>
+- options.resetTimeout: Open→HalfOpen の待機時間ms（デフォルト30000）<br>
+- 状態: Closed（通常）→ Open（遮断）→ HalfOpen（試行）→ Closed/Open
+          </div>
+<pre class="drill-code"><code>const safeFetch = createCircuitBreaker(
+  async (url) => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+  { failureThreshold: 3, resetTimeout: 5000 }
+);
+
+// 3回連続失敗 → Open状態（即座にエラー、実際のAPI呼び出しなし）
+// 5秒後 → HalfOpen（1回試行して成功ならClosed、失敗ならOpen）</code></pre>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">terminal</span>期待される動作</div>
+          <pre>Closed: API呼び出し実行
+失敗3回後 → Open: CircuitBreakerError をスロー
+5秒後 → HalfOpen: 試行呼び出し
+成功 → Closed に復帰 / 失敗 → Open に戻る</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>状態（closed/open/half-open）と失敗カウントをクロージャで管理します。Open 状態では即座にエラーを投げ、<code>setTimeout</code> で HalfOpen に遷移します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function createCircuitBreaker(fn, options = {}) {
+  const { failureThreshold = 5, resetTimeout = 30000 } = options;
+  let state = 'closed';
+  let failureCount = 0;
+  let nextAttempt = 0;
+
+  return async function (...args) {
+    if (state === 'open') {
+      if (Date.now() < nextAttempt) {
+        throw new Error('Circuit breaker is OPEN');
+      }
+      state = 'half-open';
+    }
+
+    try {
+      const result = await fn(...args);
+      // 成功 → リセット
+      failureCount = 0;
+      state = 'closed';
+      return result;
+    } catch (error) {
+      failureCount++;
+      if (failureCount >= failureThreshold || state === 'half-open') {
+        state = 'open';
+        nextAttempt = Date.now() + resetTimeout;
+      }
+      throw error;
+    }
+  };
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>3つの状態（closed/open/half-open）をクロージャで管理し、失敗率に応じて遷移する有限ステートマシンです。</li>
+              <li>Open 状態では実際の関数を呼ばずに即エラーを返すため、障害の連鎖を防止します。</li>
+              <li><code>nextAttempt</code> のタイムスタンプで HalfOpen 遷移のタイミングを制御しています。</li>
+              <li>Netflix Hystrix、opossum（Node.js）、resilience4j（Java）と同じ設計パターンです。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T8: モジュール・クラス・実践 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">extension</span>
+      <h2>T8 モジュール・クラス・実践</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- A-15 -->
+    <div class="drill-item" id="a-15">
+      <div class="drill-header">
+        <div class="drill-badge">A-15</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 モジュール・クラス・実践</span>
+          <h3 class="drill-title">依存性注入コンテナ — ライフサイクル管理付き</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>A-03 の DI コンテナをさらに発展させ、シングルトン/トランジェントのライフサイクルと dispose 機能を追加した設計です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使える高機能 DI コンテナを設計・実装してください。</p>
+<pre class="drill-code"><code>const container = createAdvancedContainer();
+
+// シングルトン: 常に同じインスタンス
+container.singleton('config', () => ({ apiUrl: 'https://api.example.com' }));
+
+// トランジェント: 毎回新しいインスタンス
+container.transient('logger', (c) => ({
+  log: (msg) => console.log(`[${Date.now()}] ${msg}`),
+  dispose: () => console.log('logger disposed')
+}));
+
+// ファクトリ: 引数付きで生成
+container.factory('userRepo', (c, userId) => ({
+  config: c.resolve('config'),
+  userId,
+  fetch: () => console.log(`Fetching user ${userId}`)
+}));
+
+const cfg1 = container.resolve('config');
+const cfg2 = container.resolve('config');
+console.log(cfg1 === cfg2); // true（シングルトン）
+
+const repo = container.create('userRepo', 42);
+repo.fetch(); // Fetching user 42
+
+await container.dispose(); // 全サービスのdisposeを呼び出し</code></pre>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
+          <pre>true
+Fetching user 42
+logger disposed</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>登録時に <code>{ factory, lifecycle: 'singleton'|'transient' }</code> を保持します。シングルトンはインスタンスキャッシュを使い、<code>dispose</code> 時に各インスタンスの <code>dispose</code> メソッドを呼びます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function createAdvancedContainer() {
+  const registrations = new Map();
+  const singletons = new Map();
+  const disposables = [];
+
+  const container = {
+    singleton(name, factory) {
+      registrations.set(name, { factory, lifecycle: 'singleton' });
+    },
+
+    transient(name, factory) {
+      registrations.set(name, { factory, lifecycle: 'transient' });
+    },
+
+    factory(name, factory) {
+      registrations.set(name, { factory, lifecycle: 'factory' });
+    },
+
+    resolve(name) {
+      const reg = registrations.get(name);
+      if (!reg) throw new Error(`Service not found: ${name}`);
+
+      if (reg.lifecycle === 'singleton') {
+        if (!singletons.has(name)) {
+          const instance = reg.factory(container);
+          singletons.set(name, instance);
+          if (instance?.dispose) disposables.push(instance);
+        }
+        return singletons.get(name);
+      }
+
+      const instance = reg.factory(container);
+      if (instance?.dispose) disposables.push(instance);
+      return instance;
+    },
+
+    create(name, ...args) {
+      const reg = registrations.get(name);
+      if (!reg) throw new Error(`Factory not found: ${name}`);
+      return reg.factory(container, ...args);
+    },
+
+    async dispose() {
+      for (const instance of disposables.reverse()) {
+        await instance.dispose();
+      }
+      singletons.clear();
+      disposables.length = 0;
+    }
+  };
+
+  return container;
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>ライフサイクル（singleton/transient/factory）を登録時に指定し、<code>resolve</code> の挙動を切り替えています。</li>
+              <li><code>disposables</code> 配列で <code>dispose</code> メソッドを持つインスタンスを追跡し、逆順で破棄しています。</li>
+              <li><code>create</code> メソッドで追加引数を渡せるファクトリパターンをサポートしています。</li>
+              <li>NestJS、tsyringe、InversifyJS のDIコンテナの設計原理です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- A-16 -->
+    <div class="drill-item" id="a-16">
+      <div class="drill-header">
+        <div class="drill-badge">A-16</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 モジュール・クラス・実践</span>
+          <h3 class="drill-title">Observerパターン + Strategyパターンの複合設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>GoFデザインパターンの Observer と Strategy を組み合わせ、プラグインベースの通知システムを設計します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のAPIで使える通知システムを設計・実装してください。</p>
+<pre class="drill-code"><code>const notifier = createNotifier();
+
+// 通知チャネル（Strategy）の登録
+notifier.addChannel('console', {
+  send: (msg) => console.log(`[Console] ${msg.title}: ${msg.body}`)
+});
+notifier.addChannel('slack', {
+  send: (msg) => console.log(`[Slack] #${msg.channel}: ${msg.title}`)
+});
+
+// ルール（Observer）の登録
+notifier.addRule('error', {
+  match: (event) => event.level === 'error',
+  channels: ['console', 'slack'],
+  transform: (event) => ({
+    title: `ERROR: ${event.message}`,
+    body: event.stack || '',
+    channel: 'alerts'
+  })
+});
+
+notifier.addRule('info', {
+  match: (event) => event.level === 'info',
+  channels: ['console'],
+  transform: (event) => ({ title: event.message, body: '' })
+});
+
+notifier.notify({ level: 'error', message: 'DB接続失敗', stack: '...' });
+// [Console] ERROR: DB接続失敗: ...
+// [Slack] #alerts: ERROR: DB接続失敗
+
+notifier.notify({ level: 'info', message: 'サーバー起動' });
+// [Console] サーバー起動:</code></pre>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">terminal</span>期待される出力</div>
+          <pre>[Console] ERROR: DB接続失敗: ...
+[Slack] #alerts: ERROR: DB接続失敗
+[Console] サーバー起動:</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>チャネルを <code>Map</code>、ルールを配列で管理します。<code>notify</code> 時に全ルールの <code>match</code> を判定し、マッチしたルールの <code>transform</code> でメッセージを変換して、指定チャネルの <code>send</code> を呼びます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>function createNotifier() {
+  const channels = new Map();
+  const rules = [];
+
+  return {
+    addChannel(name, strategy) {
+      channels.set(name, strategy);
+    },
+
+    addRule(name, rule) {
+      rules.push({ name, ...rule });
+    },
+
+    notify(event) {
+      for (const rule of rules) {
+        if (!rule.match(event)) continue;
+
+        const message = rule.transform(event);
+        for (const channelName of rule.channels) {
+          const channel = channels.get(channelName);
+          if (channel) channel.send(message);
+        }
+      }
+    },
+
+    removeRule(name) {
+      const idx = rules.findIndex(r => r.name === name);
+      if (idx > -1) rules.splice(idx, 1);
+    },
+
+    removeChannel(name) {
+      channels.delete(name);
+    }
+  };
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>Strategy パターン: 各チャネルが <code>send</code> メソッドを持ち、通知方法を交換可能にしています。</li>
+              <li>Observer パターン: ルールが <code>match</code> でイベントを購読し、条件に合致した場合にのみ処理を実行します。</li>
+              <li><code>transform</code> でイベントをチャネル向けのメッセージに変換し、関心の分離を実現しています。</li>
+              <li>Sentry、PagerDuty、GitHub Actions の通知ルーティングと同じ設計原理です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-navigation">
+      <a href="level-b.html" class="prev-page">
+        <span class="material-icons">arrow_back</span>
+        Level B — 複合実装
+      </a>
+      <a href="level-s.html" class="next-page">
+        Level S — 総合実装
+        <span class="material-icons">arrow_forward</span>
+      </a>
+    </div>
+
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

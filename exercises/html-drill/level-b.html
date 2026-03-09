@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Level B — 複合実装 | HTML実力養成ドリル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #CCE4FF;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+
+    .drill-item { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .drill-header { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #f0f0f0; background: #fafbfc; }
+    .drill-badge { background: var(--primary); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; padding: 8px 14px; border-radius: 10px; white-space: nowrap; }
+    .drill-meta { flex: 1; }
+    .drill-theme { font-size: 0.72rem; color: var(--primary); font-weight: 600; letter-spacing: 0.03em; margin-bottom: 2px; display: block; }
+    .drill-title { font-size: 1.05rem; font-weight: 700; color: #1d1d1f; }
+    .drill-body { padding: 24px; }
+
+    .drill-silver { display: flex; align-items: flex-start; gap: 12px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+    .drill-silver > .material-icons { color: #f9a825; font-size: 1.4rem; margin-top: 2px; }
+    .drill-silver strong { display: block; font-size: 0.82rem; color: #f57f17; margin-bottom: 4px; }
+    .drill-silver p { font-size: 0.85rem; color: #5d4037; line-height: 1.6; margin: 0; }
+
+    .drill-task { margin-bottom: 20px; }
+    .drill-task h4 { display: flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: 700; color: #1d1d1f; margin-bottom: 12px; }
+    .drill-task h4 .material-icons { color: var(--primary); font-size: 1.2rem; }
+    .drill-task p, .drill-task ul, .drill-task ol { font-size: 0.88rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .drill-task ul, .drill-task ol { padding-left: 1.5em; }
+    .drill-task li { margin-bottom: 4px; }
+
+    .drill-code { background: #1e293b; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; padding: 20px; border-radius: 10px; overflow-x: auto; margin: 12px 0; }
+    .drill-code code { font-family: inherit; }
+
+    .expected-output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .expected-output .label { font-size: 0.75rem; font-weight: 700; color: #16a34a; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+    .expected-output pre { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; color: #166534; margin: 0; white-space: pre-wrap; }
+
+    .drill-hint { margin-bottom: 8px; }
+    .drill-hint summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: #f57c00; padding: 10px 14px; background: #fff3e0; border-radius: 10px; list-style: none; user-select: none; }
+    .drill-hint summary::-webkit-details-marker { display: none; }
+    .drill-hint summary .material-icons { font-size: 1.1rem; }
+    .drill-hint[open] summary { border-radius: 10px 10px 0 0; }
+    .hint-content { background: #fff8e1; padding: 16px 18px; border-radius: 0 0 10px 10px; font-size: 0.85rem; line-height: 1.7; color: #5d4037; }
+    .hint-content code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
+
+    .drill-answer { margin-top: 8px; }
+    .drill-answer summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: var(--primary); padding: 10px 14px; background: var(--primary-light); border-radius: 10px; list-style: none; user-select: none; }
+    .drill-answer summary::-webkit-details-marker { display: none; }
+    .drill-answer summary .material-icons { color: var(--primary); font-size: 1.1rem; }
+    .drill-answer[open] summary { border-radius: 10px 10px 0 0; }
+    .answer-content { background: #f8fbff; padding: 20px; border-radius: 0 0 10px 10px; border: 1px solid var(--primary-light); border-top: none; }
+    .answer-content p { font-size: 0.85rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .answer-content h5 { font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin: 16px 0 8px; }
+    .answer-content ul { font-size: 0.85rem; line-height: 1.8; color: #333; padding-left: 1.5em; margin-bottom: 10px; }
+
+    .theme-separator { display: flex; align-items: center; gap: 12px; margin: 36px 0 20px; padding: 12px 20px; background: var(--primary-light); border-radius: 12px; border-left: 4px solid var(--primary); }
+    .theme-separator .material-icons { color: var(--primary); font-size: 1.3rem; }
+    .theme-separator h2 { font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
+    .theme-separator span.theme-count { font-size: 0.75rem; color: #666; font-weight: 400; margin-left: auto; }
+
+    @media (max-width: 480px) {
+      .drill-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+      .drill-body { padding: 16px; }
+      .drill-code { font-size: 0.75rem; padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-html-drill.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">code</span> Drill</div>
+      <div class="chapter-number">B</div>
+      <h1 class="chapter-title">Level B — 複合実装</h1>
+      <p style="color:#fff; margin-top:8px;">複数HTML要素を組み合わせた複雑なページ構築｜16課題・8テーマ</p>
+    </header>
+
+    <!-- ===== T1: HTML基本構造・文書型 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">description</span>
+      <h2>T1 HTML基本構造・文書型</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- B-01 -->
+    <div class="drill-item" id="b-01">
+      <div class="drill-header">
+        <div class="drill-badge">B-01</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 HTML基本構造・文書型</span>
+          <h3 class="drill-title">マルチページサイトのテンプレート設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>マルチページサイトでは共通のヘッダー・フッター構造と一貫した <code>&lt;head&gt;</code> メタ情報が重要です。相対パスを正しく設定する必要があります。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で3ページ構成のサイトの共通テンプレートを設計してください。</p>
+          <ul>
+            <li>共通ヘッダー：ロゴ、ナビ（ホーム/サービス/お問い合わせ）、現在ページに <code>aria-current="page"</code></li>
+            <li>共通フッター：会社情報、コピーライト</li>
+            <li>各ページ固有の <code>&lt;title&gt;</code>、<code>meta description</code>、OGPタグ</li>
+            <li>共通CSS（<code>style.css</code>）と共通JS（<code>script.js</code>）の読み込み</li>
+            <li>ディレクトリ構成：<code>index.html</code>、<code>services/index.html</code>、<code>contact/index.html</code></li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>サブディレクトリのページから共通CSSを読み込む場合、パスは <code>../style.css</code> になります。ナビの現在ページリンクに <code>aria-current="page"</code> を付けてください。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+            <p><strong>index.html（トップページ）:</strong></p>
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;ホーム | ABC Corporation&lt;/title&gt;
+  &lt;meta name="description" content="ABC Corporationの公式サイトです。"&gt;
+  &lt;meta property="og:title" content="ABC Corporation"&gt;
+  &lt;meta property="og:url" content="https://example.com/"&gt;
+  &lt;link rel="stylesheet" href="style.css"&gt;
+  &lt;script src="script.js" defer&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;header&gt;
+    &lt;a href="/"&gt;&lt;img src="logo.png" alt="ABC Corporation"&gt;&lt;/a&gt;
+    &lt;nav&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="/" aria-current="page"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/services/"&gt;サービス&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/contact/"&gt;お問い合わせ&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+  &lt;main&gt;
+    &lt;h1&gt;ABC Corporationへようこそ&lt;/h1&gt;
+  &lt;/main&gt;
+  &lt;footer&gt;
+    &lt;p&gt;ABC Corporation | 東京都千代田区&lt;/p&gt;
+    &lt;p&gt;&amp;copy; 2026 ABC Corporation&lt;/p&gt;
+  &lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <p><strong>services/index.html（サブページ）:</strong></p>
+<pre class="drill-code"><code>&lt;!-- head内のパスが ../style.css に変わる --&gt;
+&lt;link rel="stylesheet" href="../style.css"&gt;
+&lt;script src="../script.js" defer&gt;&lt;/script&gt;
+&lt;!-- ナビのaria-currentがサービスに移動 --&gt;
+&lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/services/" aria-current="page"&gt;サービス&lt;/a&gt;&lt;/li&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>相対パスはファイルの位置に応じて変わります。<code>../</code> は1つ上のディレクトリです。</li>
+              <li><code>aria-current="page"</code> はスクリーンリーダーに「現在のページ」を伝えます。CSSでスタイリングにも使えます。</li>
+              <li>OGPの <code>og:url</code> は各ページごとに正しいURLを設定します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- B-02 -->
+    <div class="drill-item" id="b-02">
+      <div class="drill-header">
+        <div class="drill-badge">B-02</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 HTML基本構造・文書型</span>
+          <h3 class="drill-title">パフォーマンス最適化されたhead設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>&lt;head&gt;</code> 内のリソース読み込み順序はパフォーマンスに大きく影響します。<code>preconnect</code>, <code>preload</code>, <code>defer</code>, <code>async</code> を適切に使い分けることが重要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のリソースを最適な順序・方法で読み込む <code>&lt;head&gt;</code> を設計してください。</p>
+          <ul>
+            <li>Google Fonts（Noto Sans JP）— <code>preconnect</code> + <code>link</code></li>
+            <li>重要なCSS（<code>critical.css</code>）— 通常読み込み</li>
+            <li>追加CSS（<code>style.css</code>）— <code>preload</code> で非同期読み込み</li>
+            <li>アナリティクス（<code>analytics.js</code>）— <code>async</code> で読み込み</li>
+            <li>アプリJS（<code>app.js</code>）— <code>defer</code> で読み込み</li>
+            <li>ヒーロー画像（<code>hero.webp</code>）— <code>preload</code> で事前読み込み</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>async</code> はダウンロード完了後すぐに実行、<code>defer</code> はDOM解析完了後に実行です。CSSの <code>preload</code> は <code>&lt;link rel="preload" href="..." as="style" onload="this.rel='stylesheet'"&gt;</code> で実現します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;パフォーマンス最適化ページ&lt;/title&gt;
+
+  &lt;!-- 1. preconnect（外部ドメインへの事前接続） --&gt;
+  &lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+  &lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+
+  &lt;!-- 2. preload（重要リソースの事前読み込み） --&gt;
+  &lt;link rel="preload" href="hero.webp" as="image"&gt;
+  &lt;link rel="preload" href="style.css" as="style"
+    onload="this.onload=null;this.rel='stylesheet'"&gt;
+  &lt;noscript&gt;&lt;link rel="stylesheet" href="style.css"&gt;&lt;/noscript&gt;
+
+  &lt;!-- 3. 重要CSS（レンダリングブロック） --&gt;
+  &lt;link rel="stylesheet" href="critical.css"&gt;
+
+  &lt;!-- 4. 外部フォント --&gt;
+  &lt;link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&amp;display=swap" rel="stylesheet"&gt;
+
+  &lt;!-- 5. JavaScript --&gt;
+  &lt;script src="analytics.js" async&gt;&lt;/script&gt;
+  &lt;script src="app.js" defer&gt;&lt;/script&gt;
+&lt;/head&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>preconnect</code> は DNS解決・TCP接続・TLSネゴシエーションを事前に行い、後続のリソース読み込みを高速化します。</li>
+              <li><code>preload</code> はリソースを優先的にダウンロードします。CSSの場合は <code>onload</code> で適用をトリガーします。</li>
+              <li><code>async</code> はスクリプトの実行順序を保証しません。独立したスクリプト（アナリティクス等）に適しています。</li>
+              <li><code>defer</code> はDOM解析後に実行順序を保証します。DOM操作が必要なスクリプトに適しています。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T2: テキスト・リスト・リンク ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">text_fields</span>
+      <h2>T2 テキスト・リスト・リンク</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- B-03 -->
+    <div class="drill-item" id="b-03">
+      <div class="drill-header">
+        <div class="drill-badge">B-03</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 テキスト・リスト・リンク</span>
+          <h3 class="drill-title">技術ドキュメントページ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>技術ドキュメントでは <code>&lt;code&gt;</code>, <code>&lt;pre&gt;</code>, <code>&lt;kbd&gt;</code>, <code>&lt;samp&gt;</code>, <code>&lt;var&gt;</code> など専用のテキスト要素を適切に使い分けます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で技術ドキュメントページを作成してください。</p>
+          <ul>
+            <li>ページ内目次（3セクション分のアンカーリンク）</li>
+            <li>「インストール」セクション：コマンド例を <code>&lt;pre&gt;&lt;code&gt;</code> で表示、キー操作を <code>&lt;kbd&gt;</code> で表示</li>
+            <li>「APIリファレンス」セクション：関数名を <code>&lt;code&gt;</code>、変数を <code>&lt;var&gt;</code>、出力例を <code>&lt;samp&gt;</code> で表示</li>
+            <li>「FAQ」セクション：<code>&lt;details&gt;</code> + <code>&lt;summary&gt;</code> でアコーディオンUI</li>
+            <li>注意書きを <code>&lt;blockquote&gt;</code> + <code>&lt;cite&gt;</code> で表示</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;kbd&gt;</code> はキーボード入力（例: <code>&lt;kbd&gt;Ctrl&lt;/kbd&gt;+&lt;kbd&gt;C&lt;/kbd&gt;</code>）、<code>&lt;samp&gt;</code> はプログラムの出力結果、<code>&lt;var&gt;</code> は変数を表します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;main&gt;
+  &lt;h1&gt;MyLib ドキュメント&lt;/h1&gt;
+  &lt;nav aria-label="目次"&gt;
+    &lt;ol&gt;
+      &lt;li&gt;&lt;a href="#install"&gt;インストール&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#api"&gt;APIリファレンス&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#faq"&gt;FAQ&lt;/a&gt;&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/nav&gt;
+
+  &lt;section id="install"&gt;
+    &lt;h2&gt;インストール&lt;/h2&gt;
+    &lt;p&gt;以下のコマンドを実行してください:&lt;/p&gt;
+    &lt;pre&gt;&lt;code&gt;npm install mylib&lt;/code&gt;&lt;/pre&gt;
+    &lt;p&gt;開発サーバーを起動するには &lt;kbd&gt;Ctrl&lt;/kbd&gt;+&lt;kbd&gt;Shift&lt;/kbd&gt;+&lt;kbd&gt;P&lt;/kbd&gt; でコマンドパレットを開き、"Start Server" を選択します。&lt;/p&gt;
+  &lt;/section&gt;
+
+  &lt;section id="api"&gt;
+    &lt;h2&gt;APIリファレンス&lt;/h2&gt;
+    &lt;p&gt;&lt;code&gt;mylib.init(&lt;var&gt;config&lt;/var&gt;)&lt;/code&gt; を呼び出すと、ライブラリが初期化されます。&lt;/p&gt;
+    &lt;p&gt;実行結果:&lt;/p&gt;
+    &lt;p&gt;&lt;samp&gt;MyLib v2.0 initialized successfully.&lt;/samp&gt;&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;初期化は必ずDOMContentLoadedイベント後に実行してください。&lt;/p&gt;
+      &lt;cite&gt;— MyLib 公式ドキュメント v2.0&lt;/cite&gt;
+    &lt;/blockquote&gt;
+  &lt;/section&gt;
+
+  &lt;section id="faq"&gt;
+    &lt;h2&gt;FAQ&lt;/h2&gt;
+    &lt;details&gt;
+      &lt;summary&gt;TypeScriptに対応していますか？&lt;/summary&gt;
+      &lt;p&gt;はい、型定義ファイル（.d.ts）が同梱されています。&lt;/p&gt;
+    &lt;/details&gt;
+    &lt;details&gt;
+      &lt;summary&gt;ブラウザの対応状況は？&lt;/summary&gt;
+      &lt;p&gt;Chrome, Firefox, Safari, Edgeの最新2バージョンに対応しています。&lt;/p&gt;
+    &lt;/details&gt;
+  &lt;/section&gt;
+&lt;/main&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;code&gt;</code> はインラインのコード断片、<code>&lt;pre&gt;&lt;code&gt;</code> はコードブロックに使います。</li>
+              <li><code>&lt;kbd&gt;</code> はキーボード入力を意味し、<code>&lt;samp&gt;</code> はプログラム出力を意味します。</li>
+              <li><code>&lt;var&gt;</code> は数学的変数やプログラムの変数を表します。デフォルトでイタリック表示されます。</li>
+              <li><code>&lt;blockquote&gt;</code> は長い引用、<code>&lt;cite&gt;</code> は出典を示します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- B-04 -->
+    <div class="drill-item" id="b-04">
+      <div class="drill-header">
+        <div class="drill-badge">B-04</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 テキスト・リスト・リンク</span>
+          <h3 class="drill-title">ネストリストとルビ付き文書</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>リストはネスト（入れ子）にできます。<code>&lt;ruby&gt;</code> 要素で読み仮名（ルビ）を付けることができ、日本語文書で活用できます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でネストリストとルビ付き文書を作成してください。</p>
+          <ul>
+            <li>3段階ネストのナビゲーションリスト（カテゴリ > サブカテゴリ > ページ）</li>
+            <li><code>&lt;ruby&gt;</code> でルビ付きの日本語テキスト（漢字3つ以上）</li>
+            <li><code>&lt;abbr&gt;</code> で略語の正式名称をツールチップ表示（HTML, CSS, SEO）</li>
+            <li><code>&lt;mark&gt;</code> でハイライト、<code>&lt;small&gt;</code> で注釈、<code>&lt;del&gt;</code> + <code>&lt;ins&gt;</code> で訂正を表現</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;ruby&gt;</code> の構文は <code>&lt;ruby&gt;漢字&lt;rp&gt;(&lt;/rp&gt;&lt;rt&gt;かんじ&lt;/rt&gt;&lt;rp&gt;)&lt;/rp&gt;&lt;/ruby&gt;</code> です。<code>&lt;rp&gt;</code> はルビ非対応ブラウザ向けの括弧です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;nav&gt;
+  &lt;ul&gt;
+    &lt;li&gt;フロントエンド
+      &lt;ul&gt;
+        &lt;li&gt;HTML/CSS
+          &lt;ul&gt;
+            &lt;li&gt;&lt;a href="/html-basics"&gt;HTML基礎&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href="/css-basics"&gt;CSS基礎&lt;/a&gt;&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;JavaScript
+          &lt;ul&gt;
+            &lt;li&gt;&lt;a href="/js-basics"&gt;JS基礎&lt;/a&gt;&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;
+
+&lt;section&gt;
+  &lt;h2&gt;Web&lt;ruby&gt;技術&lt;rp&gt;(&lt;/rp&gt;&lt;rt&gt;ぎじゅつ&lt;/rt&gt;&lt;rp&gt;)&lt;/rp&gt;&lt;/ruby&gt;の&lt;ruby&gt;基礎&lt;rp&gt;(&lt;/rp&gt;&lt;rt&gt;きそ&lt;/rt&gt;&lt;rp&gt;)&lt;/rp&gt;&lt;/ruby&gt;&lt;ruby&gt;知識&lt;rp&gt;(&lt;/rp&gt;&lt;rt&gt;ちしき&lt;/rt&gt;&lt;rp&gt;)&lt;/rp&gt;&lt;/ruby&gt;&lt;/h2&gt;
+
+  &lt;p&gt;&lt;abbr title="HyperText Markup Language"&gt;HTML&lt;/abbr&gt;と
+  &lt;abbr title="Cascading Style Sheets"&gt;CSS&lt;/abbr&gt;は
+  Web開発の基盤です。&lt;abbr title="Search Engine Optimization"&gt;SEO&lt;/abbr&gt;対策も重要です。&lt;/p&gt;
+
+  &lt;p&gt;このコースの&lt;mark&gt;最重要ポイント&lt;/mark&gt;はセマンティクスです。&lt;/p&gt;
+  &lt;p&gt;&lt;small&gt;※ 本教材は訓練校での使用を想定しています。&lt;/small&gt;&lt;/p&gt;
+  &lt;p&gt;受講料: &lt;del&gt;50,000円&lt;/del&gt; &lt;ins&gt;無料&lt;/ins&gt;&lt;/p&gt;
+&lt;/section&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>ネストリストは <code>&lt;li&gt;</code> の中に新たな <code>&lt;ul&gt;</code> を入れます。閉じタグの位置に注意が必要です。</li>
+              <li><code>&lt;ruby&gt;</code> + <code>&lt;rt&gt;</code> はルビ（読み仮名）です。<code>&lt;rp&gt;</code> は非対応ブラウザでの括弧表示用です。</li>
+              <li><code>&lt;abbr title="..."&gt;</code> はホバー時にツールチップで正式名称を表示します。</li>
+              <li><code>&lt;del&gt;</code>（削除）と <code>&lt;ins&gt;</code>（挿入）で変更履歴を示すことができます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T3: テーブル ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">table_chart</span>
+      <h2>T3 テーブル</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- B-05 -->
+    <div class="drill-item" id="b-05">
+      <div class="drill-header">
+        <div class="drill-badge">B-05</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 テーブル</span>
+          <h3 class="drill-title">料金比較テーブル（複雑な結合）</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>複雑なテーブルでは <code>colspan</code> / <code>rowspan</code> の組み合わせに加え、<code>colgroup</code> と <code>col</code> でスタイリング対象の列グループを定義できます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で料金比較テーブルを作成してください。</p>
+          <ul>
+            <li>3プラン（Free / Pro / Enterprise）の比較表</li>
+            <li><code>&lt;colgroup&gt;</code> で各プランの列をグループ化</li>
+            <li>ヘッダー行：プラン名を <code>colspan</code> で2段構造（プラン名 + 月額料金）</li>
+            <li>機能行：5つの機能について各プランの対応状況（○/×/数値）</li>
+            <li><code>&lt;caption&gt;</code> でテーブルタイトルを設定</li>
+            <li><code>&lt;tfoot&gt;</code> に「おすすめ」の行を追加</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;colgroup&gt;</code> は <code>&lt;caption&gt;</code> の後、<code>&lt;thead&gt;</code> の前に配置します。<code>&lt;col span="1"&gt;</code> で列単位のスタイルが可能です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;table&gt;
+  &lt;caption&gt;プラン比較表&lt;/caption&gt;
+  &lt;colgroup&gt;
+    &lt;col&gt;
+    &lt;col style="background: #f8f9fa;"&gt;
+    &lt;col style="background: #e8f5e9;"&gt;
+    &lt;col style="background: #f8f9fa;"&gt;
+  &lt;/colgroup&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th scope="col"&gt;機能&lt;/th&gt;
+      &lt;th scope="col"&gt;Free&lt;br&gt;&lt;small&gt;0円/月&lt;/small&gt;&lt;/th&gt;
+      &lt;th scope="col"&gt;Pro&lt;br&gt;&lt;small&gt;980円/月&lt;/small&gt;&lt;/th&gt;
+      &lt;th scope="col"&gt;Enterprise&lt;br&gt;&lt;small&gt;4,980円/月&lt;/small&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th scope="row"&gt;ストレージ&lt;/th&gt;
+      &lt;td&gt;1GB&lt;/td&gt;
+      &lt;td&gt;50GB&lt;/td&gt;
+      &lt;td&gt;無制限&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th scope="row"&gt;カスタムドメイン&lt;/th&gt;
+      &lt;td&gt;×&lt;/td&gt;
+      &lt;td&gt;○&lt;/td&gt;
+      &lt;td&gt;○&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th scope="row"&gt;SSL証明書&lt;/th&gt;
+      &lt;td&gt;×&lt;/td&gt;
+      &lt;td&gt;○&lt;/td&gt;
+      &lt;td&gt;○&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th scope="row"&gt;サポート&lt;/th&gt;
+      &lt;td&gt;コミュニティ&lt;/td&gt;
+      &lt;td&gt;メール&lt;/td&gt;
+      &lt;td&gt;電話+専任&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th scope="row"&gt;ユーザー数&lt;/th&gt;
+      &lt;td&gt;1人&lt;/td&gt;
+      &lt;td&gt;5人&lt;/td&gt;
+      &lt;td&gt;無制限&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+  &lt;tfoot&gt;
+    &lt;tr&gt;
+      &lt;th scope="row"&gt;おすすめ&lt;/th&gt;
+      &lt;td&gt;お試し&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;一番人気&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;大規模向け&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tfoot&gt;
+&lt;/table&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;colgroup&gt;</code> + <code>&lt;col&gt;</code> で列単位の背景色を設定でき、個別セルにスタイルを書く手間を省けます。</li>
+              <li>比較表は <code>scope="row"</code> / <code>scope="col"</code> でデータの対応関係を明確にします。</li>
+              <li><code>&lt;tfoot&gt;</code> はサマリーや推奨情報の表示に使えます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- B-06 -->
+    <div class="drill-item" id="b-06">
+      <div class="drill-header">
+        <div class="drill-badge">B-06</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 テーブル</span>
+          <h3 class="drill-title">アクセシブルなデータテーブル</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>複雑なテーブルのアクセシビリティには <code>headers</code> 属性と <code>id</code> の組み合わせが効果的です。<code>aria-describedby</code> でテーブルの説明文を関連付けることもできます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で売上データテーブルを作成してください。</p>
+          <ul>
+            <li>2段階ヘッダー：上段に四半期名（<code>colspan="3"</code>）、下段に月名</li>
+            <li>行ヘッダー：商品カテゴリ名</li>
+            <li>各ヘッダーに <code>id</code> を付与し、データセルに <code>headers</code> 属性で関連付け</li>
+            <li><code>aria-describedby</code> でテーブルの補足説明を関連付け</li>
+            <li>合計行と合計列を含める</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>headers</code> 属性にはスペース区切りで複数の <code>id</code> を指定できます。例: <code>headers="q1 jan electronics"</code> は「Q1」「1月」「家電」を関連付けます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;p id="table-desc"&gt;2026年上半期の商品カテゴリ別月次売上データ（単位：万円）&lt;/p&gt;
+&lt;table aria-describedby="table-desc"&gt;
+  &lt;caption&gt;2026年上半期 売上データ&lt;/caption&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th rowspan="2" id="cat"&gt;カテゴリ&lt;/th&gt;
+      &lt;th colspan="3" id="q1"&gt;Q1（1-3月）&lt;/th&gt;
+      &lt;th rowspan="2" id="total"&gt;合計&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th id="jan"&gt;1月&lt;/th&gt;
+      &lt;th id="feb"&gt;2月&lt;/th&gt;
+      &lt;th id="mar"&gt;3月&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th id="elec" scope="row"&gt;家電&lt;/th&gt;
+      &lt;td headers="q1 jan elec"&gt;120&lt;/td&gt;
+      &lt;td headers="q1 feb elec"&gt;135&lt;/td&gt;
+      &lt;td headers="q1 mar elec"&gt;150&lt;/td&gt;
+      &lt;td headers="total elec"&gt;405&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;th id="food" scope="row"&gt;食品&lt;/th&gt;
+      &lt;td headers="q1 jan food"&gt;80&lt;/td&gt;
+      &lt;td headers="q1 feb food"&gt;90&lt;/td&gt;
+      &lt;td headers="q1 mar food"&gt;85&lt;/td&gt;
+      &lt;td headers="total food"&gt;255&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+  &lt;tfoot&gt;
+    &lt;tr&gt;
+      &lt;th scope="row"&gt;月計&lt;/th&gt;
+      &lt;td&gt;200&lt;/td&gt;
+      &lt;td&gt;225&lt;/td&gt;
+      &lt;td&gt;235&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;660&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tfoot&gt;
+&lt;/table&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>headers</code> 属性は2段階以上のヘッダーを持つ複雑なテーブルで、データセルとヘッダーの関係を明示します。</li>
+              <li><code>aria-describedby</code> は外部の要素（ここでは <code>&lt;p&gt;</code>）をテーブルの説明として関連付けます。</li>
+              <li>スクリーンリーダーは <code>headers</code> の情報を使って「家電、Q1、1月、120万円」のように読み上げます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T4: フォーム・入力要素 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">input</span>
+      <h2>T4 フォーム・入力要素</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- B-07 -->
+    <div class="drill-item" id="b-07">
+      <div class="drill-header">
+        <div class="drill-badge">B-07</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フォーム・入力要素</span>
+          <h3 class="drill-title">マルチステップフォーム</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>複雑なフォームは <code>&lt;fieldset&gt;</code> で論理グループに分け、進行状況を <code>&lt;progress&gt;</code> で可視化します。<code>&lt;datalist&gt;</code> で入力候補を提供できます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でイベント申込フォーム（マルチステップ風）を作成してください。</p>
+          <ul>
+            <li>プログレスバー（<code>&lt;progress&gt;</code>）で進行状況を表示</li>
+            <li>Step1「個人情報」：氏名、メール、電話番号</li>
+            <li>Step2「イベント選択」：参加イベント（<code>&lt;datalist&gt;</code> 付き入力）、参加人数（<code>number</code>、1〜10）、希望日（<code>date</code>、最小日付設定）</li>
+            <li>Step3「オプション」：食事プラン（ラジオボタン3択）、アレルギー（<code>textarea</code>）、写真掲載許可（<code>checkbox</code>）</li>
+            <li><code>&lt;output&gt;</code> 要素で合計金額欄を設置</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;datalist id="events"&gt;</code> を <code>&lt;input list="events"&gt;</code> で関連付けます。<code>&lt;progress value="1" max="3"&gt;</code> で進行度を表現します。<code>&lt;output&gt;</code> は計算結果の表示用要素です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;form action="/register-event" method="post"&gt;
+  &lt;progress value="1" max="3"&gt;Step 1 of 3&lt;/progress&gt;
+
+  &lt;fieldset&gt;
+    &lt;legend&gt;Step 1: 個人情報&lt;/legend&gt;
+    &lt;div&gt;
+      &lt;label for="fullname"&gt;氏名&lt;/label&gt;
+      &lt;input type="text" id="fullname" name="fullname" required autocomplete="name"&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="email"&gt;メールアドレス&lt;/label&gt;
+      &lt;input type="email" id="email" name="email" required autocomplete="email"&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="phone"&gt;電話番号&lt;/label&gt;
+      &lt;input type="tel" id="phone" name="phone" autocomplete="tel"&gt;
+    &lt;/div&gt;
+  &lt;/fieldset&gt;
+
+  &lt;fieldset&gt;
+    &lt;legend&gt;Step 2: イベント選択&lt;/legend&gt;
+    &lt;div&gt;
+      &lt;label for="event"&gt;参加イベント&lt;/label&gt;
+      &lt;input type="text" id="event" name="event" list="events" required&gt;
+      &lt;datalist id="events"&gt;
+        &lt;option value="Web開発ワークショップ"&gt;
+        &lt;option value="デザインセミナー"&gt;
+        &lt;option value="AI勉強会"&gt;
+      &lt;/datalist&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="guests"&gt;参加人数&lt;/label&gt;
+      &lt;input type="number" id="guests" name="guests" min="1" max="10" value="1"&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="event-date"&gt;希望日&lt;/label&gt;
+      &lt;input type="date" id="event-date" name="event-date" min="2026-04-01"&gt;
+    &lt;/div&gt;
+  &lt;/fieldset&gt;
+
+  &lt;fieldset&gt;
+    &lt;legend&gt;Step 3: オプション&lt;/legend&gt;
+    &lt;div&gt;
+      &lt;p&gt;食事プラン&lt;/p&gt;
+      &lt;label&gt;&lt;input type="radio" name="meal" value="standard"&gt; スタンダード（無料）&lt;/label&gt;
+      &lt;label&gt;&lt;input type="radio" name="meal" value="premium"&gt; プレミアム（+2,000円）&lt;/label&gt;
+      &lt;label&gt;&lt;input type="radio" name="meal" value="none"&gt; 不要&lt;/label&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="allergy"&gt;アレルギー・備考&lt;/label&gt;
+      &lt;textarea id="allergy" name="allergy" rows="3"&gt;&lt;/textarea&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label&gt;&lt;input type="checkbox" name="photo-ok" value="yes"&gt; 写真掲載を許可する&lt;/label&gt;
+    &lt;/div&gt;
+  &lt;/fieldset&gt;
+
+  &lt;div&gt;
+    &lt;p&gt;合計金額: &lt;output name="total"&gt;0円&lt;/output&gt;&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;button type="submit"&gt;申し込む&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;datalist&gt;</code> は入力候補をドロップダウンで表示しつつ、自由入力も許可するハイブリッドな入力UIです。</li>
+              <li><code>&lt;progress&gt;</code> はタスクの進行状況を視覚的に示します。<code>value</code> と <code>max</code> で進捗率を設定します。</li>
+              <li><code>&lt;output&gt;</code> は計算結果やフォームの出力を示すセマンティック要素です。JavaScriptで値を動的に更新します。</li>
+              <li><code>autocomplete</code> 属性でブラウザの自動入力を適切に動作させます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- B-08 -->
+    <div class="drill-item" id="b-08">
+      <div class="drill-header">
+        <div class="drill-badge">B-08</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フォーム・入力要素</span>
+          <h3 class="drill-title">ファイルアップロード付き商品登録フォーム</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>ファイルアップロードには <code>&lt;input type="file"&gt;</code> と <code>enctype="multipart/form-data"</code> が必要です。<code>accept</code> 属性でファイル種類を制限できます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で商品登録フォームを作成してください。</p>
+          <ul>
+            <li>フォームに <code>enctype="multipart/form-data"</code> を設定</li>
+            <li>商品名（<code>text</code>、必須）、価格（<code>number</code>、最小0）</li>
+            <li>カテゴリ（<code>&lt;optgroup&gt;</code> でグループ化した <code>&lt;select&gt;</code>）</li>
+            <li>商品画像（<code>file</code>、画像のみ許可、複数ファイル対応）</li>
+            <li>商品説明（<code>textarea</code>）、色選択（<code>color</code>）、販売開始日時（<code>datetime-local</code>）</li>
+            <li>レンジスライダー（<code>range</code>）で割引率（0〜50%）を設定</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>accept="image/*"</code> で画像ファイルのみ許可します。<code>multiple</code> 属性で複数ファイルを選択可能にします。<code>&lt;optgroup label="グループ名"&gt;</code> でセレクトの選択肢をグループ化できます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;form action="/admin/products" method="post" enctype="multipart/form-data"&gt;
+  &lt;fieldset&gt;
+    &lt;legend&gt;商品情報&lt;/legend&gt;
+    &lt;div&gt;
+      &lt;label for="product-name"&gt;商品名&lt;/label&gt;
+      &lt;input type="text" id="product-name" name="product-name" required&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="price"&gt;価格（円）&lt;/label&gt;
+      &lt;input type="number" id="price" name="price" min="0" step="100" required&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="category"&gt;カテゴリ&lt;/label&gt;
+      &lt;select id="category" name="category"&gt;
+        &lt;optgroup label="ファッション"&gt;
+          &lt;option value="tops"&gt;トップス&lt;/option&gt;
+          &lt;option value="bottoms"&gt;ボトムス&lt;/option&gt;
+        &lt;/optgroup&gt;
+        &lt;optgroup label="家電"&gt;
+          &lt;option value="pc"&gt;パソコン&lt;/option&gt;
+          &lt;option value="mobile"&gt;スマートフォン&lt;/option&gt;
+        &lt;/optgroup&gt;
+      &lt;/select&gt;
+    &lt;/div&gt;
+  &lt;/fieldset&gt;
+
+  &lt;fieldset&gt;
+    &lt;legend&gt;商品詳細&lt;/legend&gt;
+    &lt;div&gt;
+      &lt;label for="images"&gt;商品画像&lt;/label&gt;
+      &lt;input type="file" id="images" name="images" accept="image/*" multiple&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="description"&gt;商品説明&lt;/label&gt;
+      &lt;textarea id="description" name="description" rows="4"&gt;&lt;/textarea&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="color"&gt;メインカラー&lt;/label&gt;
+      &lt;input type="color" id="color" name="color" value="#007AFF"&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="sale-start"&gt;販売開始日時&lt;/label&gt;
+      &lt;input type="datetime-local" id="sale-start" name="sale-start"&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="discount"&gt;割引率: &lt;output id="discount-val"&gt;0&lt;/output&gt;%&lt;/label&gt;
+      &lt;input type="range" id="discount" name="discount" min="0" max="50" value="0"&gt;
+    &lt;/div&gt;
+  &lt;/fieldset&gt;
+
+  &lt;button type="submit"&gt;商品を登録する&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>enctype="multipart/form-data"</code> はファイルアップロードに必須のエンコーディング形式です。</li>
+              <li><code>&lt;optgroup&gt;</code> はセレクトの選択肢を視覚的にグループ化します。グループ自体は選択できません。</li>
+              <li><code>type="color"</code> はカラーピッカーUIを表示します。値は <code>#RRGGBB</code> 形式です。</li>
+              <li><code>type="range"</code> はスライダーUIです。<code>&lt;output&gt;</code> と組み合わせて現在値を表示できます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T5: メディア・埋め込み ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">image</span>
+      <h2>T5 メディア・埋め込み</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- B-09 -->
+    <div class="drill-item" id="b-09">
+      <div class="drill-header">
+        <div class="drill-badge">B-09</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 メディア・埋め込み</span>
+          <h3 class="drill-title">レスポンシブ画像ギャラリー</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>&lt;picture&gt;</code> 要素と <code>&lt;source&gt;</code> でアートディレクションを行い、<code>&lt;figure&gt;</code> + <code>&lt;figcaption&gt;</code> でキャプションを付けたギャラリーを構築します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でレスポンシブ画像ギャラリーを作成してください。</p>
+          <ul>
+            <li>3枚の画像を <code>&lt;figure&gt;</code> + <code>&lt;figcaption&gt;</code> で構成</li>
+            <li>各画像を <code>&lt;picture&gt;</code> 要素でラップし、WebP/JPEGフォールバックを設定</li>
+            <li><code>&lt;source&gt;</code> に <code>media</code> 属性でモバイル用（480px以下）とデスクトップ用の画像を切り替え</li>
+            <li>全画像に <code>loading="lazy"</code>、<code>width</code>/<code>height</code> 属性を設定</li>
+            <li>ギャラリー全体を <code>&lt;section&gt;</code> で囲み、見出しと説明文を付ける</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>「旅の記録」という見出しの下に3枚の写真がカード形式で並ぶ。各写真の下にキャプション（撮影地・日時）が表示される。モバイルでは縦並び、デスクトップでは横並び。WebP非対応ブラウザではJPEGにフォールバック。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;picture&gt;</code> 内の <code>&lt;source&gt;</code> は上から順に評価されます。<code>type="image/webp"</code> と <code>media="(max-width: 480px)"</code> を組み合わせることも可能です。最後の <code>&lt;img&gt;</code> がフォールバックです。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;section&gt;
+  &lt;h2&gt;旅の記録&lt;/h2&gt;
+  &lt;p&gt;2026年に訪れた場所のフォトギャラリーです。&lt;/p&gt;
+
+  &lt;div class="gallery"&gt;
+    &lt;figure&gt;
+      &lt;picture&gt;
+        &lt;source media="(max-width: 480px)" srcset="photos/kyoto-sm.webp" type="image/webp"&gt;
+        &lt;source media="(max-width: 480px)" srcset="photos/kyoto-sm.jpg"&gt;
+        &lt;source srcset="photos/kyoto-lg.webp" type="image/webp"&gt;
+        &lt;img src="photos/kyoto-lg.jpg" alt="清水寺の紅葉"
+          width="800" height="600" loading="lazy"&gt;
+      &lt;/picture&gt;
+      &lt;figcaption&gt;京都・清水寺 — &lt;time datetime="2026-11-15"&gt;2026年11月15日&lt;/time&gt;&lt;/figcaption&gt;
+    &lt;/figure&gt;
+
+    &lt;figure&gt;
+      &lt;picture&gt;
+        &lt;source media="(max-width: 480px)" srcset="photos/fuji-sm.webp" type="image/webp"&gt;
+        &lt;source media="(max-width: 480px)" srcset="photos/fuji-sm.jpg"&gt;
+        &lt;source srcset="photos/fuji-lg.webp" type="image/webp"&gt;
+        &lt;img src="photos/fuji-lg.jpg" alt="富士山と河口湖"
+          width="800" height="600" loading="lazy"&gt;
+      &lt;/picture&gt;
+      &lt;figcaption&gt;山梨・河口湖 — &lt;time datetime="2026-01-20"&gt;2026年1月20日&lt;/time&gt;&lt;/figcaption&gt;
+    &lt;/figure&gt;
+
+    &lt;figure&gt;
+      &lt;picture&gt;
+        &lt;source media="(max-width: 480px)" srcset="photos/okinawa-sm.webp" type="image/webp"&gt;
+        &lt;source media="(max-width: 480px)" srcset="photos/okinawa-sm.jpg"&gt;
+        &lt;source srcset="photos/okinawa-lg.webp" type="image/webp"&gt;
+        &lt;img src="photos/okinawa-lg.jpg" alt="沖縄の青い海とビーチ"
+          width="800" height="600" loading="lazy"&gt;
+      &lt;/picture&gt;
+      &lt;figcaption&gt;沖縄・美ら海 — &lt;time datetime="2026-07-10"&gt;2026年7月10日&lt;/time&gt;&lt;/figcaption&gt;
+    &lt;/figure&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;picture&gt;</code> は複数の画像ソースを提供し、ブラウザが最適なものを選択します。<code>&lt;source&gt;</code> の順序が重要です。</li>
+              <li><code>&lt;figure&gt;</code> + <code>&lt;figcaption&gt;</code> はセマンティックに画像とキャプションを関連付けます。</li>
+              <li><code>loading="lazy"</code> はビューポート外の画像の読み込みを遅延し、初期表示を高速化します。</li>
+              <li><code>width</code>/<code>height</code> 属性を設定することで、画像読み込み前のレイアウトシフト（CLS）を防止します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- B-10 -->
+    <div class="drill-item" id="b-10">
+      <div class="drill-header">
+        <div class="drill-badge">B-10</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 メディア・埋め込み</span>
+          <h3 class="drill-title">マルチメディアコンテンツページ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>&lt;video&gt;</code>, <code>&lt;audio&gt;</code>, <code>&lt;iframe&gt;</code> を組み合わせたマルチメディアページでは、フォールバックコンテンツとアクセシビリティ対応が重要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でオンライン講座のメディアページを作成してください。</p>
+          <ul>
+            <li>動画プレーヤー：<code>&lt;video&gt;</code> に複数ソース（MP4/WebM）、ポスター画像、字幕（<code>&lt;track&gt;</code>）を設定</li>
+            <li>音声プレーヤー：<code>&lt;audio&gt;</code> に複数ソース（MP3/OGG）とフォールバックテキスト</li>
+            <li>埋め込みスライド：<code>&lt;iframe&gt;</code> で外部スライドを埋め込み、<code>title</code> 属性と <code>sandbox</code> 属性を設定</li>
+            <li>各メディアを <code>&lt;figure&gt;</code> + <code>&lt;figcaption&gt;</code> で説明付きに</li>
+            <li><code>&lt;details&gt;</code> でトランスクリプト（文字起こし）を表示</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>ページ上部に動画プレーヤー（コントロール付き）、その下に音声プレーヤー、さらに下に埋め込みスライドが表示される。動画には日本語字幕が表示可能。各メディアの下にキャプションがあり、トランスクリプトはクリックで展開。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;track kind="subtitles" srclang="ja" label="日本語"&gt;</code> で字幕を設定します。<code>&lt;iframe sandbox="allow-scripts allow-same-origin"&gt;</code> でセキュリティ制限を設けます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;main&gt;
+  &lt;h1&gt;HTML基礎講座 — 第3回&lt;/h1&gt;
+
+  &lt;figure&gt;
+    &lt;video controls poster="thumbnail.jpg" width="800" height="450" preload="metadata"&gt;
+      &lt;source src="lecture03.webm" type="video/webm"&gt;
+      &lt;source src="lecture03.mp4" type="video/mp4"&gt;
+      &lt;track kind="subtitles" src="lecture03-ja.vtt" srclang="ja" label="日本語" default&gt;
+      &lt;track kind="subtitles" src="lecture03-en.vtt" srclang="en" label="English"&gt;
+      &lt;p&gt;お使いのブラウザは動画再生に対応していません。&lt;a href="lecture03.mp4"&gt;動画をダウンロード&lt;/a&gt;してください。&lt;/p&gt;
+    &lt;/video&gt;
+    &lt;figcaption&gt;講義動画: テーブルとフォームの基礎（45分）&lt;/figcaption&gt;
+  &lt;/figure&gt;
+
+  &lt;details&gt;
+    &lt;summary&gt;トランスクリプトを表示&lt;/summary&gt;
+    &lt;div&gt;
+      &lt;p&gt;[00:00] 皆さんこんにちは。第3回の講義を始めます。&lt;/p&gt;
+      &lt;p&gt;[00:15] 今日はHTMLのテーブルとフォームについて学びます。&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/details&gt;
+
+  &lt;figure&gt;
+    &lt;audio controls preload="metadata"&gt;
+      &lt;source src="lecture03-audio.ogg" type="audio/ogg"&gt;
+      &lt;source src="lecture03-audio.mp3" type="audio/mpeg"&gt;
+      &lt;p&gt;お使いのブラウザは音声再生に対応していません。&lt;a href="lecture03-audio.mp3"&gt;音声をダウンロード&lt;/a&gt;してください。&lt;/p&gt;
+    &lt;/audio&gt;
+    &lt;figcaption&gt;音声のみ版（通信量を節約したい方向け）&lt;/figcaption&gt;
+  &lt;/figure&gt;
+
+  &lt;figure&gt;
+    &lt;iframe src="https://slides.example.com/lecture03"
+      title="第3回講義スライド"
+      width="800" height="450"
+      sandbox="allow-scripts allow-same-origin"
+      loading="lazy"&gt;
+      &lt;p&gt;スライドを表示できません。&lt;a href="https://slides.example.com/lecture03" target="_blank" rel="noopener noreferrer"&gt;こちら&lt;/a&gt;から閲覧してください。&lt;/p&gt;
+    &lt;/iframe&gt;
+    &lt;figcaption&gt;講義スライド（全32ページ）&lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/main&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;video&gt;</code> / <code>&lt;audio&gt;</code> は複数の <code>&lt;source&gt;</code> でフォーマット互換性を確保します。ブラウザは再生可能な最初のソースを使用します。</li>
+              <li><code>&lt;track&gt;</code> 要素で字幕（VTTファイル）を提供し、<code>default</code> 属性でデフォルト表示を指定します。</li>
+              <li><code>&lt;iframe&gt;</code> の <code>sandbox</code> 属性で埋め込みコンテンツの権限を制限し、セキュリティを向上させます。</li>
+              <li><code>preload="metadata"</code> は動画/音声の長さなどメタデータのみ事前読み込みし、帯域を節約します。</li>
+              <li>トランスクリプトは聴覚障害のあるユーザーや音声を出せない環境のユーザーにとって重要です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T6: セマンティクス・アクセシビリティ ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">accessibility</span>
+      <h2>T6 セマンティクス・アクセシビリティ</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- B-11 -->
+    <div class="drill-item" id="b-11">
+      <div class="drill-header">
+        <div class="drill-badge">B-11</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セマンティクス・アクセシビリティ</span>
+          <h3 class="drill-title">アクセシブルなカードUIコンポーネント</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>カードUIでは <code>&lt;article&gt;</code> でセマンティクスを確保し、ARIA属性でリンクカード全体のクリック領域とスクリーンリーダー対応を両立させます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でブログ一覧のカードUIを作成してください。</p>
+          <ul>
+            <li>各カードを <code>&lt;article&gt;</code> で構成（画像・カテゴリ・タイトル・抜粋・投稿日・著者）</li>
+            <li>カード画像に適切な <code>alt</code> テキスト（装飾的なら空文字列）</li>
+            <li>カテゴリを <code>&lt;span&gt;</code> + <code>role="text"</code>（または適切なセマンティクス）で表現</li>
+            <li>投稿日を <code>&lt;time datetime="..."&gt;</code> でマークアップ</li>
+            <li>カード全体がリンクになるよう、タイトルの <code>&lt;a&gt;</code> に <code>::after</code> 用クラスを設定</li>
+            <li><code>aria-label</code> でカード全体の目的を要約</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>3枚のブログカードが横並び。各カードにはサムネイル画像、カテゴリタグ（例:「HTML」「CSS」）、記事タイトル（リンク）、抜粋テキスト2行、下部に著者アイコン・名前・投稿日が表示される。カード全体がクリック可能。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>カード全体をリンクにするには、タイトルの <code>&lt;a&gt;</code> に <code>::after { position: absolute; inset: 0; }</code> を適用します。カードには <code>position: relative</code> を設定します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;section aria-label="最新ブログ記事"&gt;
+  &lt;h2&gt;最新記事&lt;/h2&gt;
+  &lt;div class="card-grid"&gt;
+
+    &lt;article class="card" aria-label="CSS Gridレイアウト完全ガイド — 田中一郎による記事"&gt;
+      &lt;img src="thumbnails/css-grid.jpg" alt="" width="400" height="225"
+        loading="lazy" decoding="async"&gt;
+      &lt;div class="card-body"&gt;
+        &lt;span class="card-category"&gt;CSS&lt;/span&gt;
+        &lt;h3&gt;&lt;a href="/blog/css-grid-guide" class="card-link"&gt;CSS Gridレイアウト完全ガイド&lt;/a&gt;&lt;/h3&gt;
+        &lt;p&gt;CSS Gridの基本概念から実践的なレイアウトパターンまで、豊富なコード例で解説します。&lt;/p&gt;
+        &lt;footer&gt;
+          &lt;img src="avatars/tanaka.jpg" alt="" width="32" height="32"&gt;
+          &lt;span&gt;田中一郎&lt;/span&gt;
+          &lt;time datetime="2026-03-01"&gt;2026年3月1日&lt;/time&gt;
+        &lt;/footer&gt;
+      &lt;/div&gt;
+    &lt;/article&gt;
+
+    &lt;article class="card" aria-label="HTMLセマンティクス入門 — 佐藤花子による記事"&gt;
+      &lt;img src="thumbnails/semantics.jpg" alt="" width="400" height="225"
+        loading="lazy" decoding="async"&gt;
+      &lt;div class="card-body"&gt;
+        &lt;span class="card-category"&gt;HTML&lt;/span&gt;
+        &lt;h3&gt;&lt;a href="/blog/html-semantics" class="card-link"&gt;HTMLセマンティクス入門&lt;/a&gt;&lt;/h3&gt;
+        &lt;p&gt;正しいHTMLタグ選択がSEOとアクセシビリティに与える影響を実例で学びます。&lt;/p&gt;
+        &lt;footer&gt;
+          &lt;img src="avatars/sato.jpg" alt="" width="32" height="32"&gt;
+          &lt;span&gt;佐藤花子&lt;/span&gt;
+          &lt;time datetime="2026-02-20"&gt;2026年2月20日&lt;/time&gt;
+        &lt;/footer&gt;
+      &lt;/div&gt;
+    &lt;/article&gt;
+
+    &lt;article class="card" aria-label="レスポンシブデザイン実践 — 鈴木太郎による記事"&gt;
+      &lt;img src="thumbnails/responsive.jpg" alt="" width="400" height="225"
+        loading="lazy" decoding="async"&gt;
+      &lt;div class="card-body"&gt;
+        &lt;span class="card-category"&gt;デザイン&lt;/span&gt;
+        &lt;h3&gt;&lt;a href="/blog/responsive-design" class="card-link"&gt;レスポンシブデザイン実践&lt;/a&gt;&lt;/h3&gt;
+        &lt;p&gt;モバイルファーストのアプローチで美しいレスポンシブサイトを構築する方法を紹介します。&lt;/p&gt;
+        &lt;footer&gt;
+          &lt;img src="avatars/suzuki.jpg" alt="" width="32" height="32"&gt;
+          &lt;span&gt;鈴木太郎&lt;/span&gt;
+          &lt;time datetime="2026-02-15"&gt;2026年2月15日&lt;/time&gt;
+        &lt;/footer&gt;
+      &lt;/div&gt;
+    &lt;/article&gt;
+
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;article&gt;</code> は自己完結型のコンテンツに使います。カードは単独でも意味が通るため適切です。</li>
+              <li>サムネイル画像は装飾的なので <code>alt=""</code> にします。タイトルリンクが内容を伝えるため二重に説明する必要はありません。</li>
+              <li>カード全体リンクは <code>.card-link::after</code> で透明オーバーレイを作る手法が一般的です。</li>
+              <li><code>aria-label</code> でカード全体の目的を要約することで、スクリーンリーダーユーザーが素早く内容を把握できます。</li>
+              <li><code>&lt;time&gt;</code> 要素の <code>datetime</code> 属性は機械可読な日付形式を提供します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- B-12 -->
+    <div class="drill-item" id="b-12">
+      <div class="drill-header">
+        <div class="drill-badge">B-12</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セマンティクス・アクセシビリティ</span>
+          <h3 class="drill-title">ランドマークとスキップリンク付きページ構造</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>HTMLランドマーク要素（<code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;aside&gt;</code>, <code>&lt;footer&gt;</code>）はスクリーンリーダーのナビゲーションに使われます。複数の同種ランドマークには <code>aria-label</code> が必要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でアクセシブルなブログページ全体を構築してください。</p>
+          <ul>
+            <li>スキップリンク（メインコンテンツへ / サイドバーへ / フッターへ の3つ）</li>
+            <li>グローバルナビ（<code>&lt;nav aria-label="メインナビゲーション"&gt;</code>）</li>
+            <li>パンくずナビ（<code>&lt;nav aria-label="パンくず"&gt;</code>）</li>
+            <li><code>&lt;main&gt;</code> 内に <code>&lt;article&gt;</code>（ブログ記事本文）</li>
+            <li><code>&lt;aside aria-label="サイドバー"&gt;</code>（関連記事・カテゴリ一覧）</li>
+            <li><code>&lt;footer&gt;</code> 内に <code>&lt;nav aria-label="フッターナビゲーション"&gt;</code></li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>フルレイアウトのブログページ。上部にヘッダーとグローバルナビ、その下にパンくずリスト。メインエリアは2カラム（左:記事本文、右:サイドバー）。下部にフッターナビとコピーライト。スクリーンリーダーはランドマーク一覧でページ構造を把握可能。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>同じ要素（例: <code>&lt;nav&gt;</code>）が複数ある場合、<code>aria-label</code> で区別します。スキップリンクは <code>visually-hidden</code> クラスで視覚的に隠し、フォーカス時に表示させます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;body&gt;
+  &lt;!-- スキップリンク --&gt;
+  &lt;a href="#main-content" class="skip-link"&gt;メインコンテンツへ&lt;/a&gt;
+  &lt;a href="#sidebar" class="skip-link"&gt;サイドバーへ&lt;/a&gt;
+  &lt;a href="#site-footer" class="skip-link"&gt;フッターへ&lt;/a&gt;
+
+  &lt;header&gt;
+    &lt;a href="/"&gt;&lt;img src="logo.svg" alt="Tech Blog ホーム"&gt;&lt;/a&gt;
+    &lt;nav aria-label="メインナビゲーション"&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/articles" aria-current="page"&gt;記事一覧&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/about"&gt;About&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+
+  &lt;nav aria-label="パンくず"&gt;
+    &lt;ol&gt;
+      &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="/articles"&gt;記事一覧&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;span aria-current="page"&gt;CSS Grid完全ガイド&lt;/span&gt;&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/nav&gt;
+
+  &lt;div class="layout"&gt;
+    &lt;main id="main-content"&gt;
+      &lt;article&gt;
+        &lt;header&gt;
+          &lt;h1&gt;CSS Grid完全ガイド&lt;/h1&gt;
+          &lt;p&gt;投稿日: &lt;time datetime="2026-03-01"&gt;2026年3月1日&lt;/time&gt;&lt;/p&gt;
+        &lt;/header&gt;
+        &lt;section&gt;
+          &lt;h2&gt;はじめに&lt;/h2&gt;
+          &lt;p&gt;CSS Gridはモダンなレイアウト手法です。&lt;/p&gt;
+        &lt;/section&gt;
+      &lt;/article&gt;
+    &lt;/main&gt;
+
+    &lt;aside id="sidebar" aria-label="サイドバー"&gt;
+      &lt;section&gt;
+        &lt;h2&gt;関連記事&lt;/h2&gt;
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href="/articles/flexbox"&gt;Flexbox入門&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/articles/responsive"&gt;レスポンシブデザイン&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/section&gt;
+      &lt;section&gt;
+        &lt;h2&gt;カテゴリ&lt;/h2&gt;
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href="/category/html"&gt;HTML (12)&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/category/css"&gt;CSS (18)&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/section&gt;
+    &lt;/aside&gt;
+  &lt;/div&gt;
+
+  &lt;footer id="site-footer"&gt;
+    &lt;nav aria-label="フッターナビゲーション"&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="/privacy"&gt;プライバシーポリシー&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/terms"&gt;利用規約&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/contact"&gt;お問い合わせ&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+    &lt;p&gt;&amp;copy; 2026 Tech Blog&lt;/p&gt;
+  &lt;/footer&gt;
+&lt;/body&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>ランドマーク要素はスクリーンリーダーの「ランドマーク一覧」機能でページ構造を把握するために使われます。</li>
+              <li>同種のランドマーク（複数の <code>&lt;nav&gt;</code>）は <code>aria-label</code> で区別します。</li>
+              <li>スキップリンクはキーボードユーザーが繰り返しナビゲーションを飛ばすために必須です。</li>
+              <li><code>aria-current="page"</code> はパンくずリストの現在位置を伝え、ナビゲーションのアクティブ項目を示します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T7: メタデータ・SEO・OGP ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">search</span>
+      <h2>T7 メタデータ・SEO・OGP</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- B-13 -->
+    <div class="drill-item" id="b-13">
+      <div class="drill-header">
+        <div class="drill-badge">B-13</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 メタデータ・SEO・OGP</span>
+          <h3 class="drill-title">SEO完全対応のブログ記事テンプレート</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>SEOに強いページには、適切な <code>&lt;title&gt;</code>、<code>meta description</code>、OGPタグ、<code>canonical</code> URL、構造化された見出し階層が必要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でSEO最適化されたブログ記事テンプレートを作成してください。</p>
+          <ul>
+            <li><code>&lt;title&gt;</code>：「記事タイトル | サイト名」形式（60文字以内）</li>
+            <li><code>meta description</code>：記事の要約（120〜160文字）</li>
+            <li>OGPタグ一式（<code>og:title</code>, <code>og:description</code>, <code>og:image</code>, <code>og:url</code>, <code>og:type</code>, <code>og:site_name</code>）</li>
+            <li>Twitter Card（<code>twitter:card</code>, <code>twitter:site</code>, <code>twitter:title</code>, <code>twitter:description</code>, <code>twitter:image</code>）</li>
+            <li><code>&lt;link rel="canonical"&gt;</code> で正規URLを設定</li>
+            <li>見出し階層 <code>h1</code> &gt; <code>h2</code> &gt; <code>h3</code> が論理的に正しいこと</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>ブラウザのタブに「CSS Gridレイアウト完全ガイド | TechBlog」と表示。SNSシェア時にOGP画像・タイトル・説明がリッチプレビューで表示される。検索結果にはmeta descriptionの内容がスニペットとして表示。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>OGPタグは <code>&lt;meta property="og:..."&gt;</code>、Twitter Cardは <code>&lt;meta name="twitter:..."&gt;</code> です。<code>og:image</code> は絶対URLで指定し、推奨サイズは1200x630pxです。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;CSS Gridレイアウト完全ガイド | TechBlog&lt;/title&gt;
+  &lt;meta name="description" content="CSS Gridの基本概念からfr単位、repeat関数、名前付きエリアまで、実践的なコード例で解説。レスポンシブ対応のモダンレイアウトを習得しましょう。"&gt;
+
+  &lt;!-- canonical --&gt;
+  &lt;link rel="canonical" href="https://techblog.example.com/articles/css-grid-guide"&gt;
+
+  &lt;!-- OGP --&gt;
+  &lt;meta property="og:type" content="article"&gt;
+  &lt;meta property="og:title" content="CSS Gridレイアウト完全ガイド"&gt;
+  &lt;meta property="og:description" content="CSS Gridの基本からfr単位、名前付きエリアまで実践的に解説します。"&gt;
+  &lt;meta property="og:image" content="https://techblog.example.com/images/css-grid-og.jpg"&gt;
+  &lt;meta property="og:url" content="https://techblog.example.com/articles/css-grid-guide"&gt;
+  &lt;meta property="og:site_name" content="TechBlog"&gt;
+
+  &lt;!-- Twitter Card --&gt;
+  &lt;meta name="twitter:card" content="summary_large_image"&gt;
+  &lt;meta name="twitter:site" content="@techblog"&gt;
+  &lt;meta name="twitter:title" content="CSS Gridレイアウト完全ガイド"&gt;
+  &lt;meta name="twitter:description" content="CSS Gridの基本からfr単位、名前付きエリアまで実践的に解説します。"&gt;
+  &lt;meta name="twitter:image" content="https://techblog.example.com/images/css-grid-og.jpg"&gt;
+
+  &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;header&gt;
+    &lt;nav aria-label="メインナビゲーション"&gt;
+      &lt;a href="/"&gt;TechBlog&lt;/a&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="/articles"&gt;記事一覧&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+
+  &lt;main&gt;
+    &lt;article&gt;
+      &lt;h1&gt;CSS Gridレイアウト完全ガイド&lt;/h1&gt;
+      &lt;p&gt;公開: &lt;time datetime="2026-03-01"&gt;2026年3月1日&lt;/time&gt;&lt;/p&gt;
+
+      &lt;section&gt;
+        &lt;h2&gt;CSS Gridとは&lt;/h2&gt;
+        &lt;p&gt;2次元レイアウトを実現するCSSモジュールです。&lt;/p&gt;
+        &lt;h3&gt;Flexboxとの違い&lt;/h3&gt;
+        &lt;p&gt;Flexboxは1次元、Gridは2次元レイアウトに適しています。&lt;/p&gt;
+      &lt;/section&gt;
+
+      &lt;section&gt;
+        &lt;h2&gt;基本プロパティ&lt;/h2&gt;
+        &lt;h3&gt;grid-template-columns&lt;/h3&gt;
+        &lt;p&gt;列の定義を行います。&lt;/p&gt;
+        &lt;h3&gt;grid-template-rows&lt;/h3&gt;
+        &lt;p&gt;行の定義を行います。&lt;/p&gt;
+      &lt;/section&gt;
+    &lt;/article&gt;
+  &lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;title&gt;</code> は検索結果のクリック率に最も影響するため、キーワードを含め60文字以内にします。</li>
+              <li><code>meta description</code> は検索スニペットに表示されます。120〜160文字で記事内容を要約します。</li>
+              <li><code>canonical</code> URLは重複コンテンツ問題を防ぎ、検索エンジンに正規ページを伝えます。</li>
+              <li>OGPの <code>og:image</code> は1200x630px推奨で、絶対URLで指定します。</li>
+              <li>見出し階層は <code>h1</code> &gt; <code>h2</code> &gt; <code>h3</code> の順で飛ばさないことがSEOの基本です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- B-14 -->
+    <div class="drill-item" id="b-14">
+      <div class="drill-header">
+        <div class="drill-badge">B-14</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 メタデータ・SEO・OGP</span>
+          <h3 class="drill-title">構造化データ付きレシピページ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>JSON-LD形式の構造化データ（Schema.org）を埋め込むと、検索結果にリッチスニペット（レシピカード、評価、調理時間など）が表示されます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で構造化データ付きのレシピページを作成してください。</p>
+          <ul>
+            <li>JSON-LD形式（<code>&lt;script type="application/ld+json"&gt;</code>）で <code>Recipe</code> スキーマを記述</li>
+            <li>レシピ名、説明、画像URL、調理時間（<code>prepTime</code>, <code>cookTime</code>）、カロリー</li>
+            <li>材料リスト（<code>recipeIngredient</code>）と手順（<code>recipeInstructions</code>）</li>
+            <li>評価（<code>aggregateRating</code>）: 平均4.5、レビュー数28</li>
+            <li>HTML本文も構造化データと対応する内容で作成</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>レシピページが表示される。Google検索ではリッチスニペットとして、レシピカード（画像、調理時間、カロリー、評価星）が表示される。ページ本文には材料一覧と手順が分かりやすく表示。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>JSON-LDは <code>&lt;head&gt;</code> または <code>&lt;body&gt;</code> 内に配置可能です。<code>@context</code> に <code>"https://schema.org"</code>、<code>@type</code> に <code>"Recipe"</code> を指定します。時間は ISO 8601 形式（例: <code>PT30M</code>）です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;鶏の唐揚げの作り方 | クックレシピ&lt;/title&gt;
+  &lt;meta name="description" content="外はカリッと中はジューシー。家庭で作れる本格鶏の唐揚げレシピ。下味のコツと揚げ方を詳しく解説。"&gt;
+
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "Recipe",
+    "name": "鶏の唐揚げ",
+    "description": "外はカリッと中はジューシーな本格鶏の唐揚げ",
+    "image": "https://cookrecipe.example.com/images/karaage.jpg",
+    "prepTime": "PT20M",
+    "cookTime": "PT15M",
+    "totalTime": "PT35M",
+    "recipeYield": "4人分",
+    "nutrition": {
+      "@type": "NutritionInformation",
+      "calories": "320 cal"
+    },
+    "recipeIngredient": [
+      "鶏もも肉 400g",
+      "醤油 大さじ2",
+      "おろし生姜 小さじ1",
+      "おろしニンニク 小さじ1",
+      "片栗粉 大さじ4",
+      "揚げ油 適量"
+    ],
+    "recipeInstructions": [
+      {
+        "@type": "HowToStep",
+        "text": "鶏もも肉を一口大に切り、醤油・生姜・ニンニクで下味をつけ、20分漬ける。"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "片栗粉をまぶし、170度の油で4分揚げる。"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "一度取り出して3分休ませ、180度で1分二度揚げする。"
+      }
+    ],
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.5",
+      "reviewCount": "28"
+    }
+  }
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;main&gt;
+    &lt;article&gt;
+      &lt;h1&gt;鶏の唐揚げ&lt;/h1&gt;
+      &lt;p&gt;調理時間: 35分 | カロリー: 320 cal | 評価: 4.5 (28件)&lt;/p&gt;
+      &lt;img src="karaage.jpg" alt="皿に盛られたカリッと揚がった鶏の唐揚げ" width="800" height="600"&gt;
+
+      &lt;section&gt;
+        &lt;h2&gt;材料（4人分）&lt;/h2&gt;
+        &lt;ul&gt;
+          &lt;li&gt;鶏もも肉 400g&lt;/li&gt;
+          &lt;li&gt;醤油 大さじ2&lt;/li&gt;
+          &lt;li&gt;おろし生姜 小さじ1&lt;/li&gt;
+          &lt;li&gt;おろしニンニク 小さじ1&lt;/li&gt;
+          &lt;li&gt;片栗粉 大さじ4&lt;/li&gt;
+          &lt;li&gt;揚げ油 適量&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/section&gt;
+
+      &lt;section&gt;
+        &lt;h2&gt;手順&lt;/h2&gt;
+        &lt;ol&gt;
+          &lt;li&gt;鶏もも肉を一口大に切り、醤油・生姜・ニンニクで下味をつけ、20分漬ける。&lt;/li&gt;
+          &lt;li&gt;片栗粉をまぶし、170度の油で4分揚げる。&lt;/li&gt;
+          &lt;li&gt;一度取り出して3分休ませ、180度で1分二度揚げする。&lt;/li&gt;
+        &lt;/ol&gt;
+      &lt;/section&gt;
+    &lt;/article&gt;
+  &lt;/main&gt;
+&lt;/body&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>JSON-LD はHTMLから独立した構造化データ形式で、Googleが推奨しています。</li>
+              <li>時間は ISO 8601 Duration形式で、<code>PT20M</code> は「20分」、<code>PT1H30M</code> は「1時間30分」を表します。</li>
+              <li><code>recipeInstructions</code> は <code>HowToStep</code> 型の配列にすると、検索結果にステップ表示されます。</li>
+              <li><code>aggregateRating</code> で評価情報を提供すると、検索結果に星評価が表示されます。</li>
+              <li>JSON-LDの内容とHTML本文の内容は一致させる必要があります。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T8: 総合マークアップ ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">integration_instructions</span>
+      <h2>T8 総合マークアップ</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- B-15 -->
+    <div class="drill-item" id="b-15">
+      <div class="drill-header">
+        <div class="drill-badge">B-15</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合マークアップ</span>
+          <h3 class="drill-title">イベント告知ページの総合マークアップ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>イベント告知ページでは、セマンティクス、フォーム、テーブル、メディア、アクセシビリティの全要素を統合的に使用します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でテックカンファレンスの告知ページを作成してください。</p>
+          <ul>
+            <li>ヒーローセクション：イベントタイトル、日時（<code>&lt;time&gt;</code>）、場所、キービジュアル</li>
+            <li>タイムテーブル：<code>&lt;table&gt;</code> で3トラック並列のスケジュール（<code>rowspan</code> 使用）</li>
+            <li>スピーカー紹介：<code>&lt;figure&gt;</code> + <code>&lt;figcaption&gt;</code> で顔写真と略歴</li>
+            <li>参加申込フォーム：名前、メール、参加トラック選択（<code>&lt;select&gt;</code>）、懇親会参加（<code>checkbox</code>）</li>
+            <li>アクセスマップ：<code>&lt;iframe&gt;</code> でGoogle Maps埋め込み + テキストでの住所・交通案内</li>
+            <li>全体がセマンティクスに基づく <code>&lt;section&gt;</code> 構造</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>カンファレンスの告知ページ。上部にヒーロー画像とイベント情報。3トラック並列のタイムテーブル、スピーカーの顔写真カード、参加申込フォーム、Google Maps埋め込みのアクセスマップがセクションごとに表示。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>タイムテーブルの基調講演は <code>colspan="3"</code> で3トラック全体に表示します。並行セッションは各 <code>&lt;td&gt;</code> にトラック別の内容を入れます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;body&gt;
+  &lt;header&gt;
+    &lt;nav aria-label="メインナビゲーション"&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="#schedule"&gt;タイムテーブル&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="#speakers"&gt;スピーカー&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="#register"&gt;参加申込&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="#access"&gt;アクセス&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+
+  &lt;main&gt;
+    &lt;section class="hero"&gt;
+      &lt;h1&gt;TechConf 2026&lt;/h1&gt;
+      &lt;p&gt;日時: &lt;time datetime="2026-06-15T10:00"&gt;2026年6月15日 10:00&lt;/time&gt;
+        〜 &lt;time datetime="2026-06-15T18:00"&gt;18:00&lt;/time&gt;&lt;/p&gt;
+      &lt;p&gt;会場: 東京国際フォーラム ホールA&lt;/p&gt;
+      &lt;img src="hero-techconf.jpg" alt="TechConf 2026 キービジュアル" width="1200" height="600"&gt;
+    &lt;/section&gt;
+
+    &lt;section id="schedule"&gt;
+      &lt;h2&gt;タイムテーブル&lt;/h2&gt;
+      &lt;table&gt;
+        &lt;caption&gt;TechConf 2026 セッションスケジュール&lt;/caption&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th scope="col"&gt;時間&lt;/th&gt;
+            &lt;th scope="col"&gt;Track A&lt;/th&gt;
+            &lt;th scope="col"&gt;Track B&lt;/th&gt;
+            &lt;th scope="col"&gt;Track C&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;
+            &lt;th scope="row"&gt;10:00-11:00&lt;/th&gt;
+            &lt;td colspan="3"&gt;基調講演「AIとWebの未来」&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;th scope="row"&gt;11:15-12:00&lt;/th&gt;
+            &lt;td&gt;React最新動向&lt;/td&gt;
+            &lt;td&gt;Go言語入門&lt;/td&gt;
+            &lt;td&gt;DevOps実践&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;th scope="row"&gt;13:00-14:30&lt;/th&gt;
+            &lt;td rowspan="2"&gt;ハンズオン: Next.js&lt;/td&gt;
+            &lt;td&gt;DB設計パターン&lt;/td&gt;
+            &lt;td&gt;セキュリティ対策&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;th scope="row"&gt;14:45-16:00&lt;/th&gt;
+            &lt;td&gt;マイクロサービス&lt;/td&gt;
+            &lt;td&gt;CI/CDパイプライン&lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/section&gt;
+
+    &lt;section id="speakers"&gt;
+      &lt;h2&gt;スピーカー&lt;/h2&gt;
+      &lt;div class="speaker-grid"&gt;
+        &lt;figure&gt;
+          &lt;img src="speakers/yamada.jpg" alt="山田太郎の顔写真" width="200" height="200"&gt;
+          &lt;figcaption&gt;
+            &lt;strong&gt;山田太郎&lt;/strong&gt;
+            &lt;p&gt;株式会社テック CTO。Webフロントエンド歴15年。&lt;/p&gt;
+          &lt;/figcaption&gt;
+        &lt;/figure&gt;
+        &lt;figure&gt;
+          &lt;img src="speakers/suzuki.jpg" alt="鈴木花子の顔写真" width="200" height="200"&gt;
+          &lt;figcaption&gt;
+            &lt;strong&gt;鈴木花子&lt;/strong&gt;
+            &lt;p&gt;AI研究所 主任研究員。機械学習専門。&lt;/p&gt;
+          &lt;/figcaption&gt;
+        &lt;/figure&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section id="register"&gt;
+      &lt;h2&gt;参加申込&lt;/h2&gt;
+      &lt;form action="/register" method="post"&gt;
+        &lt;div&gt;
+          &lt;label for="reg-name"&gt;氏名&lt;/label&gt;
+          &lt;input type="text" id="reg-name" name="name" required&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for="reg-email"&gt;メールアドレス&lt;/label&gt;
+          &lt;input type="email" id="reg-email" name="email" required&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for="reg-track"&gt;参加トラック&lt;/label&gt;
+          &lt;select id="reg-track" name="track"&gt;
+            &lt;option value="a"&gt;Track A（フロントエンド）&lt;/option&gt;
+            &lt;option value="b"&gt;Track B（バックエンド）&lt;/option&gt;
+            &lt;option value="c"&gt;Track C（インフラ）&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label&gt;&lt;input type="checkbox" name="party" value="yes"&gt; 懇親会に参加する（+3,000円）&lt;/label&gt;
+        &lt;/div&gt;
+        &lt;button type="submit"&gt;申し込む&lt;/button&gt;
+      &lt;/form&gt;
+    &lt;/section&gt;
+
+    &lt;section id="access"&gt;
+      &lt;h2&gt;アクセス&lt;/h2&gt;
+      &lt;address&gt;東京都千代田区丸の内3-5-1 東京国際フォーラム&lt;/address&gt;
+      &lt;p&gt;JR有楽町駅 徒歩1分 / 東京メトロ有楽町線 有楽町駅 D5出口直結&lt;/p&gt;
+      &lt;iframe src="https://www.google.com/maps/embed?pb=..."
+        title="東京国際フォーラムの地図"
+        width="600" height="400"
+        loading="lazy"
+        sandbox="allow-scripts allow-same-origin"&gt;&lt;/iframe&gt;
+    &lt;/section&gt;
+  &lt;/main&gt;
+
+  &lt;footer&gt;
+    &lt;p&gt;&amp;copy; 2026 TechConf 実行委員会&lt;/p&gt;
+  &lt;/footer&gt;
+&lt;/body&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>各セクションに <code>id</code> を設定し、ナビからのページ内リンクを実現しています。</li>
+              <li>タイムテーブルの <code>colspan</code>/<code>rowspan</code> で基調講演の全トラック共通表示やハンズオンの長時間枠を表現しています。</li>
+              <li><code>&lt;address&gt;</code> 要素は連絡先情報のマークアップに使用します。会場住所に適切です。</li>
+              <li><code>&lt;iframe&gt;</code> の <code>title</code> 属性はスクリーンリーダーに埋め込みコンテンツの説明を伝えます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- B-16 -->
+    <div class="drill-item" id="b-16">
+      <div class="drill-header">
+        <div class="drill-badge">B-16</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合マークアップ</span>
+          <h3 class="drill-title">ECサイト商品一覧ページの総合マークアップ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>ECサイトの商品一覧では、商品カード、フィルター/ソートUI、ページネーション、パンくずリストなど多くのHTMLパターンを組み合わせる必要があります。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でECサイトの商品一覧ページを作成してください。</p>
+          <ul>
+            <li>パンくずリスト（ホーム > カテゴリ > サブカテゴリ）</li>
+            <li>フィルターサイドバー：価格帯（<code>range</code>）、カテゴリ（<code>checkbox</code>群）、並び順（<code>&lt;select&gt;</code>）</li>
+            <li>商品カード×4枚：<code>&lt;article&gt;</code> + 画像 + 商品名 + 価格 + 評価（星マーク）+ 「カートに追加」ボタン</li>
+            <li>ページネーション：<code>&lt;nav aria-label="ページネーション"&gt;</code> で前へ/1/2/3/次へ</li>
+            <li>結果件数を <code>aria-live="polite"</code> で表示</li>
+          </ul>
+        </div>
+        <div class="expected-output">
+          <div class="label"><span class="material-icons">visibility</span> 表示結果</div>
+          <pre>左にフィルターサイドバー、右に商品カードグリッド（2x2）が表示。各カードに商品画像・名前・価格・星評価・カートボタン。上部にパンくずリストと結果件数。下部にページネーション。</pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>ページネーションの現在ページには <code>aria-current="page"</code> を設定します。フィルター変更時の件数更新は <code>aria-live</code> で通知します。星評価は <code>aria-label="5段階中4"</code> のようにテキスト代替を提供します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;body&gt;
+  &lt;nav aria-label="パンくず"&gt;
+    &lt;ol&gt;
+      &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="/electronics"&gt;家電&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;span aria-current="page"&gt;ヘッドホン&lt;/span&gt;&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/nav&gt;
+
+  &lt;p aria-live="polite" id="result-count"&gt;48件の商品が見つかりました&lt;/p&gt;
+
+  &lt;div class="page-layout"&gt;
+    &lt;aside aria-label="フィルター"&gt;
+      &lt;form&gt;
+        &lt;fieldset&gt;
+          &lt;legend&gt;価格帯&lt;/legend&gt;
+          &lt;label for="price-range"&gt;上限: &lt;output id="price-val"&gt;30,000&lt;/output&gt;円&lt;/label&gt;
+          &lt;input type="range" id="price-range" min="0" max="50000" value="30000" step="1000"&gt;
+        &lt;/fieldset&gt;
+        &lt;fieldset&gt;
+          &lt;legend&gt;タイプ&lt;/legend&gt;
+          &lt;label&gt;&lt;input type="checkbox" name="type" value="over-ear"&gt; オーバーイヤー&lt;/label&gt;
+          &lt;label&gt;&lt;input type="checkbox" name="type" value="on-ear"&gt; オンイヤー&lt;/label&gt;
+          &lt;label&gt;&lt;input type="checkbox" name="type" value="in-ear"&gt; インイヤー&lt;/label&gt;
+        &lt;/fieldset&gt;
+        &lt;div&gt;
+          &lt;label for="sort"&gt;並び順&lt;/label&gt;
+          &lt;select id="sort" name="sort"&gt;
+            &lt;option value="popular"&gt;人気順&lt;/option&gt;
+            &lt;option value="price-asc"&gt;価格: 安い順&lt;/option&gt;
+            &lt;option value="price-desc"&gt;価格: 高い順&lt;/option&gt;
+            &lt;option value="rating"&gt;評価順&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+      &lt;/form&gt;
+    &lt;/aside&gt;
+
+    &lt;main&gt;
+      &lt;div class="product-grid"&gt;
+        &lt;article class="product-card"&gt;
+          &lt;img src="products/headphone-a.jpg" alt="ワイヤレスヘッドホン AX-100 ブラック" width="300" height="300" loading="lazy"&gt;
+          &lt;h2&gt;ワイヤレスヘッドホン AX-100&lt;/h2&gt;
+          &lt;p class="price"&gt;&amp;yen;12,800&lt;/p&gt;
+          &lt;p aria-label="5段階中4の評価"&gt;
+            &lt;span aria-hidden="true"&gt;&amp;#9733;&amp;#9733;&amp;#9733;&amp;#9733;&amp;#9734;&lt;/span&gt;
+            (4.0)
+          &lt;/p&gt;
+          &lt;button type="button"&gt;カートに追加&lt;/button&gt;
+        &lt;/article&gt;
+
+        &lt;article class="product-card"&gt;
+          &lt;img src="products/headphone-b.jpg" alt="ノイズキャンセリングヘッドホン NC-200 シルバー" width="300" height="300" loading="lazy"&gt;
+          &lt;h2&gt;ノイキャンヘッドホン NC-200&lt;/h2&gt;
+          &lt;p class="price"&gt;&amp;yen;24,500&lt;/p&gt;
+          &lt;p aria-label="5段階中4.5の評価"&gt;
+            &lt;span aria-hidden="true"&gt;&amp;#9733;&amp;#9733;&amp;#9733;&amp;#9733;&amp;#9734;&lt;/span&gt;
+            (4.5)
+          &lt;/p&gt;
+          &lt;button type="button"&gt;カートに追加&lt;/button&gt;
+        &lt;/article&gt;
+
+        &lt;article class="product-card"&gt;
+          &lt;img src="products/headphone-c.jpg" alt="スポーツイヤホン SP-50 レッド" width="300" height="300" loading="lazy"&gt;
+          &lt;h2&gt;スポーツイヤホン SP-50&lt;/h2&gt;
+          &lt;p class="price"&gt;&amp;yen;6,980&lt;/p&gt;
+          &lt;p aria-label="5段階中3.5の評価"&gt;
+            &lt;span aria-hidden="true"&gt;&amp;#9733;&amp;#9733;&amp;#9733;&amp;#9734;&amp;#9734;&lt;/span&gt;
+            (3.5)
+          &lt;/p&gt;
+          &lt;button type="button"&gt;カートに追加&lt;/button&gt;
+        &lt;/article&gt;
+
+        &lt;article class="product-card"&gt;
+          &lt;img src="products/headphone-d.jpg" alt="プレミアムヘッドホン PX-500 ゴールド" width="300" height="300" loading="lazy"&gt;
+          &lt;h2&gt;プレミアムヘッドホン PX-500&lt;/h2&gt;
+          &lt;p class="price"&gt;&amp;yen;45,000&lt;/p&gt;
+          &lt;p aria-label="5段階中5の評価"&gt;
+            &lt;span aria-hidden="true"&gt;&amp;#9733;&amp;#9733;&amp;#9733;&amp;#9733;&amp;#9733;&lt;/span&gt;
+            (5.0)
+          &lt;/p&gt;
+          &lt;button type="button"&gt;カートに追加&lt;/button&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+
+      &lt;nav aria-label="ページネーション"&gt;
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href="?page=1"&gt;前へ&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="?page=1" aria-current="page"&gt;1&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="?page=2"&gt;2&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="?page=3"&gt;3&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="?page=2"&gt;次へ&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/nav&gt;
+    &lt;/main&gt;
+  &lt;/div&gt;
+&lt;/body&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>商品カードは <code>&lt;article&gt;</code> で自己完結したコンテンツとしてマークアップします。</li>
+              <li>星評価は視覚的には記号で表示し、<code>aria-label</code> でスクリーンリーダー向けのテキスト代替を提供します。</li>
+              <li>ページネーションの <code>aria-current="page"</code> で現在ページを示し、<code>&lt;nav&gt;</code> に <code>aria-label</code> で用途を伝えます。</li>
+              <li><code>aria-live="polite"</code> でフィルター変更時の結果件数をスクリーンリーダーに通知します。</li>
+              <li>フィルターは <code>&lt;aside&gt;</code> でサイドバーとしてランドマーク化しています。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-navigation">
+      <a href="level-c.html" class="prev-page">
+        <span class="material-icons">arrow_back</span>
+        Level C — 仕様実装
+      </a>
+      <a href="level-a.html" class="next-page">
+        Level A — 設計実装
+        <span class="material-icons">arrow_forward</span>
+      </a>
+    </div>
+
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

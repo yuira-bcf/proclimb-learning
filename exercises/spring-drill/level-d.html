@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Level D — 基礎実装 | SpringBoot実力養成ドリル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #34C759;
+      --primary-dark: #248A3D;
+      --primary-light: #E8F8ED;
+      --primary-lighter: #C8F0D4;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+
+    /* Drill item */
+    .drill-item {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .drill-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      background: #fafbfc;
+    }
+    .drill-badge {
+      background: var(--primary);
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .drill-meta { flex: 1; }
+    .drill-theme {
+      font-size: 0.72rem;
+      color: var(--primary);
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      display: block;
+    }
+    .drill-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1d1d1f;
+    }
+    .drill-body { padding: 24px; }
+
+    /* Point box */
+    .drill-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .drill-point > .material-icons {
+      color: #f9a825;
+      font-size: 1.4rem;
+      margin-top: 2px;
+    }
+    .drill-point strong {
+      display: block;
+      font-size: 0.82rem;
+      color: #f57f17;
+      margin-bottom: 4px;
+    }
+    .drill-point p {
+      font-size: 0.85rem;
+      color: #5d4037;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Task */
+    .drill-task { margin-bottom: 20px; }
+    .drill-task h4 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1d1d1f;
+      margin-bottom: 12px;
+    }
+    .drill-task h4 .material-icons {
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+    .drill-task p, .drill-task ul, .drill-task ol {
+      font-size: 0.88rem;
+      line-height: 1.8;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .drill-task ul, .drill-task ol { padding-left: 1.5em; }
+    .drill-task li { margin-bottom: 4px; }
+
+    /* Code block */
+    .drill-code {
+      background: #1e293b;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      padding: 20px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    .drill-code code { font-family: inherit; }
+
+    /* Expected output */
+    .expected-output {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 12px 0;
+    }
+    .expected-output .label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #16a34a;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .expected-output pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: #166534;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    /* Hint */
+    .drill-hint { margin-bottom: 8px; }
+    .drill-hint summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #f57c00;
+      padding: 10px 14px;
+      background: #fff3e0;
+      border-radius: 10px;
+      list-style: none;
+      user-select: none;
+    }
+    .drill-hint summary::-webkit-details-marker { display: none; }
+    .drill-hint summary .material-icons { font-size: 1.1rem; }
+    .drill-hint[open] summary { border-radius: 10px 10px 0 0; }
+    .hint-content {
+      background: #fff8e1;
+      padding: 16px 18px;
+      border-radius: 0 0 10px 10px;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: #5d4037;
+    }
+    .hint-content code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0,0,0,0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.82rem;
+    }
+
+    /* Answer */
+    .drill-answer { margin-top: 8px; }
+    .drill-answer summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--primary);
+      padding: 10px 14px;
+      background: var(--primary-light);
+      border-radius: 10px;
+      list-style: none;
+      user-select: none;
+    }
+    .drill-answer summary::-webkit-details-marker { display: none; }
+    .drill-answer summary .material-icons { color: var(--primary); font-size: 1.1rem; }
+    .drill-answer[open] summary { border-radius: 10px 10px 0 0; }
+    .answer-content {
+      background: #f8fbff;
+      padding: 20px;
+      border-radius: 0 0 10px 10px;
+      border: 1px solid var(--primary-light);
+      border-top: none;
+    }
+    .answer-content p {
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .answer-content h5 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin: 16px 0 8px;
+    }
+    .answer-content ul {
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: #333;
+      padding-left: 1.5em;
+      margin-bottom: 10px;
+    }
+
+    /* Signature block */
+    .signature-block {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 10px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: #334155;
+      line-height: 1.6;
+    }
+
+    /* Theme separator */
+    .theme-separator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 36px 0 20px;
+      padding: 12px 20px;
+      background: var(--primary-light);
+      border-radius: 12px;
+      border-left: 4px solid var(--primary);
+    }
+    .theme-separator .material-icons {
+      color: var(--primary);
+      font-size: 1.3rem;
+    }
+    .theme-separator h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+    .theme-separator span.theme-count {
+      font-size: 0.75rem;
+      color: #666;
+      font-weight: 400;
+      margin-left: auto;
+    }
+
+    /* Blank marker */
+    .blank-marker {
+      color: #e53935;
+      font-weight: 700;
+    }
+
+    @media (max-width: 480px) {
+      .drill-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+      .drill-body { padding: 16px; }
+      .drill-code { font-size: 0.75rem; padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-spring-drill.js"></script>
+
+  <div class="container">
+    <!-- Chapter Header -->
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">eco</span> Drill</div>
+      <div class="chapter-number">D</div>
+      <h1 class="chapter-title">Level D — 基礎実装</h1>
+      <p style="color:#fff; margin-top:8px;">穴埋め・写経+改造でSpring Bootの基本構文を身につける｜16課題・8テーマ</p>
+    </header>
+
+    <!-- ===== T1: Spring Boot基礎・DI ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">settings</span>
+      <h2>T1 Spring Boot基礎・DI</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-01 -->
+    <div class="drill-item" id="d-01">
+      <div class="drill-header">
+        <div class="drill-badge">D-01</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 Spring Boot基礎・DI</span>
+          <h3 class="drill-title">穴埋め — @Componentと@Autowired</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>Spring BootではDI（依存性注入）でオブジェクトの生成と管理をフレームワークに任せます。@ComponentでクラスをBean登録し、@Autowiredで自動注入します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のコードの <span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ③ */</span> を埋めて、DIが正しく動作するようにしてください。</p>
+<pre class="drill-code"><code>// GreetingService.java
+/* ① */
+public class GreetingService {
+    public String greet(String name) {
+        return "Hello, " + name + "!";
+    }
+}
+
+// GreetingController.java
+@RestController
+public class GreetingController {
+
+    /* ② */
+    private /* ③ */ greetingService;
+
+    @GetMapping("/greet")
+    public String greet(@RequestParam String name) {
+        return greetingService.greet(name);
+    }
+}</code></pre>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">terminal</span>GET /greet?name=Taro</div>
+<pre>Hello, Taro!</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① Beanとして登録するアノテーションは <code>@Component</code> または <code>@Service</code> です。② フィールド注入には <code>@Autowired</code> を使います。③ 注入する型名を書きます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// GreetingService.java
+@Service
+public class GreetingService {
+    public String greet(String name) {
+        return "Hello, " + name + "!";
+    }
+}
+
+// GreetingController.java
+@RestController
+public class GreetingController {
+
+    @Autowired
+    private GreetingService greetingService;
+
+    @GetMapping("/greet")
+    public String greet(@RequestParam String name) {
+        return greetingService.greet(name);
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@Service</code> は <code>@Component</code> の特殊化で、ビジネスロジック層であることを意味的に示します。</li>
+              <li><code>@Autowired</code> はSpringが型に基づいて自動的にBeanを注入します。コンストラクタ注入が推奨ですが、まずフィールド注入で仕組みを理解しましょう。</li>
+              <li><code>@RestController</code> は <code>@Controller</code> + <code>@ResponseBody</code> の合成アノテーションです。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-02 -->
+    <div class="drill-item" id="d-02">
+      <div class="drill-header">
+        <div class="drill-badge">D-02</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 Spring Boot基礎・DI</span>
+          <h3 class="drill-title">写経+改造 — コンストラクタ注入への変換</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>フィールド注入（@Autowired）より、コンストラクタ注入が推奨されます。不変性が保証され、テスト時にモックを渡しやすくなります。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のフィールド注入コードを写経して動作確認してください。</p>
+<pre class="drill-code"><code>@RestController
+public class TaskController {
+
+    @Autowired
+    private TaskService taskService;
+
+    @GetMapping("/tasks")
+    public List&lt;String&gt; getTasks() {
+        return taskService.findAll();
+    }
+}</code></pre>
+          <p><strong>Step 2（改造）:</strong> <code>@Autowired</code> フィールド注入を <strong>コンストラクタ注入</strong> に書き換えてください。フィールドには <code>final</code> を付けてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>コンストラクタが1つだけの場合、<code>@Autowired</code> は省略可能です。<code>private final TaskService taskService;</code> として、コンストラクタで受け取ります。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@RestController
+public class TaskController {
+
+    private final TaskService taskService;
+
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
+    }
+
+    @GetMapping("/tasks")
+    public List&lt;String&gt; getTasks() {
+        return taskService.findAll();
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>コンストラクタが1つだけなら <code>@Autowired</code> は省略できます（Spring 4.3以降）。</li>
+              <li><code>final</code> により、フィールドが不変（immutable）になり、NullPointerExceptionのリスクが減ります。</li>
+              <li>テスト時に <code>new TaskController(mockService)</code> のようにモックを直接渡せます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T2: RESTコントローラ ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">api</span>
+      <h2>T2 RESTコントローラ</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-03 -->
+    <div class="drill-item" id="d-03">
+      <div class="drill-header">
+        <div class="drill-badge">D-03</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 RESTコントローラ</span>
+          <h3 class="drill-title">穴埋め — GETエンドポイントのマッピング</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>REST APIでは@GetMapping, @PostMapping等のHTTPメソッド別アノテーションでエンドポイントを定義します。@PathVariableでURLパスの値、@RequestParamでクエリパラメータを受け取ります。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ③ */</span> を埋めて、ユーザー情報を返すRESTコントローラを完成させてください。</p>
+<pre class="drill-code"><code>@RestController
+/* ① */
+public class UserController {
+
+    // GET /api/users — 全ユーザー一覧
+    /* ② */
+    public List&lt;User&gt; getAllUsers() {
+        return userService.findAll();
+    }
+
+    // GET /api/users/1 — IDで1件取得
+    @GetMapping("/{id}")
+    public User getUser(/* ③ */ Long id) {
+        return userService.findById(id);
+    }
+}</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① クラスレベルの共通パスは <code>@RequestMapping("/api/users")</code> で指定します。② 一覧取得は <code>@GetMapping</code> です。③ URLの <code>{id}</code> 部分は <code>@PathVariable</code> で取得します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    @GetMapping
+    public List&lt;User&gt; getAllUsers() {
+        return userService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable Long id) {
+        return userService.findById(id);
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@RequestMapping("/api/users")</code> をクラスレベルに付けると、メソッドのパスのプレフィックスになります。</li>
+              <li><code>@GetMapping</code> はパスなしで <code>/api/users</code> にマッチします。</li>
+              <li><code>@PathVariable</code> はURL内の <code>{id}</code> プレースホルダに対応します。パラメータ名とプレースホルダ名が同じなら属性指定は不要です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-04 -->
+    <div class="drill-item" id="d-04">
+      <div class="drill-header">
+        <div class="drill-badge">D-04</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 RESTコントローラ</span>
+          <h3 class="drill-title">写経+改造 — POSTエンドポイントの追加</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>@PostMappingでリソース作成、@RequestBodyでJSONリクエストボディを受け取ります。ResponseEntityで適切なHTTPステータスコードを返すのが実務の基本です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のGETエンドポイントを写経して動作確認してください。</p>
+<pre class="drill-code"><code>@RestController
+@RequestMapping("/api/items")
+public class ItemController {
+
+    private final ItemService itemService;
+
+    public ItemController(ItemService itemService) {
+        this.itemService = itemService;
+    }
+
+    @GetMapping
+    public List&lt;Item&gt; getAll() {
+        return itemService.findAll();
+    }
+}</code></pre>
+          <p><strong>Step 2（改造）:</strong> <code>@PostMapping</code> で新しいItemを作成するエンドポイントを追加してください。リクエストボディで <code>Item</code> を受け取り、<code>ResponseEntity</code> でステータス201を返してください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>@PostMapping</code> と <code>@RequestBody</code> を使います。<code>ResponseEntity.status(HttpStatus.CREATED).body(saved)</code> でステータス201を返せます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@PostMapping
+public ResponseEntity&lt;Item&gt; create(@RequestBody Item item) {
+    Item saved = itemService.save(item);
+    return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@RequestBody</code> はHTTPリクエストボディのJSONをJavaオブジェクトに変換（デシリアライズ）します。</li>
+              <li><code>ResponseEntity</code> を使うと、ステータスコード・ヘッダー・ボディを細かく制御できます。</li>
+              <li>リソース作成時は <code>201 Created</code> を返すのがRESTful APIの慣例です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T3: データベース・MyBatis ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">storage</span>
+      <h2>T3 データベース・MyBatis</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-05 -->
+    <div class="drill-item" id="d-05">
+      <div class="drill-header">
+        <div class="drill-badge">D-05</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 データベース・MyBatis</span>
+          <h3 class="drill-title">穴埋め — @Mapperインタフェースの基本</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>MyBatisでは@Mapperインタフェースにアノテーションで SQL を記述します。@Select, @Insert, @Update, @Delete でCRUD操作を定義します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ③ */</span> を埋めて、TodoマッパーのCRUD基本操作を完成させてください。</p>
+<pre class="drill-code"><code>/* ① */
+public interface TodoMapper {
+
+    /* ② */("SELECT * FROM todos")
+    List&lt;Todo&gt; findAll();
+
+    @Select("SELECT * FROM todos WHERE id = /* ③ */")
+    Todo findById(Long id);
+
+    @Insert("INSERT INTO todos (title, completed) VALUES (#{title}, #{completed})")
+    void insert(Todo todo);
+}</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① MyBatisのマッパーインタフェースには <code>@Mapper</code> を付けます。② 全件取得のSQLには <code>@Select</code> を使います。③ MyBatisのパラメータ参照は <code>#{パラメータ名}</code> です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@Mapper
+public interface TodoMapper {
+
+    @Select("SELECT * FROM todos")
+    List&lt;Todo&gt; findAll();
+
+    @Select("SELECT * FROM todos WHERE id = #{id}")
+    Todo findById(Long id);
+
+    @Insert("INSERT INTO todos (title, completed) VALUES (#{title}, #{completed})")
+    void insert(Todo todo);
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@Mapper</code> をインタフェースに付けると、MyBatisが実装クラスを自動生成してSpring Beanとして登録します。</li>
+              <li><code>#{id}</code> はプリペアドステートメントのパラメータに変換され、SQLインジェクションを防ぎます。</li>
+              <li><code>${}</code> はリテラル置換で、SQLインジェクションの危険があるため原則使いません。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-06 -->
+    <div class="drill-item" id="d-06">
+      <div class="drill-header">
+        <div class="drill-badge">D-06</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 データベース・MyBatis</span>
+          <h3 class="drill-title">写経+改造 — UPDATEとDELETEの追加</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>@Updateと@Deleteで更新・削除操作を定義します。戻り値をintにすると、影響を受けた行数を取得できます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のSELECTとINSERTのみのマッパーを写経してください。</p>
+<pre class="drill-code"><code>@Mapper
+public interface ProductMapper {
+
+    @Select("SELECT * FROM products WHERE id = #{id}")
+    Product findById(Long id);
+
+    @Insert("INSERT INTO products (name, price) VALUES (#{name}, #{price})")
+    void insert(Product product);
+}</code></pre>
+          <p><strong>Step 2（改造）:</strong> 以下の2メソッドを追加してください。</p>
+          <ul>
+            <li><code>update(Product product)</code> — name と price を更新（戻り値: int）</li>
+            <li><code>deleteById(Long id)</code> — IDで削除（戻り値: int）</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>@Update("UPDATE products SET name = #{name}, price = #{price} WHERE id = #{id}")</code> のように書きます。<code>@Delete</code> も同様のパターンです。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@Update("UPDATE products SET name = #{name}, price = #{price} WHERE id = #{id}")
+int update(Product product);
+
+@Delete("DELETE FROM products WHERE id = #{id}")
+int deleteById(Long id);</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>戻り値を <code>int</code> にすると影響行数が返ります。0なら対象レコードが存在しなかったことがわかります。</li>
+              <li><code>#{name}</code>, <code>#{price}</code>, <code>#{id}</code> は引数のProductオブジェクトのフィールドに自動マッピングされます。</li>
+              <li>WHERE句を忘れると全行が更新・削除されるため、必ずIDで絞り込むのが鉄則です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T4: バリデーション ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">verified</span>
+      <h2>T4 バリデーション</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-07 -->
+    <div class="drill-item" id="d-07">
+      <div class="drill-header">
+        <div class="drill-badge">D-07</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 バリデーション</span>
+          <h3 class="drill-title">穴埋め — Bean Validationアノテーション</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>Bean Validation（jakarta.validation）のアノテーションでフィールドの制約を宣言的に定義します。@Valid を付けると自動でバリデーションが実行されます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ③ */</span> を埋めて、ユーザー登録フォームのバリデーションを完成させてください。</p>
+<pre class="drill-code"><code>public class UserForm {
+
+    /* ① */(message = "名前は必須です")
+    private String name;
+
+    /* ② */(message = "メールアドレスの形式が正しくありません")
+    private String email;
+
+    /* ③ */(min = 8, message = "パスワードは8文字以上で入力してください")
+    private String password;
+
+    // getter/setter 省略
+}</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① 必須チェックは <code>@NotBlank</code>（空白不可）です。② メール形式は <code>@Email</code> です。③ 文字数の最小値は <code>@Size</code> で指定します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>public class UserForm {
+
+    @NotBlank(message = "名前は必須です")
+    private String name;
+
+    @Email(message = "メールアドレスの形式が正しくありません")
+    private String email;
+
+    @Size(min = 8, message = "パスワードは8文字以上で入力してください")
+    private String password;
+
+    // getter/setter 省略
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@NotBlank</code> は null・空文字・空白のみを拒否します。<code>@NotNull</code> は null のみ、<code>@NotEmpty</code> は null と空文字を拒否します。</li>
+              <li><code>@Email</code> はRFC準拠のメールアドレス形式をチェックします。</li>
+              <li><code>@Size(min=8)</code> は文字列の長さの最小値を制約します。<code>max</code> も指定可能です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-08 -->
+    <div class="drill-item" id="d-08">
+      <div class="drill-header">
+        <div class="drill-badge">D-08</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 バリデーション</span>
+          <h3 class="drill-title">写経+改造 — @Validの適用</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>コントローラの引数に@Validを付けるとBean Validationが自動実行されます。バリデーションエラー時はMethodArgumentNotValidExceptionがスローされます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のバリデーションなしのコントローラを写経してください。</p>
+<pre class="drill-code"><code>@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    @PostMapping
+    public ResponseEntity&lt;User&gt; create(@RequestBody UserForm form) {
+        User user = userService.create(form);
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+    }
+}</code></pre>
+          <p><strong>Step 2（改造）:</strong> <code>@Valid</code> を追加してバリデーションを有効にしてください。また、<code>@Min(1)</code> で年齢フィールド（age）が1以上であることを <code>UserForm</code> に追加してください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>@RequestBody</code> の前に <code>@Valid</code> を付けます。<code>@Min(value = 1, message = "...")</code> で数値の最小値を制約します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// UserController.java
+@PostMapping
+public ResponseEntity&lt;User&gt; create(@Valid @RequestBody UserForm form) {
+    User user = userService.create(form);
+    return ResponseEntity.status(HttpStatus.CREATED).body(user);
+}
+
+// UserForm.java に追加
+@Min(value = 1, message = "年齢は1以上で入力してください")
+private Integer age;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@Valid</code> を付けないとバリデーションアノテーションは無視されます。忘れやすいポイントです。</li>
+              <li><code>@Min</code> / <code>@Max</code> は数値型（Integer, Long等）に使います。文字列には <code>@Size</code> を使います。</li>
+              <li>バリデーションエラー時は400 Bad Requestが自動返却されます。エラー詳細をカスタマイズするには例外ハンドラを実装します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T5: 例外ハンドリング ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">bug_report</span>
+      <h2>T5 例外ハンドリング</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-09 -->
+    <div class="drill-item" id="d-09">
+      <div class="drill-header">
+        <div class="drill-badge">D-09</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 例外ハンドリング</span>
+          <h3 class="drill-title">穴埋め — @ExceptionHandlerの基本</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>@ExceptionHandlerでコントローラ内の例外をキャッチし、適切なエラーレスポンスを返します。@ControllerAdviceを使うとアプリ全体で共通の例外処理が可能です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ③ */</span> を埋めて、例外ハンドラを完成させてください。</p>
+<pre class="drill-code"><code>/* ① */
+public class GlobalExceptionHandler {
+
+    /* ② */(ResourceNotFoundException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleNotFound(
+            /* ③ */ ex) {
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.NOT_FOUND.value(),
+            ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+}</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① アプリ全体の例外処理には <code>@RestControllerAdvice</code> を使います。② 特定の例外をキャッチするアノテーションは <code>@ExceptionHandler</code> です。③ キャッチする例外型を引数に指定します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity&lt;ErrorResponse&gt; handleNotFound(
+            ResourceNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.NOT_FOUND.value(),
+            ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@RestControllerAdvice</code> は <code>@ControllerAdvice</code> + <code>@ResponseBody</code> の合成アノテーションです。</li>
+              <li><code>@ExceptionHandler</code> の引数に例外クラスを指定すると、その例外がスローされた時にメソッドが呼ばれます。</li>
+              <li>ErrorResponseは独自のDTO（Data Transfer Object）で、statusとmessageフィールドを持たせるのが一般的です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-10 -->
+    <div class="drill-item" id="d-10">
+      <div class="drill-header">
+        <div class="drill-badge">D-10</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 例外ハンドリング</span>
+          <h3 class="drill-title">写経+改造 — カスタム例外の作成</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>業務固有の例外をカスタム例外として定義し、@ResponseStatusで自動的にHTTPステータスをマッピングできます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のカスタム例外クラスを写経してください。</p>
+<pre class="drill-code"><code>@ResponseStatus(HttpStatus.NOT_FOUND)
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}</code></pre>
+          <p><strong>Step 2（改造）:</strong> 同様に <code>DuplicateResourceException</code> を作成してください。HTTPステータスは <code>409 Conflict</code> にしてください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>@ResponseStatus(HttpStatus.CONFLICT)</code> でステータス409を指定します。クラス名以外の構造はResourceNotFoundExceptionと同じです。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@ResponseStatus(HttpStatus.CONFLICT)
+public class DuplicateResourceException extends RuntimeException {
+    public DuplicateResourceException(String message) {
+        super(message);
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@ResponseStatus</code> を付けた例外がスローされると、指定したHTTPステータスが自動で返ります。</li>
+              <li>409 Conflictはリソースの重複（メールアドレスの重複登録等）に使います。</li>
+              <li><code>RuntimeException</code> を継承すると非検査例外になり、throws宣言が不要になります。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T6: セキュリティ基礎 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">security</span>
+      <h2>T6 セキュリティ基礎</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-11 -->
+    <div class="drill-item" id="d-11">
+      <div class="drill-header">
+        <div class="drill-badge">D-11</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セキュリティ基礎</span>
+          <h3 class="drill-title">穴埋め — SecurityFilterChainの基本構成</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>Spring Security 6ではSecurityFilterChainをBean定義してセキュリティルールを構成します。HttpSecurityのメソッドチェーンでURLごとのアクセス制御を設定します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ③ */</span> を埋めて、セキュリティ設定を完成させてください。</p>
+<pre class="drill-code"><code>@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    /* ① */
+    public SecurityFilterChain filterChain(/* ② */ http) throws Exception {
+        http
+            .authorizeHttpRequests(auth -&gt; auth
+                .requestMatchers("/api/public/**")./* ③ */()
+                .anyRequest().authenticated()
+            )
+            .httpBasic(Customizer.withDefaults());
+        return http.build();
+    }
+}</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① Bean登録には <code>@Bean</code> を使います。② セキュリティ設定のビルダーは <code>HttpSecurity</code> 型です。③ 認証なしで許可するメソッドは <code>permitAll</code> です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(auth -&gt; auth
+                .requestMatchers("/api/public/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .httpBasic(Customizer.withDefaults());
+        return http.build();
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@Bean</code> でSecurityFilterChainを定義するのがSpring Security 6の標準パターンです。</li>
+              <li><code>permitAll()</code> は認証なしでアクセスを許可します。公開APIやログインページに使います。</li>
+              <li><code>anyRequest().authenticated()</code> で、それ以外の全URLに認証を要求します。</li>
+              <li>ルールは上から順に評価されるため、許可ルールを先に書く必要があります。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-12 -->
+    <div class="drill-item" id="d-12">
+      <div class="drill-header">
+        <div class="drill-badge">D-12</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セキュリティ基礎</span>
+          <h3 class="drill-title">写経+改造 — CORS設定の追加</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>フロントエンドとバックエンドが別オリジンの場合、CORS（Cross-Origin Resource Sharing）設定が必要です。Spring BootではWebMvcConfigurerでグローバルに設定できます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のCORS設定を写経してください。</p>
+<pre class="drill-code"><code>@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+            .allowedOrigins("http://localhost:3000")
+            .allowedMethods("GET", "POST");
+    }
+}</code></pre>
+          <p><strong>Step 2（改造）:</strong> PUT, DELETE メソッドも許可し、<code>allowedHeaders("*")</code> と <code>allowCredentials(true)</code> を追加してください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>.allowedMethods("GET", "POST", "PUT", "DELETE")</code> でメソッドを追加します。メソッドチェーンで <code>.allowedHeaders("*").allowCredentials(true)</code> を続けます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+            .allowedOrigins("http://localhost:3000")
+            .allowedMethods("GET", "POST", "PUT", "DELETE")
+            .allowedHeaders("*")
+            .allowCredentials(true);
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>allowedHeaders("*")</code> は全HTTPヘッダーを許可します。本番では必要なヘッダーのみに絞るのが安全です。</li>
+              <li><code>allowCredentials(true)</code> はCookieやAuthorizationヘッダーの送信を許可します。</li>
+              <li>CORSはブラウザのセキュリティ機構です。Postman等のツールからのリクエストには影響しません。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T7: テスト・MockMvc ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">science</span>
+      <h2>T7 テスト・MockMvc</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-13 -->
+    <div class="drill-item" id="d-13">
+      <div class="drill-header">
+        <div class="drill-badge">D-13</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 テスト・MockMvc</span>
+          <h3 class="drill-title">穴埋め — @WebMvcTestの基本構成</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>@WebMvcTestはコントローラ層のみをテストするスライステストです。MockMvcでHTTPリクエストをシミュレートし、レスポンスを検証します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ③ */</span> を埋めて、コントローラのテストを完成させてください。</p>
+<pre class="drill-code"><code>/* ① */(UserController.class)
+class UserControllerTest {
+
+    @Autowired
+    private /* ② */ mockMvc;
+
+    /* ③ */
+    private UserService userService;
+
+    @Test
+    void testGetAllUsers() throws Exception {
+        when(userService.findAll()).thenReturn(List.of(
+            new User(1L, "Taro")
+        ));
+
+        mockMvc.perform(get("/api/users"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].name").value("Taro"));
+    }
+}</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① コントローラのスライステストは <code>@WebMvcTest</code> です。② HTTPリクエストをシミュレートするのは <code>MockMvc</code> 型です。③ Serviceのモックには <code>@MockBean</code> を使います。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@WebMvcTest(UserController.class)
+class UserControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private UserService userService;
+
+    @Test
+    void testGetAllUsers() throws Exception {
+        when(userService.findAll()).thenReturn(List.of(
+            new User(1L, "Taro")
+        ));
+
+        mockMvc.perform(get("/api/users"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].name").value("Taro"));
+    }
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>@WebMvcTest</code> はWebレイヤーのみをロードし、高速にテストできます。Service等はモック化が必要です。</li>
+              <li><code>@MockBean</code> はSpringコンテキスト内のBeanをMockitoモックに置き換えます。</li>
+              <li><code>jsonPath</code> でJSON応答の特定フィールドを検証できます。<code>$[0]</code> は配列の最初の要素です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-14 -->
+    <div class="drill-item" id="d-14">
+      <div class="drill-header">
+        <div class="drill-badge">D-14</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 テスト・MockMvc</span>
+          <h3 class="drill-title">写経+改造 — POSTリクエストのテスト追加</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>POSTリクエストのテストではcontentType指定とJSONボディの送信が必要です。ObjectMapperでJavaオブジェクトをJSON文字列に変換します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のGETテストを写経して動作確認してください。</p>
+<pre class="drill-code"><code>@Test
+void testGetUser() throws Exception {
+    when(userService.findById(1L)).thenReturn(new User(1L, "Taro"));
+
+    mockMvc.perform(get("/api/users/1"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.name").value("Taro"));
+}</code></pre>
+          <p><strong>Step 2（改造）:</strong> POSTリクエストのテストメソッド <code>testCreateUser</code> を追加してください。ステータス201と作成されたユーザー名を検証してください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON).content(json))</code> でPOSTリクエストを送ります。<code>ObjectMapper</code> で変換します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>@Autowired
+private ObjectMapper objectMapper;
+
+@Test
+void testCreateUser() throws Exception {
+    UserForm form = new UserForm("Hanako", "hanako@example.com");
+    User created = new User(2L, "Hanako");
+    when(userService.create(any(UserForm.class))).thenReturn(created);
+
+    mockMvc.perform(post("/api/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(form)))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.name").value("Hanako"));
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>ObjectMapper</code> はJacksonのJSON変換クラスで、<code>@WebMvcTest</code> で自動設定されます。</li>
+              <li><code>contentType(MediaType.APPLICATION_JSON)</code> はリクエストヘッダーにContent-Typeを設定します。</li>
+              <li><code>any(UserForm.class)</code> はMockitoの引数マッチャーで、任意のUserFormインスタンスにマッチします。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T8: 総合アプリケーション ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">apps</span>
+      <h2>T8 総合アプリケーション</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-15 -->
+    <div class="drill-item" id="d-15">
+      <div class="drill-header">
+        <div class="drill-badge">D-15</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合アプリケーション</span>
+          <h3 class="drill-title">穴埋め — application.propertiesの設定</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>application.propertiesでデータベース接続、サーバーポート、MyBatis設定などのアプリケーション構成を定義します。@Valueで設定値をコードに注入できます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ③ */</span> を埋めて、Spring Boot + MyBatis + PostgreSQLの基本設定を完成させてください。</p>
+<pre class="drill-code"><code># application.properties
+
+# サーバーポート
+server.port=8080
+
+# データベース接続
+spring.datasource.url=jdbc:postgresql://localhost:5432/myapp
+spring.datasource.username=postgres
+spring.datasource.password=password
+spring.datasource.driver-class-name=/* ① */
+
+# MyBatis設定
+mybatis./* ② */=classpath:mapper/*.xml
+mybatis.configuration./* ③ */=true</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① PostgreSQLのJDBCドライバクラスは <code>org.postgresql.Driver</code> です。② XMLマッパーの場所指定は <code>mapper-locations</code> です。③ キャメルケースのカラム名をスネークケースに自動マッピングするのは <code>map-underscore-to-camel-case</code> です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code># application.properties
+
+# サーバーポート
+server.port=8080
+
+# データベース接続
+spring.datasource.url=jdbc:postgresql://localhost:5432/myapp
+spring.datasource.username=postgres
+spring.datasource.password=password
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# MyBatis設定
+mybatis.mapper-locations=classpath:mapper/*.xml
+mybatis.configuration.map-underscore-to-camel-case=true</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>org.postgresql.Driver</code> はPostgreSQLのJDBCドライバクラスです。Spring Bootは通常自動検出しますが、明示指定も重要です。</li>
+              <li><code>mapper-locations</code> でXMLマッパーファイルの配置場所を指定します。アノテーションマッパーと併用可能です。</li>
+              <li><code>map-underscore-to-camel-case=true</code> で、DBの <code>created_at</code> カラムがJavaの <code>createdAt</code> フィールドに自動マッピングされます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-16 -->
+    <div class="drill-item" id="d-16">
+      <div class="drill-header">
+        <div class="drill-badge">D-16</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合アプリケーション</span>
+          <h3 class="drill-title">写経+改造 — 3層構造の基本骨格</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-point">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>実務ポイント</strong>
+            <p>Spring Bootアプリは Controller → Service → Mapper（Repository）の3層構造が基本です。各層の責務を分離することで保守性とテスト性が向上します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下の3ファイルを写経し、全体の構造を理解してください。</p>
+<pre class="drill-code"><code>// TodoMapper.java
+@Mapper
+public interface TodoMapper {
+    @Select("SELECT * FROM todos")
+    List&lt;Todo&gt; findAll();
+}
+
+// TodoService.java
+@Service
+public class TodoService {
+    private final TodoMapper todoMapper;
+    public TodoService(TodoMapper todoMapper) {
+        this.todoMapper = todoMapper;
+    }
+    public List&lt;Todo&gt; findAll() {
+        return todoMapper.findAll();
+    }
+}
+
+// TodoController.java
+@RestController
+@RequestMapping("/api/todos")
+public class TodoController {
+    private final TodoService todoService;
+    public TodoController(TodoService todoService) {
+        this.todoService = todoService;
+    }
+    @GetMapping
+    public List&lt;Todo&gt; getAll() {
+        return todoService.findAll();
+    }
+}</code></pre>
+          <p><strong>Step 2（改造）:</strong> findById(Long id) メソッドを3層すべてに追加してください。エンドポイントは <code>GET /api/todos/{id}</code> です。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>Mapper: <code>@Select("SELECT * FROM todos WHERE id = #{id}")</code>。Service: MapperのfindByIdを呼ぶ。Controller: <code>@GetMapping("/{id}")</code> + <code>@PathVariable</code>。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>// TodoMapper.java に追加
+@Select("SELECT * FROM todos WHERE id = #{id}")
+Todo findById(Long id);
+
+// TodoService.java に追加
+public Todo findById(Long id) {
+    return todoMapper.findById(id);
+}
+
+// TodoController.java に追加
+@GetMapping("/{id}")
+public Todo getById(@PathVariable Long id) {
+    return todoService.findById(id);
+}</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>3層構造では、Controller→Service→Mapperの順にメソッドを追加していきます。</li>
+              <li>各層が単一責務を持つため、テスト時にServiceだけモック化する等の柔軟なテストが可能です。</li>
+              <li>実務ではfindByIdでnullが返った場合にResourceNotFoundExceptionをスローするのが一般的です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-navigation">
+      <a href="index.html" class="prev-page">
+        <span class="material-icons">arrow_back</span>
+        コース一覧
+      </a>
+      <a href="level-c.html" class="next-page">
+        Level C — 仕様実装
+        <span class="material-icons">arrow_forward</span>
+      </a>
+    </div>
+
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

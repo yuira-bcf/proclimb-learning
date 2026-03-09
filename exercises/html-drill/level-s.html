@@ -1,0 +1,2590 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Level S — 総合実装 | HTML実力養成ドリル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #CCE4FF;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+
+    .drill-item { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .drill-header { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #f0f0f0; background: #fafbfc; }
+    .drill-badge { background: var(--primary); color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; padding: 8px 14px; border-radius: 10px; white-space: nowrap; }
+    .drill-meta { flex: 1; }
+    .drill-theme { font-size: 0.72rem; color: var(--primary); font-weight: 600; letter-spacing: 0.03em; margin-bottom: 2px; display: block; }
+    .drill-title { font-size: 1.05rem; font-weight: 700; color: #1d1d1f; }
+    .drill-body { padding: 24px; }
+
+    .drill-silver { display: flex; align-items: flex-start; gap: 12px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+    .drill-silver > .material-icons { color: #f9a825; font-size: 1.4rem; margin-top: 2px; }
+    .drill-silver strong { display: block; font-size: 0.82rem; color: #f57f17; margin-bottom: 4px; }
+    .drill-silver p { font-size: 0.85rem; color: #5d4037; line-height: 1.6; margin: 0; }
+
+    .drill-task { margin-bottom: 20px; }
+    .drill-task h4 { display: flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: 700; color: #1d1d1f; margin-bottom: 12px; }
+    .drill-task h4 .material-icons { color: var(--primary); font-size: 1.2rem; }
+    .drill-task p, .drill-task ul, .drill-task ol { font-size: 0.88rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .drill-task ul, .drill-task ol { padding-left: 1.5em; }
+    .drill-task li { margin-bottom: 4px; }
+
+    .drill-code { background: #1e293b; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; padding: 20px; border-radius: 10px; overflow-x: auto; margin: 12px 0; }
+    .drill-code code { font-family: inherit; }
+
+    .expected-output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+    .expected-output .label { font-size: 0.75rem; font-weight: 700; color: #16a34a; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+    .expected-output pre { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; color: #166534; margin: 0; white-space: pre-wrap; }
+
+    .drill-hint { margin-bottom: 8px; }
+    .drill-hint summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: #f57c00; padding: 10px 14px; background: #fff3e0; border-radius: 10px; list-style: none; user-select: none; }
+    .drill-hint summary::-webkit-details-marker { display: none; }
+    .drill-hint summary .material-icons { font-size: 1.1rem; }
+    .drill-hint[open] summary { border-radius: 10px 10px 0 0; }
+    .hint-content { background: #fff8e1; padding: 16px 18px; border-radius: 0 0 10px 10px; font-size: 0.85rem; line-height: 1.7; color: #5d4037; }
+    .hint-content code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; }
+
+    .drill-answer { margin-top: 8px; }
+    .drill-answer summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: var(--primary); padding: 10px 14px; background: var(--primary-light); border-radius: 10px; list-style: none; user-select: none; }
+    .drill-answer summary::-webkit-details-marker { display: none; }
+    .drill-answer summary .material-icons { color: var(--primary); font-size: 1.1rem; }
+    .drill-answer[open] summary { border-radius: 10px 10px 0 0; }
+    .answer-content { background: #f8fbff; padding: 20px; border-radius: 0 0 10px 10px; border: 1px solid var(--primary-light); border-top: none; }
+    .answer-content p { font-size: 0.85rem; line-height: 1.8; color: #333; margin-bottom: 10px; }
+    .answer-content h5 { font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin: 16px 0 8px; }
+    .answer-content ul { font-size: 0.85rem; line-height: 1.8; color: #333; padding-left: 1.5em; margin-bottom: 10px; }
+
+    .theme-separator { display: flex; align-items: center; gap: 12px; margin: 36px 0 20px; padding: 12px 20px; background: var(--primary-light); border-radius: 12px; border-left: 4px solid var(--primary); }
+    .theme-separator .material-icons { color: var(--primary); font-size: 1.3rem; }
+    .theme-separator h2 { font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
+    .theme-separator span.theme-count { font-size: 0.75rem; color: #666; font-weight: 400; margin-left: auto; }
+
+    @media (max-width: 480px) {
+      .drill-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+      .drill-body { padding: 16px; }
+      .drill-code { font-size: 0.75rem; padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-html-drill.js"></script>
+
+  <div class="container">
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">code</span> Drill</div>
+      <div class="chapter-number">S</div>
+      <h1 class="chapter-title">Level S — 総合実装</h1>
+      <p style="color:#fff; margin-top:8px;">完全なWebページを仕様から構築する総合課題｜16課題・8テーマ</p>
+    </header>
+
+    <!-- ===== T1: HTML基本構造・文書型 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">description</span>
+      <h2>T1 HTML基本構造・文書型</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-01 -->
+    <div class="drill-item" id="s-01">
+      <div class="drill-header">
+        <div class="drill-badge">S-01</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 HTML基本構造・文書型</span>
+          <h3 class="drill-title">コーポレートサイト完全構築</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>本番品質のコーポレートサイトは、SEO、アクセシビリティ、パフォーマンス、セキュリティの全観点を統合して構築します。構造化データやCSP（Content Security Policy）も含みます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で5ページ構成のコーポレートサイトのHTMLを設計してください（トップページのみ完全実装、他ページは構造のみ）。</p>
+          <ul>
+            <li>共通: DOCTYPE, charset, viewport, OGP, canonical, JSON-LD (Organization), favicon一式</li>
+            <li>トップページ: ヒーロー、サービス3件、実績数値、お知らせ一覧、CTA、フッター</li>
+            <li>サービスページ: サービス詳細3件、料金比較テーブル、FAQ（<code>&lt;details&gt;</code>）</li>
+            <li>会社概要ページ: 代表挨拶、企業情報テーブル、アクセスマップ（<code>&lt;iframe&gt;</code>）</li>
+            <li>お知らせ一覧: 記事カード一覧（<code>&lt;article&gt;</code>）、ページネーション</li>
+            <li>お問い合わせ: フォーム（バリデーション付き）、プライバシーポリシー同意</li>
+            <li>全ページ: スキップリンク、パンくず、構造化データ、<code>aria-*</code> 属性</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>Organization の JSON-LD は <code>@type: "Organization"</code> で会社名、URL、ロゴ、連絡先を記述します。ページネーションは <code>&lt;nav aria-label="ページネーション"&gt;</code> で囲みます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+            <p>トップページの完全実装例（抜粋）:</p>
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;株式会社テックソリューション | ITで未来を創る&lt;/title&gt;
+  &lt;meta name="description" content="株式会社テックソリューションはWeb開発・システム開発を手がけるIT企業です。"&gt;
+  &lt;link rel="canonical" href="https://techsolution.example.com/"&gt;
+  &lt;meta property="og:title" content="株式会社テックソリューション"&gt;
+  &lt;meta property="og:description" content="ITで未来を創る。Web開発・システム開発のプロフェッショナル。"&gt;
+  &lt;meta property="og:image" content="https://techsolution.example.com/ogp.jpg"&gt;
+  &lt;meta property="og:url" content="https://techsolution.example.com/"&gt;
+  &lt;meta property="og:type" content="website"&gt;
+  &lt;link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "株式会社テックソリューション",
+    "url": "https://techsolution.example.com",
+    "logo": "https://techsolution.example.com/logo.png",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+81-3-1234-5678",
+      "contactType": "customer service"
+    }
+  }
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;a href="#main" class="skip-link"&gt;メインコンテンツへスキップ&lt;/a&gt;
+
+  &lt;header&gt;
+    &lt;a href="/"&gt;&lt;img src="logo.svg" alt="テックソリューション" width="180" height="40"&gt;&lt;/a&gt;
+    &lt;nav aria-label="メインナビ"&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="/" aria-current="page"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/services/"&gt;サービス&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/about/"&gt;会社概要&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/news/"&gt;お知らせ&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/contact/"&gt;お問い合わせ&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+
+  &lt;main id="main"&gt;
+    &lt;section aria-label="ヒーロー"&gt;
+      &lt;h1&gt;ITで未来を創る&lt;/h1&gt;
+      &lt;p&gt;最新のテクノロジーでビジネスの課題を解決します。&lt;/p&gt;
+      &lt;a href="/contact/"&gt;お問い合わせ&lt;/a&gt;
+      &lt;a href="/services/"&gt;サービスを見る&lt;/a&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;サービス&lt;/h2&gt;
+      &lt;article&gt;&lt;h3&gt;Webサイト制作&lt;/h3&gt;&lt;p&gt;レスポンシブ対応のWebサイトを制作。&lt;/p&gt;&lt;/article&gt;
+      &lt;article&gt;&lt;h3&gt;システム開発&lt;/h3&gt;&lt;p&gt;業務効率化システムの設計から開発まで。&lt;/p&gt;&lt;/article&gt;
+      &lt;article&gt;&lt;h3&gt;IT顧問&lt;/h3&gt;&lt;p&gt;DX推進の戦略策定を支援。&lt;/p&gt;&lt;/article&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;お知らせ&lt;/h2&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;time datetime="2026-03-01"&gt;2026.03.01&lt;/time&gt; &lt;a href="/news/1"&gt;新サービスをリリースしました&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;time datetime="2026-02-15"&gt;2026.02.15&lt;/time&gt; &lt;a href="/news/2"&gt;オフィス移転のお知らせ&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/section&gt;
+  &lt;/main&gt;
+
+  &lt;footer&gt;
+    &lt;nav aria-label="フッターナビ"&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="/privacy/"&gt;プライバシーポリシー&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/terms/"&gt;利用規約&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+    &lt;p&gt;&amp;copy; 2026 株式会社テックソリューション&lt;/p&gt;
+  &lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>本番品質のサイトは SEO（title, description, OGP, canonical, JSON-LD）、アクセシビリティ（スキップリンク, aria, セマンティクス）、パフォーマンス（favicon, preconnect）を全て含みます。</li>
+              <li>JSON-LD の Organization スキーマにより、検索結果にナレッジパネルが表示される可能性があります。</li>
+              <li>各ページの共通部分（ヘッダー、フッター）の構造を統一し、ナビの <code>aria-current</code> のみページごとに変更します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-02 -->
+    <div class="drill-item" id="s-02">
+      <div class="drill-header">
+        <div class="drill-badge">S-02</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 HTML基本構造・文書型</span>
+          <h3 class="drill-title">国際化対応サイト設計</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>国際化対応サイトでは <code>hreflang</code> で言語別URLを宣言し、<code>dir</code> 属性でRTL（右から左）言語に対応します。<code>lang</code> 属性を要素レベルで切り替えます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で日英バイリンガルサイトの日本語版トップページを設計してください。</p>
+          <ul>
+            <li><code>&lt;link rel="alternate" hreflang="..."&gt;</code> で日本語版・英語版・デフォルト版のURLを宣言</li>
+            <li>言語切替リンクに <code>hreflang</code> 属性と <code>lang</code> 属性を設定</li>
+            <li>英語のテキストブロックに <code>lang="en"</code> を設定</li>
+            <li>OGPの <code>og:locale</code> と <code>og:locale:alternate</code> を設定</li>
+            <li><code>&lt;html&gt;</code> の <code>dir="ltr"</code> を明示</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>hreflang="x-default"</code> はどの言語にもマッチしない場合のデフォルトURLです。<code>og:locale</code> は <code>"ja_JP"</code> のようにロケールを指定します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja" dir="ltr"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;テックソリューション | ITで未来を創る&lt;/title&gt;
+
+  &lt;link rel="alternate" hreflang="ja" href="https://example.com/ja/"&gt;
+  &lt;link rel="alternate" hreflang="en" href="https://example.com/en/"&gt;
+  &lt;link rel="alternate" hreflang="x-default" href="https://example.com/"&gt;
+
+  &lt;meta property="og:locale" content="ja_JP"&gt;
+  &lt;meta property="og:locale:alternate" content="en_US"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;header&gt;
+    &lt;nav&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="/ja/" aria-current="page"&gt;日本語&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/en/" hreflang="en" lang="en"&gt;English&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+
+  &lt;main&gt;
+    &lt;h1&gt;ITで未来を創る&lt;/h1&gt;
+    &lt;p&gt;最新のテクノロジーでビジネスの課題を解決します。&lt;/p&gt;
+
+    &lt;section lang="en"&gt;
+      &lt;h2&gt;Our Mission&lt;/h2&gt;
+      &lt;p&gt;We create the future with cutting-edge technology.&lt;/p&gt;
+    &lt;/section&gt;
+  &lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>hreflang</code> タグは検索エンジンに言語バリエーションを伝え、各地域で適切なページを表示させます。</li>
+              <li><code>x-default</code> はどの言語にもマッチしない場合のフォールバックURLです。</li>
+              <li><code>dir="ltr"</code> はテキストの方向（左から右）を明示します。アラビア語等のRTL言語は <code>dir="rtl"</code> にします。</li>
+              <li>言語切替リンクの <code>lang</code> 属性はリンクテキスト自体の言語を、<code>hreflang</code> はリンク先の言語を示します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T2: テキスト・リスト・リンク ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">text_fields</span>
+      <h2>T2 テキスト・リスト・リンク</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-03 -->
+    <div class="drill-item" id="s-03">
+      <div class="drill-header">
+        <div class="drill-badge">S-03</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 テキスト・リスト・リンク</span>
+          <h3 class="drill-title">技術ブログ記事の完全マークアップ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>技術ブログは見出し階層、コードブロック、画像、引用、リンク、リスト等の多様な要素を統合的に使用します。Article の JSON-LD 構造化データも重要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>「HTML5セマンティクス完全ガイド」という技術ブログ記事を完全にマークアップしてください。</p>
+          <ul>
+            <li>記事メタ情報: 著者、公開日、更新日、カテゴリタグ、読了時間</li>
+            <li>目次（ページ内アンカー、3セクション以上）</li>
+            <li>各セクション: 見出し、段落、コードブロック（<code>&lt;pre&gt;&lt;code&gt;</code>）、図表</li>
+            <li>引用（<code>&lt;blockquote cite="..."&gt;</code>）、略語（<code>&lt;abbr&gt;</code>）、キーボード操作（<code>&lt;kbd&gt;</code>）</li>
+            <li>関連記事リスト、著者プロフィールカード、コメントセクション（<code>&lt;section aria-label="コメント"&gt;</code>）</li>
+            <li>JSON-LD で Article スキーマを記述</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>Article スキーマは <code>@type: "Article"</code>、<code>headline</code>、<code>datePublished</code>、<code>author</code>、<code>image</code> が必須項目です。著者プロフィールは <code>&lt;aside&gt;</code> か <code>&lt;footer&gt;</code> 内に配置します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;HTML5セマンティクス完全ガイド | Tech Blog&lt;/title&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "HTML5セマンティクス完全ガイド",
+    "datePublished": "2026-03-01",
+    "dateModified": "2026-03-05",
+    "author": { "@type": "Person", "name": "山田太郎" },
+    "image": "https://example.com/images/html5-guide.jpg"
+  }
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;a href="#article" class="skip-link"&gt;記事本文へスキップ&lt;/a&gt;
+  &lt;header&gt;
+    &lt;nav aria-label="メインナビ"&gt;
+      &lt;ul&gt;&lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="/blog"&gt;ブログ&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+
+  &lt;main id="article"&gt;
+    &lt;article&gt;
+      &lt;header&gt;
+        &lt;h1&gt;&lt;abbr title="HyperText Markup Language"&gt;HTML&lt;/abbr&gt;5セマンティクス完全ガイド&lt;/h1&gt;
+        &lt;p&gt;著者: &lt;a href="/author/yamada"&gt;山田太郎&lt;/a&gt;&lt;/p&gt;
+        &lt;p&gt;公開: &lt;time datetime="2026-03-01"&gt;2026年3月1日&lt;/time&gt;
+        | 更新: &lt;time datetime="2026-03-05"&gt;2026年3月5日&lt;/time&gt;
+        | 読了時間: 約10分&lt;/p&gt;
+        &lt;ul&gt;&lt;li&gt;&lt;a href="/tag/html"&gt;HTML&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href="/tag/a11y"&gt;アクセシビリティ&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
+      &lt;/header&gt;
+
+      &lt;nav aria-label="目次"&gt;
+        &lt;h2&gt;目次&lt;/h2&gt;
+        &lt;ol&gt;
+          &lt;li&gt;&lt;a href="#what"&gt;セマンティクスとは&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="#elements"&gt;主要なセマンティック要素&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="#practice"&gt;実践テクニック&lt;/a&gt;&lt;/li&gt;
+        &lt;/ol&gt;
+      &lt;/nav&gt;
+
+      &lt;section id="what"&gt;
+        &lt;h2&gt;セマンティクスとは&lt;/h2&gt;
+        &lt;p&gt;セマンティクスとは「意味論」のことで、HTML要素に意味を持たせるマークアップのことです。&lt;/p&gt;
+        &lt;blockquote cite="https://www.w3.org/TR/html52/"&gt;
+          &lt;p&gt;HTMLの各要素には、コンテンツの種類や意味を定義するセマンティクスがあります。&lt;/p&gt;
+          &lt;footer&gt;&lt;cite&gt;HTML 5.2 仕様書&lt;/cite&gt;&lt;/footer&gt;
+        &lt;/blockquote&gt;
+      &lt;/section&gt;
+
+      &lt;section id="elements"&gt;
+        &lt;h2&gt;主要なセマンティック要素&lt;/h2&gt;
+        &lt;pre&gt;&lt;code&gt;&amp;lt;header&amp;gt; &amp;lt;nav&amp;gt; &amp;lt;main&amp;gt; &amp;lt;article&amp;gt;
+&amp;lt;section&amp;gt; &amp;lt;aside&amp;gt; &amp;lt;footer&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+      &lt;/section&gt;
+
+      &lt;section id="practice"&gt;
+        &lt;h2&gt;実践テクニック&lt;/h2&gt;
+        &lt;p&gt;開発者ツールは &lt;kbd&gt;F12&lt;/kbd&gt; で開き、Elements タブで確認します。&lt;/p&gt;
+      &lt;/section&gt;
+
+      &lt;footer&gt;
+        &lt;aside aria-label="著者プロフィール"&gt;
+          &lt;img src="yamada.jpg" alt="山田太郎" width="80" height="80"&gt;
+          &lt;h2&gt;山田太郎&lt;/h2&gt;
+          &lt;p&gt;フロントエンドエンジニア。アクセシビリティ推進に取り組んでいます。&lt;/p&gt;
+        &lt;/aside&gt;
+      &lt;/footer&gt;
+    &lt;/article&gt;
+
+    &lt;aside&gt;
+      &lt;h2&gt;関連記事&lt;/h2&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="/blog/css-grid"&gt;CSS Grid完全ガイド&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/blog/aria"&gt;WAI-ARIA入門&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/aside&gt;
+
+    &lt;section aria-label="コメント"&gt;
+      &lt;h2&gt;コメント（2件）&lt;/h2&gt;
+      &lt;article&gt;
+        &lt;header&gt;&lt;p&gt;佐藤花子 — &lt;time datetime="2026-03-02"&gt;3月2日&lt;/time&gt;&lt;/p&gt;&lt;/header&gt;
+        &lt;p&gt;とても参考になりました！&lt;/p&gt;
+      &lt;/article&gt;
+    &lt;/section&gt;
+  &lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>Article スキーマの JSON-LD はGoogleのリッチリザルト（著者名、日付付き表示）の条件です。</li>
+              <li>記事内の各コメントも <code>&lt;article&gt;</code> でマークアップでき、独立したコンテンツとして意味を持ちます。</li>
+              <li>著者プロフィールは記事の補足情報として <code>&lt;aside&gt;</code> が適切です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-04 -->
+    <div class="drill-item" id="s-04">
+      <div class="drill-header">
+        <div class="drill-badge">S-04</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 テキスト・リスト・リンク</span>
+          <h3 class="drill-title">ヘルプセンター・ナレッジベース</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>ナレッジベースは検索、カテゴリ分類、ネストしたリスト、アコーディオン、パンくずリストなどを複合的に組み合わせた大規模コンテンツです。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でヘルプセンターのHTMLを完全構築してください。</p>
+          <ul>
+            <li>検索フォーム（<code>role="search"</code>）+ 検索結果件数（<code>aria-live</code>）</li>
+            <li>カテゴリ一覧（3カテゴリ、各5記事のネストリスト）</li>
+            <li>FAQ セクション（<code>&lt;details&gt;</code> で10問以上、JSON-LD FAQPage付き）</li>
+            <li>パンくずリスト（BreadcrumbList構造化データ付き）</li>
+            <li>「役に立ちましたか？」のフィードバック UI（<code>role="group"</code>）</li>
+            <li>関連記事のサジェスト（<code>&lt;aside&gt;</code>）</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>role="search"</code> は検索フォームのランドマークです。フィードバック UI は <code>&lt;fieldset&gt;</code> + <code>role="group"</code> + <code>aria-label</code> でグループ化します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;nav aria-label="パンくず"&gt;
+  &lt;ol&gt;
+    &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt; &lt;span aria-hidden="true"&gt;/&lt;/span&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/help" aria-current="page"&gt;ヘルプセンター&lt;/a&gt;&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/nav&gt;
+
+&lt;main&gt;
+  &lt;h1&gt;ヘルプセンター&lt;/h1&gt;
+
+  &lt;form role="search" aria-label="ヘルプ記事を検索"&gt;
+    &lt;label for="help-search"&gt;検索&lt;/label&gt;
+    &lt;input type="search" id="help-search" name="q" placeholder="キーワードで検索..."&gt;
+    &lt;button type="submit"&gt;検索&lt;/button&gt;
+    &lt;p aria-live="polite" id="search-results"&gt;&lt;/p&gt;
+  &lt;/form&gt;
+
+  &lt;section&gt;
+    &lt;h2&gt;カテゴリ&lt;/h2&gt;
+    &lt;ul&gt;
+      &lt;li&gt;アカウント
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href="/help/account/register"&gt;アカウント登録方法&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/help/account/password"&gt;パスワードの変更&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;お支払い
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href="/help/billing/methods"&gt;支払い方法&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/help/billing/cancel"&gt;解約方法&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/section&gt;
+
+  &lt;section&gt;
+    &lt;h2&gt;よくある質問&lt;/h2&gt;
+    &lt;details&gt;&lt;summary&gt;退会するにはどうすれば？&lt;/summary&gt;&lt;p&gt;設定画面の「アカウント削除」から退会できます。&lt;/p&gt;&lt;/details&gt;
+    &lt;details&gt;&lt;summary&gt;料金プランを変更したい&lt;/summary&gt;&lt;p&gt;設定画面の「プラン変更」から可能です。&lt;/p&gt;&lt;/details&gt;
+  &lt;/section&gt;
+
+  &lt;div role="group" aria-label="この記事は役に立ちましたか？"&gt;
+    &lt;p&gt;この記事は役に立ちましたか？&lt;/p&gt;
+    &lt;button aria-label="はい、役に立った"&gt;はい&lt;/button&gt;
+    &lt;button aria-label="いいえ、役に立たなかった"&gt;いいえ&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/main&gt;
+
+&lt;aside&gt;
+  &lt;h2&gt;関連記事&lt;/h2&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href="/help/getting-started"&gt;はじめての方へ&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/help/troubleshooting"&gt;トラブルシューティング&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/aside&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>role="search"</code> はランドマークとして機能し、スクリーンリーダーのナビゲーションで「検索」として認識されます。</li>
+              <li><code>type="search"</code> は検索フィールド用の入力タイプで、クリアボタンが表示されるブラウザもあります。</li>
+              <li>フィードバック UI の <code>role="group"</code> はボタンをグループとして関連付け、<code>aria-label</code> でグループの目的を伝えます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T3: テーブル ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">table_chart</span>
+      <h2>T3 テーブル</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-05 -->
+    <div class="drill-item" id="s-05">
+      <div class="drill-header">
+        <div class="drill-badge">S-05</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 テーブル</span>
+          <h3 class="drill-title">管理画面のダッシュボードテーブル</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>管理画面のテーブルは、ソート、フィルター、一括操作、ページネーション、レスポンシブ対応を全て含む複合的なUIコンポーネントです。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で商品管理ダッシュボードの完全なHTMLを構築してください。</p>
+          <ul>
+            <li>フィルター: 検索入力、カテゴリ選択、ステータス選択</li>
+            <li>テーブル: チェックボックス列、商品名（ソート可能）、カテゴリ、価格（ソート可能）、在庫、ステータスバッジ、操作ボタン</li>
+            <li>一括操作: 全選択チェックボックス、「削除」「非公開」の一括操作ドロップダウン</li>
+            <li>ページネーション: 件数表示 + ページリンク（前へ/1/2/3/次へ）</li>
+            <li>全要素に適切な <code>aria-*</code> 属性</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>全選択チェックボックスは <code>aria-label="全件選択"</code>、各行のチェックボックスは <code>aria-label="商品名を選択"</code> のように設定します。ステータスバッジは <code>&lt;span&gt;</code> でマークアップし、色だけでなくテキストでも状態を伝えます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;section aria-label="商品管理"&gt;
+  &lt;h1&gt;商品管理&lt;/h1&gt;
+
+  &lt;!-- フィルター --&gt;
+  &lt;form role="search" aria-label="商品を絞り込み"&gt;
+    &lt;input type="search" aria-label="商品名で検索" placeholder="商品名..."&gt;
+    &lt;select aria-label="カテゴリで絞り込み"&gt;
+      &lt;option value=""&gt;全カテゴリ&lt;/option&gt;
+      &lt;option value="electronics"&gt;家電&lt;/option&gt;
+    &lt;/select&gt;
+    &lt;select aria-label="ステータスで絞り込み"&gt;
+      &lt;option value=""&gt;全ステータス&lt;/option&gt;
+      &lt;option value="active"&gt;公開中&lt;/option&gt;
+      &lt;option value="draft"&gt;下書き&lt;/option&gt;
+    &lt;/select&gt;
+  &lt;/form&gt;
+
+  &lt;!-- 一括操作 --&gt;
+  &lt;div&gt;
+    &lt;select aria-label="一括操作"&gt;
+      &lt;option value=""&gt;一括操作を選択&lt;/option&gt;
+      &lt;option value="delete"&gt;削除&lt;/option&gt;
+      &lt;option value="unpublish"&gt;非公開&lt;/option&gt;
+    &lt;/select&gt;
+    &lt;button&gt;実行&lt;/button&gt;
+    &lt;p aria-live="polite"&gt;表示: 1-10 / 全25件&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;!-- テーブル --&gt;
+  &lt;table&gt;
+    &lt;caption class="visually-hidden"&gt;商品一覧&lt;/caption&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th scope="col"&gt;&lt;input type="checkbox" aria-label="全件選択"&gt;&lt;/th&gt;
+        &lt;th scope="col" aria-sort="none"&gt;&lt;button&gt;商品名&lt;/button&gt;&lt;/th&gt;
+        &lt;th scope="col"&gt;カテゴリ&lt;/th&gt;
+        &lt;th scope="col" aria-sort="ascending"&gt;&lt;button&gt;価格 ▲&lt;/button&gt;&lt;/th&gt;
+        &lt;th scope="col"&gt;在庫&lt;/th&gt;
+        &lt;th scope="col"&gt;ステータス&lt;/th&gt;
+        &lt;th scope="col"&gt;操作&lt;/th&gt;
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;tr&gt;
+        &lt;td&gt;&lt;input type="checkbox" aria-label="キーボードを選択"&gt;&lt;/td&gt;
+        &lt;td&gt;キーボード&lt;/td&gt;
+        &lt;td&gt;家電&lt;/td&gt;
+        &lt;td&gt;8,500円&lt;/td&gt;
+        &lt;td&gt;12&lt;/td&gt;
+        &lt;td&gt;&lt;span&gt;公開中&lt;/span&gt;&lt;/td&gt;
+        &lt;td&gt;
+          &lt;button aria-label="キーボードを編集"&gt;編集&lt;/button&gt;
+          &lt;button aria-label="キーボードを削除"&gt;削除&lt;/button&gt;
+        &lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+
+  &lt;!-- ページネーション --&gt;
+  &lt;nav aria-label="ページネーション"&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="?page=1" aria-label="前のページ"&gt;&amp;laquo; 前へ&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="?page=1" aria-current="page"&gt;1&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="?page=2"&gt;2&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="?page=3"&gt;3&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="?page=2" aria-label="次のページ"&gt;次へ &amp;raquo;&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/section&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>操作ボタンの <code>aria-label</code> には対象の商品名を含めることで、スクリーンリーダーユーザーが「何を」操作するか分かります。</li>
+              <li>ページネーションは <code>&lt;nav aria-label="ページネーション"&gt;</code> でランドマークにし、現在ページに <code>aria-current="page"</code> を付けます。</li>
+              <li>ステータスバッジは色だけでなくテキストで状態を伝えることが WCAG のコントラスト要件を満たすために必要です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-06 -->
+    <div class="drill-item" id="s-06">
+      <div class="drill-header">
+        <div class="drill-badge">S-06</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 テーブル</span>
+          <h3 class="drill-title">カレンダー・スケジュール表</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>カレンダーはテーブル要素で構築し、日付セルに予定データを配置します。<code>aria-label</code> で各セルの日付情報をスクリーンリーダーに伝えます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で月間カレンダー＋スケジュール表を構築してください。</p>
+          <ul>
+            <li>月表示カレンダー（テーブル形式、月/前月/翌月の切替ボタン）</li>
+            <li>曜日ヘッダー（日〜土）に <code>scope="col"</code></li>
+            <li>予定のある日に予定タイトルを表示し、<code>aria-label</code> で「3月5日: 会議」のように設定</li>
+            <li>今日の日付に <code>aria-current="date"</code></li>
+            <li>週間スケジュール表（時間×曜日のグリッド、1時間単位）</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>カレンダーの各日付セルは <code>&lt;td aria-label="2026年3月5日 水曜日 会議"&gt;</code> のように完全な日付情報を含めます。前月・翌月のナビボタンには <code>aria-label="前月を表示"</code> を設定します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;section aria-label="カレンダー"&gt;
+  &lt;div&gt;
+    &lt;button aria-label="前月を表示"&gt;&amp;laquo;&lt;/button&gt;
+    &lt;h2 aria-live="polite"&gt;2026年3月&lt;/h2&gt;
+    &lt;button aria-label="翌月を表示"&gt;&amp;raquo;&lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;table&gt;
+    &lt;caption class="visually-hidden"&gt;2026年3月のカレンダー&lt;/caption&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th scope="col" abbr="日"&gt;日&lt;/th&gt;
+        &lt;th scope="col" abbr="月"&gt;月&lt;/th&gt;
+        &lt;th scope="col" abbr="火"&gt;火&lt;/th&gt;
+        &lt;th scope="col" abbr="水"&gt;水&lt;/th&gt;
+        &lt;th scope="col" abbr="木"&gt;木&lt;/th&gt;
+        &lt;th scope="col" abbr="金"&gt;金&lt;/th&gt;
+        &lt;th scope="col" abbr="土"&gt;土&lt;/th&gt;
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;tr&gt;
+        &lt;td aria-label="3月1日 日曜日"&gt;1&lt;/td&gt;
+        &lt;td aria-label="3月2日 月曜日"&gt;2&lt;/td&gt;
+        &lt;td aria-label="3月3日 火曜日"&gt;3&lt;/td&gt;
+        &lt;td aria-label="3月4日 水曜日"&gt;4&lt;/td&gt;
+        &lt;td aria-label="3月5日 木曜日 会議"&gt;5 &lt;span&gt;会議&lt;/span&gt;&lt;/td&gt;
+        &lt;td aria-label="3月6日 金曜日"&gt;6&lt;/td&gt;
+        &lt;td aria-label="3月7日 土曜日"&gt;7&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+        &lt;td aria-label="3月8日 日曜日"&gt;8&lt;/td&gt;
+        &lt;td aria-label="3月9日 月曜日" aria-current="date"&gt;&lt;strong&gt;9&lt;/strong&gt;&lt;/td&gt;
+        &lt;td aria-label="3月10日 火曜日"&gt;10&lt;/td&gt;
+        &lt;td aria-label="3月11日 水曜日"&gt;11&lt;/td&gt;
+        &lt;td aria-label="3月12日 木曜日"&gt;12&lt;/td&gt;
+        &lt;td aria-label="3月13日 金曜日"&gt;13&lt;/td&gt;
+        &lt;td aria-label="3月14日 土曜日"&gt;14&lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+&lt;/section&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>カレンダーの各セルに <code>aria-label</code> で完全な日付情報を提供し、スクリーンリーダーで「3月5日 木曜日 会議」と読み上げられます。</li>
+              <li><code>aria-current="date"</code> は今日の日付を示す標準的な方法です。</li>
+              <li>月表示の <code>aria-live="polite"</code> で月の切替時にスクリーンリーダーに新しい月名が通知されます。</li>
+              <li><code>&lt;th abbr="日"&gt;</code> はスクリーンリーダーが読み上げる際に略称を使用します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T4: フォーム・入力要素 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">input</span>
+      <h2>T4 フォーム・入力要素</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-07 -->
+    <div class="drill-item" id="s-07">
+      <div class="drill-header">
+        <div class="drill-badge">S-07</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フォーム・入力要素</span>
+          <h3 class="drill-title">ECサイト注文フロー完全構築</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>ECサイトの注文フローはカート確認、配送先入力、支払い方法選択、注文確認の4ステップフォームで構成されます。各ステップの進行状況と入力データの整合性が重要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でECサイトの注文ページ（全ステップ統合）を構築してください。</p>
+          <ul>
+            <li>ステッププログレス表示（<code>&lt;ol&gt;</code>、現在ステップに <code>aria-current="step"</code>）</li>
+            <li>Step1 カート確認: 商品テーブル（商品名、数量変更、小計、削除）、合計金額</li>
+            <li>Step2 配送先: 氏名、郵便番号（<code>pattern</code>）、住所（自動補完対応 <code>autocomplete</code>）</li>
+            <li>Step3 支払い: クレジットカード情報（カード番号 <code>inputmode="numeric"</code>、有効期限、セキュリティコード）</li>
+            <li>Step4 確認: 入力内容サマリー、利用規約同意、注文確定ボタン</li>
+            <li>全ステップにバリデーションとエラーメッセージの <code>aria-*</code> 設定</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>autocomplete="shipping address-line1"</code> で配送先住所の自動入力が動作します。<code>inputmode="numeric"</code> はモバイルで数字キーボードを表示します（<code>type="number"</code> とは異なりスピナーが出ません）。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!-- ステッププログレス --&gt;
+&lt;nav aria-label="注文ステップ"&gt;
+  &lt;ol&gt;
+    &lt;li&gt;カート確認&lt;/li&gt;
+    &lt;li aria-current="step"&gt;&lt;strong&gt;配送先入力&lt;/strong&gt;&lt;/li&gt;
+    &lt;li&gt;お支払い&lt;/li&gt;
+    &lt;li&gt;注文確認&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/nav&gt;
+
+&lt;main&gt;
+  &lt;h1&gt;配送先入力&lt;/h1&gt;
+  &lt;form action="/checkout/shipping" method="post"&gt;
+    &lt;fieldset&gt;
+      &lt;legend&gt;お届け先情報&lt;/legend&gt;
+      &lt;div&gt;
+        &lt;label for="ship-name"&gt;氏名 &lt;span aria-hidden="true"&gt;*&lt;/span&gt;&lt;/label&gt;
+        &lt;input type="text" id="ship-name" name="name"
+          required autocomplete="shipping name"
+          aria-describedby="ship-name-help"&gt;
+        &lt;span id="ship-name-help"&gt;配送先の氏名を入力&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;label for="ship-zip"&gt;郵便番号 &lt;span aria-hidden="true"&gt;*&lt;/span&gt;&lt;/label&gt;
+        &lt;input type="text" id="ship-zip" name="zip"
+          required pattern="\d{3}-?\d{4}"
+          inputmode="numeric"
+          autocomplete="shipping postal-code"
+          placeholder="123-4567"&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;label for="ship-addr"&gt;住所 &lt;span aria-hidden="true"&gt;*&lt;/span&gt;&lt;/label&gt;
+        &lt;input type="text" id="ship-addr" name="address"
+          required autocomplete="shipping address-line1"&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;label for="ship-tel"&gt;電話番号&lt;/label&gt;
+        &lt;input type="tel" id="ship-tel" name="tel"
+          autocomplete="shipping tel"&gt;
+      &lt;/div&gt;
+    &lt;/fieldset&gt;
+
+    &lt;button type="submit"&gt;お支払いへ進む&lt;/button&gt;
+    &lt;a href="/cart"&gt;カートに戻る&lt;/a&gt;
+  &lt;/form&gt;
+&lt;/main&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>aria-current="step"</code> は現在のステップを示す標準的な方法です。</li>
+              <li><code>autocomplete="shipping ..."</code> は配送先の自動入力を正しく動作させます。"billing" を使えば請求先になります。</li>
+              <li><code>inputmode="numeric"</code> はモバイルキーボードのみ制御し、入力値のバリデーションには <code>pattern</code> を使います。</li>
+              <li>カード情報は <code>autocomplete="cc-number"</code> / <code>"cc-exp"</code> / <code>"cc-csc"</code> で安全に自動入力できます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-08 -->
+    <div class="drill-item" id="s-08">
+      <div class="drill-header">
+        <div class="drill-badge">S-08</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フォーム・入力要素</span>
+          <h3 class="drill-title">アクセシブルなCMS記事エディタ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>CMS記事エディタはリッチテキスト編集、メディアアップロード、カテゴリ選択、公開設定など複雑なフォーム要素を統合します。<code>contenteditable</code> とARIA属性の組み合わせが鍵です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でCMS記事エディタのHTMLを構築してください。</p>
+          <ul>
+            <li>記事タイトル入力（<code>text</code>、リアルタイム文字数カウント <code>&lt;output&gt;</code>）</li>
+            <li>リッチテキストエディタ領域（<code>contenteditable="true"</code>、<code>role="textbox"</code>、<code>aria-multiline="true"</code>）</li>
+            <li>ツールバー（<code>role="toolbar"</code>）: 太字/斜体/リンク/画像挿入ボタン</li>
+            <li>サイドバー: カテゴリ選択（チェックボックスリスト）、タグ入力（<code>&lt;datalist&gt;</code>）、アイキャッチ画像アップロード</li>
+            <li>公開設定: 公開/下書き/予約公開（<code>datetime-local</code>）</li>
+            <li>プレビュー切替ボタン（<code>aria-pressed</code>）</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>contenteditable</code> の要素には <code>role="textbox"</code> と <code>aria-label</code> が必要です。ツールバーは <code>role="toolbar"</code> でグループ化し、各ボタンに <code>aria-label</code> を設定します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;form action="/admin/posts" method="post" enctype="multipart/form-data"&gt;
+  &lt;div&gt;
+    &lt;label for="post-title"&gt;タイトル&lt;/label&gt;
+    &lt;input type="text" id="post-title" name="title" required maxlength="100"&gt;
+    &lt;output aria-live="polite"&gt;0/100文字&lt;/output&gt;
+  &lt;/div&gt;
+
+  &lt;div role="toolbar" aria-label="書式ツールバー"&gt;
+    &lt;button type="button" aria-label="太字" aria-pressed="false"&gt;&lt;strong&gt;B&lt;/strong&gt;&lt;/button&gt;
+    &lt;button type="button" aria-label="斜体" aria-pressed="false"&gt;&lt;em&gt;I&lt;/em&gt;&lt;/button&gt;
+    &lt;button type="button" aria-label="リンクを挿入"&gt;Link&lt;/button&gt;
+    &lt;button type="button" aria-label="画像を挿入"&gt;Img&lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;div contenteditable="true" role="textbox" aria-multiline="true"
+    aria-label="記事本文" id="editor"
+    style="min-height: 300px; border: 1px solid #ccc; padding: 16px;"&gt;
+    &lt;p&gt;ここに記事を入力...&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;button type="button" aria-pressed="false" aria-label="プレビュー表示"&gt;プレビュー&lt;/button&gt;
+
+  &lt;aside aria-label="記事設定"&gt;
+    &lt;fieldset&gt;
+      &lt;legend&gt;カテゴリ&lt;/legend&gt;
+      &lt;label&gt;&lt;input type="checkbox" name="category" value="tech"&gt; テクノロジー&lt;/label&gt;
+      &lt;label&gt;&lt;input type="checkbox" name="category" value="design"&gt; デザイン&lt;/label&gt;
+      &lt;label&gt;&lt;input type="checkbox" name="category" value="business"&gt; ビジネス&lt;/label&gt;
+    &lt;/fieldset&gt;
+
+    &lt;div&gt;
+      &lt;label for="tags"&gt;タグ&lt;/label&gt;
+      &lt;input type="text" id="tags" name="tags" list="tag-list"&gt;
+      &lt;datalist id="tag-list"&gt;
+        &lt;option value="HTML"&gt;&lt;option value="CSS"&gt;&lt;option value="JavaScript"&gt;
+      &lt;/datalist&gt;
+    &lt;/div&gt;
+
+    &lt;div&gt;
+      &lt;label for="thumbnail"&gt;アイキャッチ画像&lt;/label&gt;
+      &lt;input type="file" id="thumbnail" name="thumbnail" accept="image/*"&gt;
+    &lt;/div&gt;
+
+    &lt;fieldset&gt;
+      &lt;legend&gt;公開設定&lt;/legend&gt;
+      &lt;label&gt;&lt;input type="radio" name="status" value="publish"&gt; 公開&lt;/label&gt;
+      &lt;label&gt;&lt;input type="radio" name="status" value="draft" checked&gt; 下書き&lt;/label&gt;
+      &lt;label&gt;&lt;input type="radio" name="status" value="scheduled"&gt; 予約公開&lt;/label&gt;
+      &lt;div&gt;
+        &lt;label for="schedule-date"&gt;公開日時&lt;/label&gt;
+        &lt;input type="datetime-local" id="schedule-date" name="schedule-date"&gt;
+      &lt;/div&gt;
+    &lt;/fieldset&gt;
+  &lt;/aside&gt;
+
+  &lt;button type="submit"&gt;保存する&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>contenteditable</code> + <code>role="textbox"</code> + <code>aria-multiline="true"</code> はリッチテキストエディタのアクセシビリティパターンです。</li>
+              <li><code>role="toolbar"</code> はツールバーとしてグループ化し、矢印キーでのナビゲーションが期待されます。</li>
+              <li><code>aria-pressed</code> はトグルボタンの状態（オン/オフ）を示します。太字ボタンの有効/無効などに使います。</li>
+              <li>文字数カウントの <code>&lt;output&gt;</code> に <code>aria-live="polite"</code> を設定することで、入力中の文字数変更がスクリーンリーダーに通知されます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T5: メディア・埋め込み ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">image</span>
+      <h2>T5 メディア・埋め込み</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-09 -->
+    <div class="drill-item" id="s-09">
+      <div class="drill-header">
+        <div class="drill-badge">S-09</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 メディア・埋め込み</span>
+          <h3 class="drill-title">動画学習プラットフォームのメディアプレーヤーページ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>動画プレーヤーでは複数ソース形式の提供、字幕・チャプターの <code>&lt;track&gt;</code> 要素、レスポンシブなポスター画像の <code>&lt;picture&gt;</code>、そしてプログレッシブエンハンスメントによるフォールバック戦略が重要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で動画学習プラットフォームのレッスン再生ページを構築してください。</p>
+          <ul>
+            <li><code>&lt;video&gt;</code> に MP4 / WebM の複数 <code>&lt;source&gt;</code> を設定</li>
+            <li>字幕トラック（日本語・英語）とチャプタートラックを <code>&lt;track&gt;</code> で提供</li>
+            <li>ポスター画像を <code>&lt;picture&gt;</code> + <code>&lt;source&gt;</code>（WebP / JPEG、レスポンシブ <code>media</code> 属性）で実装</li>
+            <li>動画の下に <code>&lt;figure&gt;</code> / <code>&lt;figcaption&gt;</code> でレッスン説明を配置</li>
+            <li>動画非対応ブラウザ向けに <code>&lt;object&gt;</code> → <code>&lt;embed&gt;</code> → ダウンロードリンクの3段フォールバック</li>
+            <li>レッスン一覧サイドバーに <code>&lt;audio&gt;</code> 要素でポッドキャスト版を提供</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;track kind="subtitles"&gt;</code> は字幕、<code>kind="chapters"</code> はチャプターマーカーです。<code>default</code> 属性で初期表示する字幕を指定できます。<code>&lt;picture&gt;</code> の <code>&lt;source&gt;</code> は上から順に評価され、最初に一致したものが使用されます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;article&gt;
+  &lt;h1&gt;Lesson 3: CSSグリッドレイアウト実践&lt;/h1&gt;
+
+  &lt;figure&gt;
+    &lt;!-- レスポンシブポスター画像 --&gt;
+    &lt;picture id="lesson-poster"&gt;
+      &lt;source media="(min-width: 1024px)"
+        srcset="posters/lesson3-wide.webp" type="image/webp"&gt;
+      &lt;source media="(min-width: 1024px)"
+        srcset="posters/lesson3-wide.jpg" type="image/jpeg"&gt;
+      &lt;source srcset="posters/lesson3-mobile.webp" type="image/webp"&gt;
+      &lt;img src="posters/lesson3-mobile.jpg"
+        alt="Lesson 3 サムネイル: CSSグリッドの概念図"
+        width="1280" height="720" loading="lazy"&gt;
+    &lt;/picture&gt;
+
+    &lt;!-- メインビデオプレーヤー --&gt;
+    &lt;video controls preload="metadata" crossorigin="anonymous"
+      poster="posters/lesson3-wide.jpg"
+      width="1280" height="720"&gt;
+      &lt;source src="videos/lesson3.mp4" type="video/mp4"&gt;
+      &lt;source src="videos/lesson3.webm" type="video/webm"&gt;
+
+      &lt;!-- 字幕トラック --&gt;
+      &lt;track kind="subtitles" src="subs/lesson3-ja.vtt"
+        srclang="ja" label="日本語" default&gt;
+      &lt;track kind="subtitles" src="subs/lesson3-en.vtt"
+        srclang="en" label="English"&gt;
+
+      &lt;!-- チャプタートラック --&gt;
+      &lt;track kind="chapters" src="chapters/lesson3.vtt"
+        srclang="ja" label="チャプター"&gt;
+
+      &lt;!-- 3段フォールバック --&gt;
+      &lt;object data="videos/lesson3.mp4" type="video/mp4"
+        width="640" height="360"&gt;
+        &lt;embed src="videos/lesson3.mp4"
+          type="video/mp4" width="640" height="360"&gt;
+        &lt;p&gt;お使いのブラウザは動画再生に対応していません。
+          &lt;a href="videos/lesson3.mp4" download&gt;動画をダウンロード&lt;/a&gt;
+          してご覧ください。&lt;/p&gt;
+      &lt;/object&gt;
+    &lt;/video&gt;
+
+    &lt;figcaption&gt;
+      &lt;h2&gt;レッスン概要&lt;/h2&gt;
+      &lt;p&gt;CSSグリッドの &lt;code&gt;grid-template-areas&lt;/code&gt; を使った
+        実践的なレイアウト構築を学びます。&lt;/p&gt;
+      &lt;dl&gt;
+        &lt;dt&gt;所要時間&lt;/dt&gt;&lt;dd&gt;&lt;time datetime="PT25M"&gt;25分&lt;/time&gt;&lt;/dd&gt;
+        &lt;dt&gt;難易度&lt;/dt&gt;&lt;dd&gt;中級&lt;/dd&gt;
+      &lt;/dl&gt;
+    &lt;/figcaption&gt;
+  &lt;/figure&gt;
+
+  &lt;!-- サイドバー: ポッドキャスト版 --&gt;
+  &lt;aside aria-label="ポッドキャスト版"&gt;
+    &lt;h3&gt;音声で聴く&lt;/h3&gt;
+    &lt;audio controls preload="none"&gt;
+      &lt;source src="audio/lesson3.opus" type="audio/opus"&gt;
+      &lt;source src="audio/lesson3.mp3" type="audio/mpeg"&gt;
+      &lt;p&gt;&lt;a href="audio/lesson3.mp3" download&gt;MP3をダウンロード&lt;/a&gt;&lt;/p&gt;
+    &lt;/audio&gt;
+  &lt;/aside&gt;
+&lt;/article&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;source&gt;</code> を複数記述することで、ブラウザが対応する最適な形式を自動選択します。WebM はファイルサイズが小さく、MP4 は互換性が高い形式です。</li>
+              <li><code>&lt;track kind="subtitles"&gt;</code> は字幕、<code>kind="chapters"</code> はシークバー上のチャプターマーカーを提供します。<code>default</code> 属性付きの字幕が初期表示されます。</li>
+              <li><code>&lt;picture&gt;</code> 要素で画面幅に応じた最適な画像形式・サイズを提供し、WebP 非対応ブラウザには JPEG がフォールバックされます。</li>
+              <li><code>&lt;object&gt;</code> → <code>&lt;embed&gt;</code> → ダウンロードリンクの3段構成は、プログレッシブエンハンスメントの典型パターンです。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-10 -->
+    <div class="drill-item" id="s-10">
+      <div class="drill-header">
+        <div class="drill-badge">S-10</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 メディア・埋め込み</span>
+          <h3 class="drill-title">インタラクティブ地図・データビジュアライゼーションダッシュボード</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>データダッシュボードでは <code>&lt;canvas&gt;</code> でのグラフ描画、インライン <code>&lt;svg&gt;</code> でのチャート、<code>&lt;iframe&gt;</code> の sandbox 属性による安全な外部コンテンツ埋め込み、<code>&lt;object&gt;</code> でのPDF表示、レスポンシブ画像の <code>srcset</code> / <code>sizes</code> を統合的に扱います。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で営業ダッシュボードページを構築してください。</p>
+          <ul>
+            <li>売上推移グラフ: <code>&lt;canvas&gt;</code> 要素（<code>role="img"</code>、<code>aria-label</code> でグラフの要約を提供）</li>
+            <li>地域別シェア: インライン <code>&lt;svg&gt;</code> で円グラフ（<code>&lt;circle&gt;</code> の <code>stroke-dasharray</code>）+ <code>&lt;title&gt;</code> / <code>&lt;desc&gt;</code></li>
+            <li>地図表示: <code>&lt;iframe&gt;</code> で外部地図サービスを埋め込み（<code>sandbox</code>、<code>loading="lazy"</code>、<code>title</code> 属性）</li>
+            <li>月次レポート: <code>&lt;object&gt;</code> でPDFを埋め込み、非対応時のダウンロードリンク</li>
+            <li>KPIカード: レスポンシブ画像（<code>&lt;img srcset sizes&gt;</code>）でアイコン表示</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;canvas&gt;</code> はスクリーンリーダーからアクセスできないため、<code>role="img"</code> と <code>aria-label</code> でグラフの要約を伝えます。SVGには <code>&lt;title&gt;</code>（短い説明）と <code>&lt;desc&gt;</code>（詳細説明）で代替テキストを提供します。<code>&lt;iframe sandbox&gt;</code> の値を空にすると全制限が有効になります。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;main&gt;
+  &lt;h1&gt;営業ダッシュボード — 2026年3月&lt;/h1&gt;
+
+  &lt;!-- KPIカード --&gt;
+  &lt;section aria-label="主要指標"&gt;
+    &lt;div&gt;
+      &lt;img srcset="icons/revenue-64.png 1x,
+                   icons/revenue-128.png 2x,
+                   icons/revenue-192.png 3x"
+        sizes="64px"
+        src="icons/revenue-64.png"
+        alt="" width="64" height="64"&gt;
+      &lt;dl&gt;
+        &lt;dt&gt;月間売上&lt;/dt&gt;
+        &lt;dd&gt;&lt;data value="12500000"&gt;1,250万円&lt;/data&gt;&lt;/dd&gt;
+      &lt;/dl&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;img srcset="icons/users-64.png 1x,
+                   icons/users-128.png 2x"
+        sizes="64px"
+        src="icons/users-64.png"
+        alt="" width="64" height="64"&gt;
+      &lt;dl&gt;
+        &lt;dt&gt;新規顧客&lt;/dt&gt;
+        &lt;dd&gt;&lt;data value="342"&gt;342件&lt;/data&gt;&lt;/dd&gt;
+      &lt;/dl&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- 売上推移グラフ（Canvas） --&gt;
+  &lt;section aria-label="売上推移"&gt;
+    &lt;h2&gt;月別売上推移&lt;/h2&gt;
+    &lt;canvas id="sales-chart" width="800" height="400"
+      role="img"
+      aria-label="2025年4月から2026年3月の売上推移。4月800万円から緩やかに上昇し、12月に1400万円のピーク。1月に一時下降後、3月は1250万円に回復。"&gt;
+      &lt;!-- Canvas非対応ブラウザ向け代替テーブル --&gt;
+      &lt;table&gt;
+        &lt;caption&gt;月別売上推移（万円）&lt;/caption&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;&lt;th&gt;月&lt;/th&gt;&lt;th&gt;売上&lt;/th&gt;&lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;&lt;td&gt;4月&lt;/td&gt;&lt;td&gt;800&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;5月&lt;/td&gt;&lt;td&gt;850&lt;/td&gt;&lt;/tr&gt;
+          &lt;tr&gt;&lt;td&gt;6月&lt;/td&gt;&lt;td&gt;920&lt;/td&gt;&lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/canvas&gt;
+  &lt;/section&gt;
+
+  &lt;!-- 地域別シェア（SVG円グラフ） --&gt;
+  &lt;section aria-label="地域別売上シェア"&gt;
+    &lt;h2&gt;地域別シェア&lt;/h2&gt;
+    &lt;svg viewBox="0 0 200 200" width="200" height="200"
+      role="img" aria-labelledby="pie-title pie-desc"&gt;
+      &lt;title id="pie-title"&gt;地域別売上シェア&lt;/title&gt;
+      &lt;desc id="pie-desc"&gt;関東45%、関西25%、中部15%、その他15%&lt;/desc&gt;
+      &lt;!-- 背景円 --&gt;
+      &lt;circle cx="100" cy="100" r="80" fill="none"
+        stroke="#e0e0e0" stroke-width="32"&gt;&lt;/circle&gt;
+      &lt;!-- 関東 45% --&gt;
+      &lt;circle cx="100" cy="100" r="80" fill="none"
+        stroke="#007AFF" stroke-width="32"
+        stroke-dasharray="226.2 502.65"
+        stroke-dashoffset="0" transform="rotate(-90 100 100)"&gt;
+        &lt;title&gt;関東: 45%&lt;/title&gt;
+      &lt;/circle&gt;
+      &lt;!-- 関西 25% --&gt;
+      &lt;circle cx="100" cy="100" r="80" fill="none"
+        stroke="#34C759" stroke-width="32"
+        stroke-dasharray="125.66 502.65"
+        stroke-dashoffset="-226.2" transform="rotate(-90 100 100)"&gt;
+        &lt;title&gt;関西: 25%&lt;/title&gt;
+      &lt;/circle&gt;
+      &lt;!-- 中部 15% --&gt;
+      &lt;circle cx="100" cy="100" r="80" fill="none"
+        stroke="#FF9500" stroke-width="32"
+        stroke-dasharray="75.4 502.65"
+        stroke-dashoffset="-351.86" transform="rotate(-90 100 100)"&gt;
+        &lt;title&gt;中部: 15%&lt;/title&gt;
+      &lt;/circle&gt;
+      &lt;!-- その他 15% --&gt;
+      &lt;circle cx="100" cy="100" r="80" fill="none"
+        stroke="#AF52DE" stroke-width="32"
+        stroke-dasharray="75.4 502.65"
+        stroke-dashoffset="-427.26" transform="rotate(-90 100 100)"&gt;
+        &lt;title&gt;その他: 15%&lt;/title&gt;
+      &lt;/circle&gt;
+    &lt;/svg&gt;
+  &lt;/section&gt;
+
+  &lt;!-- 地図埋め込み（iframe） --&gt;
+  &lt;section aria-label="拠点マップ"&gt;
+    &lt;h2&gt;全国拠点マップ&lt;/h2&gt;
+    &lt;iframe src="https://maps.example.com/embed?q=tokyo"
+      title="全国営業拠点の地図"
+      width="100%" height="450"
+      loading="lazy"
+      sandbox="allow-scripts allow-same-origin"
+      allow="geolocation"
+      referrerpolicy="no-referrer"
+      style="border: 0; border-radius: 8px;"&gt;
+      &lt;p&gt;お使いのブラウザはiframeに対応していません。
+        &lt;a href="https://maps.example.com/?q=tokyo"
+          target="_blank" rel="noopener noreferrer"&gt;
+          地図を別タブで開く&lt;/a&gt;&lt;/p&gt;
+    &lt;/iframe&gt;
+  &lt;/section&gt;
+
+  &lt;!-- 月次レポートPDF --&gt;
+  &lt;section aria-label="月次レポート"&gt;
+    &lt;h2&gt;月次レポート&lt;/h2&gt;
+    &lt;object data="reports/2026-03.pdf"
+      type="application/pdf"
+      width="100%" height="600"&gt;
+      &lt;p&gt;PDFを表示できません。
+        &lt;a href="reports/2026-03.pdf" download="月次レポート_2026年3月.pdf"&gt;
+          PDFをダウンロード&lt;/a&gt;&lt;/p&gt;
+    &lt;/object&gt;
+  &lt;/section&gt;
+&lt;/main&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;canvas&gt;</code> に <code>role="img"</code> と <code>aria-label</code> を設定し、グラフの要約をテキストで提供します。内部の <code>&lt;table&gt;</code> は Canvas 非対応ブラウザへのフォールバックです。</li>
+              <li>SVG の <code>&lt;title&gt;</code> と <code>&lt;desc&gt;</code> はスクリーンリーダーに読み上げられます。<code>aria-labelledby</code> で明示的に紐付けると確実です。</li>
+              <li><code>&lt;iframe sandbox&gt;</code> で外部コンテンツの権限を最小限に制限します。<code>allow-scripts allow-same-origin</code> は地図操作に必要な最小限の許可です。</li>
+              <li><code>&lt;object&gt;</code> の内部にフォールバックコンテンツを配置することで、PDF 非対応環境でもダウンロードリンクが表示されます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T6: セマンティクス・アクセシビリティ ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">accessibility</span>
+      <h2>T6 セマンティクス・アクセシビリティ</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-11 -->
+    <div class="drill-item" id="s-11">
+      <div class="drill-header">
+        <div class="drill-badge">S-11</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セマンティクス・アクセシビリティ</span>
+          <h3 class="drill-title">大規模コーポレートサイトのランディングページ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>大規模サイトでは複数の <code>&lt;nav&gt;</code> を <code>aria-label</code> で区別し、スキップナビゲーション、ランドマークロール、<code>aria-live</code> リージョンによる動的通知を組み合わせて、あらゆるユーザーに快適なナビゲーション体験を提供します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でコーポレートサイトのランディングページを構築してください。</p>
+          <ul>
+            <li>スキップナビゲーション（本文・ナビ・フッターへのスキップリンク3つ）</li>
+            <li>グローバルナビ（<code>&lt;nav aria-label="メインナビゲーション"&gt;</code>）とパンくずナビ（<code>&lt;nav aria-label="パンくずリスト"&gt;</code>）の2つの <code>&lt;nav&gt;</code></li>
+            <li><code>&lt;main&gt;</code> 内にヒーローセクション（<code>&lt;section aria-labelledby&gt;</code>）、サービス紹介（<code>&lt;article&gt;</code> 3つ）、お知らせ（<code>&lt;aside&gt;</code>）</li>
+            <li><code>aria-live="polite"</code> リージョンでニュースティッカーの動的テキスト通知</li>
+            <li><code>&lt;footer&gt;</code> 内にサイトマップナビ（<code>&lt;nav aria-label="サイトマップ"&gt;</code>）</li>
+            <li>全セクションに適切な見出し階層（<code>h1</code>〜<code>h4</code>）を設定</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>スキップリンクは視覚的に隠しつつフォーカス時に表示する CSS パターン（<code>.sr-only:focus</code>）で実装します。同じページに複数の <code>&lt;nav&gt;</code> がある場合は <code>aria-label</code> で必ず区別してください。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;株式会社テクノソリューションズ&lt;/title&gt;
+  &lt;style&gt;
+    .skip-link {
+      position: absolute; left: -9999px; top: 0;
+      z-index: 1000; padding: 8px 16px;
+      background: #000; color: #fff;
+    }
+    .skip-link:focus { left: 0; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- スキップナビゲーション --&gt;
+  &lt;a href="#main-content" class="skip-link"&gt;本文へスキップ&lt;/a&gt;
+  &lt;a href="#global-nav" class="skip-link"&gt;ナビゲーションへ&lt;/a&gt;
+  &lt;a href="#site-footer" class="skip-link"&gt;フッターへ&lt;/a&gt;
+
+  &lt;!-- ニュースティッカー --&gt;
+  &lt;div role="status" aria-live="polite" aria-atomic="true"&gt;
+    &lt;p&gt;【お知らせ】2026年3月15日にシステムメンテナンスを実施します。&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;header&gt;
+    &lt;a href="/"&gt;
+      &lt;img src="logo.svg" alt="株式会社テクノソリューションズ" width="200" height="40"&gt;
+    &lt;/a&gt;
+
+    &lt;nav id="global-nav" aria-label="メインナビゲーション"&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="/" aria-current="page"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/services"&gt;サービス&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/company"&gt;企業情報&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/careers"&gt;採用情報&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/contact"&gt;お問い合わせ&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+
+  &lt;nav aria-label="パンくずリスト"&gt;
+    &lt;ol&gt;
+      &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+      &lt;li aria-current="page"&gt;トップページ&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/nav&gt;
+
+  &lt;main id="main-content"&gt;
+    &lt;section aria-labelledby="hero-heading"&gt;
+      &lt;h1 id="hero-heading"&gt;テクノロジーで未来を創る&lt;/h1&gt;
+      &lt;p&gt;DX推進からクラウド構築まで、ワンストップでサポートします。&lt;/p&gt;
+      &lt;a href="/contact" role="button"&gt;お問い合わせ&lt;/a&gt;
+    &lt;/section&gt;
+
+    &lt;section aria-labelledby="services-heading"&gt;
+      &lt;h2 id="services-heading"&gt;サービス一覧&lt;/h2&gt;
+      &lt;article&gt;
+        &lt;h3&gt;クラウドインテグレーション&lt;/h3&gt;
+        &lt;p&gt;AWS・Azure・GCPのマルチクラウド環境を設計・構築します。&lt;/p&gt;
+      &lt;/article&gt;
+      &lt;article&gt;
+        &lt;h3&gt;AIソリューション&lt;/h3&gt;
+        &lt;p&gt;機械学習モデルの開発から運用までを支援します。&lt;/p&gt;
+      &lt;/article&gt;
+      &lt;article&gt;
+        &lt;h3&gt;セキュリティコンサルティング&lt;/h3&gt;
+        &lt;p&gt;脆弱性診断、SOC運用、インシデント対応を提供します。&lt;/p&gt;
+      &lt;/article&gt;
+    &lt;/section&gt;
+
+    &lt;aside aria-labelledby="news-heading"&gt;
+      &lt;h2 id="news-heading"&gt;お知らせ&lt;/h2&gt;
+      &lt;ul&gt;
+        &lt;li&gt;
+          &lt;time datetime="2026-03-01"&gt;2026.03.01&lt;/time&gt;
+          &lt;a href="/news/001"&gt;新サービス「AI分析パック」をリリースしました&lt;/a&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+          &lt;time datetime="2026-02-15"&gt;2026.02.15&lt;/time&gt;
+          &lt;a href="/news/002"&gt;東京オフィスを移転しました&lt;/a&gt;
+        &lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/aside&gt;
+  &lt;/main&gt;
+
+  &lt;footer id="site-footer"&gt;
+    &lt;nav aria-label="サイトマップ"&gt;
+      &lt;h2&gt;サイトマップ&lt;/h2&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;h3&gt;サービス&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;&lt;a href="/services/cloud"&gt;クラウド&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href="/services/ai"&gt;AI&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href="/services/security"&gt;セキュリティ&lt;/a&gt;&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;&lt;h3&gt;企業情報&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;&lt;a href="/company/about"&gt;会社概要&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href="/company/access"&gt;アクセス&lt;/a&gt;&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+    &lt;p&gt;&lt;small&gt;&amp;copy; 2026 TechnoSolutions Inc.&lt;/small&gt;&lt;/p&gt;
+  &lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>スキップリンクは視覚的に隠しつつ、キーボードフォーカス時に表示されるパターンです。Tab キーで最初にフォーカスされ、本文へ直接移動できます。</li>
+              <li>3つの <code>&lt;nav&gt;</code> にそれぞれ異なる <code>aria-label</code> を設定し、スクリーンリーダーのランドマーク一覧で区別できるようにしています。</li>
+              <li><code>aria-live="polite"</code> + <code>aria-atomic="true"</code> で、ニュースが切り替わるたびに全体テキストが読み上げられます。<code>role="status"</code> は暗黙の <code>aria-live="polite"</code> を持ちますが、明示するとより確実です。</li>
+              <li><code>aria-current="page"</code> は現在のページを示し、スクリーンリーダーが「現在のページ」と読み上げます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-12 -->
+    <div class="drill-item" id="s-12">
+      <div class="drill-header">
+        <div class="drill-badge">S-12</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セマンティクス・アクセシビリティ</span>
+          <h3 class="drill-title">WAI-ARIA完全対応のSPAスタイルWebアプリUI</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>SPA（シングルページアプリケーション）では、タブパネル、モーダルダイアログ、アラートダイアログ、アコーディオン、ライブリージョンなど、動的UIコンポーネントのアクセシビリティを WAI-ARIA で正しく実装する必要があります。キーボードナビゲーションとフォーカス管理が特に重要です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でプロジェクト管理アプリのUIコンポーネントを構築してください。</p>
+          <ul>
+            <li>タブパネル（<code>role="tablist"</code>/<code>"tab"</code>/<code>"tabpanel"</code>）: 「概要」「タスク」「メンバー」の3タブ、<code>aria-selected</code> / <code>aria-controls</code> を設定</li>
+            <li>モーダルダイアログ（<code>role="dialog"</code>、<code>aria-modal="true"</code>）: タスク新規作成フォーム、フォーカストラップの構造</li>
+            <li>アラートダイアログ（<code>role="alertdialog"</code>）: タスク削除確認、<code>aria-describedby</code> で警告メッセージ</li>
+            <li>通知エリア（<code>aria-live="assertive"</code>）: 操作完了メッセージの表示</li>
+            <li>アコーディオン（<code>aria-expanded</code> / <code>aria-controls</code>）: タスク詳細の折りたたみ表示</li>
+            <li>全コンポーネントでキーボード操作（Tab / Enter / Escape / 矢印キー）の属性を記述</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>タブの矢印キーナビゲーションには <code>tabindex="0"</code>（アクティブタブ）と <code>tabindex="-1"</code>（非アクティブタブ）のロービングタブインデックスパターンを使います。モーダルが開いている間は背景に <code>aria-hidden="true"</code> と <code>inert</code> 属性を設定します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!-- ライブリージョン（通知エリア） --&gt;
+&lt;div role="status" aria-live="assertive" aria-atomic="true" id="notification"&gt;
+  &lt;!-- JSで操作結果メッセージを挿入 --&gt;
+&lt;/div&gt;
+
+&lt;div id="app-root"&gt;
+  &lt;h1&gt;プロジェクト: ECサイトリニューアル&lt;/h1&gt;
+
+  &lt;!-- タブパネル --&gt;
+  &lt;div role="tablist" aria-label="プロジェクト情報"&gt;
+    &lt;button role="tab" id="tab-overview"
+      aria-selected="true" aria-controls="panel-overview"
+      tabindex="0"&gt;概要&lt;/button&gt;
+    &lt;button role="tab" id="tab-tasks"
+      aria-selected="false" aria-controls="panel-tasks"
+      tabindex="-1"&gt;タスク&lt;/button&gt;
+    &lt;button role="tab" id="tab-members"
+      aria-selected="false" aria-controls="panel-members"
+      tabindex="-1"&gt;メンバー&lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;div role="tabpanel" id="panel-overview"
+    aria-labelledby="tab-overview" tabindex="0"&gt;
+    &lt;h2&gt;プロジェクト概要&lt;/h2&gt;
+    &lt;dl&gt;
+      &lt;dt&gt;開始日&lt;/dt&gt;&lt;dd&gt;&lt;time datetime="2026-01-15"&gt;2026年1月15日&lt;/time&gt;&lt;/dd&gt;
+      &lt;dt&gt;期限&lt;/dt&gt;&lt;dd&gt;&lt;time datetime="2026-06-30"&gt;2026年6月30日&lt;/time&gt;&lt;/dd&gt;
+      &lt;dt&gt;進捗&lt;/dt&gt;&lt;dd&gt;&lt;progress value="35" max="100"&gt;35%&lt;/progress&gt;&lt;/dd&gt;
+    &lt;/dl&gt;
+  &lt;/div&gt;
+
+  &lt;div role="tabpanel" id="panel-tasks"
+    aria-labelledby="tab-tasks" tabindex="0" hidden&gt;
+    &lt;h2&gt;タスク一覧&lt;/h2&gt;
+    &lt;button type="button" aria-haspopup="dialog"&gt;
+      + 新規タスク
+    &lt;/button&gt;
+
+    &lt;!-- アコーディオン --&gt;
+    &lt;div&gt;
+      &lt;h3&gt;
+        &lt;button aria-expanded="true"
+          aria-controls="task-detail-1"&gt;
+          タスク1: ワイヤーフレーム作成
+        &lt;/button&gt;
+      &lt;/h3&gt;
+      &lt;div id="task-detail-1" role="region"
+        aria-labelledby="task-detail-1"&gt;
+        &lt;p&gt;担当: 田中 / 期限: 2026-02-28 / ステータス: 完了&lt;/p&gt;
+        &lt;button type="button" aria-haspopup="alertdialog"&gt;
+          削除
+        &lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;h3&gt;
+        &lt;button aria-expanded="false"
+          aria-controls="task-detail-2"&gt;
+          タスク2: デザインカンプ作成
+        &lt;/button&gt;
+      &lt;/h3&gt;
+      &lt;div id="task-detail-2" role="region" hidden&gt;
+        &lt;p&gt;担当: 佐藤 / 期限: 2026-03-31 / ステータス: 進行中&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div role="tabpanel" id="panel-members"
+    aria-labelledby="tab-members" tabindex="0" hidden&gt;
+    &lt;h2&gt;メンバー&lt;/h2&gt;
+    &lt;ul&gt;
+      &lt;li&gt;田中太郎（PM）&lt;/li&gt;
+      &lt;li&gt;佐藤花子（デザイナー）&lt;/li&gt;
+      &lt;li&gt;鈴木一郎（エンジニア）&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- モーダルダイアログ: タスク作成 --&gt;
+&lt;div role="dialog" aria-modal="true"
+  aria-labelledby="dialog-title" id="create-task-dialog" hidden&gt;
+  &lt;h2 id="dialog-title"&gt;新規タスク作成&lt;/h2&gt;
+  &lt;form&gt;
+    &lt;div&gt;
+      &lt;label for="task-name"&gt;タスク名 &lt;span aria-hidden="true"&gt;*&lt;/span&gt;&lt;/label&gt;
+      &lt;input type="text" id="task-name" required&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="task-assignee"&gt;担当者&lt;/label&gt;
+      &lt;select id="task-assignee"&gt;
+        &lt;option value=""&gt;選択してください&lt;/option&gt;
+        &lt;option value="tanaka"&gt;田中太郎&lt;/option&gt;
+        &lt;option value="sato"&gt;佐藤花子&lt;/option&gt;
+        &lt;option value="suzuki"&gt;鈴木一郎&lt;/option&gt;
+      &lt;/select&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label for="task-due"&gt;期限&lt;/label&gt;
+      &lt;input type="date" id="task-due"&gt;
+    &lt;/div&gt;
+    &lt;button type="submit"&gt;作成&lt;/button&gt;
+    &lt;button type="button" aria-label="閉じる"&gt;キャンセル&lt;/button&gt;
+  &lt;/form&gt;
+&lt;/div&gt;
+
+&lt;!-- アラートダイアログ: 削除確認 --&gt;
+&lt;div role="alertdialog" aria-modal="true"
+  aria-labelledby="alert-title" aria-describedby="alert-desc"
+  id="delete-confirm-dialog" hidden&gt;
+  &lt;h2 id="alert-title"&gt;タスクの削除&lt;/h2&gt;
+  &lt;p id="alert-desc"&gt;
+    「ワイヤーフレーム作成」を削除します。この操作は取り消せません。
+  &lt;/p&gt;
+  &lt;button type="button"&gt;削除する&lt;/button&gt;
+  &lt;button type="button" autofocus&gt;キャンセル&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;!-- ダイアログ表示中の背景マスク --&gt;
+&lt;div id="backdrop" hidden aria-hidden="true"&gt;&lt;/div&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>タブのロービングタブインデックス: アクティブタブのみ <code>tabindex="0"</code>、他は <code>tabindex="-1"</code> で矢印キーナビゲーションを実現します。</li>
+              <li><code>role="dialog"</code> + <code>aria-modal="true"</code> でモーダルダイアログを宣言し、背景には <code>inert</code> 属性を設定してフォーカストラップを実現します。</li>
+              <li><code>role="alertdialog"</code> は確認ダイアログ用で、<code>aria-describedby</code> で警告メッセージを紐付けます。キャンセルボタンに <code>autofocus</code> を設定し、誤操作を防止します。</li>
+              <li><code>aria-haspopup="dialog"</code> / <code>"alertdialog"</code> でボタンがダイアログを開くことをスクリーンリーダーに予告します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T7: メタデータ・SEO・OGP ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">search</span>
+      <h2>T7 メタデータ・SEO・OGP</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-13 -->
+    <div class="drill-item" id="s-13">
+      <div class="drill-header">
+        <div class="drill-badge">S-13</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 メタデータ・SEO・OGP</span>
+          <h3 class="drill-title">国際ECサイトの多言語SEO最適化ページ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>多言語ECサイトでは <code>hreflang</code> による言語切替指示、<code>canonical</code> による重複排除、JSON-LD 構造化データ（Product / BreadcrumbList / Organization）、OGP / Twitter Card の完全設定、パフォーマンス最適化メタ（<code>preload</code> / <code>preconnect</code> / <code>dns-prefetch</code>）を統合的に実装します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で日英対応ECサイトの商品ページ <code>&lt;head&gt;</code> セクションを構築してください。</p>
+          <ul>
+            <li><code>hreflang</code> タグ: 日本語版（<code>ja</code>）、英語版（<code>en</code>）、デフォルト（<code>x-default</code>）</li>
+            <li><code>canonical</code> URL の指定</li>
+            <li>JSON-LD 構造化データ: <code>Product</code>（名前、価格、在庫、レビュー集約）、<code>BreadcrumbList</code>、<code>Organization</code></li>
+            <li>OGP メタタグ一式（<code>og:title</code> / <code>og:description</code> / <code>og:image</code> / <code>og:url</code> / <code>og:type</code> / <code>og:locale</code> / <code>og:site_name</code>）</li>
+            <li>Twitter Card（<code>summary_large_image</code>）</li>
+            <li>パフォーマンス: <code>&lt;link rel="preconnect"&gt;</code>、<code>&lt;link rel="dns-prefetch"&gt;</code>、<code>&lt;link rel="preload"&gt;</code></li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>hreflang</code> はGoogleに同一コンテンツの言語バリエーションを伝えます。<code>x-default</code> はどの言語にも一致しない場合のフォールバックです。JSON-LD の <code>@type: "Product"</code> には <code>offers</code>（価格・在庫）と <code>aggregateRating</code>（レビュー集約）を含めると、検索結果にリッチスニペットが表示されます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;プレミアムワイヤレスヘッドホン XH-900 | TechShop&lt;/title&gt;
+  &lt;meta name="description"
+    content="ノイズキャンセリング搭載の高音質ワイヤレスヘッドホン XH-900。40時間バッテリー、マルチポイント接続対応。"&gt;
+
+  &lt;!-- パフォーマンス最適化 --&gt;
+  &lt;link rel="preconnect" href="https://fonts.googleapis.com" crossorigin&gt;
+  &lt;link rel="preconnect" href="https://cdn.techshop.example.com"&gt;
+  &lt;link rel="dns-prefetch" href="https://analytics.example.com"&gt;
+  &lt;link rel="preload" as="image"
+    href="https://cdn.techshop.example.com/products/xh900-hero.webp"
+    type="image/webp"&gt;
+  &lt;link rel="preload" as="font"
+    href="/fonts/NotoSansJP-Regular.woff2"
+    type="font/woff2" crossorigin&gt;
+
+  &lt;!-- Canonical &amp; hreflang --&gt;
+  &lt;link rel="canonical"
+    href="https://techshop.example.com/ja/products/xh-900"&gt;
+  &lt;link rel="alternate" hreflang="ja"
+    href="https://techshop.example.com/ja/products/xh-900"&gt;
+  &lt;link rel="alternate" hreflang="en"
+    href="https://techshop.example.com/en/products/xh-900"&gt;
+  &lt;link rel="alternate" hreflang="x-default"
+    href="https://techshop.example.com/products/xh-900"&gt;
+
+  &lt;!-- OGP --&gt;
+  &lt;meta property="og:title" content="プレミアムワイヤレスヘッドホン XH-900"&gt;
+  &lt;meta property="og:description"
+    content="ノイズキャンセリング搭載。40時間バッテリー、マルチポイント接続。"&gt;
+  &lt;meta property="og:image"
+    content="https://cdn.techshop.example.com/ogp/xh900-1200x630.jpg"&gt;
+  &lt;meta property="og:image:width" content="1200"&gt;
+  &lt;meta property="og:image:height" content="630"&gt;
+  &lt;meta property="og:url"
+    content="https://techshop.example.com/ja/products/xh-900"&gt;
+  &lt;meta property="og:type" content="product"&gt;
+  &lt;meta property="og:locale" content="ja_JP"&gt;
+  &lt;meta property="og:locale:alternate" content="en_US"&gt;
+  &lt;meta property="og:site_name" content="TechShop"&gt;
+
+  &lt;!-- Twitter Card --&gt;
+  &lt;meta name="twitter:card" content="summary_large_image"&gt;
+  &lt;meta name="twitter:site" content="@techshop_jp"&gt;
+  &lt;meta name="twitter:title" content="プレミアムワイヤレスヘッドホン XH-900"&gt;
+  &lt;meta name="twitter:description"
+    content="ノイズキャンセリング搭載の高音質ヘッドホン。"&gt;
+  &lt;meta name="twitter:image"
+    content="https://cdn.techshop.example.com/ogp/xh900-1200x630.jpg"&gt;
+
+  &lt;!-- JSON-LD 構造化データ: Organization --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "TechShop",
+    "url": "https://techshop.example.com",
+    "logo": "https://cdn.techshop.example.com/logo.png",
+    "sameAs": [
+      "https://twitter.com/techshop_jp",
+      "https://www.instagram.com/techshop_jp"
+    ]
+  }
+  &lt;/script&gt;
+
+  &lt;!-- JSON-LD 構造化データ: BreadcrumbList --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1,
+        "name": "ホーム",
+        "item": "https://techshop.example.com/ja" },
+      { "@type": "ListItem", "position": 2,
+        "name": "ヘッドホン",
+        "item": "https://techshop.example.com/ja/categories/headphones" },
+      { "@type": "ListItem", "position": 3,
+        "name": "XH-900" }
+    ]
+  }
+  &lt;/script&gt;
+
+  &lt;!-- JSON-LD 構造化データ: Product --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "プレミアムワイヤレスヘッドホン XH-900",
+    "image": [
+      "https://cdn.techshop.example.com/products/xh900-1.jpg",
+      "https://cdn.techshop.example.com/products/xh900-2.jpg"
+    ],
+    "description": "ノイズキャンセリング搭載の高音質ワイヤレスヘッドホン",
+    "brand": { "@type": "Brand", "name": "TechAudio" },
+    "sku": "XH-900-BK",
+    "offers": {
+      "@type": "Offer",
+      "url": "https://techshop.example.com/ja/products/xh-900",
+      "priceCurrency": "JPY",
+      "price": "39800",
+      "priceValidUntil": "2026-12-31",
+      "availability": "https://schema.org/InStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.6",
+      "reviewCount": "128"
+    }
+  }
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- ページ本文は省略 --&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>hreflang</code> の3点セット（<code>ja</code>・<code>en</code>・<code>x-default</code>）で、Google は言語別に適切なページを検索結果に表示します。全言語版に相互リンクが必要です。</li>
+              <li><code>canonical</code> は重複コンテンツの正規 URL を指定し、SEO 評価の分散を防ぎます。パラメータ付き URL がある場合に特に重要です。</li>
+              <li>JSON-LD の <code>Product</code> に <code>offers</code> と <code>aggregateRating</code> を含めると、検索結果に価格・星評価のリッチスニペットが表示されます。</li>
+              <li><code>preconnect</code> は TCP+TLS ハンドシェイクを事前に完了し、<code>dns-prefetch</code> は DNS 解決のみを事前実行します。重要度に応じて使い分けます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-14 -->
+    <div class="drill-item" id="s-14">
+      <div class="drill-header">
+        <div class="drill-badge">S-14</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 メタデータ・SEO・OGP</span>
+          <h3 class="drill-title">ニュースメディアサイトの記事ページSEO</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>ニュース記事ページでは JSON-LD の <code>NewsArticle</code> / <code>FAQPage</code> で検索結果のリッチスニペットを最大化し、RSS 自動検出、<code>robots</code> メタ、パフォーマンスメタを組み合わせてクローラビリティとユーザー体験を両立します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でニュースメディアサイトの記事ページを構築してください。</p>
+          <ul>
+            <li>JSON-LD <code>NewsArticle</code>: <code>headline</code> / <code>datePublished</code> / <code>dateModified</code> / <code>author</code> / <code>publisher</code> / <code>image</code> / <code>mainEntityOfPage</code></li>
+            <li>JSON-LD <code>FAQPage</code>: 記事末尾のよくある質問（3問）を構造化</li>
+            <li>RSS フィード自動検出: <code>&lt;link rel="alternate" type="application/rss+xml"&gt;</code></li>
+            <li><code>robots</code> メタ: <code>index, follow, max-snippet:-1, max-image-preview:large</code></li>
+            <li><code>&lt;link rel="sitemap"&gt;</code> でサイトマップ参照</li>
+            <li>記事本文を <code>&lt;article&gt;</code> + <code>&lt;time&gt;</code> + <code>&lt;address&gt;</code> でセマンティックにマークアップ</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>NewsArticle</code> の <code>publisher</code> には <code>Organization</code> 型で <code>logo</code> を含めます。<code>max-snippet:-1</code> は「スニペット文字数に制限なし」を意味し、Google に記事全文の引用を許可します。<code>max-image-preview:large</code> は大きい画像プレビューを許可します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;生成AIが変える2026年のWeb開発 | TechNews Japan&lt;/title&gt;
+  &lt;meta name="description"
+    content="2026年のWeb開発における生成AIの活用事例と今後の展望を解説。コード生成、テスト自動化、デザイン支援の最新動向。"&gt;
+
+  &lt;!-- robots --&gt;
+  &lt;meta name="robots"
+    content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"&gt;
+
+  &lt;!-- Canonical --&gt;
+  &lt;link rel="canonical"
+    href="https://technews.example.com/articles/ai-web-dev-2026"&gt;
+
+  &lt;!-- RSS自動検出 --&gt;
+  &lt;link rel="alternate" type="application/rss+xml"
+    title="TechNews Japan RSS"
+    href="https://technews.example.com/feed.xml"&gt;
+
+  &lt;!-- サイトマップ参照 --&gt;
+  &lt;link rel="sitemap" type="application/xml"
+    href="https://technews.example.com/sitemap.xml"&gt;
+
+  &lt;!-- OGP --&gt;
+  &lt;meta property="og:title" content="生成AIが変える2026年のWeb開発"&gt;
+  &lt;meta property="og:description"
+    content="生成AIのWeb開発活用事例と展望を解説。"&gt;
+  &lt;meta property="og:type" content="article"&gt;
+  &lt;meta property="og:url"
+    content="https://technews.example.com/articles/ai-web-dev-2026"&gt;
+  &lt;meta property="og:image"
+    content="https://cdn.technews.example.com/ogp/ai-web-dev-2026.jpg"&gt;
+  &lt;meta property="og:site_name" content="TechNews Japan"&gt;
+  &lt;meta property="article:published_time" content="2026-03-01T09:00:00+09:00"&gt;
+  &lt;meta property="article:modified_time" content="2026-03-05T14:30:00+09:00"&gt;
+  &lt;meta property="article:author" content="山田太郎"&gt;
+  &lt;meta property="article:section" content="テクノロジー"&gt;
+  &lt;meta property="article:tag" content="生成AI"&gt;
+  &lt;meta property="article:tag" content="Web開発"&gt;
+
+  &lt;!-- Twitter Card --&gt;
+  &lt;meta name="twitter:card" content="summary_large_image"&gt;
+  &lt;meta name="twitter:site" content="@technews_jp"&gt;
+
+  &lt;!-- JSON-LD: NewsArticle --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://technews.example.com/articles/ai-web-dev-2026"
+    },
+    "headline": "生成AIが変える2026年のWeb開発",
+    "image": [
+      "https://cdn.technews.example.com/articles/ai-web-dev-16x9.jpg",
+      "https://cdn.technews.example.com/articles/ai-web-dev-4x3.jpg",
+      "https://cdn.technews.example.com/articles/ai-web-dev-1x1.jpg"
+    ],
+    "datePublished": "2026-03-01T09:00:00+09:00",
+    "dateModified": "2026-03-05T14:30:00+09:00",
+    "author": {
+      "@type": "Person",
+      "name": "山田太郎",
+      "url": "https://technews.example.com/authors/yamada"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TechNews Japan",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://cdn.technews.example.com/logo-600x60.png",
+        "width": 600,
+        "height": 60
+      }
+    }
+  }
+  &lt;/script&gt;
+
+  &lt;!-- JSON-LD: FAQPage --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "生成AIでWeb開発の工数はどれくらい削減できますか？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "調査によると、コード生成やテスト自動化により平均30〜50%の工数削減が報告されています。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "生成AIが得意なWeb開発タスクは何ですか？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "定型的なCRUD処理の生成、ユニットテストの作成、CSSレイアウトの提案が特に高い精度で実行できます。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "生成AIのコードをそのまま本番利用しても安全ですか？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "必ず人間によるレビューとセキュリティチェックが必要です。特にSQLインジェクションやXSSの脆弱性に注意してください。"
+        }
+      }
+    ]
+  }
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;article&gt;
+    &lt;header&gt;
+      &lt;h1&gt;生成AIが変える2026年のWeb開発&lt;/h1&gt;
+      &lt;p&gt;
+        &lt;time datetime="2026-03-01T09:00:00+09:00"&gt;2026年3月1日 09:00&lt;/time&gt;
+        （更新: &lt;time datetime="2026-03-05T14:30:00+09:00"&gt;3月5日 14:30&lt;/time&gt;）
+      &lt;/p&gt;
+      &lt;address&gt;
+        著者: &lt;a rel="author"
+          href="https://technews.example.com/authors/yamada"&gt;山田太郎&lt;/a&gt;
+      &lt;/address&gt;
+    &lt;/header&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;はじめに&lt;/h2&gt;
+      &lt;p&gt;2026年、生成AIはWeb開発のワークフローに不可欠な存在となりました...&lt;/p&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;よくある質問&lt;/h2&gt;
+      &lt;dl&gt;
+        &lt;dt&gt;生成AIでWeb開発の工数はどれくらい削減できますか？&lt;/dt&gt;
+        &lt;dd&gt;調査によると、平均30〜50%の工数削減が報告されています。&lt;/dd&gt;
+        &lt;dt&gt;生成AIが得意なWeb開発タスクは何ですか？&lt;/dt&gt;
+        &lt;dd&gt;定型的なCRUD処理の生成、ユニットテストの作成などです。&lt;/dd&gt;
+        &lt;dt&gt;生成AIのコードをそのまま本番利用しても安全ですか？&lt;/dt&gt;
+        &lt;dd&gt;必ず人間によるレビューとセキュリティチェックが必要です。&lt;/dd&gt;
+      &lt;/dl&gt;
+    &lt;/section&gt;
+  &lt;/article&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>NewsArticle</code> の <code>image</code> に3種類のアスペクト比（16:9、4:3、1:1）を提供すると、Google Discover やニュースでの表示が最適化されます。</li>
+              <li><code>FAQPage</code> 構造化データにより、検索結果にアコーディオン形式のFAQリッチスニペットが表示され、クリック率が向上します。</li>
+              <li><code>robots</code> の <code>max-snippet:-1</code> は文字数制限なし、<code>max-image-preview:large</code> は大画像プレビューを許可し、検索結果の表示面積を最大化します。</li>
+              <li>RSS の <code>&lt;link rel="alternate" type="application/rss+xml"&gt;</code> により、ブラウザやRSSリーダーがフィードを自動検出できます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T8: 総合マークアップ ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">integration_instructions</span>
+      <h2>T8 総合マークアップ</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- S-15 -->
+    <div class="drill-item" id="s-15">
+      <div class="drill-header">
+        <div class="drill-badge">S-15</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合マークアップ</span>
+          <h3 class="drill-title">SaaS管理画面ダッシュボード</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>SaaS管理画面はナビゲーション、データテーブル、フォーム、ダイアログ、グラフ、通知、パンくず、タブなどあらゆるHTML要素を統合します。セマンティクスとアクセシビリティを完全に維持しながら複雑なUIを構築する総合力が問われます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様でSaaSアナリティクスツールの管理画面HTMLを構築してください。</p>
+          <ul>
+            <li>サイドバーナビ（<code>&lt;nav aria-label="サイドバー"&gt;</code>）: アコーディオン式メニュー（<code>aria-expanded</code>）、現在地表示（<code>aria-current</code>）</li>
+            <li>パンくずリスト（<code>&lt;nav aria-label="パンくず"&gt;</code>）+ ページタイトル</li>
+            <li>KPIカード4枚: <code>&lt;data&gt;</code> 要素で数値表示、<code>&lt;meter&gt;</code> で達成率</li>
+            <li>データテーブル: ソート可能（<code>aria-sort</code>）、ページネーション、行選択チェックボックス、一括操作ドロップダウン</li>
+            <li>フィルターフォーム: 日付範囲（<code>date</code>）、ステータスセレクト、検索テキスト、<code>&lt;output&gt;</code> で絞り込み結果件数</li>
+            <li>通知バッジ（<code>aria-label</code> で件数を読み上げ）とトースト通知（<code>aria-live</code>）</li>
+            <li>設定変更ダイアログ（<code>role="dialog"</code>）</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>テーブルのソート状態は <code>aria-sort="ascending"</code> / <code>"descending"</code> / <code>"none"</code> で示します。行選択チェックボックスには <code>aria-label="行 N を選択"</code> を設定し、全選択チェックボックスには <code>aria-label="全行を選択"</code> を使います。<code>&lt;meter&gt;</code> には <code>min</code> / <code>max</code> / <code>low</code> / <code>high</code> / <code>optimum</code> を設定できます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;body&gt;
+  &lt;!-- トースト通知 --&gt;
+  &lt;div role="status" aria-live="polite" aria-atomic="true" id="toast"&gt;&lt;/div&gt;
+
+  &lt;!-- サイドバーナビ --&gt;
+  &lt;nav aria-label="サイドバー"&gt;
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;button aria-expanded="true" aria-controls="nav-analytics"&gt;
+          アナリティクス
+        &lt;/button&gt;
+        &lt;ul id="nav-analytics"&gt;
+          &lt;li&gt;&lt;a href="/dashboard" aria-current="page"&gt;ダッシュボード&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/reports"&gt;レポート&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/realtime"&gt;リアルタイム&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;button aria-expanded="false" aria-controls="nav-settings"&gt;
+          設定
+        &lt;/button&gt;
+        &lt;ul id="nav-settings" hidden&gt;
+          &lt;li&gt;&lt;a href="/settings/general"&gt;一般&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/settings/team"&gt;チーム管理&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;!-- 通知バッジ --&gt;
+    &lt;a href="/notifications" aria-label="通知 3件の未読があります"&gt;
+      通知 &lt;span aria-hidden="true"&gt;3&lt;/span&gt;
+    &lt;/a&gt;
+  &lt;/nav&gt;
+
+  &lt;main&gt;
+    &lt;!-- パンくず --&gt;
+    &lt;nav aria-label="パンくず"&gt;
+      &lt;ol&gt;
+        &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/analytics"&gt;アナリティクス&lt;/a&gt;&lt;/li&gt;
+        &lt;li aria-current="page"&gt;ダッシュボード&lt;/li&gt;
+      &lt;/ol&gt;
+    &lt;/nav&gt;
+    &lt;h1&gt;ダッシュボード&lt;/h1&gt;
+
+    &lt;!-- KPIカード --&gt;
+    &lt;section aria-label="主要指標"&gt;
+      &lt;div&gt;
+        &lt;h2&gt;月間PV&lt;/h2&gt;
+        &lt;data value="1250000"&gt;1,250,000&lt;/data&gt;
+        &lt;p&gt;目標達成率&lt;/p&gt;
+        &lt;meter value="0.83" min="0" max="1"
+          low="0.3" high="0.7" optimum="1"&gt;83%&lt;/meter&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;h2&gt;直帰率&lt;/h2&gt;
+        &lt;data value="32.5"&gt;32.5%&lt;/data&gt;
+        &lt;meter value="0.325" min="0" max="1"
+          low="0.5" high="0.7" optimum="0"&gt;32.5%&lt;/meter&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;h2&gt;平均セッション時間&lt;/h2&gt;
+        &lt;data value="245"&gt;&lt;time datetime="PT4M5S"&gt;4分5秒&lt;/time&gt;&lt;/data&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;h2&gt;コンバージョン率&lt;/h2&gt;
+        &lt;data value="3.2"&gt;3.2%&lt;/data&gt;
+        &lt;meter value="0.8" min="0" max="1"
+          low="0.3" high="0.7" optimum="1"&gt;目標の80%&lt;/meter&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;!-- フィルターフォーム --&gt;
+    &lt;form role="search" aria-label="データ絞り込み"&gt;
+      &lt;div&gt;
+        &lt;label for="filter-from"&gt;開始日&lt;/label&gt;
+        &lt;input type="date" id="filter-from" name="from" value="2026-03-01"&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;label for="filter-to"&gt;終了日&lt;/label&gt;
+        &lt;input type="date" id="filter-to" name="to" value="2026-03-09"&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;label for="filter-status"&gt;ステータス&lt;/label&gt;
+        &lt;select id="filter-status" name="status"&gt;
+          &lt;option value=""&gt;すべて&lt;/option&gt;
+          &lt;option value="active"&gt;アクティブ&lt;/option&gt;
+          &lt;option value="inactive"&gt;非アクティブ&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;label for="filter-search"&gt;キーワード&lt;/label&gt;
+        &lt;input type="search" id="filter-search" name="q"&gt;
+      &lt;/div&gt;
+      &lt;button type="submit"&gt;絞り込み&lt;/button&gt;
+      &lt;output aria-live="polite"&gt;全 248 件中 248 件表示&lt;/output&gt;
+    &lt;/form&gt;
+
+    &lt;!-- 一括操作 --&gt;
+    &lt;div&gt;
+      &lt;label for="bulk-action"&gt;一括操作&lt;/label&gt;
+      &lt;select id="bulk-action"&gt;
+        &lt;option value=""&gt;選択してください&lt;/option&gt;
+        &lt;option value="export"&gt;CSVエクスポート&lt;/option&gt;
+        &lt;option value="archive"&gt;アーカイブ&lt;/option&gt;
+        &lt;option value="delete"&gt;削除&lt;/option&gt;
+      &lt;/select&gt;
+      &lt;button type="button"&gt;実行&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;!-- データテーブル --&gt;
+    &lt;table aria-label="ページパフォーマンス一覧"&gt;
+      &lt;thead&gt;
+        &lt;tr&gt;
+          &lt;th scope="col"&gt;
+            &lt;input type="checkbox" aria-label="全行を選択"&gt;
+          &lt;/th&gt;
+          &lt;th scope="col"&gt;
+            &lt;button aria-sort="descending"&gt;ページURL&lt;/button&gt;
+          &lt;/th&gt;
+          &lt;th scope="col"&gt;
+            &lt;button aria-sort="none"&gt;PV数&lt;/button&gt;
+          &lt;/th&gt;
+          &lt;th scope="col"&gt;
+            &lt;button aria-sort="none"&gt;直帰率&lt;/button&gt;
+          &lt;/th&gt;
+          &lt;th scope="col"&gt;ステータス&lt;/th&gt;
+        &lt;/tr&gt;
+      &lt;/thead&gt;
+      &lt;tbody&gt;
+        &lt;tr&gt;
+          &lt;td&gt;&lt;input type="checkbox" aria-label="行1を選択"&gt;&lt;/td&gt;
+          &lt;td&gt;/products/xh-900&lt;/td&gt;
+          &lt;td&gt;&lt;data value="45200"&gt;45,200&lt;/data&gt;&lt;/td&gt;
+          &lt;td&gt;28.3%&lt;/td&gt;
+          &lt;td&gt;&lt;span&gt;アクティブ&lt;/span&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt;&lt;input type="checkbox" aria-label="行2を選択"&gt;&lt;/td&gt;
+          &lt;td&gt;/blog/ai-web-dev&lt;/td&gt;
+          &lt;td&gt;&lt;data value="38900"&gt;38,900&lt;/data&gt;&lt;/td&gt;
+          &lt;td&gt;35.1%&lt;/td&gt;
+          &lt;td&gt;&lt;span&gt;アクティブ&lt;/span&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+
+    &lt;!-- ページネーション --&gt;
+    &lt;nav aria-label="ページネーション"&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="?page=1" aria-label="前のページ"&gt;&amp;laquo;&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="?page=1"&gt;1&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="?page=2" aria-current="page"&gt;2&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="?page=3"&gt;3&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="?page=3" aria-label="次のページ"&gt;&amp;raquo;&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+  &lt;/main&gt;
+
+  &lt;!-- 設定ダイアログ --&gt;
+  &lt;div role="dialog" aria-modal="true"
+    aria-labelledby="settings-title" id="settings-dialog" hidden&gt;
+    &lt;h2 id="settings-title"&gt;ダッシュボード設定&lt;/h2&gt;
+    &lt;form&gt;
+      &lt;fieldset&gt;
+        &lt;legend&gt;表示設定&lt;/legend&gt;
+        &lt;label&gt;
+          &lt;input type="checkbox" name="show-kpi" checked&gt;
+          KPIカードを表示
+        &lt;/label&gt;
+        &lt;label&gt;
+          &lt;input type="checkbox" name="show-chart" checked&gt;
+          グラフを表示
+        &lt;/label&gt;
+      &lt;/fieldset&gt;
+      &lt;fieldset&gt;
+        &lt;legend&gt;データ更新間隔&lt;/legend&gt;
+        &lt;label&gt;&lt;input type="radio" name="interval" value="30"&gt; 30秒&lt;/label&gt;
+        &lt;label&gt;&lt;input type="radio" name="interval" value="60" checked&gt; 1分&lt;/label&gt;
+        &lt;label&gt;&lt;input type="radio" name="interval" value="300"&gt; 5分&lt;/label&gt;
+      &lt;/fieldset&gt;
+      &lt;button type="submit"&gt;保存&lt;/button&gt;
+      &lt;button type="button"&gt;キャンセル&lt;/button&gt;
+    &lt;/form&gt;
+  &lt;/div&gt;
+&lt;/body&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>サイドバーのアコーディオンメニューは <code>aria-expanded</code> と <code>aria-controls</code> で開閉状態を管理し、<code>hidden</code> 属性で非表示のサブメニューを制御します。</li>
+              <li>テーブルの <code>aria-sort</code> はカラムの現在のソート状態を示します。<code>"descending"</code>（降順）/ <code>"ascending"</code>（昇順）/ <code>"none"</code>（未ソート）の3値です。</li>
+              <li><code>&lt;meter&gt;</code> の <code>low</code> / <code>high</code> / <code>optimum</code> でブラウザが自動的に色分け表示します。直帰率のように低い値が良い指標では <code>optimum="0"</code> と設定します。</li>
+              <li>通知バッジの <code>aria-label="通知 3件の未読があります"</code> で、視覚的なバッジ数字をスクリーンリーダーが意味のある文として読み上げます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- S-16 -->
+    <div class="drill-item" id="s-16">
+      <div class="drill-header">
+        <div class="drill-badge">S-16</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合マークアップ</span>
+          <h3 class="drill-title">医療予約システム完全構築</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>医療予約システムはマルチステップフォーム、カレンダーテーブル、ドクター一覧カード、アクセシビリティ、セマンティクス、メタデータのすべてを統合する最高難度の総合課題です。実際の業務システムに近い複雑さでHTMLの全知識を活用します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の仕様で医療クリニックの予約システムページを構築してください。</p>
+          <ul>
+            <li>JSON-LD <code>MedicalOrganization</code> + <code>Physician</code> 構造化データ</li>
+            <li>診療科選択 → 医師選択 → カレンダーで日時選択 → 患者情報入力 の4ステッププログレスフォーム</li>
+            <li>医師一覧: <code>&lt;article&gt;</code> カード（写真 <code>&lt;picture&gt;</code>、専門分野、資格、予約可能状況 <code>&lt;meter&gt;</code>）</li>
+            <li>カレンダーテーブル: <code>&lt;table&gt;</code> + <code>&lt;th abbr&gt;</code>、予約可能スロットを <code>&lt;button&gt;</code> で表示、<code>aria-label</code> で日時を読み上げ</li>
+            <li>患者情報フォーム: 氏名、生年月日（<code>date</code>）、保険証番号（<code>pattern</code>）、症状テキストエリア、同意チェックボックス</li>
+            <li>予約確認サマリー（<code>&lt;dl&gt;</code>）、キャンセルポリシー（<code>&lt;details&gt;</code>）、ライブリージョンでの予約完了通知</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>JSON-LD の <code>MedicalOrganization</code> には <code>medicalSpecialty</code>（診療科）と <code>availableService</code> を含めます。カレンダーの予約ボタンには <code>aria-label="3月10日 10時00分 予約可能"</code> のように完全な日時情報を設定し、選択済みスロットは <code>aria-pressed="true"</code> で示します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;オンライン予約 | さくら内科クリニック&lt;/title&gt;
+  &lt;meta name="description"
+    content="さくら内科クリニックのオンライン予約。内科・小児科・アレルギー科の診察をWeb予約できます。"&gt;
+
+  &lt;!-- JSON-LD: MedicalOrganization --&gt;
+  &lt;script type="application/ld+json"&gt;
+  {
+    "@context": "https://schema.org",
+    "@type": "MedicalOrganization",
+    "name": "さくら内科クリニック",
+    "url": "https://sakura-clinic.example.com",
+    "telephone": "+81-3-1234-5678",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "千代田区丸の内1-1-1",
+      "addressLocality": "東京都",
+      "postalCode": "100-0005",
+      "addressCountry": "JP"
+    },
+    "medicalSpecialty": ["内科", "小児科", "アレルギー科"],
+    "availableService": {
+      "@type": "MedicalProcedure",
+      "name": "一般診察"
+    },
+    "member": [
+      {
+        "@type": "Physician",
+        "name": "佐藤 美咲",
+        "medicalSpecialty": "内科",
+        "qualifications": "日本内科学会認定医"
+      },
+      {
+        "@type": "Physician",
+        "name": "田中 健一",
+        "medicalSpecialty": "小児科",
+        "qualifications": "日本小児科学会専門医"
+      }
+    ]
+  }
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;a href="#main-content" class="skip-link"&gt;予約フォームへスキップ&lt;/a&gt;
+
+  &lt;!-- 予約完了通知（ライブリージョン） --&gt;
+  &lt;div role="status" aria-live="assertive" aria-atomic="true"
+    id="booking-notification"&gt;&lt;/div&gt;
+
+  &lt;header&gt;
+    &lt;h1&gt;さくら内科クリニック — オンライン予約&lt;/h1&gt;
+  &lt;/header&gt;
+
+  &lt;main id="main-content"&gt;
+    &lt;!-- ステッププログレス --&gt;
+    &lt;nav aria-label="予約ステップ"&gt;
+      &lt;ol&gt;
+        &lt;li&gt;診療科選択&lt;/li&gt;
+        &lt;li aria-current="step"&gt;&lt;strong&gt;医師選択&lt;/strong&gt;&lt;/li&gt;
+        &lt;li&gt;日時選択&lt;/li&gt;
+        &lt;li&gt;患者情報入力&lt;/li&gt;
+      &lt;/ol&gt;
+    &lt;/nav&gt;
+
+    &lt;!-- Step1: 診療科選択（完了済み表示） --&gt;
+    &lt;section aria-labelledby="step1-heading"&gt;
+      &lt;h2 id="step1-heading"&gt;Step 1: 診療科選択&lt;/h2&gt;
+      &lt;p&gt;選択済み: &lt;strong&gt;内科&lt;/strong&gt; &lt;a href="#step1"&gt;変更&lt;/a&gt;&lt;/p&gt;
+    &lt;/section&gt;
+
+    &lt;!-- Step2: 医師選択（現在のステップ） --&gt;
+    &lt;section aria-labelledby="step2-heading"&gt;
+      &lt;h2 id="step2-heading"&gt;Step 2: 医師を選んでください&lt;/h2&gt;
+
+      &lt;div role="radiogroup" aria-label="担当医師の選択"&gt;
+        &lt;article&gt;
+          &lt;label&gt;
+            &lt;input type="radio" name="doctor" value="sato" required&gt;
+            &lt;picture&gt;
+              &lt;source srcset="doctors/sato.webp" type="image/webp"&gt;
+              &lt;img src="doctors/sato.jpg"
+                alt="佐藤 美咲 医師の顔写真"
+                width="120" height="120" loading="lazy"&gt;
+            &lt;/picture&gt;
+            &lt;h3&gt;佐藤 美咲&lt;/h3&gt;
+            &lt;dl&gt;
+              &lt;dt&gt;専門&lt;/dt&gt;&lt;dd&gt;一般内科・生活習慣病&lt;/dd&gt;
+              &lt;dt&gt;資格&lt;/dt&gt;&lt;dd&gt;日本内科学会認定医&lt;/dd&gt;
+              &lt;dt&gt;今週の予約状況&lt;/dt&gt;
+              &lt;dd&gt;
+                &lt;meter value="0.7" min="0" max="1"
+                  low="0.3" high="0.8" optimum="0"&gt;70% 埋まっています&lt;/meter&gt;
+                残りわずか
+              &lt;/dd&gt;
+            &lt;/dl&gt;
+          &lt;/label&gt;
+        &lt;/article&gt;
+
+        &lt;article&gt;
+          &lt;label&gt;
+            &lt;input type="radio" name="doctor" value="tanaka"&gt;
+            &lt;picture&gt;
+              &lt;source srcset="doctors/tanaka.webp" type="image/webp"&gt;
+              &lt;img src="doctors/tanaka.jpg"
+                alt="田中 健一 医師の顔写真"
+                width="120" height="120" loading="lazy"&gt;
+            &lt;/picture&gt;
+            &lt;h3&gt;田中 健一&lt;/h3&gt;
+            &lt;dl&gt;
+              &lt;dt&gt;専門&lt;/dt&gt;&lt;dd&gt;小児科・アレルギー科&lt;/dd&gt;
+              &lt;dt&gt;資格&lt;/dt&gt;&lt;dd&gt;日本小児科学会専門医&lt;/dd&gt;
+              &lt;dt&gt;今週の予約状況&lt;/dt&gt;
+              &lt;dd&gt;
+                &lt;meter value="0.4" min="0" max="1"
+                  low="0.3" high="0.8" optimum="0"&gt;40% 埋まっています&lt;/meter&gt;
+                空きあり
+              &lt;/dd&gt;
+            &lt;/dl&gt;
+          &lt;/label&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;!-- Step3: カレンダー日時選択 --&gt;
+    &lt;section aria-labelledby="step3-heading" hidden&gt;
+      &lt;h2 id="step3-heading"&gt;Step 3: 日時を選んでください&lt;/h2&gt;
+      &lt;div aria-live="polite"&gt;
+        &lt;h3&gt;&lt;time datetime="2026-03"&gt;2026年3月&lt;/time&gt;&lt;/h3&gt;
+      &lt;/div&gt;
+
+      &lt;table aria-label="2026年3月の予約カレンダー"&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th abbr="日" scope="col"&gt;日曜&lt;/th&gt;
+            &lt;th abbr="月" scope="col"&gt;月曜&lt;/th&gt;
+            &lt;th abbr="火" scope="col"&gt;火曜&lt;/th&gt;
+            &lt;th abbr="水" scope="col"&gt;水曜&lt;/th&gt;
+            &lt;th abbr="木" scope="col"&gt;木曜&lt;/th&gt;
+            &lt;th abbr="金" scope="col"&gt;金曜&lt;/th&gt;
+            &lt;th abbr="土" scope="col"&gt;土曜&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;/td&gt;
+            &lt;td&gt;&lt;/td&gt;
+            &lt;td&gt;&lt;/td&gt;
+            &lt;td&gt;&lt;/td&gt;
+            &lt;td&gt;&lt;/td&gt;
+            &lt;td&gt;&lt;/td&gt;
+            &lt;td aria-label="3月7日 土曜日 休診"&gt;7&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td aria-label="3月8日 日曜日 休診"&gt;8&lt;/td&gt;
+            &lt;td aria-label="3月9日 月曜日"&gt;9
+              &lt;button type="button" aria-pressed="false"
+                aria-label="3月9日 10時00分 予約可能"&gt;10:00&lt;/button&gt;
+              &lt;button type="button" aria-pressed="false"
+                aria-label="3月9日 11時00分 予約可能"&gt;11:00&lt;/button&gt;
+              &lt;button type="button" aria-pressed="false"
+                aria-label="3月9日 14時00分 予約可能"&gt;14:00&lt;/button&gt;
+            &lt;/td&gt;
+            &lt;td aria-label="3月10日 火曜日"&gt;10
+              &lt;button type="button" aria-pressed="true"
+                aria-label="3月10日 10時00分 選択中"&gt;10:00&lt;/button&gt;
+              &lt;button type="button" disabled
+                aria-label="3月10日 11時00分 予約済み"&gt;11:00&lt;/button&gt;
+            &lt;/td&gt;
+            &lt;td aria-label="3月11日 水曜日 休診"&gt;11&lt;/td&gt;
+            &lt;td aria-label="3月12日 木曜日"&gt;12
+              &lt;button type="button" aria-pressed="false"
+                aria-label="3月12日 9時00分 予約可能"&gt;9:00&lt;/button&gt;
+              &lt;button type="button" aria-pressed="false"
+                aria-label="3月12日 10時00分 予約可能"&gt;10:00&lt;/button&gt;
+            &lt;/td&gt;
+            &lt;td aria-label="3月13日 金曜日"&gt;13
+              &lt;button type="button" aria-pressed="false"
+                aria-label="3月13日 15時00分 予約可能"&gt;15:00&lt;/button&gt;
+            &lt;/td&gt;
+            &lt;td aria-label="3月14日 土曜日 休診"&gt;14&lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/section&gt;
+
+    &lt;!-- Step4: 患者情報入力 --&gt;
+    &lt;section aria-labelledby="step4-heading" hidden&gt;
+      &lt;h2 id="step4-heading"&gt;Step 4: 患者情報を入力してください&lt;/h2&gt;
+      &lt;form action="/api/bookings" method="post"&gt;
+        &lt;fieldset&gt;
+          &lt;legend&gt;基本情報&lt;/legend&gt;
+          &lt;div&gt;
+            &lt;label for="patient-name"&gt;氏名（漢字）
+              &lt;span aria-hidden="true"&gt;*&lt;/span&gt;&lt;/label&gt;
+            &lt;input type="text" id="patient-name" name="name"
+              required autocomplete="name"&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label for="patient-kana"&gt;氏名（カナ）
+              &lt;span aria-hidden="true"&gt;*&lt;/span&gt;&lt;/label&gt;
+            &lt;input type="text" id="patient-kana" name="kana" required&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label for="patient-dob"&gt;生年月日
+              &lt;span aria-hidden="true"&gt;*&lt;/span&gt;&lt;/label&gt;
+            &lt;input type="date" id="patient-dob" name="dob"
+              required max="2026-03-09"&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label for="patient-tel"&gt;電話番号
+              &lt;span aria-hidden="true"&gt;*&lt;/span&gt;&lt;/label&gt;
+            &lt;input type="tel" id="patient-tel" name="tel"
+              required autocomplete="tel"
+              pattern="0\d{1,4}-?\d{1,4}-?\d{3,4}"&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label for="insurance-no"&gt;保険証番号&lt;/label&gt;
+            &lt;input type="text" id="insurance-no" name="insurance"
+              pattern="\d{8}" inputmode="numeric"
+              aria-describedby="insurance-help"&gt;
+            &lt;span id="insurance-help"&gt;8桁の数字（お持ちでない場合は空欄）&lt;/span&gt;
+          &lt;/div&gt;
+        &lt;/fieldset&gt;
+
+        &lt;fieldset&gt;
+          &lt;legend&gt;症状・ご相談内容&lt;/legend&gt;
+          &lt;div&gt;
+            &lt;label for="symptoms"&gt;現在の症状&lt;/label&gt;
+            &lt;textarea id="symptoms" name="symptoms"
+              rows="5" maxlength="1000"
+              placeholder="症状や相談したいことをご記入ください"&gt;&lt;/textarea&gt;
+            &lt;output aria-live="polite"&gt;0/1000文字&lt;/output&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label&gt;
+              &lt;input type="checkbox" name="first-visit" value="yes"&gt;
+              初診です
+            &lt;/label&gt;
+          &lt;/div&gt;
+        &lt;/fieldset&gt;
+
+        &lt;!-- 予約確認サマリー --&gt;
+        &lt;section aria-labelledby="confirm-heading"&gt;
+          &lt;h3 id="confirm-heading"&gt;予約内容の確認&lt;/h3&gt;
+          &lt;dl&gt;
+            &lt;dt&gt;診療科&lt;/dt&gt;&lt;dd&gt;内科&lt;/dd&gt;
+            &lt;dt&gt;担当医&lt;/dt&gt;&lt;dd&gt;佐藤 美咲&lt;/dd&gt;
+            &lt;dt&gt;日時&lt;/dt&gt;
+            &lt;dd&gt;&lt;time datetime="2026-03-10T10:00"&gt;2026年3月10日（火）10:00&lt;/time&gt;&lt;/dd&gt;
+          &lt;/dl&gt;
+        &lt;/section&gt;
+
+        &lt;!-- キャンセルポリシー --&gt;
+        &lt;details&gt;
+          &lt;summary&gt;キャンセルポリシーを確認&lt;/summary&gt;
+          &lt;div&gt;
+            &lt;ul&gt;
+              &lt;li&gt;予約日の前日18時までのキャンセルは無料です。&lt;/li&gt;
+              &lt;li&gt;当日キャンセルはキャンセル料（1,000円）が発生します。&lt;/li&gt;
+              &lt;li&gt;無断キャンセルが3回続いた場合、オンライン予約の利用を制限する場合があります。&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/div&gt;
+        &lt;/details&gt;
+
+        &lt;div&gt;
+          &lt;label&gt;
+            &lt;input type="checkbox" name="agree" required&gt;
+            &lt;a href="/terms" target="_blank"
+              rel="noopener noreferrer"&gt;利用規約&lt;/a&gt;
+            および
+            &lt;a href="/privacy" target="_blank"
+              rel="noopener noreferrer"&gt;個人情報保護方針&lt;/a&gt;
+            に同意します &lt;span aria-hidden="true"&gt;*&lt;/span&gt;
+          &lt;/label&gt;
+        &lt;/div&gt;
+
+        &lt;button type="submit"&gt;予約を確定する&lt;/button&gt;
+        &lt;button type="button"&gt;戻る&lt;/button&gt;
+      &lt;/form&gt;
+    &lt;/section&gt;
+  &lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>JSON-LD <code>MedicalOrganization</code> に <code>member</code> として <code>Physician</code> を含め、Google検索で「近くの内科」等の検索結果にクリニック情報が表示されます。</li>
+              <li>カレンダーの予約ボタンに <code>aria-pressed</code> で選択状態を示し、<code>disabled</code> で予約済みスロットを無効化します。<code>aria-label</code> で完全な日時情報を提供するため、スクリーンリーダーで「3月10日 10時00分 選択中」と読み上げられます。</li>
+              <li>医師選択を <code>role="radiogroup"</code> でグループ化し、ラジオボタンとカード情報を <code>&lt;label&gt;</code> で紐付けることで、カード全体がクリック可能になります。</li>
+              <li><code>&lt;meter&gt;</code> で予約の混雑状況を視覚化し、<code>optimum="0"</code>（空いている方が良い）と設定することでブラウザが適切な色で表示します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-navigation">
+      <a href="level-a.html" class="prev-page">
+        <span class="material-icons">arrow_back</span>
+        Level A — 設計実装
+      </a>
+      <a href="index.html" class="next-page">
+        コース一覧
+        <span class="material-icons">arrow_forward</span>
+      </a>
+    </div>
+
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>

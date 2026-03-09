@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Level D — 基礎実装 | HTML実力養成ドリル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../../shared/common.css">
+  <style>
+    :root {
+      --primary: #007AFF;
+      --primary-dark: #0056B3;
+      --primary-light: #E5F1FF;
+      --primary-lighter: #CCE4FF;
+    }
+    body { padding-top: 48px; }
+    .nav-category-links { display: none; }
+
+    /* Drill item */
+    .drill-item {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .drill-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      background: #fafbfc;
+    }
+    .drill-badge {
+      background: var(--primary);
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .drill-meta {
+      flex: 1;
+    }
+    .drill-theme {
+      font-size: 0.72rem;
+      color: var(--primary);
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+      display: block;
+    }
+    .drill-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1d1d1f;
+    }
+    .drill-body {
+      padding: 24px;
+    }
+
+    /* Silver point */
+    .drill-silver {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .drill-silver > .material-icons {
+      color: #f9a825;
+      font-size: 1.4rem;
+      margin-top: 2px;
+    }
+    .drill-silver strong {
+      display: block;
+      font-size: 0.82rem;
+      color: #f57f17;
+      margin-bottom: 4px;
+    }
+    .drill-silver p {
+      font-size: 0.85rem;
+      color: #5d4037;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Task */
+    .drill-task {
+      margin-bottom: 20px;
+    }
+    .drill-task h4 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1d1d1f;
+      margin-bottom: 12px;
+    }
+    .drill-task h4 .material-icons {
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+    .drill-task p, .drill-task ul, .drill-task ol {
+      font-size: 0.88rem;
+      line-height: 1.8;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .drill-task ul, .drill-task ol {
+      padding-left: 1.5em;
+    }
+    .drill-task li {
+      margin-bottom: 4px;
+    }
+
+    /* Code block */
+    .drill-code {
+      background: #1e293b;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      padding: 20px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    .drill-code code {
+      font-family: inherit;
+    }
+
+    /* Expected output */
+    .expected-output {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 12px 0;
+    }
+    .expected-output .label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #16a34a;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .expected-output pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: #166534;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    /* Hint */
+    .drill-hint {
+      margin-bottom: 8px;
+    }
+    .drill-hint summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #f57c00;
+      padding: 10px 14px;
+      background: #fff3e0;
+      border-radius: 10px;
+      list-style: none;
+      user-select: none;
+    }
+    .drill-hint summary::-webkit-details-marker { display: none; }
+    .drill-hint summary .material-icons { font-size: 1.1rem; }
+    .drill-hint[open] summary { border-radius: 10px 10px 0 0; }
+    .hint-content {
+      background: #fff8e1;
+      padding: 16px 18px;
+      border-radius: 0 0 10px 10px;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: #5d4037;
+    }
+    .hint-content code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0,0,0,0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.82rem;
+    }
+
+    /* Answer */
+    .drill-answer {
+      margin-top: 8px;
+    }
+    .drill-answer summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--primary);
+      padding: 10px 14px;
+      background: var(--primary-light);
+      border-radius: 10px;
+      list-style: none;
+      user-select: none;
+    }
+    .drill-answer summary::-webkit-details-marker { display: none; }
+    .drill-answer summary .material-icons { color: var(--primary); font-size: 1.1rem; }
+    .drill-answer[open] summary { border-radius: 10px 10px 0 0; }
+    .answer-content {
+      background: #f8fbff;
+      padding: 20px;
+      border-radius: 0 0 10px 10px;
+      border: 1px solid var(--primary-light);
+      border-top: none;
+    }
+    .answer-content p {
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .answer-content h5 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin: 16px 0 8px;
+    }
+    .answer-content ul {
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: #333;
+      padding-left: 1.5em;
+      margin-bottom: 10px;
+    }
+
+    /* Theme separator */
+    .theme-separator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 36px 0 20px;
+      padding: 12px 20px;
+      background: var(--primary-light);
+      border-radius: 12px;
+      border-left: 4px solid var(--primary);
+    }
+    .theme-separator .material-icons {
+      color: var(--primary);
+      font-size: 1.3rem;
+    }
+    .theme-separator h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+    .theme-separator span.theme-count {
+      font-size: 0.75rem;
+      color: #666;
+      font-weight: 400;
+      margin-left: auto;
+    }
+
+    /* Blank marker */
+    .blank-marker {
+      color: #e53935;
+      font-weight: 700;
+    }
+
+    @media (max-width: 480px) {
+      .drill-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+      .drill-body { padding: 16px; }
+      .drill-code { font-size: 0.75rem; padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="global-nav"></nav>
+  <script src="../../shared/js/nav-html-drill.js"></script>
+
+  <div class="container">
+    <!-- Chapter Header -->
+    <header class="chapter-header">
+      <div class="chapter-badge"><span class="material-icons">code</span> Drill</div>
+      <div class="chapter-number">D</div>
+      <h1 class="chapter-title">Level D — 基礎実装</h1>
+      <p style="color:#fff; margin-top:8px;">穴埋め・写経+改造でHTML基本構文を手に馴染ませる｜16課題・8テーマ</p>
+    </header>
+
+    <!-- ===== T1: HTML基本構造・文書型 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">description</span>
+      <h2>T1 HTML基本構造・文書型</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-01 -->
+    <div class="drill-item" id="d-01">
+      <div class="drill-header">
+        <div class="drill-badge">D-01</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 HTML基本構造・文書型</span>
+          <h3 class="drill-title">穴埋め — HTML5基本テンプレート</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>&lt;!DOCTYPE html&gt;</code> はHTML5文書であることを宣言します。<code>&lt;html lang="ja"&gt;</code> で文書の言語を指定し、<code>&lt;meta charset="UTF-8"&gt;</code> で文字エンコーディングを設定します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のHTMLコードの <span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ③ */</span> を埋めて、正しいHTML5テンプレートを完成させてください。</p>
+<pre class="drill-code"><code>/* ① */
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  /* ② */
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;はじめてのHTML&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  /* ③ */
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">visibility</span>期待される結果</div>
+<pre>ブラウザに「こんにちは、HTML！」と表示される正しいHTML5文書</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① HTML5の文書型宣言は <code>&lt;!DOCTYPE html&gt;</code> です。② 文字エンコーディングは <code>&lt;meta charset="UTF-8"&gt;</code> で指定します。③ body内に表示したい内容を <code>&lt;h1&gt;</code> タグなどで書きます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;はじめてのHTML&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;こんにちは、HTML！&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;!DOCTYPE html&gt;</code> はHTML5文書であることをブラウザに伝える宣言です。省略すると互換モード（Quirks Mode）で表示される場合があります。</li>
+              <li><code>&lt;meta charset="UTF-8"&gt;</code> は <code>&lt;head&gt;</code> 内の最初に記述するのがベストプラクティスです。</li>
+              <li><code>lang="ja"</code> はスクリーンリーダーの言語判定やSEOに影響します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-02 -->
+    <div class="drill-item" id="d-02">
+      <div class="drill-header">
+        <div class="drill-badge">D-02</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T1 HTML基本構造・文書型</span>
+          <h3 class="drill-title">写経+改造 — headセクションの充実</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>&lt;head&gt;</code> 内には文書のメタ情報（タイトル、説明文、外部CSSリンクなど）を配置します。<code>&lt;title&gt;</code> はブラウザのタブに表示されます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のコードを写経して、ブラウザで表示を確認してください。</p>
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;自己紹介ページ&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;自己紹介&lt;/h1&gt;
+  &lt;p&gt;私はWeb開発を学んでいます。&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+          <p><strong>Step 2（改造）:</strong> <code>&lt;head&gt;</code> 内に以下を追加してください。</p>
+          <ul>
+            <li><code>&lt;meta name="description"&gt;</code> で説明文を追加</li>
+            <li><code>&lt;meta name="author"&gt;</code> で著者名を追加</li>
+            <li><code>&lt;link rel="icon" href="favicon.ico"&gt;</code> でファビコンを指定</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;meta name="description" content="説明文"&gt;</code> の形式で記述します。<code>content</code> 属性に値を設定するのを忘れないでください。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;meta name="description" content="Web開発を学ぶ私の自己紹介ページです"&gt;
+  &lt;meta name="author" content="山田太郎"&gt;
+  &lt;link rel="icon" href="favicon.ico"&gt;
+  &lt;title&gt;自己紹介ページ&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;自己紹介&lt;/h1&gt;
+  &lt;p&gt;私はWeb開発を学んでいます。&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>meta description</code> は検索エンジンの結果ページ（SERP）に表示される説明文に使われます。</li>
+              <li><code>meta author</code> は文書の著者を示すメタ情報です。</li>
+              <li><code>&lt;link rel="icon"&gt;</code> はブラウザタブに表示されるファビコンを指定します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T2: テキスト・リスト・リンク ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">text_fields</span>
+      <h2>T2 テキスト・リスト・リンク</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-03 -->
+    <div class="drill-item" id="d-03">
+      <div class="drill-header">
+        <div class="drill-badge">D-03</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 テキスト・リスト・リンク</span>
+          <h3 class="drill-title">穴埋め — 見出し・段落・強調</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>見出しは <code>&lt;h1&gt;</code>〜<code>&lt;h6&gt;</code> で階層構造を表します。<code>&lt;strong&gt;</code> は重要性を、<code>&lt;em&gt;</code> は強調を意味的に示します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下のHTMLコードの <span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ④ */</span> を埋めてください。</p>
+<pre class="drill-code"><code>&lt;/* ① */&gt;Web開発入門&lt;/h1&gt;
+&lt;/* ② */&gt;HTMLとは何か&lt;/h2&gt;
+&lt;p&gt;HTMLは&lt;/* ③ */&gt;Webページの構造&lt;/strong&gt;を定義する言語です。
+正式名称は&lt;/* ④ */&gt;HyperText Markup Language&lt;/em&gt;です。&lt;/p&gt;</code></pre>
+          <div class="expected-output">
+            <div class="label"><span class="material-icons" style="font-size:1rem;">visibility</span>期待される結果</div>
+<pre>「Web開発入門」が大見出し、「HTMLとは何か」が中見出しで表示され、
+「Webページの構造」が太字、「HyperText Markup Language」が斜体で表示される</pre>
+          </div>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>開始タグと終了タグは同じ要素名を使います。① は <code>h1</code>、② は <code>h2</code> です。③ 太字は <code>strong</code>、④ 斜体は <code>em</code> です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;h1&gt;Web開発入門&lt;/h1&gt;
+&lt;h2&gt;HTMLとは何か&lt;/h2&gt;
+&lt;p&gt;HTMLは&lt;strong&gt;Webページの構造&lt;/strong&gt;を定義する言語です。
+正式名称は&lt;em&gt;HyperText Markup Language&lt;/em&gt;です。&lt;/p&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>見出しは <code>&lt;h1&gt;</code> が最上位で、数字が大きくなるほどレベルが下がります。1ページに <code>&lt;h1&gt;</code> は原則1つです。</li>
+              <li><code>&lt;strong&gt;</code> は「重要な内容」、<code>&lt;em&gt;</code> は「強調」を意味します。見た目（太字・斜体）ではなくセマンティクスで使い分けます。</li>
+              <li><code>&lt;b&gt;</code> や <code>&lt;i&gt;</code> は見た目のみの指定で意味を持ちません。アクセシビリティの観点からは <code>&lt;strong&gt;</code> / <code>&lt;em&gt;</code> が推奨です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-04 -->
+    <div class="drill-item" id="d-04">
+      <div class="drill-header">
+        <div class="drill-badge">D-04</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T2 テキスト・リスト・リンク</span>
+          <h3 class="drill-title">穴埋め — リストとリンク</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>&lt;ul&gt;</code> は順序なしリスト、<code>&lt;ol&gt;</code> は順序ありリストです。<code>&lt;a href="URL"&gt;</code> でハイパーリンクを作成します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の <span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ④ */</span> を埋めて、リストとリンクを完成させてください。</p>
+<pre class="drill-code"><code>&lt;h2&gt;学習予定&lt;/h2&gt;
+&lt;/* ① */&gt;
+  &lt;li&gt;HTMLの基礎&lt;/li&gt;
+  &lt;li&gt;CSSの基礎&lt;/li&gt;
+  &lt;li&gt;JavaScriptの基礎&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2&gt;参考リンク&lt;/h2&gt;
+&lt;/* ② */&gt;
+  &lt;li&gt;&lt;a /* ③ */="https://developer.mozilla.org"&gt;MDN Web Docs&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href="https://www.w3.org" /* ④ */="_blank"&gt;W3C&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① 順序ありリストは <code>ol</code> です。② 順序なしリストは <code>ul</code> です。③ リンク先URLを指定する属性は <code>href</code> です。④ 新しいタブで開く属性は <code>target</code> です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;h2&gt;学習予定&lt;/h2&gt;
+&lt;ol&gt;
+  &lt;li&gt;HTMLの基礎&lt;/li&gt;
+  &lt;li&gt;CSSの基礎&lt;/li&gt;
+  &lt;li&gt;JavaScriptの基礎&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2&gt;参考リンク&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href="https://developer.mozilla.org"&gt;MDN Web Docs&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href="https://www.w3.org" target="_blank"&gt;W3C&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;ol&gt;</code>（ordered list）は番号付きリスト、<code>&lt;ul&gt;</code>（unordered list）は箇条書きリストです。</li>
+              <li><code>href</code> 属性はリンク先のURLを指定します。<code>target="_blank"</code> は新しいタブで開きます。</li>
+              <li>外部リンクには <code>rel="noopener noreferrer"</code> を追加するのがセキュリティ上のベストプラクティスです。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T3: テーブル ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">table_chart</span>
+      <h2>T3 テーブル</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-05 -->
+    <div class="drill-item" id="d-05">
+      <div class="drill-header">
+        <div class="drill-badge">D-05</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 テーブル</span>
+          <h3 class="drill-title">穴埋め — 基本テーブルの構造</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>&lt;table&gt;</code> の中に <code>&lt;thead&gt;</code>（ヘッダー行）と <code>&lt;tbody&gt;</code>（データ行）を分けて記述します。ヘッダーセルは <code>&lt;th&gt;</code>、データセルは <code>&lt;td&gt;</code> です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の <span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ④ */</span> を埋めて、商品一覧テーブルを完成させてください。</p>
+<pre class="drill-code"><code>&lt;/* ① */&gt;
+  &lt;/* ② */&gt;
+    &lt;tr&gt;
+      &lt;/* ③ */&gt;商品名&lt;/th&gt;
+      &lt;th&gt;価格&lt;/th&gt;
+      &lt;th&gt;在庫&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;/* ④ */&gt;
+    &lt;tr&gt;
+      &lt;td&gt;ノートPC&lt;/td&gt;
+      &lt;td&gt;98,000円&lt;/td&gt;
+      &lt;td&gt;5&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;マウス&lt;/td&gt;
+      &lt;td&gt;2,500円&lt;/td&gt;
+      &lt;td&gt;20&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① テーブル全体を囲む要素は <code>table</code> です。② ヘッダー部分は <code>thead</code>、③ ヘッダーセルは <code>th</code>、④ データ部分は <code>tbody</code> です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;商品名&lt;/th&gt;
+      &lt;th&gt;価格&lt;/th&gt;
+      &lt;th&gt;在庫&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;ノートPC&lt;/td&gt;
+      &lt;td&gt;98,000円&lt;/td&gt;
+      &lt;td&gt;5&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;マウス&lt;/td&gt;
+      &lt;td&gt;2,500円&lt;/td&gt;
+      &lt;td&gt;20&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;thead&gt;</code> / <code>&lt;tbody&gt;</code> / <code>&lt;tfoot&gt;</code> でテーブルの構造を明示すると、スクリーンリーダーが正しく解釈できます。</li>
+              <li><code>&lt;th&gt;</code> は自動的に太字・中央揃えになり、セマンティクスとして「見出しセル」であることを示します。</li>
+              <li><code>&lt;tr&gt;</code>（table row）が行、<code>&lt;td&gt;</code>（table data）がセルを表します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-06 -->
+    <div class="drill-item" id="d-06">
+      <div class="drill-header">
+        <div class="drill-badge">D-06</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T3 テーブル</span>
+          <h3 class="drill-title">写経+改造 — セル結合テーブル</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>colspan</code> 属性で横方向のセル結合、<code>rowspan</code> 属性で縦方向のセル結合ができます。結合数に応じて後続のセルを省略する必要があります。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下の時間割テーブルを写経して表示を確認してください。</p>
+<pre class="drill-code"><code>&lt;table border="1"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;時間&lt;/th&gt;
+      &lt;th&gt;月曜&lt;/th&gt;
+      &lt;th&gt;火曜&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;1限&lt;/td&gt;
+      &lt;td&gt;HTML&lt;/td&gt;
+      &lt;td&gt;CSS&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;2限&lt;/td&gt;
+      &lt;td&gt;HTML&lt;/td&gt;
+      &lt;td&gt;JavaScript&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+          <p><strong>Step 2（改造）:</strong> 月曜の1限と2限の「HTML」を <code>rowspan="2"</code> で1つのセルに結合してください。</p>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>1限の月曜セルに <code>rowspan="2"</code> を追加し、2限の行から月曜のセル（<code>&lt;td&gt;HTML&lt;/td&gt;</code>）を削除します。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;table border="1"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;時間&lt;/th&gt;
+      &lt;th&gt;月曜&lt;/th&gt;
+      &lt;th&gt;火曜&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;1限&lt;/td&gt;
+      &lt;td rowspan="2"&gt;HTML&lt;/td&gt;
+      &lt;td&gt;CSS&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;2限&lt;/td&gt;
+      &lt;td&gt;JavaScript&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>rowspan="2"</code> はそのセルが2行分を占有することを示します。結合したセルの分だけ次の行のセルを削除します。</li>
+              <li><code>colspan</code> は横方向の結合で、同じ行内の後続セルを減らします。</li>
+              <li>結合を使いすぎるとテーブルの構造が複雑になり、アクセシビリティが低下します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T4: フォーム・入力要素 ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">input</span>
+      <h2>T4 フォーム・入力要素</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-07 -->
+    <div class="drill-item" id="d-07">
+      <div class="drill-header">
+        <div class="drill-badge">D-07</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フォーム・入力要素</span>
+          <h3 class="drill-title">穴埋め — 基本フォーム要素</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>&lt;form&gt;</code> はフォーム全体を囲みます。<code>&lt;label&gt;</code> と <code>&lt;input&gt;</code> を <code>for</code>/<code>id</code> で紐付けることで、アクセシビリティが向上します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の <span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ④ */</span> を埋めて、ログインフォームを完成させてください。</p>
+<pre class="drill-code"><code>&lt;/* ① */ action="/login" method="post"&gt;
+  &lt;div&gt;
+    &lt;/* ② */ for="username"&gt;ユーザー名&lt;/label&gt;
+    &lt;input type="text" id="username" name="username" /* ③ */&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="password"&gt;パスワード&lt;/label&gt;
+    &lt;input type="/* ④ */" id="password" name="password" required&gt;
+  &lt;/div&gt;
+  &lt;button type="submit"&gt;ログイン&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① フォーム要素は <code>form</code> です。② ラベルは <code>label</code> です。③ 入力必須にする属性は <code>required</code> です。④ パスワード入力は <code>password</code> タイプです。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;form action="/login" method="post"&gt;
+  &lt;div&gt;
+    &lt;label for="username"&gt;ユーザー名&lt;/label&gt;
+    &lt;input type="text" id="username" name="username" required&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="password"&gt;パスワード&lt;/label&gt;
+    &lt;input type="password" id="password" name="password" required&gt;
+  &lt;/div&gt;
+  &lt;button type="submit"&gt;ログイン&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>action</code> 属性はフォーム送信先のURL、<code>method</code> はHTTPメソッド（GET/POST）を指定します。</li>
+              <li><code>&lt;label for="id"&gt;</code> と <code>&lt;input id="id"&gt;</code> の <code>for</code>/<code>id</code> を一致させることで、ラベルクリックで入力欄にフォーカスが移ります。</li>
+              <li><code>type="password"</code> は入力文字をマスク（●●●）して表示します。</li>
+              <li><code>required</code> 属性はHTML5のバリデーションで、空欄での送信を防ぎます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-08 -->
+    <div class="drill-item" id="d-08">
+      <div class="drill-header">
+        <div class="drill-badge">D-08</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T4 フォーム・入力要素</span>
+          <h3 class="drill-title">写経+改造 — 選択系フォーム要素</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>&lt;select&gt;</code> はドロップダウンメニュー、<code>&lt;input type="radio"&gt;</code> はラジオボタン、<code>&lt;input type="checkbox"&gt;</code> はチェックボックスです。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のアンケートフォームを写経してください。</p>
+<pre class="drill-code"><code>&lt;form&gt;
+  &lt;fieldset&gt;
+    &lt;legend&gt;受講アンケート&lt;/legend&gt;
+    &lt;div&gt;
+      &lt;label for="course"&gt;受講コース&lt;/label&gt;
+      &lt;select id="course" name="course"&gt;
+        &lt;option value=""&gt;選択してください&lt;/option&gt;
+        &lt;option value="html"&gt;HTML/CSS&lt;/option&gt;
+        &lt;option value="js"&gt;JavaScript&lt;/option&gt;
+      &lt;/select&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;p&gt;満足度&lt;/p&gt;
+      &lt;label&gt;&lt;input type="radio" name="rating" value="good"&gt; 良い&lt;/label&gt;
+      &lt;label&gt;&lt;input type="radio" name="rating" value="normal"&gt; 普通&lt;/label&gt;
+    &lt;/div&gt;
+  &lt;/fieldset&gt;
+&lt;/form&gt;</code></pre>
+          <p><strong>Step 2（改造）:</strong> 以下を追加してください。</p>
+          <ul>
+            <li><code>&lt;select&gt;</code> に「Java」の選択肢を追加</li>
+            <li>満足度に「悪い」の選択肢を追加</li>
+            <li>チェックボックスで「メール通知を受け取る」を追加</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>ドロップダウンには <code>&lt;option value="java"&gt;Java&lt;/option&gt;</code> を追加します。チェックボックスは <code>&lt;input type="checkbox"&gt;</code> です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;form&gt;
+  &lt;fieldset&gt;
+    &lt;legend&gt;受講アンケート&lt;/legend&gt;
+    &lt;div&gt;
+      &lt;label for="course"&gt;受講コース&lt;/label&gt;
+      &lt;select id="course" name="course"&gt;
+        &lt;option value=""&gt;選択してください&lt;/option&gt;
+        &lt;option value="html"&gt;HTML/CSS&lt;/option&gt;
+        &lt;option value="js"&gt;JavaScript&lt;/option&gt;
+        &lt;option value="java"&gt;Java&lt;/option&gt;
+      &lt;/select&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;p&gt;満足度&lt;/p&gt;
+      &lt;label&gt;&lt;input type="radio" name="rating" value="good"&gt; 良い&lt;/label&gt;
+      &lt;label&gt;&lt;input type="radio" name="rating" value="normal"&gt; 普通&lt;/label&gt;
+      &lt;label&gt;&lt;input type="radio" name="rating" value="bad"&gt; 悪い&lt;/label&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;label&gt;
+        &lt;input type="checkbox" name="notify" value="email"&gt;
+        メール通知を受け取る
+      &lt;/label&gt;
+    &lt;/div&gt;
+  &lt;/fieldset&gt;
+&lt;/form&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;fieldset&gt;</code> はフォーム要素をグループ化し、<code>&lt;legend&gt;</code> がそのグループのタイトルになります。</li>
+              <li>ラジオボタンは同じ <code>name</code> 属性を持つグループの中から1つだけ選択できます。</li>
+              <li>チェックボックスは複数選択が可能です。<code>name</code> が同じチェックボックスは配列として送信されます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T5: メディア・埋め込み ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">image</span>
+      <h2>T5 メディア・埋め込み</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-09 -->
+    <div class="drill-item" id="d-09">
+      <div class="drill-header">
+        <div class="drill-badge">D-09</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 メディア・埋め込み</span>
+          <h3 class="drill-title">穴埋め — 画像の埋め込み</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>&lt;img&gt;</code> は空要素（閉じタグなし）です。<code>src</code> で画像パス、<code>alt</code> で代替テキストを必ず指定します。<code>alt</code> はアクセシビリティとSEOに不可欠です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の <span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ③ */</span> を埋めて、画像を表示させてください。</p>
+<pre class="drill-code"><code>&lt;figure&gt;
+  &lt;/* ① */ /* ② */="images/landscape.jpg" /* ③ */="美しい山の風景写真"
+    width="600" height="400"&gt;
+  &lt;figcaption&gt;2024年夏に撮影した山の写真&lt;/figcaption&gt;
+&lt;/figure&gt;</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① 画像要素は <code>img</code> です。② 画像パスの属性は <code>src</code> です。③ 代替テキストの属性は <code>alt</code> です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;figure&gt;
+  &lt;img src="images/landscape.jpg" alt="美しい山の風景写真"
+    width="600" height="400"&gt;
+  &lt;figcaption&gt;2024年夏に撮影した山の写真&lt;/figcaption&gt;
+&lt;/figure&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>alt</code> 属性は画像が表示できない場合の代替テキストです。スクリーンリーダーはこのテキストを読み上げます。</li>
+              <li><code>width</code> / <code>height</code> を指定するとCLS（Cumulative Layout Shift）を防ぎ、パフォーマンスが向上します。</li>
+              <li><code>&lt;figure&gt;</code> と <code>&lt;figcaption&gt;</code> のセットで「図とキャプション」をセマンティックにマークアップできます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-10 -->
+    <div class="drill-item" id="d-10">
+      <div class="drill-header">
+        <div class="drill-badge">D-10</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T5 メディア・埋め込み</span>
+          <h3 class="drill-title">写経+改造 — 動画とオーディオ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>&lt;video&gt;</code> と <code>&lt;audio&gt;</code> はHTML5のメディア要素です。<code>controls</code> 属性で再生コントロールを表示します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のビデオプレイヤーを写経してください。</p>
+<pre class="drill-code"><code>&lt;video controls width="640"&gt;
+  &lt;source src="video/sample.mp4" type="video/mp4"&gt;
+  お使いのブラウザは動画再生に対応していません。
+&lt;/video&gt;</code></pre>
+          <p><strong>Step 2（改造）:</strong> 以下の属性・要素を追加してください。</p>
+          <ul>
+            <li><code>poster="images/thumbnail.jpg"</code> でサムネイル画像を指定</li>
+            <li>WebM形式のフォールバック <code>&lt;source&gt;</code> を追加</li>
+            <li>別途 <code>&lt;audio&gt;</code> 要素でBGMプレイヤーを追加</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>poster</code> 属性は <code>&lt;video&gt;</code> の属性として追加します。<code>&lt;source&gt;</code> は複数記述でき、ブラウザは上から順に再生可能な形式を選びます。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;video controls width="640" poster="images/thumbnail.jpg"&gt;
+  &lt;source src="video/sample.mp4" type="video/mp4"&gt;
+  &lt;source src="video/sample.webm" type="video/webm"&gt;
+  お使いのブラウザは動画再生に対応していません。
+&lt;/video&gt;
+
+&lt;audio controls&gt;
+  &lt;source src="audio/bgm.mp3" type="audio/mpeg"&gt;
+  &lt;source src="audio/bgm.ogg" type="audio/ogg"&gt;
+  お使いのブラウザはオーディオ再生に対応していません。
+&lt;/audio&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>poster</code> 属性は動画再生前に表示されるサムネイル画像を指定します。</li>
+              <li><code>&lt;source&gt;</code> を複数記述することで、ブラウザの対応形式に応じたフォールバックが可能です。</li>
+              <li><code>&lt;video&gt;</code> / <code>&lt;audio&gt;</code> の閉じタグの前のテキストは、要素に非対応のブラウザで表示されるフォールバックテキストです。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T6: セマンティクス・アクセシビリティ ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">accessibility</span>
+      <h2>T6 セマンティクス・アクセシビリティ</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-11 -->
+    <div class="drill-item" id="d-11">
+      <div class="drill-header">
+        <div class="drill-badge">D-11</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セマンティクス・アクセシビリティ</span>
+          <h3 class="drill-title">穴埋め — セマンティック要素の選択</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>HTML5のセマンティック要素（<code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;footer&gt;</code>）は文書の構造を明示し、アクセシビリティとSEOに貢献します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の <span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ⑤ */</span> を埋めて、セマンティックなページ構造を完成させてください。</p>
+<pre class="drill-code"><code>&lt;/* ① */&gt;
+  &lt;h1&gt;サイトタイトル&lt;/h1&gt;
+  &lt;/* ② */&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="/about"&gt;概要&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;
+
+&lt;/* ③ */&gt;
+  &lt;/* ④ */&gt;
+    &lt;h2&gt;記事タイトル&lt;/h2&gt;
+    &lt;p&gt;記事の本文...&lt;/p&gt;
+  &lt;/article&gt;
+&lt;/main&gt;
+
+&lt;/* ⑤ */&gt;
+  &lt;p&gt;&amp;copy; 2026 サイト名&lt;/p&gt;
+&lt;/footer&gt;</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① サイトヘッダーは <code>header</code>、② ナビゲーションは <code>nav</code>、③ メインコンテンツは <code>main</code>、④ 独立した記事は <code>article</code>、⑤ フッターは <code>footer</code> です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;header&gt;
+  &lt;h1&gt;サイトタイトル&lt;/h1&gt;
+  &lt;nav&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="/about"&gt;概要&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/header&gt;
+
+&lt;main&gt;
+  &lt;article&gt;
+    &lt;h2&gt;記事タイトル&lt;/h2&gt;
+    &lt;p&gt;記事の本文...&lt;/p&gt;
+  &lt;/article&gt;
+&lt;/main&gt;
+
+&lt;footer&gt;
+  &lt;p&gt;&amp;copy; 2026 サイト名&lt;/p&gt;
+&lt;/footer&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;header&gt;</code> はページやセクションの導入部、<code>&lt;footer&gt;</code> は末尾の情報を囲みます。</li>
+              <li><code>&lt;nav&gt;</code> は主要なナビゲーションリンクのグループを示します。</li>
+              <li><code>&lt;main&gt;</code> はページのメインコンテンツで、1ページに1つだけ使用します。</li>
+              <li><code>&lt;article&gt;</code> は独立して配信・再利用可能なコンテンツ（ブログ記事、ニュースなど）を表します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-12 -->
+    <div class="drill-item" id="d-12">
+      <div class="drill-header">
+        <div class="drill-badge">D-12</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T6 セマンティクス・アクセシビリティ</span>
+          <h3 class="drill-title">写経+改造 — WAI-ARIAの基礎</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p><code>aria-label</code> はスクリーンリーダー向けのラベルを提供します。<code>role</code> 属性はHTML要素のセマンティクスを補足・上書きできます。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のアクセシブルなナビゲーションを写経してください。</p>
+<pre class="drill-code"><code>&lt;nav aria-label="メインナビゲーション"&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href="/" aria-current="page"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/products"&gt;商品一覧&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/contact"&gt;お問い合わせ&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;</code></pre>
+          <p><strong>Step 2（改造）:</strong> 以下を追加してください。</p>
+          <ul>
+            <li>パンくずリスト用の <code>&lt;nav aria-label="パンくず"&gt;</code> を追加</li>
+            <li>パンくず内の各リンクの間に <code>aria-hidden="true"</code> の区切り文字「&gt;」を配置</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>ページに複数の <code>&lt;nav&gt;</code> がある場合、<code>aria-label</code> で区別します。<code>aria-hidden="true"</code> はスクリーンリーダーに読み上げさせない要素に使います。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;nav aria-label="メインナビゲーション"&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href="/" aria-current="page"&gt;ホーム&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/products"&gt;商品一覧&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/contact"&gt;お問い合わせ&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;
+
+&lt;nav aria-label="パンくず"&gt;
+  &lt;ol&gt;
+    &lt;li&gt;&lt;a href="/"&gt;ホーム&lt;/a&gt; &lt;span aria-hidden="true"&gt;&amp;gt;&lt;/span&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/products"&gt;商品一覧&lt;/a&gt; &lt;span aria-hidden="true"&gt;&amp;gt;&lt;/span&gt;&lt;/li&gt;
+    &lt;li&gt;商品詳細&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/nav&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>aria-label</code> は要素に「目に見えないラベル」を付与します。複数の <code>&lt;nav&gt;</code> を区別するのに必須です。</li>
+              <li><code>aria-current="page"</code> は「現在表示中のページ」を示し、スクリーンリーダーに伝わります。</li>
+              <li><code>aria-hidden="true"</code> は装飾的な要素をスクリーンリーダーから隠します。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T7: メタデータ・SEO・OGP ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">search</span>
+      <h2>T7 メタデータ・SEO・OGP</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-13 -->
+    <div class="drill-item" id="d-13">
+      <div class="drill-header">
+        <div class="drill-badge">D-13</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 メタデータ・SEO・OGP</span>
+          <h3 class="drill-title">穴埋め — 基本メタタグ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>SEOに重要なメタタグは <code>&lt;title&gt;</code>（検索結果のタイトル）と <code>&lt;meta name="description"&gt;</code>（検索結果の説明文）です。<code>viewport</code> メタタグはレスポンシブデザインに必須です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の <span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ④ */</span> を埋めて、SEO対策されたheadセクションを完成させてください。</p>
+<pre class="drill-code"><code>&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="/* ① */" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;/* ② */&gt;東京カフェガイド｜おすすめカフェ情報&lt;/title&gt;
+  &lt;meta name="/* ③ */" content="東京都内のおすすめカフェを厳選して紹介。Wi-Fi完備、電源ありの作業向けカフェ情報。"&gt;
+  &lt;link rel="/* ④ */" href="https://example.com/cafe-guide"&gt;
+&lt;/head&gt;</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① レスポンシブ用メタタグは <code>viewport</code> です。② タイトルタグは <code>title</code> です。③ 説明文は <code>description</code> です。④ 正規URLを示すリンクは <code>canonical</code> です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;東京カフェガイド｜おすすめカフェ情報&lt;/title&gt;
+  &lt;meta name="description" content="東京都内のおすすめカフェを厳選して紹介。Wi-Fi完備、電源ありの作業向けカフェ情報。"&gt;
+  &lt;link rel="canonical" href="https://example.com/cafe-guide"&gt;
+&lt;/head&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>viewport</code> メタタグはモバイルデバイスでの表示を制御します。これがないとスマホで小さく表示されます。</li>
+              <li><code>&lt;title&gt;</code> はSEOで最も重要な要素の1つです。30〜60文字程度が推奨されます。</li>
+              <li><code>meta description</code> は120〜160文字程度が推奨されます。検索結果のスニペットに使われます。</li>
+              <li><code>link rel="canonical"</code> は重複ページがある場合に正規URLを示し、SEO評価の分散を防ぎます。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-14 -->
+    <div class="drill-item" id="d-14">
+      <div class="drill-header">
+        <div class="drill-badge">D-14</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T7 メタデータ・SEO・OGP</span>
+          <h3 class="drill-title">写経+改造 — OGPタグの設定</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>OGP（Open Graph Protocol）タグはSNSでページをシェアした時の表示内容を制御します。<code>og:title</code>, <code>og:description</code>, <code>og:image</code> が基本3点セットです。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のOGPタグを写経してください。</p>
+<pre class="drill-code"><code>&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;サンプルブログ&lt;/title&gt;
+  &lt;meta property="og:title" content="サンプルブログ"&gt;
+  &lt;meta property="og:description" content="Web開発について発信するブログです"&gt;
+  &lt;meta property="og:image" content="https://example.com/ogp.jpg"&gt;
+  &lt;meta property="og:url" content="https://example.com"&gt;
+  &lt;meta property="og:type" content="website"&gt;
+&lt;/head&gt;</code></pre>
+          <p><strong>Step 2（改造）:</strong> Twitter Card用のメタタグを追加してください。</p>
+          <ul>
+            <li><code>twitter:card</code> を <code>summary_large_image</code> に設定</li>
+            <li><code>twitter:site</code> にアカウント名 <code>@example</code> を設定</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>Twitter Card は <code>&lt;meta name="twitter:card" content="..."&gt;</code> の形式です。OGP は <code>property</code> 属性、Twitter Card は <code>name</code> 属性を使う点に注意してください。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;サンプルブログ&lt;/title&gt;
+  &lt;meta property="og:title" content="サンプルブログ"&gt;
+  &lt;meta property="og:description" content="Web開発について発信するブログです"&gt;
+  &lt;meta property="og:image" content="https://example.com/ogp.jpg"&gt;
+  &lt;meta property="og:url" content="https://example.com"&gt;
+  &lt;meta property="og:type" content="website"&gt;
+  &lt;meta name="twitter:card" content="summary_large_image"&gt;
+  &lt;meta name="twitter:site" content="@example"&gt;
+&lt;/head&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>OGP タグは <code>property</code> 属性を使い、Twitter Card は <code>name</code> 属性を使います。</li>
+              <li><code>twitter:card</code> の値は <code>summary</code>（小さい画像）か <code>summary_large_image</code>（大きい画像）が一般的です。</li>
+              <li>OGP画像の推奨サイズは 1200x630px です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- ===== T8: 総合マークアップ ===== -->
+    <div class="theme-separator">
+      <span class="material-icons">integration_instructions</span>
+      <h2>T8 総合マークアップ</h2>
+      <span class="theme-count">2課題</span>
+    </div>
+
+    <!-- D-15 -->
+    <div class="drill-item" id="d-15">
+      <div class="drill-header">
+        <div class="drill-badge">D-15</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合マークアップ</span>
+          <h3 class="drill-title">穴埋め — プロフィールカード</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>複数のHTML要素を組み合わせてコンポーネントを構築します。<code>&lt;div&gt;</code> はグルーピング用の汎用要素ですが、適切なセマンティック要素がある場合はそちらを優先します。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p>以下の <span class="blank-marker">/* ① */</span> 〜 <span class="blank-marker">/* ⑤ */</span> を埋めて、プロフィールカードを完成させてください。</p>
+<pre class="drill-code"><code>&lt;div class="profile-card"&gt;
+  &lt;/* ① */ src="avatar.jpg" /* ② */="山田太郎のプロフィール写真" width="120" height="120"&gt;
+  &lt;/* ③ */&gt;山田太郎&lt;/h2&gt;
+  &lt;p&gt;フロントエンドエンジニア&lt;/p&gt;
+  &lt;/* ④ */&gt;
+    &lt;li&gt;&lt;/* ⑤ */ href="https://twitter.com/example" target="_blank" rel="noopener noreferrer"&gt;Twitter&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="https://github.com/example" target="_blank" rel="noopener noreferrer"&gt;GitHub&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p>① 画像要素は <code>img</code>、② 代替テキストは <code>alt</code>、③ 名前は見出し <code>h2</code>、④ リストは <code>ul</code>、⑤ リンクは <code>a</code> です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;div class="profile-card"&gt;
+  &lt;img src="avatar.jpg" alt="山田太郎のプロフィール写真" width="120" height="120"&gt;
+  &lt;h2&gt;山田太郎&lt;/h2&gt;
+  &lt;p&gt;フロントエンドエンジニア&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href="https://twitter.com/example" target="_blank" rel="noopener noreferrer"&gt;Twitter&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="https://github.com/example" target="_blank" rel="noopener noreferrer"&gt;GitHub&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li>プロフィール画像の <code>alt</code> には「誰の」「何の写真か」を記述します。装飾画像なら <code>alt=""</code>（空文字）にします。</li>
+              <li><code>target="_blank"</code> で新規タブを開く場合、<code>rel="noopener noreferrer"</code> をセキュリティのために追加します。</li>
+              <li>このカードは <code>&lt;div&gt;</code> で囲んでいますが、独立したコンテンツとして扱う場合は <code>&lt;article&gt;</code> も適切です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- D-16 -->
+    <div class="drill-item" id="d-16">
+      <div class="drill-header">
+        <div class="drill-badge">D-16</div>
+        <div class="drill-meta">
+          <span class="drill-theme">T8 総合マークアップ</span>
+          <h3 class="drill-title">写経+改造 — ニュース記事ページ</h3>
+        </div>
+      </div>
+      <div class="drill-body">
+        <div class="drill-silver">
+          <span class="material-icons">verified</span>
+          <div>
+            <strong>学習ポイント</strong>
+            <p>実際のWebページは複数のセマンティック要素、テキスト要素、リスト、リンクなどを組み合わせて構築されます。<code>&lt;time&gt;</code> 要素で日時をマークアップするとSEOに有利です。</p>
+          </div>
+        </div>
+        <div class="drill-task">
+          <h4><span class="material-icons">assignment</span>課題</h4>
+          <p><strong>Step 1（写経）:</strong> 以下のニュース記事ページを写経してください。</p>
+<pre class="drill-code"><code>&lt;article&gt;
+  &lt;header&gt;
+    &lt;h1&gt;HTML5の新機能が発表&lt;/h1&gt;
+    &lt;p&gt;投稿日: &lt;time datetime="2026-03-01"&gt;2026年3月1日&lt;/time&gt;&lt;/p&gt;
+    &lt;p&gt;カテゴリ: &lt;a href="/category/web"&gt;Web技術&lt;/a&gt;&lt;/p&gt;
+  &lt;/header&gt;
+  &lt;p&gt;HTML5の最新アップデートでは、以下の新機能が追加されました。&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;新しいセマンティック要素&lt;/li&gt;
+    &lt;li&gt;フォームバリデーションの強化&lt;/li&gt;
+  &lt;/ul&gt;
+  &lt;footer&gt;
+    &lt;p&gt;著者: &lt;a href="/author/tanaka"&gt;田中一郎&lt;/a&gt;&lt;/p&gt;
+  &lt;/footer&gt;
+&lt;/article&gt;</code></pre>
+          <p><strong>Step 2（改造）:</strong> 以下を追加してください。</p>
+          <ul>
+            <li>記事内に画像（<code>&lt;figure&gt;</code> + <code>&lt;figcaption&gt;</code>）を追加</li>
+            <li>「関連記事」セクション（<code>&lt;aside&gt;</code>）を追加し、リンク2件を配置</li>
+            <li>記事フッターに「更新日」を <code>&lt;time&gt;</code> 要素で追加</li>
+          </ul>
+        </div>
+        <details class="drill-hint">
+          <summary><span class="material-icons">lightbulb</span>ヒント</summary>
+          <div class="hint-content">
+            <p><code>&lt;aside&gt;</code> は主要コンテンツに関連するがメインではない補足情報に使います。<code>&lt;time datetime="YYYY-MM-DD"&gt;</code> の <code>datetime</code> 属性は機械可読な日付形式です。</p>
+          </div>
+        </details>
+        <details class="drill-answer">
+          <summary><span class="material-icons">check_circle</span>解答・解説</summary>
+          <div class="answer-content">
+<pre class="drill-code"><code>&lt;article&gt;
+  &lt;header&gt;
+    &lt;h1&gt;HTML5の新機能が発表&lt;/h1&gt;
+    &lt;p&gt;投稿日: &lt;time datetime="2026-03-01"&gt;2026年3月1日&lt;/time&gt;&lt;/p&gt;
+    &lt;p&gt;カテゴリ: &lt;a href="/category/web"&gt;Web技術&lt;/a&gt;&lt;/p&gt;
+  &lt;/header&gt;
+
+  &lt;figure&gt;
+    &lt;img src="images/html5-update.jpg" alt="HTML5の新機能を示す図解" width="800" height="450"&gt;
+    &lt;figcaption&gt;HTML5の主要な新機能の一覧&lt;/figcaption&gt;
+  &lt;/figure&gt;
+
+  &lt;p&gt;HTML5の最新アップデートでは、以下の新機能が追加されました。&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;新しいセマンティック要素&lt;/li&gt;
+    &lt;li&gt;フォームバリデーションの強化&lt;/li&gt;
+  &lt;/ul&gt;
+
+  &lt;aside&gt;
+    &lt;h2&gt;関連記事&lt;/h2&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="/articles/css-grid"&gt;CSS Gridレイアウト入門&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="/articles/js-es2026"&gt;JavaScript ES2026の新機能&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/aside&gt;
+
+  &lt;footer&gt;
+    &lt;p&gt;著者: &lt;a href="/author/tanaka"&gt;田中一郎&lt;/a&gt;&lt;/p&gt;
+    &lt;p&gt;更新日: &lt;time datetime="2026-03-05"&gt;2026年3月5日&lt;/time&gt;&lt;/p&gt;
+  &lt;/footer&gt;
+&lt;/article&gt;</code></pre>
+            <h5>解説</h5>
+            <ul>
+              <li><code>&lt;figure&gt;</code> + <code>&lt;figcaption&gt;</code> は画像と説明文をセマンティックに関連付けます。</li>
+              <li><code>&lt;aside&gt;</code> は記事の補足情報（関連記事、サイドバーなど）に使います。</li>
+              <li><code>&lt;time datetime="..."&gt;</code> の <code>datetime</code> 属性はISO 8601形式で記述します。検索エンジンはこの情報を利用します。</li>
+              <li><code>&lt;article&gt;</code> 内の <code>&lt;header&gt;</code> / <code>&lt;footer&gt;</code> は記事固有のヘッダー/フッターで、ページ全体のものとは別です。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-navigation">
+      <a href="index.html" class="prev-page">
+        <span class="material-icons">arrow_back</span>
+        コース一覧
+      </a>
+      <a href="level-c.html" class="next-page">
+        Level C — 仕様実装
+        <span class="material-icons">arrow_forward</span>
+      </a>
+    </div>
+
+  </div>
+
+  <footer class="global-footer"></footer>
+  <script src="../../shared/footer.js"></script>
+</body>
+</html>
