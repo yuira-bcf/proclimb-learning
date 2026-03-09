@@ -59,7 +59,7 @@ function generateNavHTML() {
     return `
         <div class="nav-container">
             <a href="${navData.logo.href}" class="nav-logo${logoActive}">
-                <span class="nav-logo-icon" style="background: #34C759; color: white;">${logoIcon}</span>
+                <span class="nav-logo-icon" style="background: #00897B; color: white;">${logoIcon}</span>
                 <span>${navData.logo.text}</span>
             </a>
             <div class="nav-category-links">
